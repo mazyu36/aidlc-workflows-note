@@ -1,0 +1,173 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="lifecycle" name="lifecycle">
+    <mxGraphModel dx="1400" dy="800" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1460" pageHeight="700" math="0" shadow="0" background="#161d29">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Phase 0: INITIALIZATION -->
+        <mxCell id="ph0" value="INITIALIZATION（0.x / 3 stages）&#10;ブートストラップ・承認ゲートなし" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#8492ac;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="20" y="120" width="250" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="s01" value="0.1 workspace-scaffold" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="35" y="165" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s02" value="0.2 workspace-detection" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="35" y="203" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s03" value="0.3 state-init" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="35" y="241" width="220" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Phase 1: IDEATION -->
+        <mxCell id="ph1" value="IDEATION（1.x / 7 stages）&#10;構想の妥当性検証" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#6db3ff;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#6db3ff;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="310" y="60" width="250" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="s11" value="1.1 intent-capture" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="325" y="105" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s12" value="1.2 market-research" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="325" y="143" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s13" value="1.3 feasibility" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="325" y="181" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s14" value="1.4 scope-definition" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="325" y="219" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s15" value="1.5 team-formation" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="325" y="257" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s16" value="1.6 rough-mockups" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="325" y="295" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s17" value="1.7 approval-handoff" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="325" y="333" width="220" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Phase 2: INCEPTION -->
+        <mxCell id="ph2" value="INCEPTION（2.x / 8 stages）&#10;要求の精緻化" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#b895ff;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#b895ff;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="600" y="60" width="250" height="398" as="geometry" />
+        </mxCell>
+        <mxCell id="s21" value="2.1 reverse-engineering ◇pipeline" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="615" y="105" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s22" value="2.2 practices-discovery ◇subagent" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="615" y="143" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s23" value="2.3 requirements-analysis" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="615" y="181" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s24" value="2.4 user-stories ◇mob" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="615" y="219" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s25" value="2.5 refined-mockups" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="615" y="257" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s26" value="2.6 application-design" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="615" y="295" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s27" value="2.7 units-generation" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="615" y="333" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s28" value="2.8 delivery-planning" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="615" y="371" width="220" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Phase 3: CONSTRUCTION -->
+        <mxCell id="ph3" value="CONSTRUCTION（3.x / 7 stages）&#10;ソリューションの構築" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#f2b35c;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#f2b35c;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="890" y="60" width="266" height="390" as="geometry" />
+        </mxCell>
+        <mxCell id="boltbox" value="Bolt ごとに反復（初回 = walking skeleton）" style="rounded=1;html=0;fillColor=none;strokeColor=#f2b35c;dashed=1;dashPattern=2 3;verticalAlign=bottom;align=center;fontColor=#aab6cc;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="900" y="100" width="246" height="245" as="geometry" />
+        </mxCell>
+        <mxCell id="s31" value="3.1 functional-design" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="913" y="110" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s32" value="3.2 nfr-requirements" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="913" y="148" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s33" value="3.3 nfr-design" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="913" y="186" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s34" value="3.4 infrastructure-design" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="913" y="224" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s35" value="3.5 code-generation ◇subagent" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="913" y="262" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s36" value="3.6 build-and-test（全 Bolt 後に 1 回）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="913" y="365" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s37" value="3.7 ci-pipeline（同・1 回）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="913" y="403" width="220" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Phase 4: OPERATION -->
+        <mxCell id="ph4" value="OPERATION（4.x / 7 stages）&#10;デプロイと運用（全ステージ条件付き）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#57d9a9;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#57d9a9;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1190" y="60" width="250" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="s41" value="4.1 deployment-pipeline" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="1205" y="105" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s42" value="4.2 environment-provisioning" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="1205" y="143" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s43" value="4.3 deployment-execution" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="1205" y="181" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s44" value="4.4 observability-setup" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="1205" y="219" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s45" value="4.5 incident-response" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="1205" y="257" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s46" value="4.6 performance-validation" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="1205" y="295" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s47" value="4.7 feedback-optimization（終端）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=11;align=left;spacingLeft=8" vertex="1" parent="1">
+          <mxGeometry x="1205" y="333" width="220" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Phase transitions -->
+        <mxCell id="e01" value="自動遷移" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.42" edge="1" parent="1" source="ph0" target="ph1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" value="検証ゲート" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.42;entryX=0;entryY=0.42" edge="1" parent="1" source="ph1" target="ph2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e23" value="検証ゲート" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.42;entryX=0;entryY=0.42" edge="1" parent="1" source="ph2" target="ph3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e34" value="検証ゲート" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.42;entryX=0;entryY=0.42" edge="1" parent="1" source="ph3" target="ph4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Feedback loop 4.7 -> 1.1 -->
+        <mxCell id="efb" value="フィードバックループ（4.7 承認時: 完了 or 1.1 へ）" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#57d9a9;dashed=1;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5" edge="1" parent="1" source="s47" target="s11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1315" y="560" />
+              <mxPoint x="290" y="560" />
+              <mxPoint x="290" y="120" />
+            </Array>
+            <mxPoint x="0" y="14" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="各ステージ末尾に承認ゲート（Initialization を除く）／ ◇ = 分散トポロジー（他 28 ステージは inline 実行）" style="text;html=0;fontColor=#aab6cc;fontSize=11;align=left" vertex="1" parent="1">
+          <mxGeometry x="20" y="600" width="900" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

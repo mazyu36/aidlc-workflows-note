@@ -1,0 +1,35 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="learning-loop" name="learning-loop">
+    <mxGraphModel dx="1300" dy="500" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="330" math="0" shadow="0" background="#161d29">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="l1" value="ステージ実行中&#10;&#10;観察日誌 memory.md に記録&#10;Interpretations / Deviations /&#10;Tradeoffs / Open questions" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="20" y="80" width="230" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" value="承認ゲート直前（§13）&#10;&#10;aidlc-learnings.ts surface&#10;非空の日誌行を候補として&#10;そのまま提示（読み取り専用）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="285" y="80" width="230" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="l3" value="ユーザーが確定&#10;&#10;残す学びを選択。&#10;org.md との矛盾は着地前に&#10;検出され revise / skip / 昇格" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="550" y="80" width="230" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="l4" value="aidlc-learnings.ts persist&#10;&#10;practice として memory/project.md&#10;へ追記（team.md へ 1 クリック昇格）&#10;RULE_LEARNED / SENSOR_PROPOSED" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="815" y="80" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="l5" value="次のワークフロー&#10;&#10;compile が rules_in_context に&#10;焼き込み、全エージェントが&#10;起動時に memory/ を再読" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="1090" y="80" width="195" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="le1" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="l1" target="l2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="le2" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="l2" target="l3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="le3" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="l3" target="l4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="le4" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="l4" target="l5"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="lnote" value="実行中のワークフローには反映しない（コンパイル済みビューは安定）— 修正は「次回から」効く。Open questions は昇格しない" style="text;html=0;fontColor=#aab6cc;fontSize=11;align=left" vertex="1" parent="1">
+          <mxGeometry x="20" y="250" width="1000" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

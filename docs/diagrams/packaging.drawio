@@ -1,0 +1,65 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="packaging" name="packaging">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="880" math="0" shadow="0" background="#161d29">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Sources zone -->
+        <mxCell id="zsrc" value="手書きソース（ハーネス非依存の正 + 薄いハーネス別オーバーレイ）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1200" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="core" value="core/ — 単一の正&#10;stages 32 ・ agents 14 ・ conductor + protocols&#10;hooks 13 ・ tools 30 ・ knowledge 59&#10;scopes 9 ・ sensors 4 ・ memory ・ templates" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="45" y="60" width="560" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="hov" value="harness/&lt;name&gt;/ × 5 — 投影レシピ&#10;manifest.ts（coreDirs / harnessDir / tierFlavor / rulesRename）&#10;onboarding.fills.ts ・ 認可済み skills / settings&#10;adapter（codex / kiro / kiro-ide / opencode）・ emit.ts（任意）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="645" y="60" width="550" height="125" as="geometry" />
+        </mxCell>
+
+        <!-- package.ts -->
+        <mxCell id="pkg" value="scripts/package.ts — buildTree()（ハーネスごとに実行・manifest.ts の走査で自動発見）&#10;1  core/ を変換して &lt;harnessDir&gt;/ へ: {{HARNESS_DIR}} 置換 ・ rules/ リネーム ・ tier: → model / effort 投影&#10;2  authored ファイルのコピー（Kiro は JSON にも tier 投影）&#10;2b onboarding.md を描画 → CLAUDE.md / AGENTS.md&#10;2c–2e ワークスペースの雛形: aidlc/spaces/default/memory ・ active-space ・ memory-seed&#10;3  aidlc-graph.ts compile → stage-graph.json / scope-grid.json（+ harness.json）&#10;4  aidlc-runner-gen → skills/ ランナー生成&#10;5  emit() プラグイン（codex / opencode のみ）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=12;align=left;spacing=14;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="170" y="280" width="900" height="215" as="geometry" />
+        </mxCell>
+
+        <!-- dist zone -->
+        <mxCell id="zdist" value="dist/ — 生成物をコミット（bun scripts/package.ts --check がバイト単位でドリフト検知）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="20" y="565" width="1200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="dc" value="claude&#10;.claude/&#10;CLAUDE.md&#10;aidlc/" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="45" y="605" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dx" value="codex&#10;.codex/ + .agents/skills/&#10;AGENTS.md&#10;aidlc/" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="240" y="605" width="200" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dk" value="kiro / kiro-ide&#10;.kiro/&#10;AGENTS.md&#10;aidlc/" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="455" y="605" width="190" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="do" value="opencode&#10;.aidlc/（エンジン）&#10;.opencode/ + opencode.json&#10;AGENTS.md ・ aidlc/" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="660" y="605" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="dp" value="plugins/&lt;p&gt;/&lt;harness&gt;&#10;プラグイン投影&#10;（marketplace.json ほか）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="905" y="605" width="290" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- user project -->
+        <mxCell id="user" value="ユーザーのプロジェクト — cp -r dist/&lt;harness&gt;/* を置くだけ（前提は bun のみ）&#10;ハーネスが &lt;harnessDir&gt;/ の hooks / tools を実行し、非 Claude 系は adapter がネイティブイベントをバイト同一の core hooks へ変換" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="170" y="790" width="900" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- edges -->
+        <mxCell id="p1" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.3;entryY=0" edge="1" parent="1" source="core" target="pkg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.7;entryY=0" edge="1" parent="1" source="hov" target="pkg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="ハーネスごとに 1 ツリーを clean-sweep 再生成" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="pkg" target="zdist">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="コピーだけでインストール完了" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="zdist" target="user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

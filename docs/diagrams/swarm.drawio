@@ -1,0 +1,57 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="swarm" name="swarm">
+    <mxGraphModel dx="1100" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1060" pageHeight="820" math="0" shadow="0" background="#161d29">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="cond" value="Conductor（ライブの LLM セッション）— fan-out と再試行ループを所有&#10;人間が Construction の自律モードを許可した場合のみ swarm 起動" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="230" y="20" width="600" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="prep" value="aidlc-swarm prepare — Unit ごとに git worktree を fork&#10;（aidlc-worktree create + aidlc-bolt start --worktree）・SWARM_STARTED を監査" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="230" y="140" width="600" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="zpar" value="並列実行（バッチ = unit-of-work-dependency.md の DAG をトポロジカル順に分割）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#f2b35c;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#f2b35c;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="260" width="940" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="w1" value="Unit A worktree&#10;3.1–3.5 を実行&#10;（並列 Task）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="100" y="300" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="w2" value="Unit B worktree&#10;3.1–3.5 を実行&#10;（並列 Task）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="400" y="300" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="w3" value="Unit C worktree&#10;3.1–3.5 を実行&#10;（並列 Task）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="700" y="300" width="260" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="chk" value="aidlc-swarm check &lt;unit&gt; — Unit 単位の収束判定（助言のみ・監査なし）&#10;検査コマンド exit 0 が唯一の正 + git diff --quiet の改竄ガード（worker の自己申告は信用しない）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="180" y="470" width="700" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fin" value="aidlc-swarm finalize — 権威ゲート&#10;主張された Unit を全数再検証（lying-conductor guard）+ reviewer 宣言ステージは REVIEW_COMPLETED 領収書を要求&#10;→ 合格 Unit のみ hold-merge で直列マージバック・SWARM_* を監査・失敗は型付きエンベロープで返す" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="180" y="600" width="700" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="mrg" value="main へ直列マージ完了" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="230" y="750" width="280" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="hlt" value="失敗 Unit: BOLT_FAILED + halt-and-ask&#10;（worktree は保全・Retry / Skip / Abort）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;dashed=1;fontColor=#aab6cc;fontSize=11;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="570" y="742" width="310" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="se1" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="cond" target="prep"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se2" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.3;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="prep" target="w1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se3" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="prep" target="w2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se4" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.7;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="prep" target="w3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se5" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.2;entryY=0" edge="1" parent="1" source="w1" target="chk"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se6" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="w2" target="chk"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se7" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.8;entryY=0" edge="1" parent="1" source="w3" target="chk"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se8" value="全 Unit 完了を主張" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="chk" target="fin"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se9" value="合格のみ" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=0.3;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="fin" target="mrg"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="se10" value="不合格" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;dashed=1;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=0.7;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="fin" target="hlt"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

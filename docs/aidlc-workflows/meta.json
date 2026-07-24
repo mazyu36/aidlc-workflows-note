@@ -1,0 +1,8 @@
+{
+  "repo": "awslabs/aidlc-workflows",
+  "branch": "v2",
+  "analyzedCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+  "analyzedAt": "2026-07-23",
+  "driftAtBuild": 0,
+  "note": "基点はユーザー指定の origin/v2（v2.x タグのリリースライン）。main は v1 系ツリーのため基点にしない。"
+}

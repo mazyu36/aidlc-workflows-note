@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>実行の仕組み — AI-DLC Workflows Atlas</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/mermaid.min.js"></script>
+<script defer src="../assets/highlight.min.js"></script>
+<script defer src="../assets/app.js"></script>
+<script type="module" src="../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">aidlc-workflows / runtime</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">aidlc-workflows</div>
+  <a href="../index.html">概要（Atlas）</a>
+  <a href="concepts.html">概念</a>
+  <a href="architecture.html">つくり（構造）</a>
+  <a href="runtime.html" class="here">実行の仕組み</a>
+  <a href="quality.html">エージェントと品質</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#loop">forwarding loop</a>
+  <a href="#protocol">ステージプロトコル</a>
+  <a href="#routing">次ステージの決定</a>
+  <a href="#state">状態機械と監査</a>
+  <a href="#hooks">フック 13 本</a>
+  <a href="#cli">CLI 面</a>
+  <a href="#resume">再開・ジャンプ・復旧</a>
+</nav>
+
+<main>
+<p class="eyebrow">AIDLC-WORKFLOWS / RUNTIME</p>
+<h1>実行の仕組み — 決定論エンジンと forwarding loop</h1>
+<p class="lede">セッションは 1 つの単純なループで動く。決定論エンジン（aidlc-orchestrate.ts）が「次の一手」を JSON directive で返し、conductor（LLM）がその一手だけを実行して report で結果を返す。routing はエンジン、実行品質は conductor、状態を書けるのは aidlc-state.ts だけ、承認できるのは人間だけ — 役割の壁がツールとフックで強制されている。</p>
+
+<h2 id="loop">forwarding loop — 1 ステージが流れる様子</h2>
+<p>ユーザーが <code>/aidlc</code> を打つと、conductor はスキル定義に従い「next → 一手を実行 → report → 繰り返し」のループに入る。エンジンの <code>next</code> は状態ファイルとコンパイル済みステージグラフを読み、型付き directive（run-stage / invoke-swarm / ask / print / error / done / parked）をちょうど 1 つ stdout に返す。何も書き換えない。run-stage directive にはルール・ペルソナ・ステージファイル・入力成果物のパスが解決済みで入っており、最初の 1 通だけ conductor.md の全文（conductor_persona）が焼き込まれる。</p>
+<pre class="mermaid">
+sequenceDiagram
+  participant U as ユーザー
+  participant H as Hooks
+  participant C as Conductor（LLM）
+  participant E as Engine（orchestrate）
+  participant S as State（aidlc-state.ts)
+  U->>C: /aidlc [引数]
+  H->>H: SessionStart: 文脈注入 + SESSION_STARTED
+  C->>E: next $ARGUMENTS
+  E->>E: nextInScopeStage() で次ステージ決定
+  E-->>C: run-stage directive（JSON・読み取り専用）
+  C->>C: rules → persona → stage file → consumes を読む
+  C->>C: ステージ本体を実行し produces を書く
+  H->>H: PostToolUse: ARTIFACT_* / SENSOR_* を監査へ
+  C->>E: report --result awaiting-approval
+  E->>S: gate-start（[-] を [?] へ）
+  C-->>U: 承認ゲート提示（HARD STOP）
+  U->>C: Approve
+  H->>H: HUMAN_TURN を監査へ
+  C->>E: report --result approved
+  E->>S: approve（[?] を [x] へ + auto-advance）
+  E-->>C: done（次の next を実行せよ）
+  C->>E: next（ループ継続）
+</pre>
+<p>ループの実体はスキル文書の 4 行の擬似コードで、エンジンと conductor の分業宣言は conductor.md の冒頭 5 行にある。</p>
+<figure class="excerpt">
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/aidlc-common/conductor.md#L3-L7">core/aidlc-common/conductor.md:3-7</a><button class="copy" type="button" data-copy="core/aidlc-common/conductor.md:3" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <pre><code class="language-markdown">You are the AI-DLC conductor. The forwarding loop in your runner's `SKILL.md`
+is the *mechanism* — get a directive from the engine, do that one move, report
+the outcome, repeat. This file is the irreducible *knowledge-work* the engine
+cannot do for you: how to run a stage **well**. The engine decides which stage
+is next; you own the quality of execution inside the move it named.</code></pre>
+  <p class="excerpt-note">動作: LLM の裁量を「エンジンが指名した一手の中の実行品質」に限定する宣言。どのステージへ進むか・いつ止まるかの判断は LLM から取り上げられている。</p>
+</figure>
+<div class="refrow"><span class="label">参照:</span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/harness/claude/skills/aidlc/SKILL.md#L38-L44">harness/claude/skills/aidlc/SKILL.md:38-44（ループ擬似コード）</a><button class="copy" type="button" data-copy="harness/claude/skills/aidlc/SKILL.md:38" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-orchestrate.ts">core/tools/aidlc-orchestrate.ts（4,009 行）</a><button class="copy" type="button" data-copy="core/tools/aidlc-orchestrate.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-directive.ts">core/tools/aidlc-directive.ts（directive の型）</a><button class="copy" type="button" data-copy="core/tools/aidlc-directive.ts" aria-label="パスをコピー">⧉</button></span>
+</div>
+
+<h2 id="protocol">ステージプロトコル — 32 ステージが従う共通契約</h2>
+<p>各ステージは YAML frontmatter（slug / phase / lead_agent / mode / produces / consumes / requires_stage を含む 14 の authored フィールド）と、順序固定の本文（Steps / Sensors / Learn）を持つ .md ファイル。成果物のパスをステージファイルにハードコードすることは禁じられ、エンジンが directive 発行時に record dir の実パスへ解決する。全ステージの振る舞いは 1,128 行の stage-protocol.md が統べており、その中核が承認ゲートの HARD STOP 規則。</p>
+<figure class="excerpt">
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/aidlc-common/protocols/stage-protocol.md#L30-L35">core/aidlc-common/protocols/stage-protocol.md:30-35</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-protocol.md:30" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <pre><code class="language-markdown">### HARD STOP RULE (non-negotiable)
+
+When you present an approval gate question, you MUST end your turn immediately and wait for the user's explicit response. Do NOT call any tool until the user has typed their choice in a new message. An approval gate is a mandatory human checkpoint that cannot be inferred, auto-approved, or skipped.
+
+### NO EMERGENT BEHAVIOR RULE
+Construction and Operation stages MUST use standardized 2-option completion messages. DO NOT create 3-option menus or other emergent navigation patterns. Only IDEATION and INCEPTION stages may conditionally include a 3rd option (to add a previously skipped stage). Any deviation from these patterns is a protocol violation.</code></pre>
+  <p class="excerpt-note">動作: ゲート提示後は即ターンを終え、ユーザーの新規メッセージまでツール呼び出しを禁じる。承認の推測・自動化・スキップを「交渉不能」と明記し、完了メッセージの形まで標準化して創発的なナビゲーションを塞ぐ。</p>
+</figure>
+<div class="refrow"><span class="label">参照:</span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/aidlc-common/protocols/stage-definition.md">core/aidlc-common/protocols/stage-definition.md（frontmatter 仕様）</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-definition.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/aidlc-common/stages/inception/user-stories.md">stages/inception/user-stories.md（mob 実行の例）</a><button class="copy" type="button" data-copy="core/aidlc-common/stages/inception/user-stories.md" aria-label="パスをコピー">⧉</button></span>
+</div>
+
+<h2 id="routing">次ステージの決定 — グラフ × スコープ × 状態上書き</h2>
+<p>routing の中心はただ 1 つのループ。コンパイル済みグラフを現在位置から前方へ歩き、完了・スキップ済みを飛ばし、スコープ行列（state 側の EXECUTE/SKIP 上書きが優先）で最初の EXECUTE ステージを返す。返すものがなければワークフロー完了。</p>
+<figure class="excerpt">
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-lib.ts#L4667-L4679">core/tools/aidlc-lib.ts:4667-4679（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:4667" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <pre><code class="language-typescript">  for (let i = currentIdx + 1; i &lt; graph.length; i++) {
+    const slug = graph[i].slug;
+
+    // Already completed or skipped via jump — keep walking.
+    const cb = checkboxStates.find((c) =&gt; c.slug === slug);
+    if (cb &amp;&amp; (cb.state === "completed" || cb.state === "skipped")) continue;
+
+    // State override wins over scope-mapping. A SKIP override drops an
+    // EXECUTE stage; an EXECUTE override promotes a SKIP stage.
+    const effectiveAction = stateOverrides?.get(slug) ?? mapping.stages[slug];
+    if (effectiveAction === "EXECUTE") return graph[i];
+  }
+  return null;</code></pre>
+  <p class="excerpt-note">動作: グラフ前方走査 + 「状態の上書きがスコープ行列に勝つ」の 2 規則だけで、ジャンプ後の再開・ゲートでのステージ追加・recompose 後の実行計画のすべてを同じ経路で処理する。null が「done」。</p>
+</figure>
+
+<h2 id="state">状態機械と監査 — 書けるのは 1 つのツールだけ</h2>
+<p>進捗の正は record dir 直下の <code>aidlc-state.md</code>。各ステージは 6 状態のチェックボックスで表され、遷移（advance / gate-start / approve / reject / revise / skip）を実行できるのは aidlc-state.ts のみ。conductor が状態ファイルを直接書き換えようとすると PreToolUse フックが exit 2 で拒否する。全遷移は「監査を先に書き、状態を後に書く」順序で、ディレクトリ mutex（mkdir ロック、50 回 × 100ms リトライ）に包まれる。</p>
+<figure class="diagram" role="img" aria-label="ステージ状態機械。pending から advance で in progress、gate-start で awaiting approval、approve で completed。reject で revising に落ち revise で戻る。skip で skipped。approve は次ステージを自動で in progress にする。">
+<svg xmlns="http://www.w3.org/2000/svg" style="background: #161d29; background-color: #161d29; " xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="912px" height="353px" viewBox="0 0 912 353"><defs/><rect fill="#161d29" width="100%" height="100%" x="0" y="0" style="fill: rgb(22, rgb(207, 213, 223));"/><g><g data-cell-id="state-machine-0"><g data-cell-id="state-machine-1"><g data-cell-id="state-machine-p"><g transform="translate(0.5,0.5)"><rect x="0" y="70" width="150" height="44" rx="6.6" ry="6.6" fill="#1e2736" stroke="#8492ac" pointer-events="all" style="fill: rgb(30, rgb(198, 205, 218)); stroke: rgb(132, rgb(102, 114, 137));"/></g><g><g fill="#e8ecf4" font-family="Helvetica" text-anchor="middle" font-size="12px" style="fill: rgb(232, rgb(31, 35, 42));"><text x="75" y="97">[ ] pending</text></g></g></g><g data-cell-id="state-machine-ip"><g transform="translate(0.5,0.5)"><rect x="220" y="70" width="160" height="44" rx="6.6" ry="6.6" fill="#1e2736" stroke="#6db3ff" pointer-events="all" style="fill: rgb(30, rgb(198, 205, 218)); stroke: rgb(109, rgb(39, 99, 164));"/></g><g><g fill="#e8ecf4" font-family="Helvetica" text-anchor="middle" font-size="12px" style="fill: rgb(232, rgb(31, 35, 42));"><text x="300" y="97">[-] in progress</text></g></g></g><g data-cell-id="state-machine-aw"><g transform="translate(0.5,0.5)"><rect x="460" y="70" width="200" height="44" rx="6.6" ry="6.6" fill="#1e2736" stroke="#b895ff" pointer-events="all" style="fill: rgb(30, rgb(198, 205, 218)); stroke: rgb(184, rgb(113, 83, 174));"/></g><g><g fill="#e8ecf4" font-family="Helvetica" text-anchor="middle" font-size="12px" style="fill: rgb(232, rgb(31, 35, 42));"><text x="560" y="97">[?] awaiting approval</text></g></g></g><g data-cell-id="state-machine-done"><g transform="translate(0.5,0.5)"><rect x="750" y="70" width="160" height="44" rx="6.6" ry="6.6" fill="#1e2736" stroke="#57d9a9" pointer-events="all" style="fill: rgb(30, rgb(198, 205, 218)); stroke: rgb(87, rgb(0, 104, 63));"/></g><g><g fill="#e8ecf4" font-family="Helvetica" text-anchor="middle" font-size="12px" style="fill: rgb(232, rgb(31, 35, 42));"><text x="830" y="97">[x] completed</text></g></g></g><g data-cell-id="state-machine-rev"><g transform="translate(0.5,0.5)"><rect x="460" y="230" width="200" height="44" rx="6.6" ry="6.6" fill="#1e2736" stroke="#f2b35c" pointer-events="all" style="fill: rgb(30, rgb(198, 205, 218)); stroke: rgb(242, rgb(125, 71, 0));"/></g><g><g fill="#e8ecf4" font-family="Helvetica" text-anchor="middle" font-size="12px" style="fill: rgb(232, rgb(31, 35, 42));"><text x="560" y="257">[R] revising</text></g></g></g><g data-cell-id="state-machine-sk"><g transform="translate(0.5,0.5)"><rect x="110" y="230" width="160" height="44" rx="6.6" ry="6.6" fill="#1e2736" stroke="#8492ac" stroke-dasharray="3 3" pointer-events="all" style="fill: rgb(30, rgb(198, 205, 218)); stroke: rgb(132, rgb(102, 114, 137));"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="middle" font-size="12px" style="fill: rgb(170, rgb(73, 83, 102));"><text x="190" y="257">[S] skipped</text></g></g></g><g data-cell-id="state-machine-t1"><g transform="translate(0.5,0.5)"><path d="M 150 92 L 211.88 92" fill="none" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="stroke" style="stroke: rgb(154, rgb(85, 96, 117));"/><path d="M 218.88 92 L 211.88 95.5 L 211.88 88.5 Z" fill="#9aa7bf" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="all" style="fill: rgb(154, rgb(85, 96, 117)); stroke: rgb(154, rgb(85, 96, 117));"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="middle" font-size="11px" style="fill: rgb(170, rgb(73, 83, 102));"><rect fill="#10141d" stroke="none" x="161" y="76" width="49" height="14" stroke-width="0" style="fill: rgb(16, rgb(217, 220, 228));"/><text x="185" y="86.5">advance</text></g></g></g><g data-cell-id="state-machine-t2"><g transform="translate(0.5,0.5)"><path d="M 380 92 L 451.88 92" fill="none" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="stroke" style="stroke: rgb(154, rgb(85, 96, 117));"/><path d="M 458.88 92 L 451.88 95.5 L 451.88 88.5 Z" fill="#9aa7bf" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="all" style="fill: rgb(154, rgb(85, 96, 117)); stroke: rgb(154, rgb(85, 96, 117));"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="middle" font-size="11px" style="fill: rgb(170, rgb(73, 83, 102));"><rect fill="#10141d" stroke="none" x="393" y="76" width="56" height="14" stroke-width="0" style="fill: rgb(16, rgb(217, 220, 228));"/><text x="420" y="86.5">gate-start</text></g></g></g><g data-cell-id="state-machine-t3"><g transform="translate(0.5,0.5)"><path d="M 660 92 L 741.88 92" fill="none" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="stroke" style="stroke: rgb(154, rgb(85, 96, 117));"/><path d="M 748.88 92 L 741.88 95.5 L 741.88 88.5 Z" fill="#9aa7bf" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="all" style="fill: rgb(154, rgb(85, 96, 117)); stroke: rgb(154, rgb(85, 96, 117));"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="middle" font-size="11px" style="fill: rgb(170, rgb(73, 83, 102));"><rect fill="#10141d" stroke="none" x="682" y="76" width="47" height="14" stroke-width="0" style="fill: rgb(16, rgb(217, 220, 228));"/><text x="705" y="86.5">approve</text></g></g></g><g data-cell-id="state-machine-t4"><g transform="translate(0.5,0.5)"><path d="M 510 114 L 510 221.88" fill="none" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="stroke" style="stroke: rgb(154, rgb(85, 96, 117));"/><path d="M 510 228.88 L 506.5 221.88 L 513.5 221.88 Z" fill="#9aa7bf" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="all" style="fill: rgb(154, rgb(85, 96, 117)); stroke: rgb(154, rgb(85, 96, 117));"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="middle" font-size="11px" style="fill: rgb(170, rgb(73, 83, 102));"><rect fill="#10141d" stroke="none" x="377" y="166" width="156" height="14" stroke-width="0" style="fill: rgb(16, rgb(217, 220, 228));"/><text x="454" y="176.5">reject（Revision Count++）</text></g></g></g><g data-cell-id="state-machine-t5"><g transform="translate(0.5,0.5)"><path d="M 610 230 L 610 122.12" fill="none" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="stroke" style="stroke: rgb(154, rgb(85, 96, 117));"/><path d="M 610 115.12 L 613.5 122.12 L 606.5 122.12 Z" fill="#9aa7bf" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="all" style="fill: rgb(154, rgb(85, 96, 117)); stroke: rgb(154, rgb(85, 96, 117));"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="middle" font-size="11px" style="fill: rgb(170, rgb(73, 83, 102));"><rect fill="#10141d" stroke="none" x="627" y="166" width="35" height="14" stroke-width="0" style="fill: rgb(16, rgb(217, 220, 228));"/><text x="644" y="176.5">revise</text></g></g></g><g data-cell-id="state-machine-t6"><g transform="translate(0.5,0.5)"><path d="M 75 114 L 75 162 Q 75 172 85 172 L 148 172 Q 158 172 158 182 L 158 221.88" fill="none" stroke="#9aa7bf" stroke-miterlimit="10" stroke-dasharray="3 3" pointer-events="stroke" style="stroke: rgb(154, rgb(85, 96, 117));"/><path d="M 158 228.88 L 154.5 221.88 L 161.5 221.88 Z" fill="#9aa7bf" stroke="#9aa7bf" stroke-miterlimit="10" pointer-events="all" style="fill: rgb(154, rgb(85, 96, 117)); stroke: rgb(154, rgb(85, 96, 117));"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="middle" font-size="11px" style="fill: rgb(170, rgb(73, 83, 102));"><rect fill="#10141d" stroke="none" x="18" y="166" width="139" height="14" stroke-width="0" style="fill: rgb(16, rgb(217, 220, 228));"/><text x="87" y="176.5">skip（jump / スコープ外）</text></g></g></g><g data-cell-id="state-machine-t7"><g transform="translate(0.5,0.5)"><path d="M 830 114 L 830 320 Q 830 330 820 330 L 310 330 Q 300 330 300 320 L 300 122.12" fill="none" stroke="#57d9a9" stroke-miterlimit="10" stroke-dasharray="3 3" pointer-events="stroke" style="stroke: rgb(87, rgb(0, 104, 63));"/><path d="M 300 115.12 L 303.5 122.12 L 296.5 122.12 Z" fill="#57d9a9" stroke="#57d9a9" stroke-miterlimit="10" pointer-events="all" style="fill: rgb(87, rgb(0, 104, 63)); stroke: rgb(87, rgb(0, 104, 63));"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="middle" font-size="11px" style="fill: rgb(170, rgb(73, 83, 102));"><rect fill="#10141d" stroke="none" x="419" y="338" width="294" height="14" stroke-width="0" style="fill: rgb(16, rgb(217, 220, 228));"/><text x="565" y="348.5">auto-advance: 次ステージを [-] に（STAGE_STARTED）</text></g></g></g><g data-cell-id="state-machine-note"><g><rect x="0" y="0" width="900" height="20" fill="none" stroke="none" pointer-events="all"/></g><g><g fill="#aab6cc" font-family="Helvetica" text-anchor="start" font-size="11px" style="fill: rgb(170, rgb(73, 83, 102));"><text x="2" y="17">遷移の実行者はすべて aidlc-state.ts（監査先行 + ディレクトリ mutex）。3 回 reject で Accept as-is が出現</text></g></g></g></g></g></g></svg>
+<figcaption>ステージの 6 状態と遷移。approve は次ステージの advance まで自動で連鎖する（auto-advance）。</figcaption>
+</figure>
+<figure class="excerpt">
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/knowledge/aidlc-shared/state-template.md#L47-L62">core/knowledge/aidlc-shared/state-template.md:47-62</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/state-template.md:47" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <pre><code class="language-markdown">## Stage Progress
+&lt;!-- Checkbox states: [ ] pending, [-] in-progress, [?] awaiting approval, [R] revising, [x] completed, [S] skipped --&gt;
+
+The engine emits one phase heading per compiled phase, then one checkbox row per
+compiled stage in that phase:
+
+### [PHASE] PHASE
+- [ ] stage-slug — [EXECUTE/SKIP: reason]
+
+## Current Status
+- **Lifecycle Phase**: [READY/INITIALIZATION/IDEATION/INCEPTION/CONSTRUCTION/OPERATION]
+- **Current Stage**: [stage slug or status text]
+- **Next Stage**: [next stage slug or none]
+- **Status**: [Running/Completed]
+- **Construction Autonomy Mode**: [unset/autonomous/gated]
+- **Last Updated**: [ISO 8601 timestamp]</code></pre>
+  <p class="excerpt-note">動作: 状態ファイルは frontmatter ではなく H2 セクション + チェックボックス行の Markdown。人間がそのまま読める形式で、6 状態の凡例と Current Status のフィールド群（自律モード含む）が仕様として固定されている。</p>
+</figure>
+<p>監査はイベント 74 種・19 カテゴリの追記専用ログで、<code>audit/&lt;host&gt;-&lt;clone&gt;.md</code> というクローンごとのシャードに書かれる。読む側が全シャードを glob してタイムスタンプでマージするため、並列 worktree からの追記が git コンフリクトを起こさない。実行時に生成されるワークスペースの全体像は次のとおり。</p>
+<div class="tree-view"><span class="dir">aidlc/</span>                                  <span class="comment"># ワークスペース（git コミット対象）</span>
+├── active-space                         <span class="comment"># カーソル（gitignore・ユーザー毎）</span>
+└── <span class="dir">spaces/&lt;space&gt;/</span>
+    ├── <span class="dir">memory/</span>                          <span class="comment"># ルール層: org / team / project / phases/*</span>
+    ├── <span class="dir">knowledge/</span> <span class="dir">codekb/&lt;repo&gt;/</span>        <span class="comment"># チームナレッジ / 逆解析の成果（9 成果物）</span>
+    └── <span class="dir">intents/</span>
+        ├── intents.json                 <span class="comment"># 登録簿 {uuid, slug, scope, status}</span>
+        └── <span class="dir">&lt;YYMMDD&gt;-&lt;label&gt;/</span>            <span class="comment"># record dir（intent 1 件の全記録）</span>
+            ├── aidlc-state.md           <span class="comment"># 進捗の正（このセクションの主役）</span>
+            ├── <span class="dir">audit/</span>&lt;host&gt;-&lt;clone&gt;.md   <span class="comment"># 追記専用の監査シャード</span>
+            ├── <span class="dir">&lt;phase&gt;/&lt;stage&gt;/</span>          <span class="comment"># ステージ成果物 + memory.md + questions</span>
+            ├── <span class="dir">.aidlc-sensors/</span>          <span class="comment"># センサー失敗の詳細ファイル</span>
+            └── runtime-graph.json       <span class="comment"># データプレーンの読み取りモデル（gitignore）</span>
+</div>
+<div class="refrow"><span class="label">参照:</span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-state.ts">core/tools/aidlc-state.ts（3,503 行・唯一の遷移実行者）</a><button class="copy" type="button" data-copy="core/tools/aidlc-state.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/knowledge/aidlc-shared/audit-format.md">core/knowledge/aidlc-shared/audit-format.md（74 イベントの台帳）</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/audit-format.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/10-state-and-audit.md">docs/guide/10-state-and-audit.md</a><button class="copy" type="button" data-copy="docs/guide/10-state-and-audit.md" aria-label="パスをコピー">⧉</button></span>
+</div>
+
+<h2 id="hooks">フック 13 本 — ハーネスイベントへの接続</h2>
+<p>Claude Code では settings.json が 8 イベント種に 13 本のフックを束線する。10 本は記録専用（非ブロック）、3 本だけが流れを変える: 状態ファイルへの直接書き込みを拒否する state-transition-guard、レビュー中の越境読み取りを拒否する reviewer-scope、そしてゲート・park・done 以外でターンを終えられなくする Stop フック。Stop フックは停止のたびに <code>orchestrate next</code> を裏で回し、途中なら decision:block で directive を注入してループを続けさせる — forwarding loop の「繰り返し」はここで機械的に強制されている。</p>
+<table>
+  <thead><tr><th>イベント</th><th>フック</th><th>役割</th></tr></thead>
+  <tbody>
+    <tr><td>PreToolUse（Read/Write/Bash ほか）</td><td>aidlc-state-transition-guard.ts</td><td>状態遷移の直接実行を exit 2 で拒否（流れを変える）</td></tr>
+    <tr><td>PreToolUse（同）</td><td>aidlc-reviewer-scope.ts</td><td>レビュアーの読み取り境界を強制（流れを変える）</td></tr>
+    <tr><td>UserPromptSubmit / PostToolUse（AskUserQuestion）</td><td>aidlc-mint-presence.ts</td><td>本物の人間ターンを HUMAN_TURN として記録</td></tr>
+    <tr><td>SessionStart / SessionEnd</td><td>aidlc-session-start.ts / aidlc-session-end.ts</td><td>セッションイベント記録 + 再開時の文脈注入</td></tr>
+    <tr><td>PostToolUse（Write|Edit）</td><td>aidlc-audit-logger.ts / aidlc-sensor-fire.ts</td><td>成果物イベント記録 + センサー発火（助言）</td></tr>
+    <tr><td>PostToolUse（TaskUpdate）</td><td>aidlc-sync-statusline.ts</td><td>タスク進行を状態へ同期</td></tr>
+    <tr><td>PostToolUse（Bash）</td><td>aidlc-runtime-compile.ts</td><td>遷移イベント検知で runtime-graph.json を再構築</td></tr>
+    <tr><td>PreCompact / SubagentStop</td><td>aidlc-validate-state.ts / aidlc-log-subagent.ts</td><td>復旧ブレッドクラム / サブエージェント完了記録</td></tr>
+    <tr><td>Stop</td><td>aidlc-stop.ts</td><td>境界外での停止をブロックしループを強制（流れを変える）</td></tr>
+    <tr><td>statusLine</td><td>aidlc-statusline.ts</td><td>ターミナルに進捗を常時表示</td></tr>
+  </tbody>
+</table>
+<p>非 Claude ハーネスは同じ 13 本をバイト同一のまま使い、authored な adapter 1 枚がネイティブイベントを Claude 形式の stdin に正規化して子プロセス実行する。Codex の apply_patch はファイルごとの Write/Edit に展開され、Kiro の todo_list は TaskUpdate に写像され、opencode はフックレジストリ自体がないためプラグインのハンドラ関数として同じ変換を行う。exit 2 / decision:block という流れを変えるチャネルも各ハーネスのネイティブなブロック手段へ透過的に転送される。</p>
+<div class="refrow"><span class="label">参照:</span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/harness/claude/settings.json#L146-L156">harness/claude/settings.json:146-156（Stop フックの束線）</a><button class="copy" type="button" data-copy="harness/claude/settings.json:146" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/hooks">core/hooks/（13 本の実体）</a><button class="copy" type="button" data-copy="core/hooks" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/harness/codex/hooks/aidlc-codex-adapter.ts">harness/codex/hooks/aidlc-codex-adapter.ts（adapter の例）</a><button class="copy" type="button" data-copy="harness/codex/hooks/aidlc-codex-adapter.ts" aria-label="パスをコピー">⧉</button></span>
+</div>
+
+<h2 id="cli">CLI 面 — 1 つのディスパッチャと 19 のツール</h2>
+<p><code>aidlc.ts</code>（1,083 行）はルーティング専用のシムで、<code>aidlc &lt;verb&gt;</code>（13 の トップレベル動詞: next / report / park / compose / status / doctor / init ほか）と <code>aidlc &lt;noun&gt; &lt;verb&gt;</code>（state / audit / graph / runtime / sensor / swarm / bolt / worktree / jump / learnings を含む 20 の名詞）を 19 の兄弟ツールへ委譲する。エンジン中枢の orchestrate が公開するのは next / report / park の 3 動詞だけで、state は 24 動詞を持つ — 「決める者は書かず、書く者は決めない」の分離が CLI の面にもそのまま現れている。</p>
+<div class="refrow"><span class="label">参照:</span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc.ts#L53-L73">core/tools/aidlc.ts:53-73（TOOLS 対応表）</a><button class="copy" type="button" data-copy="core/tools/aidlc.ts:53" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">docs/guide/12-cli-commands.md</a><button class="copy" type="button" data-copy="docs/guide/12-cli-commands.md" aria-label="パスをコピー">⧉</button></span>
+</div>
+
+<h2 id="resume">再開・ジャンプ・復旧</h2>
+<p>中断への備えは 4 系統ある。(1) 再開: SessionStart フックが状態の生きたフィールドと forwarding loop の規律を additionalContext として注入し、Resume / Redo / Jump / Start Fresh のメニューを出す。(2) ジャンプ: <code>aidlc-jump.ts</code> が resolve（方向と影響範囲の計算）と execute（前方は途中を [S] に、後方は下流を [ ] に戻す）の 2 段で状態を書き換える。(3) コンパクション: PreCompact フックが復旧ブレッドクラム <code>.aidlc-recovery.md</code> を書き、resume が監査末尾の SESSION_COMPACTED を見て継続確認を挟む。(4) 中断: park はステージ境界でワークフローを綺麗に停止させ、<code>/aidlc --resume</code> が解除する。</p>
+<div class="refrow"><span class="label">参照:</span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-jump.ts">core/tools/aidlc-jump.ts</a><button class="copy" type="button" data-copy="core/tools/aidlc-jump.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/hooks/aidlc-session-start.ts">core/hooks/aidlc-session-start.ts</a><button class="copy" type="button" data-copy="core/hooks/aidlc-session-start.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/12-state-machine.md">docs/reference/12-state-machine.md</a><button class="copy" type="button" data-copy="docs/reference/12-state-machine.md" aria-label="パスをコピー">⧉</button></span>
+</div>
+
+<footer class="meta">
+  分析基点: awslabs/aidlc-workflows <code>v2</code> @ <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46">ccf284b</a>（2026-07-23 時点の origin/v2）· ページ生成: 2026-07-23 · リンクは基点コミット固定
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

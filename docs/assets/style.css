@@ -1,0 +1,340 @@
+/* AI-DLC Workflows Atlas — 共通スタイル
+   設計ルール:
+   - 色は AI-DLC のフェーズ識別にのみ使う (ideation=青 / inception=紫 /
+     construction=琥珀 / operation=緑)。装飾目的の色は追加しない。
+     琥珀は警告バナーと兼用。サイト全体のアクセントは inception の紫。
+   - 書体の意味論: sans = 文章・見出し・UI テキスト / mono = コード・パス・数値データと
+     masthead のブランドマークのみ（主要ドキュメントサイトの実践に準拠）。
+   - ビルドステップなし。file:// で開けることを維持する。 */
+
+:root {
+  --ink: #10141d;
+  --panel: #161d29;
+  --panel-2: #1e2736;
+  --line: #2c3850;
+  --paper: #e8ecf4;
+  --muted: #aab6cc;
+  --faint: #8492ac;
+
+  --inception: #b895ff;
+  --ideation: #6db3ff;
+  --construction: #f2b35c;
+  --operation: #57d9a9;
+  --warn: #f2b35c;
+
+  --hue: var(--paper); /* body[data-repo] で上書き */
+
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: "Hiragino Sans", "Noto Sans CJK JP", "Yu Gothic UI", -apple-system, "Segoe UI", sans-serif;
+}
+
+body[data-repo="aidlc"] { --hue: var(--inception); }
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; animation: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* 日本語の文節単位改行 (BudouX)。未対応ブラウザは通常改行にフォールバック */
+p, li, .lede, td, figcaption { word-break: auto-phrase; }
+/* 本文は左揃え。justify は使わない — インラインコードやチップのような分割不能要素が
+   多い行で字間が強制拡張され「始 ま る」のような不自然な間隔になるため。
+   右端の自然さは BudouX の文節改行で担保する */
+pre.mermaid p, pre.mermaid li { text-align: center; max-width: none; word-break: normal; }
+h1, h2, h3 { text-wrap: balance; }
+
+a { color: var(--paper); text-decoration-color: var(--faint); text-underline-offset: 3px; }
+a:hover { color: var(--hue); text-decoration-color: var(--hue); }
+:focus-visible { outline: 2px solid var(--hue); outline-offset: 2px; border-radius: 2px; }
+
+code { font-family: var(--mono); font-size: 0.88em; background: var(--panel); padding: 1px 5px; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+
+/* ---- ページ骨格 ---- */
+
+.wrap { max-width: 1480px; margin: 0 auto; padding: 0 40px 80px; }
+@media (max-width: 1100px) { .wrap { padding: 0 24px 60px; } }
+
+.masthead {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  padding: 22px 0 18px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+}
+.masthead .site { font-size: 0.82rem; letter-spacing: 0.16em; color: var(--muted); text-decoration: none; }
+.masthead .site:hover { color: var(--hue); }
+.masthead .here { font-size: 0.82rem; color: var(--hue); }
+
+.eyebrow {
+  font-family: var(--sans); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.18em;
+  color: var(--hue); text-transform: uppercase; margin: 0 0 6px;
+}
+
+h1 { font-family: var(--sans); font-weight: 700; font-size: 1.9rem; line-height: 1.3; margin: 34px 0 8px; }
+.lede { color: #cdd5e4; max-width: 64em; margin: 0 0 14px; font-size: 1.02rem; }
+
+h2 {
+  font-family: var(--sans); font-weight: 700; font-size: 1.2rem;
+  margin: 56px 0 14px; padding-top: 26px; border-top: 1px solid var(--line);
+}
+h2::before { content: "## "; color: var(--hue); font-family: var(--mono); }
+h3 { font-family: var(--sans); font-weight: 700; font-size: 1.0rem; margin: 30px 0 8px; color: var(--paper); }
+
+/* 注意: 日本語主体の文章に ch 単位を使わない（全角幅は "0" の約 2 倍で、想定の半分で折り返す）。
+   text-wrap: pretty も使わない — 最終行の孤立回避のために途中の行を早めに折り、
+   文節改行と組み合わさると改行位置が不自然になるため（2026-07-23 撤回） */
+p { max-width: 64em; }
+ul, ol { max-width: 64em; padding-left: 1.4em; }
+li { margin: 3px 0; }
+
+/* ---- 3カラム: 左 = ページナビ / 中央 = 本文 / 右 = ページ内目次
+   NN/g の TOC ガイドラインに準拠: ローカルナビと目次はレールを分離、
+   レール目次は sticky + 現在位置ハイライト + 明確なラベル ---- */
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 200px;
+  grid-template-areas: "nav main pagetoc";
+  gap: 44px; align-items: start;
+}
+.layout.no-nav { grid-template-columns: minmax(0, 1fr) 200px; grid-template-areas: "main pagetoc"; }
+.layout > main { grid-area: main; min-width: 0; }
+
+.toc, .pagetoc {
+  font-family: var(--sans); font-size: 0.82rem; line-height: 1.5;
+  position: sticky; top: 20px;
+  max-height: calc(100vh - 40px); overflow-y: auto;
+}
+.toc { grid-area: nav; }
+.pagetoc { grid-area: pagetoc; font-size: 0.78rem; }
+
+.toc .group, .pagetoc .group {
+  color: var(--faint); letter-spacing: 0.18em; font-size: 0.66rem;
+  margin: 22px 0 8px 2px; text-transform: uppercase;
+}
+.toc .group:first-child, .pagetoc .group:first-child { margin-top: 4px; }
+
+/* 左レール: ページ移動のみ (カード型) */
+.toc a {
+  display: block; padding: 6px 12px; margin: 3px 0;
+  color: var(--muted); text-decoration: none;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+}
+.toc a:hover { color: var(--paper); border-color: var(--faint); }
+.toc a.here {
+  color: var(--hue); border-color: var(--hue); background: var(--panel-2); font-weight: 700;
+}
+
+/* 右レール: このページの目次のみ (縦ライン + 追従ハイライト) */
+.pagetoc a {
+  display: block; padding: 3px 10px 3px 14px;
+  color: var(--muted); text-decoration: none;
+  border-left: 2px solid var(--line);
+}
+.pagetoc a:hover { color: var(--paper); }
+.pagetoc a.active { color: var(--hue); border-left-color: var(--hue); }
+
+@media (max-width: 1100px) {
+  .layout, .layout.no-nav {
+    grid-template-columns: 1fr;
+    grid-template-areas: "nav" "pagetoc" "main";
+    gap: 0;
+  }
+  .toc { position: static; max-height: none; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 14px; }
+  /* 狭い画面では目次を本文冒頭のボックスに畳む (NN/g: 本文内配置が全画面サイズで安全) */
+  .pagetoc {
+    position: static; max-height: none;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 16px; margin: 0 0 22px;
+  }
+}
+
+/* ---- コード参照チップ (このサイトの基本部品) ---- */
+
+.ref {
+  display: inline-flex; align-items: center; gap: 0;
+  font-family: var(--mono); font-size: 0.78rem;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  margin: 2px 4px 2px 0; vertical-align: middle;
+  max-width: 100%;
+}
+.ref a {
+  color: var(--muted); text-decoration: none; padding: 2px 7px;
+  overflow-wrap: anywhere;
+}
+.ref a:hover { color: var(--hue); }
+.ref .copy {
+  font-family: var(--mono); font-size: 0.78rem;
+  background: none; border: none; border-left: 1px solid var(--line);
+  color: var(--faint); padding: 2px 7px; cursor: pointer;
+}
+.ref .copy:hover { color: var(--hue); }
+.ref .copy.done { color: var(--operation); }
+
+.refrow { margin: 6px 0 14px; }
+.refrow .label { font-family: var(--sans); font-weight: 700; font-size: 0.72rem; color: var(--faint); letter-spacing: 0.08em; margin-right: 6px; }
+
+/* ---- テーブル ---- */
+
+table { border-collapse: collapse; width: 100%; margin: 14px 0 22px; font-size: 0.88rem; }
+th {
+  font-family: var(--sans); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.1em;
+  color: var(--faint); text-align: left; text-transform: uppercase;
+  padding: 6px 14px 6px 0; border-bottom: 1px solid var(--line);
+}
+td { padding: 7px 14px 7px 0; border-bottom: 1px solid rgba(44, 56, 80, 0.55); vertical-align: top; }
+td code { white-space: nowrap; }
+tr:hover td { background: rgba(30, 39, 54, 0.5); }
+
+/* ---- 図 ---- */
+
+.diagram {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px; margin: 16px 0 24px; overflow-x: auto;
+}
+.diagram svg { display: block; max-width: 100%; height: auto; }
+pre.mermaid {
+  /* mermaid 描画前のフォールバック表示 */
+  font-family: var(--mono); font-size: 0.78rem; color: var(--faint);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px; margin: 16px 0 24px; overflow-x: auto;
+}
+pre.mermaid[data-processed="true"] { color: inherit; }
+.diagram svg, pre.mermaid[data-processed="true"] svg { cursor: zoom-in; }
+
+/* クリックで拡大 (app.js が生成) */
+.lightbox {
+  position: fixed; inset: 0; z-index: 99;
+  background: rgba(8, 10, 16, 0.94);
+  display: flex; align-items: center; justify-content: center;
+  padding: 3vh 3vw; cursor: zoom-out;
+}
+.lightbox svg {
+  width: min(94vw, 1800px) !important; max-width: none !important;
+  height: auto !important; max-height: 94vh;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 24px;
+}
+.lightbox .hint {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  font-family: var(--sans); font-size: 0.72rem; color: var(--faint);
+}
+
+/* 図番号つきキャプション (spec-to-readable-html の規約を採用) */
+main { counter-reset: fig; }
+figure.diagram figcaption {
+  counter-increment: fig;
+  margin-top: 12px; font-size: 0.85rem; color: var(--muted);
+}
+figure.diagram figcaption::before {
+  content: "図 " counter(fig) " — ";
+  font-weight: 700; color: var(--faint);
+}
+
+/* 統計カード (stat-grid) */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 18px 0 26px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; }
+.stat .stat-label { font-family: var(--sans); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.12em; color: var(--faint); text-transform: uppercase; }
+.stat .stat-value { font-family: var(--mono); font-size: 1.7rem; font-weight: 700; color: var(--hue); margin: 2px 0; }
+.stat .stat-detail { font-size: 0.8rem; color: var(--muted); }
+
+/* コールアウト */
+.callout { border: 1px solid var(--line); border-left: 3px solid var(--ideation); background: var(--panel); border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 0.92rem; }
+.callout .callout-title { font-family: var(--sans); font-weight: 700; font-size: 0.7rem; letter-spacing: 0.14em; color: var(--ideation); display: block; margin-bottom: 4px; text-transform: uppercase; }
+.callout.warn { border-left-color: var(--warn); }
+.callout.warn .callout-title { color: var(--warn); }
+
+/* ディレクトリツリー */
+.tree-view { font-family: var(--mono); font-size: 0.82rem; line-height: 1.7; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; white-space: pre; overflow-x: auto; margin: 14px 0 22px; }
+.tree-view .dir { color: var(--hue); font-weight: 700; }
+.tree-view .comment { color: var(--faint); }
+
+/* ---- コード抜粋 ---- */
+
+.excerpt { margin: 16px 0 26px; }
+.excerpt figcaption { margin-bottom: 6px; }
+.excerpt pre {
+  margin: 0; background: #121826; border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 18px; overflow-x: auto;
+  font-family: var(--mono); font-size: 0.8rem; line-height: 1.6;
+}
+.excerpt pre code { background: none; padding: 0; font-size: inherit; }
+.excerpt .excerpt-note { margin: 8px 0 0; font-size: 0.88rem; color: var(--muted); }
+
+/* highlight.js テーマ (自前トークン配色) */
+.hljs { color: var(--paper); }
+.hljs-comment, .hljs-quote { color: var(--faint); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-meta { color: var(--inception); }
+.hljs-string, .hljs-regexp, .hljs-addition { color: var(--operation); }
+.hljs-number, .hljs-literal, .hljs-symbol { color: var(--construction); }
+.hljs-title, .hljs-function .hljs-title, .hljs-title.function_ { color: var(--ideation); }
+.hljs-attr, .hljs-attribute, .hljs-variable, .hljs-params { color: var(--paper); }
+.hljs-type, .hljs-class .hljs-title, .hljs-title.class_, .hljs-built_in { color: #7fd4e8; }
+.hljs-deletion { color: #ff8f8f; }
+
+/* 手書き SVG 図の共通クラス (Atlas の関係図と同スタイル) */
+.svgmap text { font-family: var(--sans); }
+.svgmap .box { fill: var(--panel); stroke-width: 1.6; }
+.svgmap .box-inner { fill: var(--panel-2); stroke: var(--line); }
+.svgmap .t-name { font-size: 15px; font-weight: 700; }
+.svgmap .t-mod { font-size: 12.5px; font-weight: 600; fill: var(--paper); }
+.svgmap .t-role { font-size: 12.5px; fill: var(--paper); }
+.svgmap .t-sub { font-size: 11px; fill: var(--muted); }
+.svgmap .t-edge { font-size: 12px; font-weight: 600; fill: var(--paper); }
+.svgmap .edge { stroke: #9aa7bf; stroke-width: 1.7; fill: none; }
+
+.legend { display: flex; gap: 26px; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); margin: 10px 0 0; }
+.legend .key { display: inline-block; width: 34px; height: 0; border-top: 2px solid var(--muted); vertical-align: middle; margin-right: 8px; }
+.legend .key.dashed { border-top-style: dashed; }
+.legend .key.dotted { border-top-style: dotted; }
+
+/* ---- カード (Atlas トップ) ---- */
+
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 20px 0; }
+@media (max-width: 760px) { .cards { grid-template-columns: 1fr; } }
+.card {
+  display: block; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 18px 20px; text-decoration: none; color: var(--paper);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+a.card:hover { border-color: var(--hue); background: var(--panel-2); color: var(--paper); }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.card-name { font-family: var(--sans); font-weight: 700; font-size: 1.02rem; color: var(--hue); }
+.card p { margin: 8px 0 0; font-size: 0.86rem; color: var(--muted); max-width: none; }
+.card .card-role { color: var(--paper); }
+.card.is-todo { opacity: 0.75; }
+
+.chip {
+  font-family: var(--sans); font-weight: 700; font-size: 0.68rem; letter-spacing: 0.1em;
+  padding: 2px 9px; border-radius: 99px; white-space: nowrap;
+}
+.chip.ok { border: 1px solid var(--hue); color: var(--hue); }
+.chip.todo { border: 1px dashed var(--faint); color: var(--faint); }
+
+/* ---- バナー・フッター ---- */
+
+.banner {
+  border: 1px solid var(--line); border-left: 3px solid var(--warn);
+  background: var(--panel); border-radius: 8px;
+  padding: 12px 16px; margin: 20px 0; font-size: 0.88rem;
+}
+.banner .label { font-family: var(--sans); font-weight: 700; font-size: 0.7rem; letter-spacing: 0.16em; color: var(--warn); display: block; margin-bottom: 4px; }
+.banner p { margin: 0; max-width: none; }
+
+footer.meta {
+  margin-top: 70px; padding-top: 16px; border-top: 1px solid var(--line);
+  font-family: var(--sans); font-size: 0.76rem; color: var(--faint); line-height: 1.9;
+}
+footer.meta a { color: var(--muted); }

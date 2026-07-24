@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-DLC Workflows Atlas</title>
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="assets/mermaid.min.js"></script>
+<script defer src="assets/highlight.min.js"></script>
+<script defer src="assets/app.js"></script>
+<script type="module" src="assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">トップ</span>
+</header>
+
+<div class="layout no-nav">
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#tldr">TL;DR</a>
+  <a href="#map">リポジトリの三層構造</a>
+  <a href="#pages">ページ索引</a>
+  <a href="#basis">分析基点</a>
+  <a href="#sources">一次資料</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC WORKFLOWS ATLAS</p>
+<h1>AI-DLC Workflows v2 — コードベースアトラス</h1>
+<p class="lede">awslabs/aidlc-workflows の v2 ブランチを「1 クリックで実コードに届く」形で解説するノート。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論で、このリポジトリはその公式実装 — 単一の core/ から Claude Code / Kiro CLI / Kiro IDE / Codex CLI / opencode の 5 配布物を生成する。</p>
+
+<h2 id="tldr">TL;DR</h2>
+<p>設計の要は 3 つの分離。第一に方法論と実装の分離 — 5 フェーズ・32 ステージの方法論は Markdown で記述され、routing は決定論エンジン（TypeScript / bun）が、実行品質は LLM（conductor）が担う。第二にソースと配布の分離 — 手書きの正は core/ の 1 箇所で、5 ハーネス向け dist/ はすべて生成物としてコミットされる。第三に判断と記録の分離 — 承認できるのは人間だけ、状態を書けるのは専用ツールだけで、この壁はフックが機械的に強制する。</p>
+<div class="stat-grid">
+  <div class="stat"><div class="stat-label">ライフサイクル</div><div class="stat-value">5 / 32</div><div class="stat-detail">フェーズ / ステージ</div></div>
+  <div class="stat"><div class="stat-label">エージェント</div><div class="stat-value">14</div><div class="stat-detail">専門家 11 + レビュアー 2 + composer 1</div></div>
+  <div class="stat"><div class="stat-label">スコープ</div><div class="stat-value">9</div><div class="stat-detail">bugfix 7 〜 enterprise 32 ステージ</div></div>
+  <div class="stat"><div class="stat-label">監査イベント</div><div class="stat-value">74</div><div class="stat-detail">19 カテゴリ・追記専用</div></div>
+  <div class="stat"><div class="stat-label">配布ハーネス</div><div class="stat-value">5</div><div class="stat-detail">エンジンはバイト同一</div></div>
+  <div class="stat"><div class="stat-label">フック / ツール</div><div class="stat-value">13 / 30</div><div class="stat-detail">core の TypeScript 機構</div></div>
+</div>
+
+<h2 id="map">リポジトリの三層構造</h2>
+<p>手書きの正（core/ + harness/）→ パッケージャ（scripts/package.ts）→ コミット済み生成物（dist/）の一方通行。dist を書き換える PR は CI の --check が落とす。テストは 347 ファイルで、TUI・SDK・ACP の 3 方式で実ハーネスを駆動する e2e まで持つ。</p>
+<div class="tree-view"><span class="dir">core/</span>       <span class="comment"># 正: stages 32 / agents 14 / hooks 13 / tools 30 / knowledge 59 / scopes 9 / sensors 4</span>
+<span class="dir">harness/</span>    <span class="comment"># 5 ハーネスの投影レシピ（manifest.ts）+ adapter</span>
+<span class="dir">dist/</span>       <span class="comment"># 生成物（コミット済み・--check でドリフト検知）: claude / codex / kiro / kiro-ide / opencode / plugins</span>
+<span class="dir">plugins/</span>    <span class="comment"># サンプルプラグイン test-pro</span>
+<span class="dir">scripts/</span>    <span class="comment"># package.ts（パッケージャ）ほか</span>
+<span class="dir">docs/</span>       <span class="comment"># 公式ドキュメント 91 md（guide 37 / harness-engineering 11 / reference 41）</span>
+<span class="dir">tests/</span>      <span class="comment"># 347 テストファイル（smoke / unit / integration / e2e）</span>
+</div>
+<div class="refrow"><span class="label">参照:</span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46">リポジトリルート（基点コミット）</a><button class="copy" type="button" data-copy="." aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/README.md">README.md</a><button class="copy" type="button" data-copy="README.md" aria-label="パスをコピー">⧉</button></span>
+</div>
+
+<h2 id="pages">ページ索引</h2>
+<div class="cards">
+  <a class="card" href="aidlc-workflows/concepts.html">
+    <div class="card-head"><span class="card-name">概念</span><span class="chip ok">公開</span></div>
+    <p><span class="card-role">AI-DLC という方法論。</span>5 フェーズ・32 ステージのライフサイクル全体図、Bolt と walking skeleton、用語モデル、9 スコープと深度、対話モードと承認ゲート。</p>
+  </a>
+  <a class="card" href="aidlc-workflows/architecture.html">
+    <div class="card-head"><span class="card-name">つくり（構造）</span><span class="chip ok">公開</span></div>
+    <p><span class="card-role">1 つの core を 5 ハーネスへ投影する。</span>リポジトリマップ、パッケージングパイプライン、manifest 契約、モデル tier 投影、プレーンアーキテクチャ。</p>
+  </a>
+  <a class="card" href="aidlc-workflows/runtime.html">
+    <div class="card-head"><span class="card-name">実行の仕組み</span><span class="chip ok">公開</span></div>
+    <p><span class="card-role">決定論エンジンと forwarding loop。</span>1 ステージ実行のシーケンス、ステージプロトコル、状態機械と監査、13 フック、CLI 面、再開とジャンプ。</p>
+  </a>
+  <a class="card" href="aidlc-workflows/quality.html">
+    <div class="card-head"><span class="card-name">エージェントと品質</span><span class="chip ok">公開</span></div>
+    <p><span class="card-role">小さなモブと 4 層の防衛線。</span>14 エージェント、ナレッジシステム、敵対的レビュアー、センサー、Construction swarm、学習ループ。</p>
+  </a>
+</div>
+
+<h2 id="basis">分析基点</h2>
+<table>
+  <thead><tr><th>項目</th><th>値</th></tr></thead>
+  <tbody>
+    <tr><td>対象リポジトリ</td><td><a href="https://github.com/awslabs/aidlc-workflows">github.com/awslabs/aidlc-workflows</a>（public）</td></tr>
+    <tr><td>基点</td><td><code>origin/v2</code> @ <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46"><code>ccf284b5</code></a>（2026-07-23 時点の HEAD）</td></tr>
+    <tr><td>基点の選定理由</td><td>v2 が v2.x タグのリリースライン・活発な開発ブランチ。main は v1 系ツリー（<code>.claude/</code> / <code>aidlc-rules/</code> 構成）で v2 と別物</td></tr>
+    <tr><td>リンク方針</td><td>全コード参照を基点コミットに固定（ブランチ名リンク禁止）。<code>scripts/validate-refs.sh</code> で全数検証</td></tr>
+  </tbody>
+</table>
+
+<h2 id="sources">一次資料</h2>
+<ul>
+  <li>AWS ブログ: <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AI-Driven Development Life Cycle</a>（方法論の原典）</li>
+  <li>仕様書: リポジトリ同梱の <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/assets/AI-DLC-Workflows-2.0-Specification.pdf">AI-DLC Workflows 2.0 Specification（PDF）</a></li>
+  <li>公式ドキュメント: <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs">docs/</a>（guide = 利用者向け / harness-engineering = 拡張者向け / reference = 開発者向け）</li>
+</ul>
+
+<footer class="meta">
+  分析基点: awslabs/aidlc-workflows <code>v2</code> @ <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46">ccf284b</a>（2026-07-23 時点の origin/v2）· ページ生成: 2026-07-23 · リンクは基点コミット固定
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>
