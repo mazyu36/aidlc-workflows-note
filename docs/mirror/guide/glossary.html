@@ -36,12 +36,33 @@
   <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html" class="here">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
@@ -95,7 +116,7 @@
 </tr>
 <tr>
 <td><strong>Codex</strong></td>
-<td>OpenAI Codex CLI の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/codex/</code> から <code>dist/codex/</code> へ生成される。<code>$aidlc</code> で呼び出す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/codex-cli.md">Codex CLI 上の AI-DLC</a> を参照。</td>
+<td>OpenAI Codex CLI の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/codex/</code> から <code>dist/codex/</code> へ生成される。<code>$aidlc</code> で呼び出す。<a href="harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Command</strong></td>
@@ -159,7 +180,7 @@
 </tr>
 <tr>
 <td><strong>Kiro</strong></td>
-<td>Kiro の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> から <code>dist/kiro/</code>（CLI）と <code>dist/kiro-ide/</code>（IDE）へ生成され、AIDLC のメソッドは Kiro のエージェント resources glob 経由で <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> から読まれる。<code>/aidlc</code> で呼び出す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-ide.md">Kiro IDE で AI-DLC を動かす</a> と <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-cli.md">Kiro CLI で AI-DLC を動かす</a> を参照。</td>
+<td>Kiro の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> から <code>dist/kiro/</code>（CLI）と <code>dist/kiro-ide/</code>（IDE）へ生成され、AIDLC のメソッドは Kiro のエージェント resources glob 経由で <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> から読まれる。<code>/aidlc</code> で呼び出す。<a href="harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a> と <a href="harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Knowledge</strong></td>
@@ -199,7 +220,7 @@
 </tr>
 <tr>
 <td><strong>opencode</strong></td>
-<td>opencode の harness（opencode.ai）— 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/opencode/</code> から <code>dist/opencode/</code> へ生成される。エンジンツリーは <code>.aidlc/</code> に出荷される（opencode は <code>.opencode/tools/*.ts</code> をカスタムツールとして自動インポートするため、エンジンをそこに置けない）。<code>.opencode/</code> はネイティブシェル（subagent・<code>/aidlc</code> コマンド・hook アダプタのプラグイン）だけを運び、AIDLC のメソッドはプロジェクトルートの <code>opencode.json</code> の <code>instructions</code> glob 経由で読まれる。<code>/aidlc</code> で呼び出す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/opencode.md">opencode 上の AI-DLC</a> を参照。</td>
+<td>opencode の harness（opencode.ai）— 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/opencode/</code> から <code>dist/opencode/</code> へ生成される。エンジンツリーは <code>.aidlc/</code> に出荷される（opencode は <code>.opencode/tools/*.ts</code> をカスタムツールとして自動インポートするため、エンジンをそこに置けない）。<code>.opencode/</code> はネイティブシェル（subagent・<code>/aidlc</code> コマンド・hook アダプタのプラグイン）だけを運び、AIDLC のメソッドはプロジェクトルートの <code>opencode.json</code> の <code>instructions</code> glob 経由で読まれる。<code>/aidlc</code> で呼び出す。<a href="harnesses/opencode.html">opencode 上の AI-DLC</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Orchestrator</strong></td>

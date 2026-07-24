@@ -36,19 +36,40 @@
   <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
   <div class="group">このページの目次</div>
   <a href="#one-workspace-organized-by-what-youre-working-on">1 つのワークスペース、作業対象で整理する</a>
-  <a href="#intents--one-per-piece-of-work">Intent — 作業 1 件につき 1 つ</a>
-  <a href="#spaces--one-per-team">Space — チームにつき 1 つ</a>
+  <a href="#intents-one-per-piece-of-work">Intent — 作業 1 件につき 1 つ</a>
+  <a href="#spaces-one-per-team">Space — チームにつき 1 つ</a>
   <a href="#multiple-repos-in-one-intent">1 つの intent に複数のリポジトリ</a>
   <a href="#whats-committed-and-whats-not">何がコミットされ、何がされないか</a>
   <a href="#next-steps">次のステップ</a>
@@ -135,7 +156,7 @@ intent が 2 つあっても区別が保たれる。</li>
 複数の作業を互いに壊すことなく並置できる。</p>
 </blockquote>
 <hr>
-<h2 id="intents--one-per-piece-of-work">Intent — 作業 1 件につき 1 つ</h2>
+<h2 id="intents-one-per-piece-of-work">Intent — 作業 1 件につき 1 つ</h2>
 <p><strong>intent</strong> は 1 つのタスクにスコープされた AI-DLC ライフサイクルの 1 実行である。
 すべての intent は space の <code>intents.json</code> レジストリに 1 行 — <code>{uuid, slug, dirName, scope, repos, status}</code> — を持ち、その実行の状態・audit トレイル・成果物を保持する
 <strong>record dir</strong> を持つ。<code>uuid</code>（UUIDv7）が正準で衝突しない同一性であり、
@@ -174,11 +195,11 @@ record dir・状態・進捗はすべて置いた場所にそのまま保たれ�
 いくつでも並行して持て、自由に行き来できる。それぞれが独立した実行である。</p>
 <blockquote>
 <p>裸の <code>/aidlc intent</code> は読み取り専用 — 一覧するだけである。機械可読の出力には
-<code>--json</code> を足す。フラグの完全なリファレンスは <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> を
+<code>--json</code> を足す。フラグの完全なリファレンスは <a href="12-cli-commands.html">CLI コマンド</a> を
 参照。</p>
 </blockquote>
 <hr>
-<h2 id="spaces--one-per-team">Space — チームにつき 1 つ</h2>
+<h2 id="spaces-one-per-team">Space — チームにつき 1 つ</h2>
 <p><strong>space</strong> は 1 チームの完全な世界である: 自分の <code>memory/</code>（メソッド）、<code>knowledge/</code>、
 <code>codekb/</code>、<code>intents/</code> を持つ。本章のここまでのすべては、自動で作成される
 <code>default</code> という名の単一 space の中で起きていた。<strong>ソロ開発者や単一チームなら、
@@ -260,7 +281,7 @@ practices・ナレッジは、すべて切り替え先の space から来る。<
 <li><a href="08-knowledge.html">ナレッジ</a> — space の <code>knowledge/</code> にチームの標準を足す</li>
 <li><a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> — space の <code>memory/</code> メソッドの書き方と学ばれ方</li>
 <li><a href="14-artifacts-reference.html">成果物リファレンス</a> — intent 別 record dir の詳細</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> — <code>space</code> / <code>intent</code> 動詞の完全リファレンス</li>
+<li><a href="12-cli-commands.html">CLI コマンド</a> — <code>space</code> / <code>intent</code> 動詞の完全リファレンス</li>
 <li><a href="glossary.html">用語集</a> — Space・Intent・Record dir・Multi-repo intent の定義</li>
 </ul>
 <pre class="term"><code></code></pre>

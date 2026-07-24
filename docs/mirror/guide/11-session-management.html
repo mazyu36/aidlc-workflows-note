@@ -36,12 +36,33 @@
   <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html" class="here">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
@@ -63,7 +84,7 @@
 intent の record dir にある）。セッションの<em>ライフサイクルイベント</em>は異なる: Claude Code は
 <code>SESSION_STARTED/RESUMED/ENDED</code> と <code>SESSION_COMPACTED</code> を発行し、Kiro は
 <code>SESSION_STARTED</code> のみ、Codex は <code>SESSION_ENDED</code> を推定し、コンパクション後の
-ミッション再注入を足す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> を参照。</p>
+ミッション再注入を足す。<a href="harnesses/README.html">他の harness で動かす</a> を参照。</p>
 </blockquote>
 <hr>
 <h2 id="resume-flow">再開のフロー</h2>
@@ -244,7 +265,7 @@ Discovery では、conductor はリードの草稿と既存のすべての contr
 <ul>
 <li><a href="10-state-and-audit.html">状態の追跡と audit トレイル</a> — 状態ファイルの構造とチェックポイント記法</li>
 <li><a href="17-skills.html">Skill とランナーコマンド</a> — 読み取り専用のセッションビュー（<code>/aidlc-session-cost</code>・<code>/aidlc-replay</code>・<code>/aidlc-outcomes-pack</code>）とランナー群</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> — <code>--stage</code>・<code>--phase</code> ほかフラグの完全リファレンス</li>
+<li><a href="12-cli-commands.html">CLI コマンド</a> — <code>--stage</code>・<code>--phase</code> ほかフラグの完全リファレンス</li>
 <li><a href="15-troubleshooting.html">トラブルシューティング</a> — コンパクションからの復旧と状態破損</li>
 <li><a href="glossary.html">用語集</a> — コンパクション・復旧ブレッドクラム・セッションの定義</li>
 </ul>

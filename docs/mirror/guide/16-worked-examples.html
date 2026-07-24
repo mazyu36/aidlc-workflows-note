@@ -36,12 +36,33 @@
   <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html" class="here">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
@@ -60,7 +81,7 @@
 サーフェス — <code>/aidlc</code> と、<code>Task</code> 呼び出しで dispatch される subagent の stage — を示す。
 stage のフロー・gate・成果物はどの harness でも同一で、異なるのは dispatch の機構だけ
 である（Kiro は <code>subagent</code> ツール、Codex は <code>codex exec</code> のワーカーを使う）。
-<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> を参照。</p>
+<a href="harnesses/README.html">他の harness で動かす</a> を参照。</p>
 </blockquote>
 <hr>
 <h2 id="bugfix-walkthrough">Bugfix のウォークスルー</h2>
@@ -136,7 +157,7 @@ stage のフロー・gate・成果物はどの harness でも同一で、異な�
 <td>inline</td>
 </tr>
 </tbody></table>
-<h3 id="initialization-stages-01-03--auto-proceed">Initialization（stage 0.1-0.3）— 自動進行</h3>
+<h3 id="initialization-stages-01-03-auto-proceed">Initialization（stage 0.1-0.3）— 自動進行</h3>
 <p>3 つの Initialization stage は単一の決定論的ツール呼び出し（<code>aidlc-utility intent-birth</code>）として、ユーザーの対話なしに 1 秒未満で走る:</p>
 <ul>
 <li><strong>0.1 Workspace Scaffold</strong> — 最初の intent を自動 birth し、record dir を <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（以下 <code>&lt;record&gt;/</code> と表記）に作成する — <code>&lt;YYMMDD&gt;</code> は記録が時系列に並ぶコンパクトな UTC 日付プレフィクス、<code>&lt;label&gt;</code> は conductor が付ける要望の短いケバブケースの本質で、正準の id は <code>intents.json</code> レジストリ行が運ぶ UUIDv7 である</li>
@@ -146,7 +167,7 @@ stage のフロー・gate・成果物はどの harness でも同一で、異な�
 <blockquote>
 <p>Progress: 3/7 overall | 3/3 INITIALIZATION stages complete. Next: Reverse Engineering</p>
 </blockquote>
-<h3 id="stage-21--reverse-engineering">Stage 2.1 — Reverse Engineering</h3>
+<h3 id="stage-21-reverse-engineering">Stage 2.1 — Reverse Engineering</h3>
 <p>2 リンクの pipeline がコードベースをスキャンする: まず aidlc-developer-agent のコードスキャン、次に成果物を書き出す aidlc-architect-agent の統合。リポジトリのための 9 つの永続成果物を <code>aidlc/spaces/default/codekb/user-service/</code> に生み出す:</p>
 <table>
 <thead>
@@ -197,7 +218,7 @@ stage のフロー・gate・成果物はどの harness でも同一で、異な�
 - Approve        -&gt; Continue to Requirements Analysis
 - Request Changes -&gt; Provide revision feedback</code></pre>
 <p><strong>Approve</strong> を選ぶ。</p>
-<h3 id="stage-23--requirements-analysis">Stage 2.3 — Requirements Analysis</h3>
+<h3 id="stage-23-requirements-analysis">Stage 2.3 — Requirements Analysis</h3>
 <p>aidlc-product-agent ペルソナが読み込まれ、<code>&lt;record&gt;/inception/requirements-analysis/requirements-analysis-questions.md</code> に明確化質問を作る:</p>
 <pre><code class="language-markdown">## Q1: Bug Severity Classification
 How severe is this bug for your users?
@@ -217,7 +238,7 @@ X. Other (please specify)
 <p><strong>Guide me</strong> を選び、こう答える: Q1 = High、Q2 = フォールバックはユーザー名、Q3 = null を穏当に処理（マイグレーションなし）。</p>
 <p>conductor は 3 つの機能要件（null 処理・serializer の修正・フォールバックロジック）と 1 つの非機能要件（応答時間の回帰なし）を持つ <code>requirements.md</code> を生成する。</p>
 <p><strong>承認 gate:</strong> <strong>Approve</strong> を選ぶ。</p>
-<h3 id="stage-35--code-generation">Stage 3.5 — Code Generation</h3>
+<h3 id="stage-35-code-generation">Stage 3.5 — Code Generation</h3>
 <p>conductor がコード生成計画を作り、aidlc-developer-agent の subagent に委譲する:</p>
 <p><strong>計画:</strong></p>
 <ol>
@@ -234,7 +255,7 @@ X. Other (please specify)
 <li><strong>作成</strong>: <code>ProfileControllerIntegrationTest.java</code>（統合テスト 2 件）</li>
 </ul>
 <p><strong>承認 gate:</strong> <strong>Approve</strong> を選ぶ。</p>
-<h3 id="stage-36--build-and-test">Stage 3.6 — Build and Test</h3>
+<h3 id="stage-36-build-and-test">Stage 3.6 — Build and Test</h3>
 <p>aidlc-quality-agent がビルドとテストを実行する:</p>
 <pre class="term"><code>mvn clean compile<span class="t-comment">        # BUILD SUCCESS</span>
 mvn test<span class="t-comment">                 # 89 tests, 0 failures</span>
@@ -280,7 +301,7 @@ mvn verify<span class="t-comment">               # Integration tests pass</span>
 <blockquote>
 <p>A notification service for our task management app. Users should receive in-app notifications and optional email digests when tasks are assigned, due dates approach, or comments are posted. Support notification preferences per user.</p>
 </blockquote>
-<h3 id="initialization-stages-01-03--auto-proceed-1">Initialization（stage 0.1-0.3）— 自動進行</h3>
+<h3 id="initialization-stages-01-03-auto-proceed-1">Initialization（stage 0.1-0.3）— 自動進行</h3>
 <p>3 つの Initialization stage が <code>aidlc-utility intent-birth</code> の中で自動実行される。Workspace Detection が特定する: TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク・ユーザーサービスを持つ brownfield プロジェクト。</p>
 <blockquote>
 <p>Progress: 3/32 overall | Scope: feature, Depth: Standard</p>

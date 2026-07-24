@@ -36,12 +36,33 @@
   <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html" class="here">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
@@ -55,7 +76,7 @@
   <a href="#audit-log-growing-too-large">audit ログが大きくなりすぎる</a>
   <a href="#lock-files-left-behind">残されたロックファイル</a>
   <a href="#statusline-issues">ステータスラインの問題</a>
-  <a href="#using---doctor">--doctor の使い方</a>
+  <a href="#using-doctor">--doctor の使い方</a>
   <a href="#sharing-a-diagnostic-report">診断レポートの共有</a>
   <a href="#next-steps">次のステップ</a>
 </nav>
@@ -69,7 +90,7 @@
 （hook のファイル名、<code>settings.json</code> のブロック、コンパクションの挙動）。決定論の中核
 — 状態・audit・エンジン — はどの harness でも同一に振る舞うが、シェルレベルの
 サーフェスは異なる: 他の harness は hook と設定を独自の方法で束線する
-（<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> を参照）。対処が <code>.claude/</code> のパスや
+（<a href="harnesses/README.html">他の harness で動かす</a> を参照）。対処が <code>.claude/</code> のパスや
 Claude の機構を名指しする箇所は、利用 harness の設定ディレクトリに同等物がある。</p>
 </blockquote>
 <hr>
@@ -138,7 +159,7 @@ npm install -g bun
 bun --version
 </code></pre>
 <p><code>bun</code> が <code>~/.zshenv</code>（zsh）や <code>~/.bashrc</code>（bash / Windows の Git Bash）で PATH に載っていることを確認する -- <code>~/.zshrc</code> だけでは不十分。ネイティブ Windows PowerShell では、<code>npm install -g bun</code> が設定するシステム PATH エントリで足りる。</p>
-<h3 id="reviewer-tool-calls-refused-reviewer-read-scope-">レビュアーのツール呼び出しが拒否される（&quot;reviewer read-scope: ...&quot;）</h3>
+<h3 id="reviewer-tool-calls-refused-reviewer-read-scope">レビュアーのツール呼び出しが拒否される（&quot;reviewer read-scope: ...&quot;）</h3>
 <p>unit 単位の Construction レビュー中、reviewer-scope hook は、dispatch されたレビュアーが兄弟 unit の <code>construction/</code> パスへ届くツール呼び出しを拒否する（stage-protocol §12a の読み取りスコープ境界）。拒否メッセージはスコープ対象の unit と渡された契約パスを名指しし、各拒否は <code>REVIEWER_SCOPE_BLOCKED</code> の audit 行を記録する。自分のソースツリーに AI-DLC の unit と無関係な <code>construction/</code> ディレクトリがあり、正当なレビュアーの読み取りが拒否される場合は、<code>AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1</code> で強制を無効化できる。散文の境界は引き続き有効である。レビューが走っていないのにレビュアーが拒否される場合は古い dispatch 記録を意味する - <code>/aidlc --doctor</code> の hook ドロップカウンタ（<code>reviewer-scope.drops</code>）を確認し、<code>&lt;record&gt;/.aidlc-reviewer-dispatch.json</code> があれば削除する（6 時間より古い記録は無視され自動で掃除される）。</p>
 <h3 id="hook-not-configured">hook が設定されていない</h3>
 <p>hook はプロジェクト全体で <code>.claude/settings.json</code> に登録される（v0.6.0 以降。以前のバージョンはワークフローの背骨の hook を SKILL.md の frontmatter で宣言していた）。<code>settings.json</code> に <code>PreToolUse</code>・<code>PostToolUse</code>・<code>PreCompact</code>・<code>SubagentStop</code>・<code>Stop</code>（加えて <code>SessionStart</code>/<code>SessionEnd</code>）のエントリを持つ <code>hooks</code> ブロックがあることを確認する。これらを移動したアップグレードを取り込んだのにディスク上の <code>settings.json</code> がそれ以前のものである場合は、同梱の <code>settings.json</code> の hooks ブロックを再コピーする。</p>
@@ -243,12 +264,12 @@ Remove-Item &quot;$env:TEMP\.aidlc-audit-*.lock&quot;, &quot;$env:TEMP\.aidlc-su
 <li>状態ファイルが無い -- ワークフローが無いとき、ステータスラインは正しく <code>[AIDLC] ready</code> を表示する</li>
 </ol>
 <hr>
-<h2 id="using---doctor"><code>--doctor</code> の使い方</h2>
+<h2 id="using-doctor"><code>--doctor</code> の使い方</h2>
 <p><code>--doctor</code> ユーティリティコマンドはセットアップを検証する。何かがおかしいと感じたらいつでも実行する:</p>
 <pre class="term"><code>/aidlc --doctor</code></pre>
 <p>チェック内容: 前提条件（<code>bun</code>）、hook の存在（<code>settings.json</code> が束線するすべての hook — フレームワークの全 13 hook — が <code>.claude/hooks/</code> に存在すること。束線済みなのに無い hook は大きく失敗する）、プロジェクト構造（<code>settings.json</code>）、ワークスペースシェルの準備（<code>.claude/</code> + <code>aidlc/spaces/default/memory/</code>）、状態と audit の一貫性、hook のハートビート、グラフ整合性（サイクル無し・全グラフエントリにファイルがある）、全 9 scope の scope 検証、stage スキーマ + グラフ参照、scope 間のキーワード重複。さらに、常に合格する（終了コードを変えない）2 つの advisory 行を表示する: <strong>Rule drift</strong>（org ポリシーの記入済み見出しと重なる team/project の rule。矛盾レビューのためのフラグ）と <strong>Paired sensor coverage</strong>（<code>pairing:</code> を持つ rule の、名指しされた Sensor が stage に解決すること）。もう 1 行の <strong>Hook drops</strong> は条件付きである: 静かに劣化した hook（例: contribution を適用できなかった plugin compose、失敗した再コンパイル）は、重大度タグ付きの行を <code>&lt;hooks-health&gt;/&lt;hook&gt;.drops</code> に記録する。<code>[degraded]</code> のドロップは doctor を<strong>失敗</strong>させ（CI の gate が中途半端に適用された plugin を捕まえられる）、<code>[advisory]</code> のドロップ（想定内・無害な状態）は合格の行になる。plugin compose の hook は実行のたびに drops ファイルを書き直すため、原因を直して再 compose すれば自己クリアする。全合格で 0、いずれかの失敗で 1 で終了し、レポートはどちらでも stdout に書かれる。<code>--doctor</code> は<strong>読み取り専用</strong>である: intent がまだ無い新しいシェルでは何も作らない — 最初の intent が生まれる前でも安全に実行でき、何かがおかしいと感じたら最初に試すものである。intent が存在するようになると、<code>HEALTH_CHECKED</code>（と <code>GUARDRAIL_LOADED</code>）の audit 行を記録する。</p>
 <p>ワークフローに問題があるとき、<code>--doctor</code> は構造化された指摘（未解決の gate、古い・欠けた runtime グラフ、冷えた hook、その他の「前に進まない」原因）を列挙する <strong>Workflow diagnosis</strong> セクションも表示する — <code>--doctor --export</code> がレポートに書くのと同じ分析である。</p>
-<p>各チェックが何を検証し、失敗をどう直すかの詳細は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md#aidlc-doctor-health-check">CLI コマンド</a> を参照。</p>
+<p>各チェックが何を検証し、失敗をどう直すかの詳細は <a href="12-cli-commands.html#aidlc-doctor-health-check">CLI コマンド</a> を参照。</p>
 <hr>
 <h2 id="sharing-a-diagnostic-report">診断レポートの共有</h2>
 <p>ワークフローが詰まる・挙動不審 — 開かない gate、進まない stage、承認済みレポートの
@@ -273,13 +294,13 @@ runtime グラフ、長時間発火していない hook は、走らなかった
 <p>レポート内の <code>report.md</code> はすべての指摘を対処付きで列挙する。復旧バイパス
 （<code>AIDLC_DISABLE_*</code> の env 変数のような）を名指しする対処には、自動化は安全でない
 というフラグが付く。レポートの完全な内容と安全モデルは
-<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md#aidlc-doctor-export-write-a-diagnostic-report">CLI コマンド</a> を参照。</p>
+<a href="12-cli-commands.html#aidlc-doctor-export-write-a-diagnostic-report">CLI コマンド</a> を参照。</p>
 <hr>
 <h2 id="next-steps">次のステップ</h2>
 <ul>
 <li><a href="10-state-and-audit.html">状態の追跡と audit トレイル</a> — 状態ファイルの構造</li>
 <li><a href="11-session-management.html">セッション管理</a> — コンパクション後の再開オプション</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> — <code>--doctor</code>・<code>--status</code>・<code>--stage</code> の使い方</li>
+<li><a href="12-cli-commands.html">CLI コマンド</a> — <code>--doctor</code>・<code>--status</code>・<code>--stage</code> の使い方</li>
 <li><a href="glossary.html">用語集</a> — コンパクション・復旧ブレッドクラム・hook の定義</li>
 </ul>
 

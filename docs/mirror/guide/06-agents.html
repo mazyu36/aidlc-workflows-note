@@ -36,12 +36,33 @@
   <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
@@ -135,8 +156,8 @@ flowchart TD
 <blockquote>
 <p><strong>同梱エージェントの知識をカスタマイズしたい？</strong> <code>.claude/agents/*.md</code> にある 14 の同梱エージェントファイルを編集しないこと — フレームワークのファイルであり、アップグレードで上書きされる。会社の標準は代わりに space レベルの <code>aidlc/knowledge/&lt;agent-name&gt;/</code> に追加する。完全なワークフローは <a href="08-knowledge.html">ナレッジ</a> を参照。<em>新しい</em>エージェントが欲しいチームは、必須の frontmatter を持つファイルを <code>.claude/agents/&lt;slug&gt;.md</code> に置ける — そのファイルはユーザー所有である。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md#adding-an-agent">コントリビューション: エージェントの追加</a> を参照。</p>
 </blockquote>
-<p>以下の各エージェントには<strong>深掘りページ</strong>がある — 完全な責務、リード / 支援する stage、読み込む知識。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/README.md">エージェント深掘り索引</a> が 11 体すべてを一覧し、エージェント別リンクは各見出しの下にインラインで置いてある。</p>
-<h3 id="aidlc-product-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/product-agent.md">aidlc-product-agent</a></h3>
+<p>以下の各エージェントには<strong>深掘りページ</strong>がある — 完全な責務、リード / 支援する stage、読み込む知識。<a href="agents/README.html">エージェント深掘り索引</a> が 11 体すべてを一覧し、エージェント別リンクは各見出しの下にインラインで置いてある。</p>
+<h3 id="aidlc-product-agent"><a href="agents/product-agent.html">aidlc-product-agent</a></h3>
 <p><strong>ドメイン:</strong> 要件、ユーザーストーリー、scope、市場調査</p>
 <p>aidlc-product-agent はプロダクトマネージャー兼ビジネスアナリストとして振る舞う。intent を捕捉し、市場調査を行い、scope を定義し、要件を引き出し、ユーザーストーリーを作る。Ideation と Inception の phase で最も活発なエージェントである。</p>
 <ul>
@@ -144,7 +165,7 @@ flowchart TD
 <li><strong>支援:</strong> rough-mockups、approval-handoff、refined-mockups</li>
 <li><strong>特別なツール:</strong> WebSearch（市場調査用）</li>
 </ul>
-<h3 id="aidlc-design-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/design-agent.md">aidlc-design-agent</a></h3>
+<h3 id="aidlc-design-agent"><a href="agents/design-agent.html">aidlc-design-agent</a></h3>
 <p><strong>ドメイン:</strong> UX/UI デザイン、ワイヤーフレーム、インタラクションデザイン、アクセシビリティ</p>
 <p>aidlc-design-agent はワイヤーフレーム・モックアップ・インタラクション仕様を作る。ユーザー向け機能では aidlc-product-agent と、デザインが実装可能であることの担保では aidlc-developer-agent と密に連携する。</p>
 <ul>
@@ -152,7 +173,7 @@ flowchart TD
 <li><strong>支援:</strong> user-stories、application-design</li>
 <li><strong>特別なツール:</strong> WebSearch（デザインリサーチ用）</li>
 </ul>
-<h3 id="aidlc-delivery-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/delivery-agent.md">aidlc-delivery-agent</a></h3>
+<h3 id="aidlc-delivery-agent"><a href="agents/delivery-agent.html">aidlc-delivery-agent</a></h3>
 <p><strong>ドメイン:</strong> チーム編成、キャパシティ計画、デリバリーの順序付け</p>
 <p>aidlc-delivery-agent はエンジニアリングマネージャーとして振る舞う。チームのキャパシティを評価し、mob の編成を組み、デリバリーの順序を計画し、phase の引き継ぎを管理する。</p>
 <ul>
@@ -160,14 +181,14 @@ flowchart TD
 <li><strong>支援:</strong> scope-definition、units-generation</li>
 <li><strong>特別なツール:</strong> 共有セット以外なし</li>
 </ul>
-<h3 id="aidlc-architect-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/architect-agent.md">aidlc-architect-agent</a></h3>
+<h3 id="aidlc-architect-agent"><a href="agents/architect-agent.html">aidlc-architect-agent</a></h3>
 <p><strong>ドメイン:</strong> アプリケーション設計、ドメインモデリング、NFR、コンポーネント分解</p>
 <p>aidlc-architect-agent は設計の中心的権威である。stage への関与が最も広く（3 phase にわたる 9 stage）、<code>judgment</code> tier を持つ — 他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と同様である。judgment のエージェントはセッション自身のモデルと effort を継承するため、あなたが選んだものより下げられることはない。delivery・pipeline-deploy・operations の 3 体だけが <code>templated</code> tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro では全 tier がセッションのモデルと effort を継承）を持つ。その出力が定型的な計画・CI/CD の YAML・runbook の雛形に支配されているためである。</p>
 <ul>
 <li><strong>リード:</strong> feasibility、application-design、units-generation、functional-design、nfr-requirements、nfr-design</li>
 <li><strong>支援:</strong> intent-capture、reverse-engineering（統合）、delivery-planning</li>
 </ul>
-<h3 id="aidlc-aws-platform-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/aws-platform-agent.md">aidlc-aws-platform-agent</a></h3>
+<h3 id="aidlc-aws-platform-agent"><a href="agents/aws-platform-agent.html">aidlc-aws-platform-agent</a></h3>
 <p><strong>ドメイン:</strong> AWS インフラ、CDK/CloudFormation、コスト最適化</p>
 <p>aidlc-aws-platform-agent はインフラを設計し、環境をプロビジョニングし、コストを最適化する。AWS CLI と CDK のコマンドを実行するための Bash アクセスを持つ。</p>
 <ul>
@@ -175,7 +196,7 @@ flowchart TD
 <li><strong>支援:</strong> feasibility、application-design、nfr-design、feedback-optimization</li>
 <li><strong>特別なツール:</strong> Bash（<code>aws</code>・<code>cdk</code> コマンド用）</li>
 </ul>
-<h3 id="aidlc-compliance-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/compliance-agent.md">aidlc-compliance-agent</a></h3>
+<h3 id="aidlc-compliance-agent"><a href="agents/compliance-agent.html">aidlc-compliance-agent</a></h3>
 <p><strong>ドメイン:</strong> 規制スキャン、データ分類、リスク評価</p>
 <p>aidlc-compliance-agent は純粋に助言の立場で動く — リードする stage を持たない。他のエージェント、特に aidlc-architect-agent と aidlc-devsecops-agent がリードする stage に規制上の制約を供給する。</p>
 <ul>
@@ -183,7 +204,7 @@ flowchart TD
 <li><strong>支援:</strong> feasibility、nfr-requirements、infrastructure-design、environment-provisioning</li>
 <li><strong>特別なツール:</strong> WebSearch（規制リサーチ用）</li>
 </ul>
-<h3 id="aidlc-devsecops-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/devsecops-agent.md">aidlc-devsecops-agent</a></h3>
+<h3 id="aidlc-devsecops-agent"><a href="agents/devsecops-agent.html">aidlc-devsecops-agent</a></h3>
 <p><strong>ドメイン:</strong> 脅威モデリング、セキュリティスキャン、DevSecOps パイプライン</p>
 <p>aidlc-devsecops-agent は設計をセキュリティ観点でレビューし、セキュリティ要件を定義し、CI/CD パイプラインにセキュリティを統合する。aidlc-compliance-agent と同様、支援ロールで動く。</p>
 <ul>
@@ -191,7 +212,7 @@ flowchart TD
 <li><strong>支援:</strong> practices-discovery、nfr-requirements、infrastructure-design、build-and-test、environment-provisioning</li>
 <li><strong>特別なツール:</strong> Bash（セキュリティスキャン用）</li>
 </ul>
-<h3 id="aidlc-developer-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/developer-agent.md">aidlc-developer-agent</a></h3>
+<h3 id="aidlc-developer-agent"><a href="agents/developer-agent.html">aidlc-developer-agent</a></h3>
 <p><strong>ドメイン:</strong> コード実装、コード分析、データモデリング</p>
 <p>aidlc-developer-agent は 3 つの phase にまたがる — Inception のリバースエンジニアリングから Operation のデプロイ支援まで。既存コードベースのコードスキャンを実行し、実装コードを生成する。</p>
 <ul>
@@ -202,7 +223,7 @@ flowchart TD
 <ul>
 <li><strong>特別なツール:</strong> Bash（ビルド・実行コマンド用）</li>
 </ul>
-<h3 id="aidlc-quality-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/quality-agent.md">aidlc-quality-agent</a></h3>
+<h3 id="aidlc-quality-agent"><a href="agents/quality-agent.html">aidlc-quality-agent</a></h3>
 <p><strong>ドメイン:</strong> テスト戦略、テスト生成、性能検証</p>
 <p>aidlc-quality-agent はテスト戦略を定義し、テストスイートを生成し、品質 gate を検証し、性能テストを実行する。</p>
 <ul>
@@ -210,7 +231,7 @@ flowchart TD
 <li><strong>支援:</strong> practices-discovery、user-stories、nfr-requirements</li>
 <li><strong>特別なツール:</strong> Bash（テスト実行用）</li>
 </ul>
-<h3 id="aidlc-pipeline-deploy-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/pipeline-deploy-agent.md">aidlc-pipeline-deploy-agent</a></h3>
+<h3 id="aidlc-pipeline-deploy-agent"><a href="agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent</a></h3>
 <p><strong>ドメイン:</strong> CI/CD パイプライン、デプロイ戦略、リリース実行</p>
 <p>aidlc-pipeline-deploy-agent は CI/CD パイプラインを設定し、デプロイ戦略を計画し、ロールバック能力を備えたリリースを実行する。</p>
 <ul>
@@ -218,7 +239,7 @@ flowchart TD
 <li><strong>支援:</strong> なし</li>
 <li><strong>特別なツール:</strong> Bash（パイプライン・デプロイコマンド用）</li>
 </ul>
-<h3 id="aidlc-operations-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/operations-agent.md">aidlc-operations-agent</a></h3>
+<h3 id="aidlc-operations-agent"><a href="agents/operations-agent.html">aidlc-operations-agent</a></h3>
 <p><strong>ドメイン:</strong> 可観測性、インシデント対応、SLO 追跡、フィードバックループ</p>
 <p>aidlc-operations-agent は監視を構築し、インシデント対応手順を定義し、運用の洞察を次のイテレーションのために aidlc-product-agent へ還流してライフサイクルのループを閉じる。</p>
 <ul>

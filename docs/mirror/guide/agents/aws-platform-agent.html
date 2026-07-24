@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS Platform Agent — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/agents/aws-platform-agent</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../../guide/00-introduction.html">はじめに</a>
+  <a href="../../guide/01-getting-started.html">はじめかた</a>
+  <a href="../../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../../guide/06-agents.html">エージェント</a>
+  <a href="../../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../../guide/11-session-management.html">セッション管理</a>
+  <a href="../../guide/12-cli-commands.html">CLI コマンド</a>
+  <a href="../../guide/13-customization.html">カスタマイズ</a>
+  <a href="../../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../../guide/16-worked-examples.html">実例集</a>
+  <a href="../../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../../guide/glossary.html">用語集</a>
+  <a href="../../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../../guide/agents/aws-platform-agent.html" class="here">AWS Platform Agent</a>
+  <a href="../../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#stages-led">リードする stage</a>
+  <a href="#stages-supported">支援する stage</a>
+  <a href="#what-to-expect">期待できること</a>
+  <a href="#how-it-collaborates">協働のしかた</a>
+  <a href="#key-principles">主要原則</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="aws-platform-agent">AWS Platform Agent</h1>
+<blockquote>
+<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/aws-platform-agent.md">aws-platform-agent</a></p>
+</blockquote>
+<p>aidlc-aws-platform-agent はあなたの AWS ソリューションアーキテクト兼インフラエンジニアである。アプリケーションアーキテクチャを AWS サービスの選定、CDK/CloudFormation テンプレート、環境プロビジョニング戦略へ翻訳する。行うすべてのインフラ決定はコストを意識し、secure-by-default で、AWS Well-Architected Framework に照らして検証される。</p>
+<p>aidlc-aws-platform-agent は 2 つの stage をリードし、4 つを支援する。AWS CLI コマンド・CDK 操作・インフラ検証ツールを実行するための Bash アクセスを持つ。</p>
+<h2 id="stages-led">リードする stage</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Phase</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3.4 Infrastructure Design</td>
+<td>Construction</td>
+<td>AWS サービス選定、IaC テンプレート、コスト見積もり（unit ごと）</td>
+</tr>
+<tr>
+<td>4.2 Environment Provisioning</td>
+<td>Operation</td>
+<td>IaC 定義から環境をプロビジョニングして検証</td>
+</tr>
+</tbody></table>
+<h2 id="stages-supported">支援する stage</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Phase</th>
+<th>貢献</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.3 Feasibility &amp; Constraints</td>
+<td>Ideation</td>
+<td>AWS サービスの利用可能性と制約の評価</td>
+</tr>
+<tr>
+<td>2.6 Application Design</td>
+<td>Inception</td>
+<td>クラウドネイティブなパターンとサービス統合の助言</td>
+</tr>
+<tr>
+<td>3.3 NFR Design</td>
+<td>Construction</td>
+<td>NFR をインフラ仕様とスケーリングポリシーへ翻訳</td>
+</tr>
+<tr>
+<td>4.7 Feedback &amp; Optimization</td>
+<td>Operation</td>
+<td>コスト最適化とインフラのチューニング</td>
+</tr>
+</tbody></table>
+<h2 id="what-to-expect">期待できること</h2>
+<p>aidlc-aws-platform-agent がアクティブなとき、AWS アカウント構造、既存インフラ、コスト制約、コンプライアンス要件を尋ねる。CDK/CloudFormation の仕様、VPC トポロジー、IAM ポリシー、環境ティアごとのコスト見積もりを持つインフラ設計を生む。サービスの利用可能性や既存設定の検証のために AWS CLI コマンドを実行することがある。</p>
+<h2 id="how-it-collaborates">協働のしかた</h2>
+<p>aidlc-aws-platform-agent は aidlc-architect-agent からアプリケーションのトポロジーを、aidlc-devsecops-agent からセキュリティ要件を受け取る。監視インフラと runbook の統合では aidlc-operations-agent と連携する。プロビジョニングした環境は、デプロイ先として aidlc-pipeline-deploy-agent へ引き継がれる。</p>
+<h2 id="key-principles">主要原則</h2>
+<ul>
+<li>すべてのインフラ決定は Well-Architected の 6 本柱すべてに対して弁護可能でなければならない</li>
+<li>すべてのリソースはコードで定義される — コンソールでの変更はドリフトである</li>
+<li>コストは第一級のアーキテクチャ上の関心事 — すべての設計にコスト見積もりを含める</li>
+<li>IAM ポリシーは必要最小限の権限を与える — ワイルドカードのポリシーは使わない</li>
+<li>dev・staging・production はスケールだけが異なってよく、トポロジーは決して違えない</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/aws-platform-agent.md"><code>docs/guide/agents/aws-platform-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

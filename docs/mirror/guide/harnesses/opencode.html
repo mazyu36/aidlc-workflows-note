@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>opencode 上の AI-DLC — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/harnesses/opencode</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../../guide/00-introduction.html">はじめに</a>
+  <a href="../../guide/01-getting-started.html">はじめかた</a>
+  <a href="../../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../../guide/06-agents.html">エージェント</a>
+  <a href="../../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../../guide/11-session-management.html">セッション管理</a>
+  <a href="../../guide/12-cli-commands.html">CLI コマンド</a>
+  <a href="../../guide/13-customization.html">カスタマイズ</a>
+  <a href="../../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../../guide/16-worked-examples.html">実例集</a>
+  <a href="../../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../../guide/glossary.html">用語集</a>
+  <a href="../../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/opencode.html" class="here">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#layout-two-dot-dirs-on-purpose">レイアウト: 意図的な 2 つの dot ディレクトリ</a>
+  <a href="#prerequisites">前提条件</a>
+  <a href="#install">インストール</a>
+  <a href="#whats-different-on-this-harness">この harness での違い</a>
+  <a href="#verifying-an-install">インストールの検証</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="ai-dlc-on-opencode">opencode 上の AI-DLC</h1>
+<p><code>dist/opencode/</code> は、オープンソースの <strong>opencode</strong> harness（opencode.ai）向けの、フレームワークの harness ディストリビューションのひとつである。1 つの決定論的 core、多くの harness: エンジン、状態機械、audit ログ、グラフ、swarm の referee、learnings の gate はすべてのディストリビューションでバイト同一 — 異なるのはシェルだけである。このツリーは <code>core/</code> + <code>harness/opencode/</code> から <code>bun scripts/package.ts opencode</code> で<strong>生成</strong>される。決して手で編集しないこと（ドリフトガードが CI を落とす）。</p>
+<h2 id="layout-two-dot-dirs-on-purpose">レイアウト: 意図的な 2 つの dot ディレクトリ</h2>
+<p>opencode は <code>.opencode/tools/</code> と <code>.opencode/tool/</code> 配下のすべての <code>*.ts</code> をカスタムツール定義として自動インポートし、CLI 形式のエンジンスクリプト（トップレベルの dispatch・<code>process.exit</code>）のインポートはセッションをクラッシュさせる（opencode 1.17.18 でライブ再現済み）。そのためこのディストリビューションは分割する:</p>
+<ul>
+<li><strong><code>.aidlc/</code></strong> — AIDLC のエンジンツリー（tools・hooks・skills・agents・
+knowledge・scopes・sensors・aidlc-common）。opencode はここを決してスキャンしない。
+同梱の <code>opencode.json</code> が <code>skills.paths: [&quot;.aidlc/skills&quot;]</code> を登録するため、
+orchestrator のスキルと生成された全ランナーはそこから発見される。</li>
+<li><strong><code>.opencode/</code></strong> — ネイティブに消費されるサーフェスだけ: 14 のペルソナ subagent
+（<code>agents/*.md</code>・<code>mode: subagent</code>）、<code>/aidlc</code> コマンド（<code>command/aidlc.md</code>）、
+hook アダプタのプラグイン（<code>plugin/aidlc-opencode-adapter.ts</code>。opencode が自動発見）。</li>
+</ul>
+<h2 id="prerequisites">前提条件</h2>
+<ul>
+<li><strong>opencode ≥ 1.17</strong> — このインストールが依存するプラグインの hook サーフェス
+（<code>tool.execute.before</code>・<code>tool.execute.after</code>・<code>chat.message</code>・<code>session.idle</code>・
+<code>experimental.session.compacting</code>）と、プロジェクトローカルの skill / エージェント発見。
+<code>opencode --version</code> で確認する。</li>
+<li><strong>bun</strong> — どの harness とも同じ要件。すべてのツールと hook は bun 経由で走る。
+アダプタのプラグインは bun を <code>PATH</code>、次に <code>~/.bun/bin/bun</code> から解決する。</li>
+<li><strong>モデルプロバイダ</strong> — 同梱のプロジェクト <code>opencode.json</code> はセッションモデルを
+固定しない。グローバルの opencode 設定が供給する。tier 付きのペルソナは
+<code>amazon-bedrock/global.anthropic.claude-sonnet-4-6</code> を固定する — プロバイダが違うなら
+プロジェクトの <code>opencode.json</code> でエージェント別に上書きする。</li>
+</ul>
+<h2 id="install">インストール</h2>
+<ol>
+<li><p>ディストリビューションをプロジェクトへコピーする:</p>
+<pre><code class="language-bash">cp -r dist/opencode/.aidlc/    your-project/.aidlc/
+cp -r dist/opencode/.opencode/ your-project/.opencode/
+cp -r dist/opencode/aidlc/     your-project/aidlc/      # the workspace shell — a sibling of .aidlc/, not inside it
+cp dist/opencode/opencode.json your-project/opencode.json  # or merge into yours
+cp dist/opencode/AGENTS.md     your-project/AGENTS.md      # or merge into yours
+</code></pre>
+<p><code>opencode.json</code> は 3 つの荷重を受けるブロックを運ぶ: <code>skills.paths</code>（<code>.aidlc/skills</code>
+からのスキル発見）、<code>instructions</code>（メソッドツリーの取り込み — <code>/aidlc space &lt;name&gt;</code>
+が向け直す）、そして AIDLC の bash エントリポイントと <code>.aidlc/tools/</code>・<code>.aidlc/hooks/</code>
+配下の編集に対する権限ルール。既存の <code>opencode.json</code> や <code>opencode.jsonc</code> にマージする
+場合は、3 つとも保つこと。アダプタが権限境界を強制する: 対象はパッケージ済みツリーから
+埋め込まれたエントリポイントであり、連結・リダイレクト・展開・コマンド置換なしの
+1 つの直接コマンドとして呼び出されなければならない。エンジンコードの編集は承認を求める。</p>
+</li>
+<li><p>ワークフローを始める前に、同梱 <code>AGENTS.md</code> の「Git Integration」節にある
+<code>.gitignore</code> エントリを適用する（クローン別の audit シャードは意図的にコミットされ、
+カーソルとマシンローカルのランタイムは無視されたままになる）。</p>
+</li>
+<li><p>プロジェクトで opencode を起動し、<code>/aidlc --doctor</code> を実行し、続けて <code>/aidlc</code> と
+作りたいものを打つ。</p>
+</li>
+</ol>
+<h2 id="whats-different-on-this-harness">この harness での違い</h2>
+<ul>
+<li><strong>質問は番号付きの散文の選択肢として描画される</strong>（構造化質問のウィジェットは無い）。
+<code>[Answer]:</code> タグ付きの質問ファイルが正であることは変わらない。</li>
+<li><strong>hook はアダプタのプラグインに乗る。</strong> opencode には hooks.json / settings の hook
+レジストリが無い。<code>.opencode/plugin/aidlc-opencode-adapter.ts</code> が opencode のプラグイン
+hook の瞬間を <code>.aidlc/hooks/</code> の core hook 本体（bun のサブプロセスとして実行）へ
+対応付ける: ツール実行前の reviewer 読み取りスコープと AIDLC bash 境界、
+write / edit / apply_patch での audit + sensor、bash での runtime-compile、
+todowrite での statusline 同期、task での subagent 記録、human turn ごとの presence の
+記録、コンパクション前の状態検証。</li>
+<li><strong>forwarding loop の強制は助言的。</strong> Stop の継ぎ目は <code>session.idle</code> イベント —
+反応的であってブロックではない。core の stop hook が <code>block</code> と答えると、プラグインは
+ナッジのプロンプトを注入してループを再係合させる（human presence を決して記録しないよう
+センチネルで印を付ける）。チャット中・停止中の人間は hook の対話上限が解放する。</li>
+<li><strong>ペルソナはネイティブの subagent</strong>（<code>mode: subagent</code>）。conductor は大半の stage で
+inline に纏い、2 つの subagent stage（2.1 reverse-engineering・3.5 code-generation）では
+<code>task</code> ツールで委譲する。ネイティブの権限マップが <code>task</code> を拒否するため、委譲された
+エージェントが再委譲することはできない。plugin の合成は、plugin のペルソナにも同じ
+<code>.opencode/agents/</code> の双子を出力する。</li>
+<li><strong>space の切り替えは JSONC を保つ。</strong> <code>/aidlc space &lt;name&gt;</code> は <code>opencode.json</code> でも
+<code>opencode.jsonc</code> でも、コメントや末尾カンマを剥がさずにメソッドの glob を更新し、
+明示的なペルソナの memory パスも揃えて保つ。</li>
+<li><strong>Construction の swarm は task ツールのファンアウトのみ</strong>（<code>AIDLC_USE_SWARM=1</code> は
+大きな音の no-op — Workflow ツールは存在しない）。</li>
+<li><strong>session-end の瞬間が無い</strong> — <code>SESSION_ENDED</code> の audit イベントは発行されない。
+コンパクション前の検証は発火する（<code>experimental.session.compacting</code>）。</li>
+<li><strong>ステータスライン / ウェルカムメッセージは無い</strong> — <code>/aidlc --status</code> と gate の
+進捗行を使う。</li>
+<li><strong>MCP サーバー</strong>: 同梱なし。必要なら <code>opencode.json</code> の <code>mcp:</code> 配下に自分で設定する。</li>
+</ul>
+<h2 id="verifying-an-install">インストールの検証</h2>
+<pre><code class="language-bash">bun .aidlc/tools/aidlc-utility.ts doctor    # all checks pass on a fresh copy
+opencode run --command aidlc -- &quot;--status&quot;  # /aidlc --status through the harness
+</code></pre>
+<p>doctor の opencode 固有チェック: <code>.opencode/plugin/</code> にアダプタのプラグインがあること、
+プロジェクトルートに <code>opencode.json</code> か <code>opencode.jsonc</code> があること、
+<code>.opencode/command/aidlc.md</code> があること。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/opencode.md"><code>docs/guide/harnesses/opencode.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

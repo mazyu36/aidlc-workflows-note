@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLI コマンド — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/12-cli-commands</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html" class="here">CLI コマンド</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#quick-reference">クイックリファレンス</a>
+  <a href="#command-decision-tree">コマンド決定木</a>
+  <a href="#detailed-reference">詳細リファレンス</a>
+  <a href="#deterministic-cli-tools">決定論的 CLI ツール</a>
+  <a href="#environment-variables">環境変数</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="cli-commands">CLI コマンド</h1>
+<p>AI-DLC のコマンドはすべて orchestrator の呼び出しから始まる。この章は、あらゆる呼び出しパターンとフラグの完全なリファレンスである。</p>
+<blockquote>
+<p><strong>呼び出しのプレフィックスは harness で異なる。</strong> Claude Code・Kiro IDE・Kiro CLI・
+opencode では <code>/aidlc</code> と打つ。Codex CLI では <code>$aidlc</code>（または <code>/skills</code> →
+aidlc）である。以下のフラグと挙動はどちらでも同一 — 変わるのはプレフィックスだけである。
+例は <code>/aidlc</code> を使う。Codex では <code>$aidlc</code> に置き換える。
+<a href="harnesses/kiro-cli.html">Kiro CLI</a>・<a href="harnesses/kiro-ide.html">Kiro IDE</a>・
+<a href="harnesses/codex-cli.html">Codex CLI</a>・
+<a href="harnesses/opencode.html">opencode</a> の harness ガイドを参照。</p>
+</blockquote>
+<hr>
+<h2 id="quick-reference">クイックリファレンス</h2>
+<table>
+<thead>
+<tr>
+<th>コマンド</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/aidlc [scope]</code></td>
+<td>明示した scope で新しいワークフローを開始する</td>
+</tr>
+<tr>
+<td><code>/aidlc [description]</code></td>
+<td>新しいワークフローを開始する。scope は記述から自動検出される（豊かな／マッチしない散文には compose の申し出が出る）</td>
+</tr>
+<tr>
+<td><code>/aidlc compose &quot;&lt;task&gt;&quot;</code></td>
+<td>アダプティブ composer を強制する: タスクに合わせた EXECUTE/SKIP 計画を提案する</td>
+</tr>
+<tr>
+<td><code>/aidlc compose --report &lt;path&gt;</code></td>
+<td>スキャンレポートから compose する（トリアージ結果を、直して出すだけのコンパクトな実行に落とす）</td>
+</tr>
+<tr>
+<td><code>/aidlc --new-scope &quot;&lt;task&gt;&quot;</code></td>
+<td>既製 scope がマッチする場合でも、composer にカスタム scope の合成を強制する</td>
+</tr>
+<tr>
+<td><code>/aidlc</code></td>
+<td>既存ワークフローを再開する（intent があれば）か、最初の intent を birth して新規開始する</td>
+</tr>
+<tr>
+<td><code>/aidlc intent [name]</code></td>
+<td>アクティブな space の intent を一覧する、または既存の intent に切り替える</td>
+</tr>
+<tr>
+<td><code>/aidlc space [name]</code></td>
+<td>space を一覧する、または既存の space に切り替える</td>
+</tr>
+<tr>
+<td><code>/aidlc space-create &lt;name&gt;</code></td>
+<td>フレームワークのベースラインから新しい space を作成する</td>
+</tr>
+<tr>
+<td><code>/aidlc --status</code></td>
+<td>読み取り専用のステータス要約を表示する</td>
+</tr>
+<tr>
+<td><code>/aidlc --doctor</code></td>
+<td>セットアップのヘルスチェックを実行する</td>
+</tr>
+<tr>
+<td><code>/aidlc --doctor --export</code></td>
+<td>新規のヘルスチェックを実行し、続けて共有用に小さく秘匿化した診断レポートを書き出す</td>
+</tr>
+<tr>
+<td><code>/aidlc --stage &lt;slug|#&gt;</code></td>
+<td>特定の stage へジャンプする</td>
+</tr>
+<tr>
+<td><code>/aidlc --stage &lt;slug&gt; --single</code></td>
+<td>1 つの stage を単独で実行する（ワークフローを進めない）</td>
+</tr>
+<tr>
+<td><code>/aidlc --phase &lt;name|#&gt;</code></td>
+<td>phase の先頭へジャンプする</td>
+</tr>
+<tr>
+<td><code>/aidlc --scope &lt;name&gt;</code></td>
+<td>アクティブな scope を変更する</td>
+</tr>
+<tr>
+<td><code>/aidlc --depth &lt;level&gt;</code></td>
+<td>depth レベルを上書きする（minimal, standard, comprehensive）</td>
+</tr>
+<tr>
+<td><code>/aidlc --test-strategy &lt;level&gt;</code></td>
+<td>テスト戦略を上書きする（minimal, standard, comprehensive）</td>
+</tr>
+<tr>
+<td><code>/aidlc config get &lt;key&gt;</code></td>
+<td>アクティブなワークフロー設定を表示する（<code>depth</code>, <code>test-strategy</code>）</td>
+</tr>
+<tr>
+<td><code>/aidlc config set &lt;key&gt; &lt;value&gt;</code></td>
+<td>アクティブなワークフロー設定を変更する（<code>depth</code>, <code>test-strategy</code>）</td>
+</tr>
+<tr>
+<td><code>/aidlc config list</code></td>
+<td>アクティブなワークフロー設定を一覧する（構造化出力は <code>--json</code>）</td>
+</tr>
+<tr>
+<td><code>/aidlc plugin list</code></td>
+<td>インストール済みプラグインと有効状態を一覧する</td>
+</tr>
+<tr>
+<td><code>/aidlc plugin sync</code></td>
+<td>インストール済みのプラグインルートを現在のインストールに compose する</td>
+</tr>
+<tr>
+<td><code>/aidlc --version</code></td>
+<td>フレームワークのバージョンを表示する</td>
+</tr>
+<tr>
+<td><code>/aidlc --help</code></td>
+<td>使い方を表示する</td>
+</tr>
+<tr>
+<td><code>bun .claude/tools/aidlc-utility.ts select-plugins [names]</code></td>
+<td>直接呼び出し専用: このインストールの有効プラグイン一覧を表示または設定する</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="command-decision-tree">コマンド決定木</h2>
+<pre class="mermaid">
+flowchart TD
+    START(["What do you want to do?"])
+
+    Q1{"Start a new\nworkflow?"}
+    Q2{"Check or manage\nan existing workflow?"}
+    Q3{"Verify the\nproject?"}
+
+    A1["/aidlc feature"]
+    A2["/aidlc Build a payments API"]
+    A3["/aidlc"]
+    A4["/aidlc --status"]
+    A5["/aidlc --stage code-generation"]
+    A6["/aidlc --phase construction"]
+    A8["/aidlc --doctor"]
+
+    START --&gt; Q1
+    START --&gt; Q2
+    START --&gt; Q3
+
+    Q1 --&gt;|"Know the scope"| A1
+    Q1 --&gt;|"Describe what you want"| A2
+    Q2 --&gt;|"Resume where I left off"| A3
+    Q2 --&gt;|"See progress"| A4
+    Q2 --&gt;|"Jump to a stage"| A5
+    Q2 --&gt;|"Jump to a phase"| A6
+    Q3 --&gt;|"Verify setup"| A8
+
+    style START fill:#2a2440,stroke:#b895ff
+</pre>
+<hr>
+<h2 id="detailed-reference">詳細リファレンス</h2>
+<h3 id="aidlc-scope-start-with-explicit-scope"><code>/aidlc [scope]</code> — 明示スコープで開始</h3>
+<p>有効な scope のいずれかで新しいワークフローを開始する。core は名前付きの 9 scope を同梱する。プラグインが追加でき、<code>select-plugins</code> は無効化したプラグイン／core の scope をランタイムから隠せる。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc enterprise
+/aidlc feature
+/aidlc mvp
+/aidlc poc
+/aidlc bugfix
+/aidlc refactor
+/aidlc infra
+/aidlc security-patch</code></pre>
+<p><strong>挙動:</strong> フレームワークは scope キーワードを認識し、何を作りたいかを尋ね、Initialization phase を実行して最初のドメイン stage を開始する。状態ファイルが既に存在すれば、代わりに resume の選択肢を出す。</p>
+<p><strong>例:</strong></p>
+<pre class="term"><code>/aidlc bugfix
+<span class="t-input">&gt; What would you like to fix?</span>
+<span class="t-input">&gt; The login API returns 500 when email contains a plus sign</span></code></pre>
+<hr>
+<h3 id="aidlc-description-start-with-auto-detection"><code>/aidlc [description]</code> — 自動検出で開始</h3>
+<p>作りたいものを記述すると、エンジンが適切な scope を自動検出する。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc Build a REST API for inventory management
+/aidlc Fix the login timeout bug</code></pre>
+<p><strong>挙動:</strong> エンジンは記述のキーワードを解析する（例: &quot;fix&quot; は bugfix を示唆する）。明確にマッチすれば、マッチした scope とその儀式（stage 数、承認 gate 数、unit ごとのファンアウト — すべてコンパイル済みグリッド由来）を挙げる 1 行確認を出す。豊かな、あるいはマッチしない散文には、沈黙の既定ではなく compose の申し出（後述の <code>/aidlc compose</code>）が出る。ワークフロー開始前に、確認するか上書きする。</p>
+<p><strong>例:</strong></p>
+<pre class="term"><code>/aidlc Fix the null pointer in ProfileSerializer
+<span class="t-input">&gt; Starting a "bugfix" workflow for: "Fix the null pointer in ProfileSerializer" - 7 of 32 stages, 4 approval gates, 1 stage repeats per unit of work in Construction. Confirm to proceed, name a different scope, or say "compose" for a tailored plan.</span></code></pre>
+<hr>
+<h3 id="aidlc-compose-the-adaptive-composer"><code>/aidlc compose</code> — アダプティブ composer</h3>
+<p>既製 scope がマッチする場合でも composer を強制する。3 つの局面で働く:</p>
+<pre class="term"><code>/aidlc compose "harden the deployment pipeline and add observability"
+/aidlc compose --report sonar.json
+/aidlc compose<span class="t-comment">            (mid-workflow: re-shape the pending stages)</span></code></pre>
+<p><strong>挙動:</strong> conductor は composer エージェントを dispatch する。composer はタスク（またはスキャンレポート、または実行中ワークフローの状態）を読み、読み取り専用の <code>detect</code> スキャンを走らせ、実装エントロピーの 5 成分（intent の曖昧さ、構造的不確実性、検証エントロピー、リスク、未解決の前提 — 設定されていれば CodeKB MCP 解析に、なければワークスペーススキャンに根ざす）を見積もり、スコアの内訳と各 EXECUTE / SKIP の理由を添えた最小実行可能な EXECUTE/SKIP グリッドを提案する。gate であなたは承認・編集・却下する。承認時: 既製マッチはそのまま birth する。カスタムグリッドは本物の scope として著述され（インストール済みツリーに 2 ファイル）、同じターンでその上にワークフローが birth する。進行中の提案は、<code>recompose</code> 動詞で pending stage の suffix flip として着地する（audit ロック下、strict 検証、<code>RECOMPOSED</code> を audit）。<code>--new-scope</code> は合成を強制する。<code>--report &lt;path&gt;</code> はトリアージした findings を intent に seed する。<code>/aidlc-compose</code> スキルは同じ経路のタイプ可能なショートカットである。ワークフロー途中では、チャットで言うだけでもよい（&quot;can we skip market research?&quot;）— conductor は reshape 要求を認識し、同じ gate と動詞に経路づける。リテラルの <code>compose</code> は不要である（Claude 以外の harness では、リテラルの動詞が文書化された信頼できる経路のまま残る）。</p>
+<p>完全なフローは <a href="05-scopes-and-depth.html#the-adaptive-composer">Scope と Depth — アダプティブ composer</a> を参照。</p>
+<hr>
+<h3 id="aidlc-resume-existing-workflow"><code>/aidlc</code> — 既存ワークフローの再開</h3>
+<p>状態ファイルが存在するとき、引数なしで実行すると再開する。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc</code></pre>
+<p><strong>挙動:</strong> <code>aidlc-state.md</code> を読み、<code>.aidlc-recovery.md</code> で破損を確認し、4 つの resume 選択肢を出す: チェックポイントから再開、現在の stage をやり直し、stage へジャンプ、最初からやり直し。詳細は <a href="11-session-management.html">セッション管理</a> を参照。</p>
+<p>状態ファイルが無ければ、フレームワークはこれを新しいワークフローとして扱い、scope／記述を尋ねる。</p>
+<hr>
+<h3 id="initialization-automatic-no-command">Initialization — 自動、コマンド無し</h3>
+<p>スキャフォールドコマンドは無い。同梱される <code>dist/&lt;harness&gt;/</code> のワークスペースシェルは
+構築済みで届き（<code>.claude/</code> エンジンと <code>aidlc/spaces/default/memory/</code>）、
+エンジンは最初の <code>/aidlc</code>（または作りたいものを記述したとき）に最初の intent を
+<strong>自動 birth</strong> する。birth は 3 つの Initialization stage（Workspace Scaffold、
+Workspace Detection、State Init）を 1 つの決定論的ツール呼び出しとして走らせる:
+intent の record dir を
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（<code>audit/</code> シャードdir、
+phase 別の成果物 dir、<code>verification/</code>）に作り、空の space レベル
+<code>aidlc/knowledge/</code> ディレクトリを作り、ルールベースのワークスペーススキャンを走らせ、
+その intent の <code>aidlc-state.md</code> を scope 計画とともに書く。
+init シーケンスのイベント（<code>WORKFLOW_STARTED</code>、<code>WORKSPACE_SCAFFOLDED</code>、
+<code>WORKSPACE_SCANNED</code>、<code>WORKSPACE_INITIALISED</code>、加えて stage 別の
+<code>STAGE_STARTED</code>/<code>STAGE_COMPLETED</code>）をログする。scope の指定（<code>/aidlc --scope feature</code>）は
+初期 scope を seed する。無ければ <code>poc</code> を既定にする。最初の実行前にチーム knowledge や
+ガードレールを足すには、同梱の <code>aidlc/spaces/default/memory/</code> ファイルを編集する。
+space レベルの <code>aidlc/knowledge/</code> ディレクトリは最初の intent が存在すると（空で）作られ、
+そこから自由形式のファイルを足していく。</p>
+<p>ウェルカムメッセージは <code>settings.json</code> の <code>companyAnnouncements</code> エントリ経由で
+セッション開始時に描画される。</p>
+<p><strong>マルチリポのワークスペース。</strong> ワークスペースルートが複数の兄弟コードリポ（それぞれ
+<code>.git</code> を持つ直下の子ディレクトリ）を持つとき、birth ステップは intent が触れるリポの
+集合を <code>intents.json</code> の行に記録する。既定ではすべての兄弟リポを<strong>自動発見</strong>する。
+intent を特定の部分集合に絞るには、birth ツールが <code>--repos a,b</code>（リポのディレクトリ名の
+カンマ区切りリスト）を受け付ける。これらはエンジンがあなたのために走らせる決定論的な
+<code>aidlc-utility intent-birth</code> ステップのフラグであり、あなたが打つ <code>/aidlc</code> のフラグではない。
+Construction の間、各 git 操作（worktree、swarm、Bolt）は 1 つのリポを対象にする。
+conductor はそれを固定するために <code>--repo &lt;name&gt;</code> を渡す。intent が複数リポにまたがるときのみ
+必須である。記録リポの無い intent は単一リポの既定（git はワークスペース／プロジェクト dir で
+走る）である。<a href="14-artifacts-reference.html">成果物リファレンス</a> を参照。</p>
+<hr>
+<h3 id="aidlc-intent-name-list-or-switch-intents"><code>/aidlc intent [name]</code> — intent の一覧または切り替え</h3>
+<p>裸の <code>/aidlc intent</code> はアクティブな space の intent を一覧する。構造化出力には <code>--json</code> を
+足す。<code>/aidlc intent &lt;name&gt;</code> は、曖昧さのない slug または完全な record-dir 名で、ユーザーごとの
+アクティブ intent カーソルを既存の intent に切り替える。intent を作ることも、ワークフローを
+進めることもしない。</p>
+<h3 id="aidlc-space-name-list-or-switch-spaces"><code>/aidlc space [name]</code> — space の一覧または切り替え</h3>
+<p>裸の <code>/aidlc space</code> は space を一覧する。構造化出力には <code>--json</code> を足す。
+<code>/aidlc space &lt;name&gt;</code> はユーザーごとのアクティブ space カーソルを切り替え、harness
+ネイティブのメソッド include をその space に向け直す。space を作ることも、intent を
+進めることもしない。</p>
+<h3 id="aidlc-space-create-name-create-a-space"><code>/aidlc space-create &lt;name&gt;</code> — space の作成</h3>
+<p>完全な <code>memory/</code>・<code>knowledge/</code>・<code>codekb/</code>・<code>intents/</code> の形を持つ新しいチーム space を、
+別チームの学習済み practice ではなくフレームワークのベースラインから seed して作る。
+自動で space を切り替えはしない。ワークスペースモデル、切り替えの例、何がコミットされるかは
+<a href="03-spaces-and-intents.html">Space と Intent</a> を参照。</p>
+<hr>
+<h3 id="aidlc-status-read-only-status"><code>/aidlc --status</code> — 読み取り専用ステータス</h3>
+<p>現在のワークフローの進捗を、何も変更せずに表示する。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --status</code></pre>
+<p><strong>挙動:</strong> アクティブな intent の <code>aidlc-state.md</code> を読み、現在の phase、現在の stage、完了／総 stage 数、scope、depth、stage 進捗リストを表示する。ワークフローがアクティブでなければ、進行中のワークフローが無いと報告する。</p>
+<hr>
+<h3 id="aidlc-doctor-health-check"><code>/aidlc --doctor</code> — ヘルスチェック</h3>
+<p>このインストールの前提条件・設定・stage グラフの整合性がすべて揃っていることを検証する。完全パスで 0、いずれかの失敗で 1 を exit する。完全なレポートはどちらの場合も stdout に書かれるため、orchestrator は必ず表に出す。<code>--doctor</code> は<strong>読み取り専用</strong>である — intent がまだ無い新規シェル（<code>audit/</code> シャードが無い）では何もファイルを作らないので、最初の intent が birth する前に走らせて安全である。intent が存在すれば <code>HEALTH_CHECKED</code> の audit 行を記録する。</p>
+<p>ワークフローに問題があるとき、<code>--doctor</code> は<strong>ワークフロー診断</strong>の節も表示し、構造化された findings（例: <code>gate-unresolved</code>、<code>runtime-graph-stale</code>）を挙げる: 未解決の gate、古いまたは欠けたランタイムグラフ、冷えた hook、その他「進まなくなる」原因である。ライブレポートと <code>--export</code> は 1 つの解析を共有するため、findings はどちらでも同一である。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --doctor</code></pre>
+<p><strong>何を確認するか:</strong></p>
+<table>
+<thead>
+<tr>
+<th>チェック</th>
+<th>何を検証するか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>前提条件</td>
+<td><code>bun</code> がインストールされ PATH にあること</td>
+</tr>
+<tr>
+<td>Hook の存在</td>
+<td><code>settings.json</code> が束ねるすべての hook（<code>hooks</code> ブロック + <code>statusLine</code> コマンド — フレームワークの 13 hook 全部）が <code>.claude/hooks/</code> に存在すること。束ねたのに欠けた hook は大きな音で失敗する。想定される名簿を <code>settings.json</code> から取ることで、そこに hook を足せば自動で確認される</td>
+</tr>
+<tr>
+<td>プロジェクト構造</td>
+<td><code>.claude/settings.json</code> が存在すること（ファイルの存在のみ、内容検証はしない）</td>
+</tr>
+<tr>
+<td>ワークスペースシェル</td>
+<td><code>.claude/</code> + <code>aidlc/spaces/default/memory/</code> が存在すること（同梱のシェル）</td>
+</tr>
+<tr>
+<td>サブモジュール</td>
+<td><code>.gitmodules</code> があれば、宣言されたサブモジュールパス数と未初期化数を報告し、未初期化があれば <code>git submodule update --init --recursive</code> を挙げる（助言 — 決して失敗しない）</td>
+</tr>
+<tr>
+<td>Env scope</td>
+<td><code>AWS_AIDLC_DEFAULT_SCOPE</code>（設定されていれば）が有効な scope を指すこと</td>
+</tr>
+<tr>
+<td>Hook ハートビート</td>
+<td><code>.aidlc-hooks-health/</code> に hook 実行の最近のタイムスタンプがあること</td>
+</tr>
+<tr>
+<td>Hook ドロップ</td>
+<td><code>.aidlc-hooks-health/&lt;hook&gt;.drops</code> のテレメトリを表に出す — 各エントリはあなたのツール呼び出しを壊さないために hook が飲み込んだ失敗を記録する — hook ごとのドロップ数と最終タイムスタンプ、そして是正（調査し、ファイルを削除する）を添えて。助言 — 決して失敗しない</td>
+</tr>
+<tr>
+<td>状態ドリフト</td>
+<td>アクティブな intent の <code>aidlc-state.md</code> が audit の最後の <code>WORKFLOW_COMPLETED</code> と一致すること</td>
+</tr>
+<tr>
+<td>サイクル検出</td>
+<td><code>stage-graph.json</code> にサイクルが無いこと</td>
+</tr>
+<tr>
+<td>孤立 stage ファイル</td>
+<td>グラフのすべての slug がディスク上に対応する <code>&lt;phase&gt;/&lt;slug&gt;.md</code> を持つこと</td>
+</tr>
+<tr>
+<td>未コンパイル stage ファイル</td>
+<td>slug がコンパイル済みグラフに無い stage <code>.md</code> をディスク上で表に出す。<code>aidlc-graph.ts compile</code> を走らせるまで実行されない（助言、決して失敗しない）</td>
+</tr>
+<tr>
+<td>プラグイン選択</td>
+<td>有効プラグイン一覧、プラグインごとの有効 stage 数、全グラフの <code>enabled:false</code> フラグの整合、破れた選択の回復ヒント</td>
+</tr>
+<tr>
+<td>Scope 検証</td>
+<td>すべての有効 scope（プラグイン選択後の <code>.claude/scopes/*.md</code> 由来）がクリーンに歩けること（scope 切り詰めのギャップに対する助言は想定内）</td>
+</tr>
+<tr>
+<td>スキーマ検証</td>
+<td>すべての stage の YAML frontmatter が <code>validateStageFrontmatter</code> を通ること</td>
+</tr>
+<tr>
+<td>グラフ参照</td>
+<td>すべての <code>consumes[].artifact</code> と <code>requires_stage[]</code> の対象が解決すること</td>
+</tr>
+<tr>
+<td>キーワード重複</td>
+<td>どのキーワードも 2 つ以上の scope に主張されていないこと</td>
+</tr>
+<tr>
+<td>ルールドリフト</td>
+<td>populated な org-policy の見出しと重なるチームまたはプロジェクトのルール見出しを表に出し、矛盾がないか見直せるようにする（助言 — 決して失敗しない）</td>
+</tr>
+<tr>
+<td>ペア Sensor カバレッジ</td>
+<td>ペアの Sensor を名指すすべてのルールが、どこかの stage が実際に発火する Sensor に解決することを確認する（助言 — 決して失敗しない）</td>
+</tr>
+</tbody></table>
+<p><strong>出力例:</strong></p>
+<pre class="term"><code><span class="t-ok">✓ bun installed (required for CLI tools and hooks)</span>
+<span class="t-ok">✓ aidlc-audit-logger.ts present</span>
+<span class="t-ok">✓ aidlc-sync-statusline.ts present</span>
+<span class="t-ok">✓ aidlc-validate-state.ts present</span>
+<span class="t-ok">✓ aidlc-log-subagent.ts present</span>
+<span class="t-ok">✓ aidlc-session-start.ts present</span>
+<span class="t-ok">✓ aidlc-session-end.ts present</span>
+<span class="t-ok">✓ aidlc-statusline.ts present</span>
+<span class="t-ok">✓ settings.json present</span>
+<span class="t-ok">✓ AWS_AIDLC_DEFAULT_SCOPE (unset — no project default)</span>
+<span class="t-ok">✓ workspace shell ready (.claude/ + aidlc/spaces/default/memory/)</span>
+<span class="t-ok">✓ Submodules: no .gitmodules at workspace root</span>
+<span class="t-ok">✓ Hook heartbeats: not yet fired (first workflow stage will populate)</span>
+<span class="t-ok">✓ Hook drops: none recorded</span>
+<span class="t-ok">✓ State matches last audit event (no drift)</span>
+<span class="t-ok">✓ Cycle detection: 0 cycles</span>
+<span class="t-ok">✓ Orphan stage files: 32 graph entries all have files</span>
+<span class="t-ok">✓ Uncompiled stage files: 0 stage files missing from the compiled graph</span>
+<span class="t-ok">✓ Enabled plugins: all enabled (no selection); enabled stage counts: aidlc=32</span>
+<span class="t-ok">✓ Scope validation: 9 scopes valid (29 advisories)</span>
+<span class="t-ok">✓ Schema validation: 32/32 stages valid</span>
+<span class="t-ok">✓ Graph references: 122 artifacts + edges resolved</span>
+<span class="t-ok">✓ Keyword overlap: no conflicts</span>
+<span class="t-ok">✓ Rule drift: no team/project rule overlaps org policy</span>
+<span class="t-ok">✓ Paired sensor coverage: no sensor-bound rules (0 feedforward-only)</span></code></pre>
+<hr>
+<h3 id="aidlc-doctor-export-write-a-diagnostic-report"><code>/aidlc --doctor --export</code> — 診断レポートの書き出し</h3>
+<p><code>--doctor</code> に <code>--export</code> を足すと、小さく秘匿化した診断レポートを書き出し、プロジェクト
+ディレクトリ全体を共有せずに、誤動作するワークフローをデバッグできる。まず<strong>新規</strong>の doctor
+パスを走らせ（レポートは決してキャッシュされた診断を反映しない）、続けてレポートを書く。
+レポートの書き出しは決して doctor の exit コードを変えない。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --doctor --export
+/aidlc --doctor --export --output &lt;dir&gt;</code></pre>
+<p><code>--output &lt;dir&gt;</code> は出力先を上書きする。既定はプロジェクト下の
+<code>aidlc/diagnostics/</code> である。</p>
+<p><strong>何を生成するか:</strong> システムの <code>tar</code> があればタイムスタンプ付きの <code>.tar.gz</code>、
+無ければレポートディレクトリを保持し、共有前に自分で圧縮する指示を添える（新しいパッケージ
+依存も、独自のアーカイブライターも無い）。レポートの中身:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>中身</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>report.md</code></td>
+<td>人が読めるワークフローのタイムラインと findings</td>
+</tr>
+<tr>
+<td><code>report.json</code></td>
+<td>機械可読なタイムライン、findings、要約</td>
+</tr>
+<tr>
+<td><code>manifest.json</code></td>
+<td>レポートスキーマのバージョン、AI-DLC バージョン、harness、ハッシュ化した intent id、ファイル別 SHA-256 チェックサム、適用した秘匿化、切り詰めの通知、除外リスト</td>
+</tr>
+<tr>
+<td><code>evidence/normalized.json</code></td>
+<td>許可リストで正規化したフィールドのみ — 生ファイルは決して含まない</td>
+</tr>
+</tbody></table>
+<p><strong>何を診断するか:</strong> レポートは audit トレイルからワークフローの<strong>タイムライン</strong>（stage の所要時間、
+gate、リビジョン、ギャップ、異常／不完全フラグ）を再構成し、続けて共通の「進まなくなる」原因に
+対する<strong>決定論的な</strong>条件→是正ルール（LLM なし）を走らせる: 未解決の承認 gate、状態／audit の
+ドリフト、古いまたは欠けたランタイムグラフ／冷えたまたは凍った hook ハートビート。findings は
+ライブの <code>--doctor</code> が使うのと同じ共有 <code>DoctorFinding</code> モデルから来るため、コマンドとレポートが
+食い違うことは決してない。回復のバイパス（例: <code>AIDLC_DISABLE_*</code> の env 変数や「ワークスペースを
+アーカイブせよ」の指示）を名指す是正は、常に自動化して安全でないと印される。</p>
+<p><strong>安全性。</strong> レポートはワークスペースのソース、生の状態／audit／
+ランタイムグラフファイル、成果物／コントリビューション／質問／memory の本文、環境変数、
+コマンド出力を決して含まない。書き出す文字列はすべて秘匿化される: ホーム dir は <code>~</code>、
+プロジェクトルートは <code>&lt;project&gt;</code>、intent id はハッシュ化、秘密らしい値はスクラブされる。
+実際のパスがプロジェクトルートを脱出する入力は拒否される（シンボリックリンクされた葉や親は
+ツリー外へ辿らない）。ファイル別と合計のサイズは上限が付き（切り詰めは manifest に記録される）、
+プラットフォームが対応する場合はファイルは所有者のみで作られる。</p>
+<p><strong>出力例:</strong></p>
+<pre class="term"><code>Diagnostic report created:
+  aidlc/diagnostics/aidlc-diagnostic-report-20260714-153000-3f9a1c22.tar.gz
+
+Findings:
+  ERROR gate-unresolved
+  WARNING runtime-graph-stale
+
+No source files or artifact bodies were included.</code></pre>
+<hr>
+<h3 id="aidlc-stage-slug-jump-to-stage"><code>/aidlc --stage &lt;slug|#&gt;</code> — stage へジャンプ</h3>
+<p>slug または番号で特定の stage へ直接ジャンプする。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --stage code-generation
+/aidlc --stage 3.5
+/aidlc --stage requirements-analysis
+/aidlc --stage 2.3</code></pre>
+<p><strong>挙動:</strong> ワークフローがアクティブなら、対象 stage へジャンプする（途中の stage は警告付きで飛ばす）。ワークフローが無ければ、<code>--scope</code> と組み合わせられる:</p>
+<pre class="term"><code>/aidlc --stage code-generation --scope bugfix</code></pre>
+<hr>
+<h3 id="aidlc-stage-slug-single-run-one-stage-in-isolation"><code>/aidlc --stage &lt;slug&gt; --single</code> — 1 stage を単独実行</h3>
+<p><code>--single</code> を足すと、メインワークフローに触れずに単一の stage をそれ単体で走らせる。stage は
+走り、成果物を書き、止まる。ワークフローの <code>Current Stage</code> は決して進まない — 隔離は慣習ではなく
+エンジンが強制する。フルライフサイクルにコミットせずに、方法論の 1 片（requirements 解析、
+reverse-engineering スキャン）を適用するのに使う。隔離実行でも stage が設定したエージェントと
+reviewer は使うが、ワークフローの learnings は走らせず、ワークフローの承認も求めない。その合成的な
+完了は audit ログに記録され、そこでコマンドは止まる。</p>
+<pre class="term"><code>/aidlc --stage requirements-analysis --single
+/aidlc --stage reverse-engineering --single</code></pre>
+<p>実行可能なすべての stage は、タイプ可能な 1 語のランナー <code>/aidlc-&lt;slug&gt;</code> も同梱する。これは
+<code>/aidlc --stage &lt;slug&gt; --single</code> をパッケージしたものである。ランナーファミリー全体（scope
+ランナー、stage ランナー、<code>/aidlc-init</code>、セッションビュー）は
+<a href="17-skills.html">スキルとランナーコマンド</a> に文書化されている。</p>
+<hr>
+<h3 id="aidlc-phase-name-jump-to-phase"><code>/aidlc --phase &lt;name|#&gt;</code> — phase へジャンプ</h3>
+<p>特定の phase の最初の stage へジャンプする。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --phase construction
+/aidlc --phase 3
+/aidlc --phase ideation
+/aidlc --phase 1</code></pre>
+<p><strong>挙動:</strong> <code>--stage</code> と同じだが、名指した phase の最初の stage を対象にする。<code>--scope</code> と組み合わせられる。</p>
+<hr>
+<h3 id="aidlc-scope-name-change-scope"><code>/aidlc --scope &lt;name&gt;</code> — scope の変更</h3>
+<p>実行中ワークフローのアクティブな scope を変更する。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --scope bugfix
+/aidlc --scope enterprise</code></pre>
+<p><strong>挙動:</strong> <code>aidlc-state.md</code> の scope 設定を更新し、どの stage が実行され／飛ばされるべきかを再計算し、<code>SCOPE_CHANGED</code> の audit イベントをログする。新しい scope の既定 depth を上書きするために <code>--depth</code> と組み合わせられる。</p>
+<p>自律 Construction 下（<code>Construction Autonomy Mode: autonomous</code>）では拒否される。<code>recompose</code> と同じルールである: 計画の再形成は gate に人間を要し、無人実行には人間がいない。先に gated Construction に切り替える（<code>aidlc-bolt set-autonomy --mode gated</code>）か、swarm を終わらせる。</p>
+<p>ワークフローがまだ無い新規プロジェクトでは、<code>--scope &lt;name&gt;</code> は代わりにワークフローを開始する: <code>/aidlc &lt;name&gt;</code> と全く同じに振る舞う — ワークスペースが名指した scope で初期化され、その最初の stage でワークフローが始まる。</p>
+<hr>
+<h3 id="aidlc-depth-level-override-depth"><code>/aidlc --depth &lt;level&gt;</code> — depth の上書き</h3>
+<p>現在または新しいワークフローの depth レベルを上書きする。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --depth minimal
+/aidlc --depth standard
+/aidlc --depth comprehensive</code></pre>
+<p><strong>挙動:</strong> ワークフローがアクティブなら、<code>aidlc-state.md</code> の Depth フィールドを更新し、<code>DEPTH_CHANGED</code> の audit イベントをログする。<code>--scope</code> と組み合わせると、新しい scope の既定 depth を上書きする。<code>--stage</code> または <code>--phase</code> と組み合わせると、ジャンプ先の実行コンテキストの depth を設定する。アクティブなワークフローが無ければエラーになる。</p>
+<p><strong>有効な値:</strong> <code>minimal</code>、<code>standard</code>、<code>comprehensive</code>（大文字小文字を区別しない）。</p>
+<p><strong>例:</strong></p>
+<pre class="term"><code>/aidlc --depth minimal                            Change depth of active workflow
+/aidlc --scope bugfix --depth comprehensive        Bugfix with comprehensive analysis
+/aidlc --stage code-generation --depth minimal     Jump with minimal depth</code></pre>
+<hr>
+<h3 id="aidlc-test-strategy-level-override-test-strategy"><code>/aidlc --test-strategy &lt;level&gt;</code> — テスト戦略の上書き</h3>
+<p>depth とは独立に、テスト量の戦略を上書きする。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --test-strategy minimal
+/aidlc --test-strategy standard
+/aidlc --test-strategy comprehensive</code></pre>
+<p><strong>挙動:</strong> 指定しなければ現在の depth レベルを既定にする。ただし scope が独自の既定を宣言する場合（例: workshop は Minimal を既定にする）は除く。独立に設定すると、Standard depth（フル成果物）と Minimal テスト（Nyquist モデル）のような組み合わせを許す。<code>aidlc-state.md</code> の <code>Test Strategy</code> フィールドを更新し、<code>TEST_STRATEGY_CHANGED</code> の audit イベントをログする。</p>
+<p><strong>有効な値:</strong> <code>minimal</code>、<code>standard</code>、<code>comprehensive</code>（大文字小文字を区別しない）。</p>
+<p><strong>テスト戦略のモデル:</strong></p>
+<ul>
+<li><strong>Minimal（Nyquist）:</strong> 要件ごとに 1 テスト、happy-path の床、ユニットテストのみ（合計 ~5〜15）</li>
+<li><strong>Standard:</strong> コンポーネントごとに 5〜8 テスト、ユニット + 統合</li>
+<li><strong>Comprehensive:</strong> コンポーネントごとに 10〜15 テスト、全テスト種別</li>
+</ul>
+<p>各レベルの詳細、既定化の挙動、よくある組み合わせは <a href="05-scopes-and-depth.html#the-3-test-strategy-levels">Scope・Depth・テスト戦略</a> を参照。</p>
+<p><strong>例:</strong></p>
+<pre class="term"><code>/aidlc --test-strategy minimal                         Minimal testing for active workflow
+/aidlc --depth standard --test-strategy minimal        Full artifacts, minimal tests
+/aidlc --scope bugfix --test-strategy comprehensive    Bugfix with thorough testing</code></pre>
+<hr>
+<h3 id="aidlc-version-framework-version"><code>/aidlc --version</code> — フレームワークのバージョン</h3>
+<p>フレームワークのバージョン（<code>aidlc &lt;X.Y.Z&gt;</code>）を表示して exit する。読み取り専用 — ワークフロー無しで動き、再開を促すこともない。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --version</code></pre>
+<hr>
+<h3 id="aidlc-help-usage-information"><code>/aidlc --help</code> — 使い方</h3>
+<p>利用可能なコマンドとフラグの要約を表示する。</p>
+<p><strong>構文:</strong></p>
+<pre class="term"><code>/aidlc --help</code></pre>
+<hr>
+<h2 id="deterministic-cli-tools">決定論的 CLI ツール</h2>
+<p>上記の <code>/aidlc</code> フラグの他に、このインストールは、ワークフローの実行中に hook と stage
+プロトコルが呼び出す Bun/TypeScript のツールをいくつか同梱する。手で呼ぶことは稀だが、
+それぞれ便利なデバッグハンドルでもある。</p>
+<p><code>bun &lt;harness-dir&gt;/tools/&lt;tool&gt;.ts &lt;subcommand&gt;</code> を使う。<code>&lt;harness-dir&gt;</code> は
+Claude Code で <code>.claude</code>、Kiro CLI と Kiro IDE で <code>.kiro</code>、Codex CLI で <code>.codex</code> である。</p>
+<h3 id="aidlc-utility-codekb-path-resolve-the-code-knowledge-directory"><code>aidlc-utility codekb-path</code> — コード knowledge ディレクトリを解決する</h3>
+<p>これは<strong>直接のユーティリティ呼び出し</strong>であり、<code>/aidlc codekb-path</code> コマンドではない:</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-utility.ts codekb-path --repo &lt;repo&gt;
+bun .kiro/tools/aidlc-utility.ts codekb-path --repo &lt;repo&gt;
+bun .codex/tools/aidlc-utility.ts codekb-path --repo &lt;repo&gt;
+</code></pre>
+<p>アクティブな space の決定論的な
+<code>aidlc/spaces/&lt;space&gt;/codekb/&lt;repo&gt;/</code> パスを表示する。<code>--json</code> を足すと
+<code>{space, repo, dir}</code>。このクエリは何も書かず、ディレクトリを作らず、audit イベントも
+発しない。reverse-engineering stage の散文がこれを直接呼び出すため、パスは手で導かれない。</p>
+<h3 id="aidlc-utility-detect-read-only-workspace-scan"><code>aidlc-utility detect</code> — 読み取り専用のワークスペーススキャン</h3>
+<p><code>bun .claude/tools/aidlc-utility.ts detect --json</code> はワークスペーススキャン（プロジェクト種別、言語、フレームワーク、ビルドシステム、宣言された git サブモジュールとその初期化状態の <code>submodules</code> 配列）に加え、解決した scopes dir と scope グリッドのパスを表示する。純粋な読み取り。composer は現在の harness で scope データがどこにあるかを知るためにこれを走らせる。</p>
+<h3 id="aidlc-utility-select-plugins-install-plugin-selection"><code>aidlc-utility select-plugins</code> — インストールのプラグイン選択</h3>
+<p><code>/aidlc plugin list</code> はインストール済みプラグイン名と各々の有効／無効を表示する。
+<code>select-plugins</code> は<strong>直接のユーティリティ呼び出し</strong>であり、<code>/aidlc select-plugins</code> コマンドではない。
+<code>bun .claude/tools/aidlc-utility.ts select-plugins</code> は現在の選択
+（<code>plugins</code> キーが無ければ <code>all enabled (no selection)</code>）と既知の
+プラグイン名を表示する。カンマ区切りのリストを渡して設定する:</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-utility.ts select-plugins test-pro
+bun .claude/tools/aidlc-utility.ts select-plugins aidlc,test-pro
+</code></pre>
+<p>このコマンドは名前を検証し、<code>.claude/tools/data/harness.json</code> を書き、新たに無効化された プラグインのマージ済みコントリビューションを core stage ソースから剥がし（構造的追加は compose が書いた sidecar 経由、継ぎ合わせた散文はそのセンチネルマーカー経由。再有効化すると次のセッション開始時に復元される）、無効ノードを <code>enabled:false</code> と印して全グラフを再コンパイルし、stage と scope のランナーを刈り／再生成し、生成された SKILL.md の scope/stage テーブルを 1 トランザクションでリフレッシュする。<code>aidlc</code> は core である。省くと、常時オンの Initialization stage を除く core サーフェスを無効化する。アクティブなワークフローを座礁させる変更（その scope、または計画中の pending EXECUTE stage が、新しい選択で無効化されるプラグインに所有される）は、各依存を名指して拒否される — 先にワークフローを完了または park するか、そのプラグインを有効に保つ。</p>
+<p><code>/aidlc plugin sync</code> はインストール済みのプラグイン compose hook を走らせる。繰り返し走らせて安全である。プラグインルートが無ければ <code>no installed plugins; nothing to sync</code> で 0 exit する。</p>
+<h3 id="aidlc-utility-recompose-in-flight-plan-flips"><code>aidlc-utility recompose</code> — 進行中の計画 flip</h3>
+<p><code>bun .claude/tools/aidlc-utility.ts recompose --skip &lt;slugs&gt; --add &lt;slugs&gt;</code>（カンマ区切り）は、ライブの状態ファイル上で、PENDING かつカーソルより先の stage の計画 suffix を flip する。audit ロック下で走り、残る stage の必須入力を飢えさせる flip を拒否する（および完了／進行中 stage の flip、カーソルより後ろの stage、Construction の最初の EXECUTE stage — walking-skeleton の錨 — をどちらの向きにも動かす flip、Status が Running でないワークフローに対する recompose、自律 Construction 下の recompose — 計画の再形成は gate に人間を要するので先に gated に切り替えるか swarm を終わらせる）、派生した状態フィールドを再構築し、<code>RECOMPOSED</code> を発する。通常はワークフロー途中に <code>/aidlc compose</code> 経由で到達し、直接は打たない。</p>
+<h3 id="aidlc-graph-validate-grid-arbitrary-grid-dependency-check"><code>aidlc-graph validate-grid</code> — 任意グリッドの依存チェック</h3>
+<p><code>bun .claude/tools/aidlc-graph.ts validate-grid --proposal &lt;path&gt; [--strict] [--project-type &lt;t&gt;] [--keywords &lt;csv&gt;]</code> は、任意の <code>{&quot;&lt;stage&gt;&quot;: &quot;EXECUTE&quot;|&quot;SKIP&quot;}</code> JSON グリッドを検証する。lenient モードは <code>validate-scope</code> を映す（経路外の必須プロデューサは助言）。<code>--strict</code> はそれをハード却下する（recompose の姿勢）。<code>--keywords</code> は付与された各キーワードを、既存 scope が既に主張するキーワードと照合する: 衝突は現職の scope を名指すハードエラーである（composer は gate で付与されたキーワードを書く前にこれを走らせる）。無効なときのみ exit 1。JSON 結果は stdout に着地する。</p>
+<h3 id="aidlc-sensor-inspect-and-fire-sensors"><code>aidlc-sensor</code> — Sensor の検査と発火</h3>
+<p>Sensor は、stage 出力への <code>Write</code> または <code>Edit</code> のたびに走る決定論的なチェックである（<a href="09-rules-and-the-learning-loop.html">ルールと学習ループ</a> とリファレンスの <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/07-sensor-system.md">Sensor システム</a> を参照）。PostToolUse hook があなたのために発火する。このツールは一覧、記述、手動発火を可能にする。</p>
+<table>
+<thead>
+<tr>
+<th>サブコマンド</th>
+<th>何をするか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>list</code></td>
+<td>フレームワークの全 Sensor（<code>id</code>, <code>kind</code>, <code>description</code>）をアルファベット順に表示</td>
+</tr>
+<tr>
+<td><code>describe &lt;id&gt;</code></td>
+<td>1 つの Sensor の完全な manifest（コマンド、既定の severity、<code>matches</code> glob、タイムアウト）を表示</td>
+</tr>
+<tr>
+<td><code>fire &lt;id&gt; --stage &lt;slug&gt; --output-path &lt;path&gt;</code></td>
+<td>ファイルに対して Sensor を走らせ、<code>SENSOR_FIRED</code> 行とペアの結果行を発する</td>
+</tr>
+</tbody></table>
+<p>手動発火は <code>SENSOR_FIRED</code> の audit 行を発し、続けて厳密に 1 つの終端行を発する: <code>SENSOR_PASSED</code>、<code>SENSOR_FAILED</code>、または <code>SENSOR_BUDGET_OVERRIDE</code>。失敗は <code>&lt;record&gt;/.aidlc-sensors/&lt;stage&gt;/</code>（intent の record dir 内）に詳細ファイルを書く。Sensor は助言 — Sensor の失敗は決してツールの失敗ではないため、コマンドはなお 0 exit する。フレームワークが同梱する 4 つの Sensor は <code>required-sections</code>、<code>upstream-coverage</code>、<code>linter</code>、<code>type-check</code> である。</p>
+<pre class="term"><code>bun .claude/tools/aidlc-sensor.ts list
+bun .claude/tools/aidlc-sensor.ts describe required-sections
+bun .claude/tools/aidlc-sensor.ts fire required-sections \
+  --stage requirements-analysis \
+  --output-path aidlc/spaces/default/intents/&lt;YYMMDD&gt;-&lt;label&gt;/inception/requirements-analysis/requirements.md</code></pre>
+<h3 id="aidlc-learnings-the-learning-gate-tool"><code>aidlc-learnings</code> — 学習 gate ツール</h3>
+<p>これは §13 の学習 gate の決定論的な半分である。stage が承認された後、orchestrator はこれを使って、その stage の <code>memory.md</code> 日記をレビュー可能な学習候補に変え、続けてあなたが確認したものを永続化する。通常は直接呼ばない — orchestrator が <code>AskUserQuestion</code> gate の周りで両ステップを駆動する — が、発する audit 行の意味が通るようにここに載せる。</p>
+<table>
+<thead>
+<tr>
+<th>サブコマンド</th>
+<th>何をするか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>surface --slug &lt;stage-slug&gt;</code></td>
+<td>承認直後の stage の <code>memory.md</code> を読み、構造化された候補（Interpretations、Deviations、Tradeoffs）と park された open question を表示。読み取り専用</td>
+</tr>
+<tr>
+<td><code>persist --slug &lt;stage-slug&gt; --selections-json &lt;path&gt;</code></td>
+<td>確認された learnings（確認された learning は practice である）を <code>aidlc/spaces/&lt;active-space&gt;/memory/project.md</code> / <code>team.md</code> に書く（Sensor 束縛の learning にはプロジェクト tier の Sensor をスキャフォールドし束縛する）。<code>RULE_LEARNED</code> / <code>SENSOR_PROPOSED</code> を発する</td>
+</tr>
+</tbody></table>
+<p>確認された learnings は現在ではなく次のワークフローに適用される。</p>
+<h3 id="aidlc-runtime-read-the-runtime-graph"><code>aidlc-runtime</code> — ランタイムグラフを読む</h3>
+<p>ランタイムグラフ（intent の record dir 内の <code>runtime-graph.json</code>）は、このワークフローで実際に何が起きたかのデータプレーンの記録である: どの stage が走ったか、各 <code>memory.md</code> 日記がどれだけ埋まったか、どの Sensor が発火したか、各々が何を返したか。構造的な <code>stage-graph.json</code> のランタイム版である。フレームワークは各 stage 遷移の後に再コンパイルする。このツールはコンパイルの起動、または 1 stage の行の読み取りを可能にする。</p>
+<table>
+<thead>
+<tr>
+<th>サブコマンド</th>
+<th>何をするか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>compile</code></td>
+<td><code>audit/</code> シャードと stage 別の <code>memory.md</code> を歩き、<code>runtime-graph.json</code> を書き直す。遷移のたびに hook が自動発火</td>
+</tr>
+<tr>
+<td><code>read &lt;stage-slug&gt;</code></td>
+<td><code>runtime-graph.json</code> から 1 stage の行（タイムスタンプ、エージェント、memory 内訳、Sensor 発火、結果）を表示</td>
+</tr>
+<tr>
+<td><code>summary [--json]</code></td>
+<td>グラフ全体にわたる決定論的な集計 — stage/phase の結果集計、memory エントリ数、Sensor の 4 状態集計、捕捉した learnings、ワークフロー所要時間 — を表示。読み取り専用のセッションスキルが読むデータソース</td>
+</tr>
+</tbody></table>
+<pre class="term"><code>bun .claude/tools/aidlc-runtime.ts read requirements-analysis</code></pre>
+<p><code>runtime-graph.json</code> は gitignore される。成果物の形は <a href="14-artifacts-reference.html">成果物リファレンス</a> を、完全なスキーマは <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/13-runtime-graph.md">ランタイムグラフ</a> のリファレンス章を参照。</p>
+<h3 id="session-skills-report-on-a-workflow">セッションスキル — ワークフローを報告する</h3>
+<p>3 つの読み取り専用スキルが、<code>aidlc-runtime summary</code> が報告する内容を、読みやすい出力に包んで表に出す。コマンドのようにタイプする:</p>
+<table>
+<thead>
+<tr>
+<th>スキル</th>
+<th>何をするか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/aidlc-session-cost</code></td>
+<td>決定論的なコストビュー（所要時間、stage の結果、memory、Sensor、learnings）。ターミナルのみ</td>
+</tr>
+<tr>
+<td><code>/aidlc-replay</code></td>
+<td>非同期レビュー向けの読みやすいセッション物語。ターミナルのみ</td>
+</tr>
+<tr>
+<td><code>/aidlc-outcomes-pack</code></td>
+<td>チーム向けの引き継ぎ文書。<code>OUTCOMES.md</code> を書く</td>
+</tr>
+</tbody></table>
+<p>3 つとも読み取り専用 — stage の前進も audit の発行も無い — で、すべての数値を <code>aidlc-runtime summary --json</code> から取る。完全なウォークスルーは <a href="11-session-management.html#session-skills">セッション管理 § セッションスキル</a> を参照。</p>
+<hr>
+<h2 id="environment-variables">環境変数</h2>
+<h3 id="aws_aidlc_default_scope"><code>AWS_AIDLC_DEFAULT_SCOPE</code></h3>
+<p>プロジェクトの既定 scope を事前設定する。ワークフロー初期化時に <code>.claude/settings.json</code> の <code>env</code> ブロックから読まれる。</p>
+<p><strong>構文（<code>.claude/settings.json</code> 内）:</strong></p>
+<pre><code class="language-json">{
+  &quot;env&quot;: {
+    &quot;AWS_AIDLC_DEFAULT_SCOPE&quot;: &quot;workshop&quot;
+  }
+}
+</code></pre>
+<p><strong>有効な値:</strong> <code>enterprise</code>、<code>feature</code>、<code>mvp</code>、<code>poc</code>、<code>bugfix</code>、<code>refactor</code>、<code>infra</code>、<code>security-patch</code>、<code>workshop</code>。</p>
+<p><strong>優先順位:</strong> 明示の CLI フラグ &gt; キーワード検出 &gt; <code>AWS_AIDLC_DEFAULT_SCOPE</code> &gt; ハードコードのフォールバック。</p>
+<p><strong>効果の範囲:</strong> ワークフロー初期化時のみ適用される。intent の <code>aidlc-state.md</code> が存在すると、状態ファイルが正である。完全なウォークスルーは <a href="13-customization.html#per-project-default-scope">カスタマイズ § プロジェクト別の既定 scope</a> を参照。</p>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="17-skills.html">スキルとランナーコマンド</a> — タイプ可能な <code>/aidlc-&lt;scope&gt;</code> と <code>/aidlc-&lt;stage&gt;</code> のランナー、<code>--single</code> の役割</li>
+<li><a href="11-session-management.html">セッション管理</a> — resume の選択肢と stage ジャンプの詳細</li>
+<li><a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> — scope の定義、stage マッピング、テスト戦略のレベル</li>
+<li><a href="15-troubleshooting.html">トラブルシューティング</a> — コマンドが期待どおりに動かないとき</li>
+<li><a href="glossary.html">用語集</a> — command、utility command、scope の定義</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md"><code>docs/guide/12-cli-commands.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

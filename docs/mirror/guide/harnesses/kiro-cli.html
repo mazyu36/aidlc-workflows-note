@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiro CLI で AI-DLC を動かす — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/harnesses/kiro-cli</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../../guide/00-introduction.html">はじめに</a>
+  <a href="../../guide/01-getting-started.html">はじめかた</a>
+  <a href="../../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../../guide/06-agents.html">エージェント</a>
+  <a href="../../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../../guide/11-session-management.html">セッション管理</a>
+  <a href="../../guide/12-cli-commands.html">CLI コマンド</a>
+  <a href="../../guide/13-customization.html">カスタマイズ</a>
+  <a href="../../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../../guide/16-worked-examples.html">実例集</a>
+  <a href="../../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../../guide/glossary.html">用語集</a>
+  <a href="../../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/kiro-cli.html" class="here">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#prerequisites">前提条件</a>
+  <a href="#install">インストール</a>
+  <a href="#usage">使い方</a>
+  <a href="#whats-different-on-kiro">Kiro での違い</a>
+  <a href="#for-framework-developers">フレームワーク開発者向け</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="running-ai-dlc-on-kiro-cli">Kiro CLI で AI-DLC を動かす</h1>
+<blockquote>
+<p>[!NOTE]
+Kiro CLI 上の AI-DLC は <strong>Claude Opus 4.8</strong> で最もよく動き、これには
+<strong>Kiro の有償プラン</strong>が必要である。弱いモデルでは conductor が任意の stage 手順
+（reviewer のパス、learnings の儀式）を飛ばしたり、承認 gate を急いだりすることがある。
+IDE 向けディストリビューションは別に文書化されている:
+<a href="kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>。</p>
+</blockquote>
+<p>フレームワークの harness のひとつ: <code>dist/kiro/</code> は同じ AI-DLC の方法論を
+<a href="https://kiro.dev/docs/cli/">Kiro CLI</a> で動かす。1 つの決定論的な core
+— ツール・32 の stage ファイル・プロトコル・knowledge・sensor・scope・rule —
+はすべての harness でバイト共有され、シェル（skills・エージェント設定・
+hook の束線・アクティベーション）だけが異なる。</p>
+<h2 id="prerequisites">前提条件</h2>
+<ul>
+<li><strong>Kiro CLI ≥ 2.6</strong>（<code>kiro-cli --version</code>）、ログイン済み（<code>kiro-cli login</code>）</li>
+<li><strong>bun</strong> が PATH にあること（<code>curl -fsSL https://bun.sh/install | bash</code>）</li>
+</ul>
+<h2 id="install">インストール</h2>
+<pre><code class="language-bash">cp -r dist/kiro/.kiro your-project/.kiro
+cp -r dist/kiro/aidlc your-project/aidlc       # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
+cp dist/kiro/AGENTS.md your-project/AGENTS.md   # merge if you already have one
+</code></pre>
+<p><code>aidlc/</code> ディレクトリはワークスペースシェルである — エンジンが読む構築済みの
+<code>aidlc/spaces/default/memory/</code> メソッドツリーを同梱する。<code>.kiro/</code> の<strong>兄弟</strong>なので
+別にコピーする（もしくは <code>dist/kiro/</code> ツリー全体を一度にコピーする）。
+これが無いと <code>/aidlc --doctor</code> の「workspace shell ready」チェックが失敗する。</p>
+<p>次に、プロジェクトでセッションを開始する:</p>
+<pre><code class="language-bash">kiro-cli chat
+</code></pre>
+<p>インストールは <code>chat.defaultAgent: &quot;aidlc&quot;</code> を持つ <code>.kiro/settings/cli.json</code> を同梱するため、
+AI-DLC の conductor エージェントが既定で有効になる — <code>/aidlc</code> がそのまま動く。
+<strong>このワークスペース設定は、あなたが設定済みかもしれないグローバルの既定エージェントより
+優先される</strong>。自分の既定を使いたければ、この設定を削除して代わりに
+<code>kiro-cli chat --agent aidlc</code> を使う。</p>
+<p>どの同梱エージェントもモデルを固定しない: 固定した ID はそのモデルがユーザーの
+Kiro インストールで有効なときにしか解決しないため、conductor と全 14 ペルソナは
+セッションのモデル（<code>/model</code>）を継承する。同じ <code>cli.json</code> は
+<code>chat.modelDefaults</code> 経由で、モデル別の推論 effort の CONDITIONAL な既定を 1 つ同梱する:
+<code>claude-opus-4.8</code> には <code>xhigh</code>。これはセッションが実際にそのモデルで走るとき
+（推奨セットアップ）にだけ適用され、そうでなければ不活性である。
+Kiro にはエージェント別の effort サーフェスが無いため、effort はこの方法でモデルに
+乗せるしかない。このファイルを読むのは Kiro CLI だけである — Kiro IDE は
+<code>cli.json</code> を無視し、代わりに拡張のモデル別既定を適用する。セッション単位の上書きは
+チャットの <code>/effort &lt;level&gt;</code> または <code>kiro-cli chat --effort &lt;level&gt;</code>
+（low|medium|high|xhigh|max）で行う — セッションフラグとユーザーレベルの
+<code>~/.kiro/settings/cli.json</code> は、どちらもワークスペースの既定より優先される。</p>
+<h2 id="usage">使い方</h2>
+<p>プロジェクトで <code>kiro-cli chat</code> を開始し、<code>/aidlc &lt;description&gt;</code> で conductor を呼び出す。
+<code>/aidlc --status</code> が位置を報告し、<code>/aidlc --doctor</code>・<code>--stage</code>・<code>--phase</code>・<code>--depth</code>・
+<code>--test-strategy</code> はすべて動く。ワークスペースの移動は <code>/aidlc intent [name]</code>・
+<code>/aidlc space [name]</code>・<code>/aidlc space-create &lt;name&gt;</code> を使う。stage 別
+（<code>/aidlc-application-design</code>）と scope 別（<code>/aidlc-feature</code>）のランナースキルも
+インストールされている。</p>
+<h2 id="whats-different-on-kiro">Kiro での違い</h2>
+<table>
+<thead>
+<tr>
+<th>領域</th>
+<th>Claude Code</th>
+<th>Kiro CLI</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>gate と質問</td>
+<td><code>AskUserQuestion</code> ウィジェット</td>
+<td>番号付きの散文の選択肢（番号で回答）。<code>[Answer]:</code> タグ付きの質問ファイルが正であることは変わらない</td>
+</tr>
+<tr>
+<td>ステータスライン</td>
+<td>現在の stage + モデル + コンテキスト %</td>
+<td>利用不可 — <code>/aidlc --status</code> と各 gate の進捗行を使う</td>
+</tr>
+<tr>
+<td>dispatch される stage（2.1 pipeline・2.2 subagent・2.4 mob・3.5 subagent）</td>
+<td><code>Task</code> ツール</td>
+<td>Kiro の <code>subagent</code> ツール → エージェント設定（全 14 ペルソナが設定を同梱）</td>
+</tr>
+<tr>
+<td>Construction の swarm</td>
+<td>並列 <code>Task</code> の床、任意の ultracode Workflow</td>
+<td>subagent のファンアウトのみ。<code>AIDLC_USE_SWARM=1</code> は no-op として告知される</td>
+</tr>
+<tr>
+<td>セッションの audit イベント</td>
+<td><code>SESSION_STARTED/RESUMED/ENDED</code>、<code>SESSION_COMPACTED</code></td>
+<td><code>SESSION_STARTED</code> のみ（Kiro には session-end / pre-compaction の hook が無い）</td>
+</tr>
+<tr>
+<td>forwarding loop の強制（Stop hook）</td>
+<td>対話 + ヘッドレス</td>
+<td>対話セッションのみ — <code>--no-interactive</code> の実行は stop-hook のブロックを尊重しない</td>
+</tr>
+<tr>
+<td>権限</td>
+<td><code>settings.json</code> の許可リスト</td>
+<td><code>aidlc</code> エージェント設定: 事前承認は <code>bun .kiro/tools/*</code> だけ。他のシェルコマンドはプロンプトが出る</td>
+</tr>
+<tr>
+<td>ウェルカムメッセージ</td>
+<td>セッション開始時に <code>settings.json</code> の <code>companyAnnouncements</code> から描画</td>
+<td>無し — Kiro にはウェルカム描画の同等物が無い。session-start の hook は再開の文脈だけを注入する</td>
+</tr>
+<tr>
+<td>MCP サーバー</td>
+<td>5 つ同梱（<code>.mcp.json</code>: <code>context7</code> + 4 つの AWS サーバー）</td>
+<td>同梱なし。Kiro の MCP 設定機構はここではまだ文書化されていない — 実務上は今日 Claude 専用</td>
+</tr>
+</tbody></table>
+<p>それ以外のすべて — 状態機械、audit トレイル、intent record dir
+（<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>）配下の成果物、learnings の儀式、
+sensor、scope、depth / テスト戦略 — は同一に振る舞う。同一<em>である</em>からだ:
+同じツールが <code>.kiro/tools/</code> から走る。</p>
+<p>プロジェクトの <code>aidlc/</code> ワークスペースは harness 非依存である。プロジェクトを harness 間で
+移す（または並走させる）ことはサポートされているが未テストである。アクティブなワークフローを
+持つ衝突した harness セットアップを検出すると <code>/aidlc --doctor</code> が警告する。</p>
+<h2 id="for-framework-developers">フレームワーク開発者向け</h2>
+<p><code>dist/kiro</code> は <code>core/</code> + <code>harness/kiro/</code> から <code>bun scripts/package.ts kiro</code> で
+<strong>生成</strong>される（<code>{{HARNESS_DIR}}</code> トークンを <code>.kiro</code> に置換し、<code>rules/</code> → <code>steering/</code> に
+リネームした core のコピー）。<code>bun scripts/package.ts --check</code> がドリフトガードで、
+CI（t145）で走る。authored な Kiro のサーフェスは <code>harness/kiro/</code> に住む:
+orchestrator のスキル（<code>skills/aidlc/</code>）、エージェントの JSON（<code>agents/</code>）、
+hook アダプタ（<code>hooks/aidlc-kiro-adapter.ts</code>）、<code>settings/cli.json</code>、<code>AGENTS.md</code> —
+編集するのはそれら（または <code>core/</code>）であり、生成された <code>dist/kiro</code> では決してない。
+<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/09-porting-to-a-new-harness.md">新しい harness への移植</a> を参照。</p>
+<p>Claude の双子と並ぶライブの TUI ジャーニーテストが存在する:
+<code>tests/e2e/t-tui-kiro-intent-capture.serial.test.ts</code> は、同梱ツリーに対して
+<code>kiro-cli chat</code> をキーストロークで駆動する（番号付き散文の gate に「1」= 推奨の選択肢で
+回答し、ディスク上の状態で終了判定する）。<code>AIDLC_KIRO_TUI_LIVE=1</code> でオプトインし、
+tmux・<code>kiro-cli</code>・ログイン済み Kiro セッションが無ければ理由付きでスキップする。</p>
+<h2 id="next-steps">次のステップ</h2>
+<p>インストールとアクティベーションは済んだ？ 方法論はどの harness でも同じである —
+中立の章で続きを:</p>
+<ul>
+<li><a href="../02-your-first-workflow.html">最初のワークフロー</a> — 注釈付きの end-to-end 実行。</li>
+<li><a href="../04-phases-and-stages.html">Phase と Stage</a> — 5 つの phase と 32 の stage。</li>
+<li><a href="../05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> — 実行の適切なサイズ選び。</li>
+<li><a href="../glossary.html">用語集</a> — すべての用語の定義。</li>
+</ul>
+<p>他の harness: <a href="codex-cli.html">Codex CLI 上の AI-DLC</a> · <a href="README.html">harness ファミリーの索引</a>。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-cli.md"><code>docs/guide/harnesses/kiro-cli.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

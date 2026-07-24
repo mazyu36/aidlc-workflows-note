@@ -97,7 +97,12 @@ function slugify(text, used) {
     .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\*\*([^*]*)\*\*/g, "$1")
     .replace(/\*([^*]*)\*/g, "$1");
-  let s = t.toLowerCase().replace(/[^\p{L}\p{N} \-_]/gu, "").replace(/ /g, "-");
+  // MkDocs（Python-Markdown toc）準拠: 記号除去 → トリム → 連続する空白/ハイフンを 1 つに畳む → 前後ハイフン除去
+  let s = t.toLowerCase()
+    .replace(/[^\p{L}\p{N} \-_]/gu, "")
+    .trim()
+    .replace(/[\s-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   if (used.has(s)) {
     let i = 1;
     while (used.has(`${s}-${i}`)) i++;

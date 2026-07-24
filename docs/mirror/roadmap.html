@@ -41,7 +41,7 @@
 
 <main>
 <p class="eyebrow">AI-DLC DOCS 日本語版 / DOCS</p>
-<h1 id="ai-dlc-workflows-20---roadmap">AI-DLC Workflows 2.0 - ロードマップ</h1>
+<h1 id="ai-dlc-workflows-20-roadmap">AI-DLC Workflows 2.0 - ロードマップ</h1>
 <p>2026-07-13 時点のステータス。現在のリリース版: <strong>2.3.4</strong>（origin/v2 tip 3c768787）。
 Full GA は <strong>2.4.0</strong> で宣言される。</p>
 <h2 id="north-star-reference">North Star（参照）</h2>
@@ -236,7 +236,7 @@ Full GA は <strong>2.4.0</strong> で宣言される。</p>
 </tbody></table>
 <p>バージョンスロットは複数主張される。後にマージする側が rebase して再バンプする（t68 が漏れを検出する）。</p>
 <h2 id="outstanding-planned-minors">未着手（計画済みマイナー）</h2>
-<h3 id="240---reviewer-as-verifier-declares-full-ga">2.4.0 - Verifier としての reviewer（Full GA を宣言）</h3>
+<h3 id="240-reviewer-as-verifier-declares-full-ga">2.4.0 - Verifier としての reviewer（Full GA を宣言）</h3>
 <p>解釈は 2026-07-13 に確定: <strong>プロンプトのみの変更</strong>。ゴール 4 の 4 文のうち、
 「異なる LLM」は提供済み（2.3.1 の tier 分離）、予算も提供済み
 （<code>reviewer_max_iterations</code> + HITL エスカレーション。「iterations / tokens」は
@@ -247,16 +247,16 @@ or として読む）。残るのは:</p>
 <li>明示的にスコープ外: トークン予算、専用のドメイン検証ツール、新しい stage スキーマのフィールド。これらのスコープ判断は changelog エントリに記録する。</li>
 <li>新しい agent は作らない: 既存の 2 reviewer が reviewer 宣言のある全 11 stage をカバーする。stage 単位の <code>reviewer:</code> フィールドは後から追加できる形になっている。</li>
 </ul>
-<h3 id="250---three-role-ensemble-goal-1">2.5.0 - 3 ロールのアンサンブル（ゴール 1）</h3>
+<h3 id="250-three-role-ensemble-goal-1">2.5.0 - 3 ロールのアンサンブル（ゴール 1）</h3>
 <ul>
 <li>Collaborator を、conductor が inline で纏う声ではなく独立した subagent にする。</li>
 <li>コラボレーションパターン（pipeline / swarm / review-loop / mob）を stage 単位で選択可能なノブにする。</li>
 </ul>
-<h3 id="260---governed-cyclic-flows-goal-5">2.6.0 - 統制された循環フロー（ゴール 5）</h3>
+<h3 id="260-governed-cyclic-flows-goal-5">2.6.0 - 統制された循環フロー（ゴール 5）</h3>
 <ul>
 <li>stage 間の後方エッジ: 下流 stage が上流のギャップを露見させたとき、統制された engine 管理の巻き戻しを発火する。今日のグラフコンパイルはすべてのサイクルを拒否し、<code>requires_stage</code> は前方のみ。</li>
 </ul>
-<h3 id="270---progressive-enrichment-goal-6">2.7.0 - 漸進的エンリッチメント（ゴール 6）</h3>
+<h3 id="270-progressive-enrichment-goal-6">2.7.0 - 漸進的エンリッチメント（ゴール 6）</h3>
 <ul>
 <li>下流 stage が、リンクされた別ファイルを出すのではなく、同じ上流成果物をその場で豊かにする。</li>
 <li>ADR を core の設計成果物にする。</li>

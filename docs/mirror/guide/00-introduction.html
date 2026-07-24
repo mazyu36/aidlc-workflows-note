@@ -36,12 +36,33 @@
   <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
@@ -61,7 +82,7 @@
 <p><a href="../README.html">AI-DLC ドキュメント</a> の一部 · <strong>ユーザーガイド</strong> · <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md">Harness Engineer ガイド</a> · <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">開発者リファレンス</a></p>
 </blockquote>
 <h2 id="what-is-ai-dlc">AI-DLC とは</h2>
-<p>AI-DLC（AI-Driven Development Life Cycle）は、AI 支援によるソフトウェア開発を、再現可能で追跡可能な phase に構造化するための方法論である。これは <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AWS AI-DLC methodology</a> を起源とする。本リポジトリはこれを単一の harness 非依存なコアからネイティブに実装しており、すでに利用している CLI harness の中で動作する。現時点では Claude Code、Kiro CLI、Kiro IDE、Codex CLI、opencode である。本ガイドは harness 非依存であり、harness ごとに詳細が異なる箇所ではその旨を明記し、対応する harness の章へ誘導する（<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で実行する</a> を参照）。特に断りがない限り、例は Claude Code で示す。</p>
+<p>AI-DLC（AI-Driven Development Life Cycle）は、AI 支援によるソフトウェア開発を、再現可能で追跡可能な phase に構造化するための方法論である。これは <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AWS AI-DLC methodology</a> を起源とする。本リポジトリはこれを単一の harness 非依存なコアからネイティブに実装しており、すでに利用している CLI harness の中で動作する。現時点では Claude Code、Kiro CLI、Kiro IDE、Codex CLI、opencode である。本ガイドは harness 非依存であり、harness ごとに詳細が異なる箇所ではその旨を明記し、対応する harness の章へ誘導する（<a href="harnesses/README.html">他の harness で実行する</a> を参照）。特に断りがない限り、例は Claude Code で示す。</p>
 <p>呼び出しは単一のコマンドで行う:</p>
 <pre class="term"><code>/aidlc Build a REST API for inventory management</code></pre>
 <p>その後 AI-DLC は、intent の捕捉から要件・設計・実装・テスト・デプロイに至る構造化されたワークフローを通じて利用者を導きつつ、あらゆる意思決定ポイントで制御を利用者の手に残す。</p>
@@ -82,7 +103,7 @@
 <p>本ガイドは、ソフトウェアを構築するために AI-DLC を<strong>使う</strong>すべての人に向けたものである:</p>
 <ul>
 <li><strong>新規ユーザー</strong> — <a href="01-getting-started.html">はじめかた</a>、<a href="02-your-first-workflow.html">最初のワークフロー</a>、<a href="03-spaces-and-intents.html">Space と Intent</a> から始めるとよい</li>
-<li><strong>通常ユーザー</strong> — <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a>、<a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>、<a href="15-troubleshooting.html">トラブルシューティング</a> を参照する</li>
+<li><strong>通常ユーザー</strong> — <a href="12-cli-commands.html">CLI コマンド</a>、<a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>、<a href="15-troubleshooting.html">トラブルシューティング</a> を参照する</li>
 <li><strong>チームリード</strong> — チームの標準に合わせて AI-DLC をカスタマイズするには、<a href="08-knowledge.html">ナレッジ</a> と <a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照する</li>
 </ul>
 <p>AI-DLC の<em>振る舞いそのもの</em>を作り変えるには — stage やエージェントの追加、scope の定義、rule や sensor の作成、チームナレッジの追加（すべて設定であり、コードは不要）— <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md">Harness Engineer ガイド</a> を参照。AI-DLC のコードベース自体を変更するには、<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">開発者リファレンス</a> を参照。</p>
@@ -156,7 +177,7 @@
 <td>14 エージェントの一覧: 11 のドメインエキスパート、2 のレビュアー、および composer</td>
 </tr>
 <tr>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/README.md">エージェント詳解</a></td>
+<td><a href="agents/README.html">エージェント詳解</a></td>
 <td>エージェントごとのリファレンスページ: 責務、stage、ナレッジ</td>
 </tr>
 <tr>
@@ -180,7 +201,7 @@
 <td>resume、redo、jump、recovery、セッションレポートのスキル</td>
 </tr>
 <tr>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a></td>
+<td><a href="12-cli-commands.html">CLI コマンド</a></td>
 <td>例付きの完全なフラグリファレンス</td>
 </tr>
 <tr>
@@ -204,11 +225,11 @@
 <td><code>/aidlc-*</code> の stage ランナー・scope ランナーコマンドと、独自ランナー作成の道筋</td>
 </tr>
 <tr>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/workshop-mode.md">Workshop モード</a></td>
+<td><a href="workshop-mode.html">Workshop モード</a></td>
 <td>workshop scope 向けのマルチ開発者手動レシピ（git push による claim セマンティクス）</td>
 </tr>
 <tr>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で実行する</a></td>
+<td><a href="harnesses/README.html">他の harness で実行する</a></td>
 <td>Kiro CLI、Kiro IDE、Codex CLI、opencode でのインストールと実行、および harness ごとの差異</td>
 </tr>
 <tr>

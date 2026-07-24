@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quality Agent — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/agents/quality-agent</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../../guide/00-introduction.html">はじめに</a>
+  <a href="../../guide/01-getting-started.html">はじめかた</a>
+  <a href="../../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../../guide/06-agents.html">エージェント</a>
+  <a href="../../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../../guide/11-session-management.html">セッション管理</a>
+  <a href="../../guide/12-cli-commands.html">CLI コマンド</a>
+  <a href="../../guide/13-customization.html">カスタマイズ</a>
+  <a href="../../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../../guide/16-worked-examples.html">実例集</a>
+  <a href="../../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../../guide/glossary.html">用語集</a>
+  <a href="../../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../../guide/agents/quality-agent.html" class="here">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#stages-led">リードする stage</a>
+  <a href="#stages-supported">支援する stage</a>
+  <a href="#what-to-expect">期待できること</a>
+  <a href="#how-it-collaborates">協働のしかた</a>
+  <a href="#key-principles">主要原則</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="quality-agent">Quality Agent</h1>
+<blockquote>
+<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/quality-agent.md">quality-agent</a></p>
+</blockquote>
+<p>aidlc-quality-agent はあなたの QA エンジニア兼パフォーマンススペシャリストである。テスト戦略を定義し、テストスイート（単体・統合・契約・セキュリティ）を生成し、受け入れ基準に対するカバレッジを検証し、負荷テストを設計・実行し、非機能要件の目標を検証する。実装されたすべての unit が受け入れ基準を満たし、システム全体が品質 gate を満たすことを保証する。</p>
+<p>aidlc-quality-agent は 2 つの stage — Construction と Operation に 1 つずつ — をリードし、さらに 3 つの stage を支援する。ビルドツール・テストコマンド・性能テストユーティリティを実行するための Bash アクセスを持つ。</p>
+<h2 id="stages-led">リードする stage</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Phase</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3.6 Build and Test</td>
+<td>Construction</td>
+<td>ビルドの実行、テストスイートの生成と実行、品質 gate の検証</td>
+</tr>
+<tr>
+<td>4.6 Performance Validation</td>
+<td>Operation</td>
+<td>負荷テスト、NFR 検証マトリクス、キャパシティ計画</td>
+</tr>
+</tbody></table>
+<h2 id="stages-supported">支援する stage</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Phase</th>
+<th>貢献</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2.2 Practices Discovery</td>
+<td>Inception</td>
+<td>相互に盲目なテスト姿勢のスポーク。自分の contribution ファイルを書く</td>
+</tr>
+<tr>
+<td>2.4 User Stories</td>
+<td>Inception</td>
+<td>mob でのテスト可能性・受け入れ基準の声。自分の contribution ファイルを書く</td>
+</tr>
+<tr>
+<td>3.2 NFR Requirements</td>
+<td>Construction</td>
+<td>テスト可能な品質特性シナリオの定義</td>
+</tr>
+</tbody></table>
+<h2 id="what-to-expect">期待できること</h2>
+<p>aidlc-quality-agent がアクティブなとき、ビルド手順とテストスイートを生成し、実装済みコードに対して実行する。Build and Test では、プロジェクトのビルドシステムを走らせ、単体テスト・統合テスト・プロジェクトに適したその他のテスト種別を実行する。合否の結果、カバレッジのメトリクス、品質 gate の状態を報告する。</p>
+<p>Operation phase の Performance Validation では、負荷テストを設計・実行し、NFR 目標（レイテンシのパーセンタイル・スループット・可用性）を検証し、目標と実測を比べる NFR 検証マトリクスを生む。</p>
+<h2 id="how-it-collaborates">協働のしかた</h2>
+<p>aidlc-quality-agent は aidlc-product-agent から受け入れ基準付きのユーザーストーリーを、aidlc-architect-agent から NFR 目標を、aidlc-developer-agent から実装済みコードを受け取る。セキュリティテスト要件では aidlc-devsecops-agent と、CI 統合では aidlc-pipeline-deploy-agent と連携する。テスト結果と性能のベースラインは aidlc-operations-agent へ引き継がれる。</p>
+<h2 id="key-principles">主要原則</h2>
+<ul>
+<li>実装ではなく要件をテストする</li>
+<li>テストピラミッドに従う: 多くの速い単体テスト、より少ない統合テスト、最小限の end-to-end テスト</li>
+<li>欠陥を見つけたら、直す前にそれを再現するテストを書く</li>
+<li>テストは実行順序や共有状態に依存してはならない</li>
+<li>カバレッジは指針であってゴールではない — 考え抜かれた 70% は無意味なアサーションの 100% に勝る</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/quality-agent.md"><code>docs/guide/agents/quality-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

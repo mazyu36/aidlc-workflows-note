@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product Agent — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/agents/product-agent</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../../guide/00-introduction.html">はじめに</a>
+  <a href="../../guide/01-getting-started.html">はじめかた</a>
+  <a href="../../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../../guide/06-agents.html">エージェント</a>
+  <a href="../../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../../guide/11-session-management.html">セッション管理</a>
+  <a href="../../guide/12-cli-commands.html">CLI コマンド</a>
+  <a href="../../guide/13-customization.html">カスタマイズ</a>
+  <a href="../../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../../guide/16-worked-examples.html">実例集</a>
+  <a href="../../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../../guide/glossary.html">用語集</a>
+  <a href="../../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../../guide/agents/product-agent.html" class="here">Product Agent</a>
+  <a href="../../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#stages-led">リードする stage</a>
+  <a href="#stages-supported">支援する stage</a>
+  <a href="#what-to-expect">期待できること</a>
+  <a href="#how-it-collaborates">協働のしかた</a>
+  <a href="#key-principles">主要原則</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="product-agent">Product Agent</h1>
+<blockquote>
+<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/product-agent.md">product-agent</a></p>
+</blockquote>
+<p>aidlc-product-agent はあなたのプロダクトマネージャー兼ビジネスアナリストである。生のビジネスニーズ・ユーザーの要望・ドメイン知識を、構造化された要件・優先順位付けされたユーザーストーリー・輪郭の明確な scope 境界へ変換する。すべての下流成果物が検証済みの要件へ遡れることを保証し、ステークホルダーの望みと開発者の作るものの間の溝を橋渡しする。</p>
+<p>aidlc-product-agent は Ideation と Inception にまたがる 5 つの stage をリードする。ワークフローの序盤で主に対話するエージェントであり、intent の明確化質問をし、scope の内外を定義し、以後のすべての設計と実装を駆動する要件とストーリーを生む。</p>
+<h2 id="stages-led">リードする stage</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Phase</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.1 Intent Capture &amp; Framing</td>
+<td>Ideation</td>
+<td>プロジェクトの intent とステークホルダーの文脈を捕捉</td>
+</tr>
+<tr>
+<td>1.2 Market Research</td>
+<td>Ideation</td>
+<td>競合分析と build-vs-buy の評価</td>
+</tr>
+<tr>
+<td>1.4 Scope Definition</td>
+<td>Ideation</td>
+<td>scope 境界と優先順位付けされた intent バックログの定義</td>
+</tr>
+<tr>
+<td>2.3 Requirements Analysis</td>
+<td>Inception</td>
+<td>構造化された機能・非機能要件の生成</td>
+</tr>
+<tr>
+<td>2.4 User Stories</td>
+<td>Inception</td>
+<td>ペルソナから受け入れ基準付きのユーザーストーリーを作成</td>
+</tr>
+</tbody></table>
+<h2 id="stages-supported">支援する stage</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Phase</th>
+<th>貢献</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.6 Rough Mockups</td>
+<td>Ideation</td>
+<td>モックアップを捕捉済みの intent に照らして検証</td>
+</tr>
+<tr>
+<td>1.7 Approval &amp; Handoff</td>
+<td>Ideation</td>
+<td>initiative brief の完全性を検証</td>
+</tr>
+<tr>
+<td>2.5 Refined Mockups</td>
+<td>Inception</td>
+<td>モックアップをユーザーストーリーに照らして検証</td>
+</tr>
+</tbody></table>
+<h2 id="what-to-expect">期待できること</h2>
+<p>aidlc-product-agent がアクティブなとき、プロジェクトのゴール・対象ユーザー・優先度・制約についての構造化された質問を期待できる。3 モードの質問フロー（Guide Me・Edit File・Chat）を使い、曖昧さを表に出しギャップを埋める的を絞った質問をする。容赦なく優先順位を付ける — must-have と nice-to-have の区別を助ける。</p>
+<h2 id="how-it-collaborates">協働のしかた</h2>
+<p>aidlc-product-agent は、実現性と依存関係で aidlc-architect-agent と、UX の整合で aidlc-design-agent と、キャパシティと scope の検証で aidlc-delivery-agent と密に連携する。その出力（要件・ストーリー・scope）は、ほぼすべての下流エージェントが消費する。</p>
+<h2 id="key-principles">主要原則</h2>
+<ul>
+<li>すべての要件はステークホルダーのニーズへ遡れなければならない — 発明された要件は無し</li>
+<li>テストで検証できない要件は、要件ではない</li>
+<li>曖昧さは敵である — 自明に見えるものこそ確認する</li>
+<li>量より価値 — 輪郭の明確な少数のストーリーが、大きく曖昧なバックログに勝る</li>
+<li>ストーリーは水平ではなく、全レイヤーを垂直に貫くべきである</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/product-agent.md"><code>docs/guide/agents/product-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

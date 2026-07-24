@@ -36,12 +36,33 @@
   <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
@@ -128,7 +149,7 @@
 <li><strong>既定テスト戦略:</strong> Minimal（Nyquist）— ワークショップのペースを速く保つ</li>
 <li><strong>スキップ:</strong> Ideation の全 stage（1.1-1.7）— プロジェクトの scope は事前決定済み</li>
 </ul>
-<p>複数開発者での手動レシピと claim の意味論は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/workshop-mode.md">Workshop モード</a> を参照。</p>
+<p>複数開発者での手動レシピと claim の意味論は <a href="workshop-mode.html">Workshop モード</a> を参照。</p>
 <hr>
 <h2 id="scope-routing-table">scope ルーティング表</h2>
 <p>権威あるデータは <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイル（scope の同一性）、plugin の scope ファイル、そして各 stage の <code>scopes:</code> frontmatter（所属）にあり、<code>.claude/tools/data/scope-grid.json</code> へコンパイルされる。コンパイル済みグリッドは現在の plugin 選択で有効な scope だけを含む。生きたコンパイル済みの表は <code>bun .claude/tools/aidlc-utility.ts scope-table</code> で（ユーザー向けの 1 行説明は <code>bun .claude/tools/aidlc-utility.ts help</code> で）確認できる。</p>
@@ -358,7 +379,7 @@ You can request different depth or test strategy at any approval gate.</code></p
 <hr>
 <h2 id="the-3-test-strategy-levels">3 つのテスト戦略レベル</h2>
 <p>テスト戦略は<strong>いくつのテストを</strong>生成し、<strong>どのテスト種別を</strong>含めるかを制御する。depth からは独立している — depth は成果物の詳細度（文書・図・質問）を制御し、テスト戦略はテスト量だけを制御する。この分離により、速度がテストカバレッジより重要な場面で、Standard depth の完全なワークフローを Minimal のテストで走らせられる。</p>
-<h3 id="minimal--nyquist-model">Minimal — Nyquist モデル</h3>
+<h3 id="minimal-nyquist-model">Minimal — Nyquist モデル</h3>
 <p>信号処理の Nyquist レート — 信号を再構成するのに必要な最小サンプリング周波数 — に着想を得ている。Minimal のテスト戦略は、すべての要件を検証するのに必要な最小限のテストを生成する — それ以上でも以下でもない。</p>
 <ul>
 <li><strong>特定された要件 1 つにつき 1 テスト</strong>（要件駆動であり、コンポーネント駆動ではない）</li>
@@ -368,7 +389,7 @@ You can request different depth or test strategy at any approval gate.</code></p
 <li>ソフトなガイドライン — 安全性が重要な文脈が要求すればエージェントは超過できる</li>
 </ul>
 <p><strong>向いているもの:</strong> ワークショップ、トレーニング、proof of concept、素早い bugfix — 完全なテストスイートに投資せず正しさを検証したいあらゆる文脈。</p>
-<h3 id="standard--per-component-model">Standard — コンポーネント単位モデル</h3>
+<h3 id="standard-per-component-model">Standard — コンポーネント単位モデル</h3>
 <p>コンポーネント間の境界を検証する、バランスの取れたテストカバレッジ。</p>
 <ul>
 <li><strong>コンポーネントごとに 5〜8 テスト</strong></li>
@@ -378,7 +399,7 @@ You can request different depth or test strategy at any approval gate.</code></p
 <li>ソフトなガイドライン</li>
 </ul>
 <p><strong>向いているもの:</strong> 大半の機能と MVP — テストに過剰投資しない良好なカバレッジ。</p>
-<h3 id="comprehensive--full-coverage-model">Comprehensive — 完全カバレッジモデル</h3>
+<h3 id="comprehensive-full-coverage-model">Comprehensive — 完全カバレッジモデル</h3>
 <p>全テスト種別にわたる徹底したテストカバレッジ。</p>
 <ul>
 <li><strong>コンポーネントごとに 10〜15 テスト</strong></li>
@@ -421,7 +442,7 @@ You can request different depth or test strategy at any approval gate.</code></p
 <ol start="3">
 <li><strong>任意の承認 gate</strong> — フィードバックの一部として別のテスト戦略を要望する</li>
 </ol>
-<h3 id="common-depth--test-strategy-combinations">よくある depth + テスト戦略の組み合わせ</h3>
+<h3 id="common-depth-test-strategy-combinations">よくある depth + テスト戦略の組み合わせ</h3>
 <table>
 <thead>
 <tr>
@@ -521,7 +542,7 @@ You can request different depth or test strategy at any approval gate.</code></p
 <li><a href="04-phases-and-stages.html">Phase と Stage</a> — 各 stage が何をするか</li>
 <li><a href="06-agents.html">エージェント</a> — どのエージェントがどの scope に参加するか</li>
 <li><a href="17-skills.html">Skill とランナーコマンド</a> — bugfix・feature・mvp・security-patch の一語 <code>/aidlc-&lt;scope&gt;</code> ランナー</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> — コマンドの完全リファレンス</li>
+<li><a href="12-cli-commands.html">CLI コマンド</a> — コマンドの完全リファレンス</li>
 <li><a href="glossary.html">用語集</a> — 用語リファレンス</li>
 </ul>
 

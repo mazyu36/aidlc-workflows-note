@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pipeline &amp; Deploy Agent — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/agents/pipeline-deploy-agent</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../../guide/00-introduction.html">はじめに</a>
+  <a href="../../guide/01-getting-started.html">はじめかた</a>
+  <a href="../../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../../guide/06-agents.html">エージェント</a>
+  <a href="../../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../../guide/11-session-management.html">セッション管理</a>
+  <a href="../../guide/12-cli-commands.html">CLI コマンド</a>
+  <a href="../../guide/13-customization.html">カスタマイズ</a>
+  <a href="../../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../../guide/16-worked-examples.html">実例集</a>
+  <a href="../../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../../guide/glossary.html">用語集</a>
+  <a href="../../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../../guide/agents/pipeline-deploy-agent.html" class="here">Pipeline &amp; Deploy Agent</a>
+  <a href="../../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#stages-led">リードする stage</a>
+  <a href="#stages-supported">支援する stage</a>
+  <a href="#what-to-expect">期待できること</a>
+  <a href="#how-it-collaborates">協働のしかた</a>
+  <a href="#key-principles">主要原則</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="pipeline-deploy-agent">Pipeline &amp; Deploy Agent</h1>
+<blockquote>
+<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/pipeline-deploy-agent.md">pipeline-deploy-agent</a></p>
+</blockquote>
+<p>aidlc-pipeline-deploy-agent はあなたの CI/CD エンジニア兼リリースマネージャーである。ビルド仕様とインフラのターゲットを、品質 gate・ロールバックの安全性・完全な監査可能性を備えて、コミットから本番までを運ぶ完全自動のパイプラインへ翻訳する。</p>
+<p>aidlc-pipeline-deploy-agent は Inception・Construction・Operation にまたがる 4 つの stage をリードする。パイプラインツール・デプロイスクリプト・スモークテストのコマンドを実行するための Bash アクセスを持つ。</p>
+<h2 id="stages-led">リードする stage</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Phase</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2.2 Practices Discovery</td>
+<td>Inception</td>
+<td>hub-and-spoke の発見の草稿・インタビュー・統合。承認された practices をアクティブ space の team/project memory へ昇格</td>
+</tr>
+<tr>
+<td>3.7 CI Pipeline</td>
+<td>Construction</td>
+<td>品質 gate 付きの CI パイプライン構成</td>
+</tr>
+<tr>
+<td>4.1 Deployment Pipeline</td>
+<td>Operation</td>
+<td>デプロイ戦略とロールバック手順を備えた CD パイプライン</td>
+</tr>
+<tr>
+<td>4.3 Deployment Execution</td>
+<td>Operation</td>
+<td>デプロイの実行、スモークテスト、ヘルスの監視</td>
+</tr>
+</tbody></table>
+<h2 id="stages-supported">支援する stage</h2>
+<p>aidlc-pipeline-deploy-agent は助言の立場でどの stage も支援しない。</p>
+<h2 id="what-to-expect">期待できること</h2>
+<p>Practices Discovery では、aidlc-pipeline-deploy-agent がまず草稿を書き、人間へのインタビューの後に、相互に盲目な quality・developer・devsecops の contribution を統合する。デリバリー系の stage では、CI/CD 基盤・デプロイ先・ブランチ戦略・ロールバック要件を尋ね、パイプライン構成・デプロイ戦略・ロールバック runbook を生み、Deployment Execution を監視する。</p>
+<h2 id="how-it-collaborates">協働のしかた</h2>
+<p>aidlc-pipeline-deploy-agent は aidlc-developer-agent からビルド可能なソースとテストスイートを、aidlc-quality-agent から品質 gate の定義を、aidlc-aws-platform-agent から環境のエンドポイントを受け取る。デプロイしたサービスは可観測性の整備のために aidlc-operations-agent へ引き継がれ、デプロイの成果物は性能検証のために aidlc-quality-agent へ渡る。</p>
+<h2 id="key-principles">主要原則</h2>
+<ul>
+<li>すべてのコミットはリリース候補である — 全 gate を通過したなら本番に出せる</li>
+<li>すべてのデプロイにはテスト済みのロールバック経路が要る</li>
+<li>CI パイプラインは時間ではなく分で完了すべき — 遅いパイプラインはバッチ化を招く</li>
+<li>品質 gate は欠陥のある成果物がユーザーに届くのを防ぐために存在する</li>
+<li>スモークテストがサービスの健全性を確認するまで、デプロイは完了ではない</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/pipeline-deploy-agent.md"><code>docs/guide/agents/pipeline-deploy-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

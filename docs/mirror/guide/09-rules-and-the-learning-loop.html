@@ -36,12 +36,33 @@
   <a href="../guide/09-rules-and-the-learning-loop.html" class="here">Rule と学習ループ</a>
   <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
   <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/12-cli-commands.html">CLI コマンド</a>
   <a href="../guide/13-customization.html">カスタマイズ</a>
   <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
   <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
   <a href="../guide/16-worked-examples.html">実例集</a>
   <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
   <a href="../guide/glossary.html">用語集</a>
+  <a href="../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
 </nav>
 
 <nav class="pagetoc" aria-label="このページの目次">
@@ -113,7 +134,7 @@
 <p>残した学びが rule ではなく <strong>sensor の束縛</strong>（ある stage の出力に新しい決定論チェックを発火させたい）である場合、フレームワークは 2 書き込みのインストールをアトミックに行う: sensor マニフェストを雛形生成し、由来の stage のインポートリストへ新 sensor の id を追記する。日誌・gate の確認・結果のファイル書き込みは、それぞれ audit の行（<code>RULE_LEARNED</code> または <code>SENSOR_PROPOSED</code>）を残す — rule が黙ってインストールされることは決してない。</p>
 <h3 id="admission-time-conflict-checks">受け入れ時の衝突チェック</h3>
 <p>残した学びがディスクに着地する前に、フレームワークは <code>memory/org.md</code> に対するセクションレベルのチェックを実行する。提案されたエントリが同じ見出しの下の org rule と矛盾する場合、gate は停止し、矛盾する org の文をインラインで引用する。あなたはエントリの修正・スキップ・org rule 所有者への上申を選ぶ。矛盾を抱えたままの rule が着地することは無いため、ランタイムのリゾルバは単純なまま保たれる — 衝突チェックを既に通過した rule だけを見る。</p>
-<p>同じセクションレベルのチェックが practices-discovery の確認 gate も守る。そして org のポリシーが team や project の rule のディスク着地<em>後</em>に変わったときは、<code>/aidlc --doctor</code> が要求に応じて生じたドリフトを表示する: ファイル・セクション・矛盾する org の文を名指しするので、チームが対応できる。doctor のチェックは助言であり決してブロックしない。doctor の 2 つの advisory 行は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> と <a href="15-troubleshooting.html">トラブルシューティング</a> に記載がある。</p>
+<p>同じセクションレベルのチェックが practices-discovery の確認 gate も守る。そして org のポリシーが team や project の rule のディスク着地<em>後</em>に変わったときは、<code>/aidlc --doctor</code> が要求に応じて生じたドリフトを表示する: ファイル・セクション・矛盾する org の文を名指しするので、チームが対応できる。doctor のチェックは助言であり決してブロックしない。doctor の 2 つの advisory 行は <a href="12-cli-commands.html">CLI コマンド</a> と <a href="15-troubleshooting.html">トラブルシューティング</a> に記載がある。</p>
 <h3 id="applies-next-workflow-not-mid-run">反映は次のワークフローから。実行中には効かない</h3>
 <p>ある gate で捕捉された学びは、現在のワークフローの残りの rule を<strong>変えない</strong>。この実行についてはあなたが会話の中で既にエージェントを修正した。rule は次回のためのものだ。新しい行はディスクに載っているが、実行中のワークフローは開始時のコンパイル済みビューを保つ。</p>
 <p>次にワークフローを開始したとき、コンパイルが新しいファイルを読み、rule は stage 1 から適用される。これはルーターが BGP から得るのと同じ安定性である: 経路はパケットの飛行中に再計算されず、AI-DLC はワークフローの途中で再コンパイルしない。見返りは予測可能性だ — ワークフローの前半で承認した gate は安定した rule の集合を証言しており、フレームワークは進行中の実行の足元を変えない。</p>
@@ -190,7 +211,7 @@
 <li><a href="13-customization.html">カスタマイズ</a> — rule の追加、sensor の追加、ループの拡張、stage やエージェントの追加</li>
 <li><a href="07-interaction-modes.html">対話モード</a> — stage 中に修正がどう起きるか</li>
 <li><a href="10-state-and-audit.html">状態と audit</a> — 学習ループのイベントがどう記録されるか</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> — doctor の rule ドリフトとペアカバレッジの advisory 行</li>
+<li><a href="12-cli-commands.html">CLI コマンド</a> — doctor の rule ドリフトとペアカバレッジの advisory 行</li>
 <li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/08-rule-system.md">Rule システム</a> · <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/07-sensor-system.md">Sensor システム</a> · <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/02-plane-architecture.md">Plane アーキテクチャ</a> — スキーマ・設計レベルのリファレンス</li>
 <li><a href="glossary.html">用語集</a> — 用語リファレンス</li>
 </ul>
