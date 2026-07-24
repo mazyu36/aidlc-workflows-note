@@ -1,0 +1,10 @@
+{
+  "name": "mirror-build",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "marked": "^15",
+    "pdf-parse": "^2.4.5",
+    "playwright": "^1.61.1"
+  }
+}

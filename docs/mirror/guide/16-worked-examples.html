@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>実例集 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/16-worked-examples</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html" class="here">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#bugfix-walkthrough">Bugfix のウォークスルー</a>
+  <a href="#feature-walkthrough">Feature のウォークスルー</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="worked-examples">実例集</h1>
+<p>AI-DLC の実際の動きを示す 2 つの完全なウォークスルー: bugfix と feature。それぞれコマンドの呼び出し、stage の進行、承認 gate、成果物の出力を示す。</p>
+<blockquote>
+<p><strong>Harness に関する注記。</strong> これらの記録は <strong>Claude Code</strong> で採られたもので、その
+サーフェス — <code>/aidlc</code> と、<code>Task</code> 呼び出しで dispatch される subagent の stage — を示す。
+stage のフロー・gate・成果物はどの harness でも同一で、異なるのは dispatch の機構だけ
+である（Kiro は <code>subagent</code> ツール、Codex は <code>codex exec</code> のワーカーを使う）。
+<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> を参照。</p>
+</blockquote>
+<hr>
+<h2 id="bugfix-walkthrough">Bugfix のウォークスルー</h2>
+<p>この例はユーザープロフィール API の null ポインタ例外を直す。<strong>bugfix</strong> scope は 7 stage（Initialization 3 + ドメイン 4）を Minimal depth で走らせる。</p>
+<h3 id="invocation">呼び出し</h3>
+<pre class="term"><code>/aidlc bugfix</code></pre>
+<p>conductor が何を直したいかを尋ねる:</p>
+<blockquote>
+<p><strong>What would you like to build?</strong></p>
+</blockquote>
+<p>あなたはこう答える:</p>
+<blockquote>
+<p>The user profile API returns HTTP 500 when the <code>display_name</code> field is null. The <code>GET /api/v1/users/:id/profile</code> endpoint crashes with a NullPointerException in <code>ProfileSerializer.serialize()</code>. This affects about 12% of user profiles created before display_name was made mandatory.</p>
+</blockquote>
+<h3 id="stages-executed">実行される stage</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Stage</th>
+<th>Phase</th>
+<th>リードエージェント</th>
+<th>モード</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.1</td>
+<td>Workspace Scaffold</td>
+<td>Initialization</td>
+<td>orchestrator</td>
+<td>inline（自動進行）</td>
+</tr>
+<tr>
+<td>0.2</td>
+<td>Workspace Detection</td>
+<td>Initialization</td>
+<td>orchestrator</td>
+<td>inline（自動進行）</td>
+</tr>
+<tr>
+<td>0.3</td>
+<td>State Init</td>
+<td>Initialization</td>
+<td>orchestrator</td>
+<td>inline（自動進行）</td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>Reverse Engineering</td>
+<td>Inception</td>
+<td>aidlc-developer-agent + aidlc-architect-agent</td>
+<td>pipeline</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>Requirements Analysis</td>
+<td>Inception</td>
+<td>aidlc-product-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td>Code Generation</td>
+<td>Construction</td>
+<td>aidlc-developer-agent</td>
+<td>subagent</td>
+</tr>
+<tr>
+<td>3.6</td>
+<td>Build and Test</td>
+<td>Construction</td>
+<td>aidlc-quality-agent</td>
+<td>inline</td>
+</tr>
+</tbody></table>
+<h3 id="initialization-stages-01-03--auto-proceed">Initialization（stage 0.1-0.3）— 自動進行</h3>
+<p>3 つの Initialization stage は単一の決定論的ツール呼び出し（<code>aidlc-utility intent-birth</code>）として、ユーザーの対話なしに 1 秒未満で走る:</p>
+<ul>
+<li><strong>0.1 Workspace Scaffold</strong> — 最初の intent を自動 birth し、record dir を <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（以下 <code>&lt;record&gt;/</code> と表記）に作成する — <code>&lt;YYMMDD&gt;</code> は記録が時系列に並ぶコンパクトな UTC 日付プレフィクス、<code>&lt;label&gt;</code> は conductor が付ける要望の短いケバブケースの本質で、正準の id は <code>intents.json</code> レジストリ行が運ぶ UUIDv7 である</li>
+<li><strong>0.2 Workspace Detection</strong> — ルールベースのスキャンが Java 17・Spring Boot 3.2・Maven・brownfield プロジェクトを特定する</li>
+<li><strong>0.3 State Init</strong> — scope <code>bugfix</code>、depth <code>Minimal</code>、実行対象の印が付いたドメイン stage で <code>aidlc-state.md</code> を初期化する</li>
+</ul>
+<blockquote>
+<p>Progress: 3/7 overall | 3/3 INITIALIZATION stages complete. Next: Reverse Engineering</p>
+</blockquote>
+<h3 id="stage-21--reverse-engineering">Stage 2.1 — Reverse Engineering</h3>
+<p>2 リンクの pipeline がコードベースをスキャンする: まず aidlc-developer-agent のコードスキャン、次に成果物を書き出す aidlc-architect-agent の統合。リポジトリのための 9 つの永続成果物を <code>aidlc/spaces/default/codekb/user-service/</code> に生み出す:</p>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>business-overview.md</code></td>
+<td>ユーザーサービス — プロフィール、設定、認証トークン</td>
+</tr>
+<tr>
+<td><code>architecture.md</code></td>
+<td>Spring Boot モノリス、3 層設計</td>
+</tr>
+<tr>
+<td><code>code-structure.md</code></td>
+<td>6 パッケージ: controller・service・model・repository・serializer・config</td>
+</tr>
+<tr>
+<td><code>api-documentation.md</code></td>
+<td><code>/api/v1/users/</code> 配下の 8 つの REST エンドポイント</td>
+</tr>
+<tr>
+<td><code>component-inventory.md</code></td>
+<td>controller・service・repository・serializer の目録</td>
+</tr>
+<tr>
+<td><code>technology-stack.md</code></td>
+<td>Java 17、Spring Boot 3.2、PostgreSQL 15、Jackson 2.15</td>
+</tr>
+<tr>
+<td><code>dependencies.md</code></td>
+<td>Maven の依存ツリー、サードパーティライブラリ、バージョン制約</td>
+</tr>
+<tr>
+<td><code>code-quality-assessment.md</code></td>
+<td>テストカバレッジ 62%、基本的な CI</td>
+</tr>
+<tr>
+<td><code>reverse-engineering-timestamp.md</code></td>
+<td>いつ・どのコミットに対してスキャンが走ったか</td>
+</tr>
+</tbody></table>
+<p><strong>承認 gate:</strong></p>
+<pre class="term"><code>Reverse Engineering complete. How would you like to proceed?
+- Approve        -&gt; Continue to Requirements Analysis
+- Request Changes -&gt; Provide revision feedback</code></pre>
+<p><strong>Approve</strong> を選ぶ。</p>
+<h3 id="stage-23--requirements-analysis">Stage 2.3 — Requirements Analysis</h3>
+<p>aidlc-product-agent ペルソナが読み込まれ、<code>&lt;record&gt;/inception/requirements-analysis/requirements-analysis-questions.md</code> に明確化質問を作る:</p>
+<pre><code class="language-markdown">## Q1: Bug Severity Classification
+How severe is this bug for your users?
+A. Critical — causes data loss or security exposure
+B. High — blocks a core workflow for affected users
+C. Medium — degraded experience but workaround exists
+D. Low — cosmetic or minor inconvenience
+X. Other (please specify)
+
+[Answer]:
+</code></pre>
+<p>conductor が対話モードを提案する:</p>
+<pre class="term"><code>How would you like to answer these questions?
+- Guide me        -&gt; Walk through each question interactively
+- I'll edit the file -&gt; Fill in answers directly
+- Chat            -&gt; Discuss freely</code></pre>
+<p><strong>Guide me</strong> を選び、こう答える: Q1 = High、Q2 = フォールバックはユーザー名、Q3 = null を穏当に処理（マイグレーションなし）。</p>
+<p>conductor は 3 つの機能要件（null 処理・serializer の修正・フォールバックロジック）と 1 つの非機能要件（応答時間の回帰なし）を持つ <code>requirements.md</code> を生成する。</p>
+<p><strong>承認 gate:</strong> <strong>Approve</strong> を選ぶ。</p>
+<h3 id="stage-35--code-generation">Stage 3.5 — Code Generation</h3>
+<p>conductor がコード生成計画を作り、aidlc-developer-agent の subagent に委譲する:</p>
+<p><strong>計画:</strong></p>
+<ol>
+<li>null の <code>display_name</code> を処理するよう <code>ProfileSerializer.serialize()</code> を修正</li>
+<li>null / 非 null ケースの単体テストを追加</li>
+<li><code>ProfileService.getProfile()</code> の防御的チェックを修正</li>
+<li>API エンドポイントの統合テストを追加</li>
+</ol>
+<p>計画を承認する。subagent が 4 手順すべてを実装する:</p>
+<ul>
+<li><strong>変更</strong>: <code>ProfileSerializer.java</code>（ユーザー名フォールバック付きの null 安全化）</li>
+<li><strong>変更</strong>: <code>ProfileService.java</code>（防御的な null 処理）</li>
+<li><strong>作成</strong>: <code>ProfileSerializerTest.java</code>（単体テスト 2 件）</li>
+<li><strong>作成</strong>: <code>ProfileControllerIntegrationTest.java</code>（統合テスト 2 件）</li>
+</ul>
+<p><strong>承認 gate:</strong> <strong>Approve</strong> を選ぶ。</p>
+<h3 id="stage-36--build-and-test">Stage 3.6 — Build and Test</h3>
+<p>aidlc-quality-agent がビルドとテストを実行する:</p>
+<pre class="term"><code>mvn clean compile<span class="t-comment">        # BUILD SUCCESS</span>
+mvn test<span class="t-comment">                 # 89 tests, 0 failures</span>
+mvn verify<span class="t-comment">               # Integration tests pass</span></code></pre>
+<p>結果は <code>&lt;record&gt;/construction/build-and-test/test-results.md</code> に捕捉される: 89 テスト合格、失敗 0、カバレッジは 62% から 64% に上昇。</p>
+<p><strong>承認 gate:</strong> <strong>Approve</strong> を選ぶ。ワークフロー完了。</p>
+<h3 id="end-state">終了時の状態</h3>
+<pre class="term"><code>aidlc/spaces/default/
+  codekb/
+    user-service/<span class="t-comment">             # 9 space-level RE artifacts</span>
+  intents/260624-null-display-fix/
+    aidlc-state.md<span class="t-comment">            # All 7 stages marked [x]</span>
+    audit/<span class="t-comment">                    # Full decision trail (per-clone shards)</span>
+    inception/
+      requirements-analysis/ # requirements.md + questions
+    construction/
+      bugfix-null-display-name/
+        code-generation/<span class="t-comment">     # plan + summary</span>
+      build-and-test/<span class="t-comment">        # instructions + test results</span></code></pre>
+<p>ワークスペースルートのアプリケーションコード:</p>
+<ul>
+<li><code>ProfileSerializer.java</code>（変更）</li>
+<li><code>ProfileService.java</code>（変更）</li>
+<li><code>ProfileSerializerTest.java</code>（作成）</li>
+<li><code>ProfileControllerIntegrationTest.java</code>（作成）</li>
+</ul>
+<h3 id="key-observations">主要な観察</h3>
+<ol>
+<li><strong>すべてのドメイン stage に承認 gate</strong> — 各決定をあなたが制御する</li>
+<li><strong>Minimal depth</strong> — 簡潔で的を絞った成果物。修正の定義に必要な質問だけ</li>
+<li><strong>subagent への委譲</strong> — 重い仕事（RE・コード生成）はサブプロセスで走り、あなたは承認する</li>
+<li><strong>完全な audit トレイル</strong> — すべての決定が ISO タイムスタンプ付きで記録される</li>
+<li><strong>セッション再開</strong> — どの時点で中断しても、<code>/aidlc</code> が進行中の状態を検出する</li>
+</ol>
+<hr>
+<h2 id="feature-walkthrough">Feature のウォークスルー</h2>
+<p>この例はタスク管理アプリの通知サービスを作る。<strong>feature</strong> scope は全 32 stage を Standard depth で走らせる。このウォークスルーは全 phase の主要 stage をハイライトする。</p>
+<h3 id="invocation-1">呼び出し</h3>
+<pre class="term"><code>/aidlc feature</code></pre>
+<blockquote>
+<p><strong>What would you like to build?</strong></p>
+</blockquote>
+<blockquote>
+<p>A notification service for our task management app. Users should receive in-app notifications and optional email digests when tasks are assigned, due dates approach, or comments are posted. Support notification preferences per user.</p>
+</blockquote>
+<h3 id="initialization-stages-01-03--auto-proceed-1">Initialization（stage 0.1-0.3）— 自動進行</h3>
+<p>3 つの Initialization stage が <code>aidlc-utility intent-birth</code> の中で自動実行される。Workspace Detection が特定する: TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク・ユーザーサービスを持つ brownfield プロジェクト。</p>
+<blockquote>
+<p>Progress: 3/32 overall | Scope: feature, Depth: Standard</p>
+</blockquote>
+<h3 id="ideation-phase-stages-11-17">Ideation phase（stage 1.1-1.7）</h3>
+<p><strong>Stage 1.1 — Intent Capture</strong>（aidlc-product-agent）</p>
+<p>aidlc-product-agent が intent を捕捉し、<code>intent-statement.md</code> と <code>stakeholder-map.md</code> を作る。質問は対象ユーザー・通知チャネル・優先度に焦点を当てる:</p>
+<pre class="term"><code>Q1: Which notification channels are in scope?
+A. In-app only
+B. In-app + email
+C. In-app + email + push
+D. In-app + email + push + SMS
+X. Other</code></pre>
+<p>B（in-app + email）と答える。承認後、stage は通知種別とユーザートリガーを結ぶ構造化された intent statement を生む。</p>
+<p><strong>Stage 1.4 — Scope Definition</strong>（aidlc-product-agent）</p>
+<p>scope の境界を定義する: in-scope（3 つのトリガー種別・ユーザー設定・メールダイジェスト）、out-of-scope（プッシュ通知・SMS・リアルタイム WebSocket）。優先順位付けされた項目を持つ <code>scope-document.md</code> と <code>intent-backlog.md</code> を生む。</p>
+<p><strong>Stage 1.7 — Approval &amp; Handoff</strong>（aidlc-delivery-agent）</p>
+<p>Ideation の全出力を集約する initiative brief をまとめる。phase 境界検証が intent から scope へのトレーサビリティを確認する。</p>
+<blockquote>
+<p>Progress: 10/32 overall | IDEATION complete. Verification Gate passed.</p>
+</blockquote>
+<h3 id="inception-phase-stages-21-28">Inception phase（stage 2.1-2.8）</h3>
+<p><strong>Stage 2.1 — Reverse Engineering</strong>（pipeline）</p>
+<p>既存コードベースの 2 リンクスキャン。9 つの成果物をリポジトリの space レベルのストア <code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> に書き、通知サービスが統合すべき既存のサービス構造・データベーススキーマ・API パターンを特定する。</p>
+<p><strong>Stage 2.2 — Practices Discovery</strong>（aidlc-pipeline-deploy-agent）</p>
+<p>これは subagent の hub-and-spoke である。aidlc-pipeline-deploy-agent が Reverse Engineering の証拠から草稿を書き、aidlc-quality-agent・aidlc-developer-agent・aidlc-devsecops-agent が互いの contribution を見ずに並列でその草稿を検分する。人間へのインタビューが証拠のギャップとポリシー判断を解消し、その後リードが 3 つの contribution を <code>team-practices.md</code>・<code>discovered-rules.md</code>・<code>evidence.md</code> に統合する。gate は <strong>Approve</strong> / <strong>Request Changes</strong> を提示する。Approve の後、<code>practices-promote</code> が <code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> と <code>project.md</code> を書き、確認済みタイムスタンプと対応する <code>PRACTICES_AFFIRMED</code> の領収書をアトミックに記録する。conductor が stage を承認済みと報告するのはその後だけである。昇格が無い・古い・失敗した場合、gate は開いたままで stage は未完了になる。</p>
+<p><strong>Stage 2.3 — Requirements Analysis</strong>（aidlc-product-agent）</p>
+<p>12 の機能要件（通知トリガー・設定の CRUD・メール描画・ダイジェストのスケジューリング）と 5 つの非機能要件（配信遅延 &lt; 5 秒・メール再試行・設定の保存）を生む。質問はエッジケースを掘る: メール配信が失敗したら？ダイジェストはどの頻度で走るべきか？</p>
+<p><strong>Stage 2.4 — User Stories</strong>（mob）</p>
+<p>まず aidlc-product-agent がペルソナとストーリーの草稿を書く。次に aidlc-design-agent・aidlc-developer-agent・aidlc-quality-agent が相互に盲目な協力者としてその草稿を検分し、それぞれ identity 付きの contribution ファイルを書く。リードの aidlc-product-agent が 3 つの contribution を <code>personas.md</code> と <code>stories.md</code> に統合してから、<strong>Approve</strong> / <strong>Request Changes</strong> の gate を提示する。</p>
+<p><strong>Stage 2.6 — Application Design</strong>（aidlc-architect-agent）</p>
+<p>aidlc-architect-agent が通知サービスのアーキテクチャを設計する:</p>
+<ul>
+<li><strong>コンポーネント</strong>: NotificationService、PreferenceService、EmailRenderer、DigestScheduler</li>
+<li><strong>API 契約</strong>: 設定管理の REST エンドポイント、トリガー用の内部イベントハンドラ</li>
+<li><strong>ADR</strong>: イベント駆動のトリガーパターン（ポーリングとの比較）、メールキューに SQS（直接送信との比較）</li>
+</ul>
+<p><code>components.md</code>、<code>services.md</code>、<code>decisions.md</code> を生む。</p>
+<p><strong>Stage 2.7 — Units Generation</strong>（aidlc-architect-agent）</p>
+<p>3 つの unit of work に分解する:</p>
+<ol>
+<li><strong>notification-core</strong> — イベントハンドラ、通知の保存、in-app 配信</li>
+<li><strong>notification-preferences</strong> — 設定の CRUD API、既定の設定</li>
+<li><strong>notification-email</strong> — メール描画、SQS 統合、ダイジェストのスケジューラ</li>
+</ol>
+<p>依存マップ付きの <code>unit-of-work.md</code> を生む: notification-core が先、その後 preferences と email が並列。</p>
+<p><strong>Stage 2.8 — Delivery Planning</strong>（aidlc-delivery-agent）</p>
+<p>Bolt の順序: Bolt 1 が notification-core を出荷する（walking skeleton — イベントハンドラのパイプラインを end-to-end で証明）。Bolt 2 が notification-preferences と notification-email を並列で出荷する。Bolt ごとの DoD は <code>bolt-plan.md</code> に、WSJF 流の根拠は <code>risk-and-sequencing-rationale.md</code> に、外部の SES/SQS 依存は <code>external-dependency-map.md</code> に対応付けられる。phase 境界検証が要件とアーキテクチャの整合を確認する。</p>
+<blockquote>
+<p>Progress: 18/32 overall | INCEPTION complete. Verification Gate passed.</p>
+</blockquote>
+<h3 id="construction-phase-stages-31-37">Construction phase（stage 3.1-3.7）</h3>
+<p>Construction は 2.8 の計画に従って <strong>Bolt 単位</strong>で走る。最初の Bolt が walking skeleton で、その後の ladder prompt が残りの自律性を決める。依存を共有する Bolt は並列で走る。</p>
+<p><strong>Bolt 1: notification-core</strong> — walking skeleton（常に gate 付き）</p>
+<p>この Bolt はイベントハンドラのパイプラインが動くことを証明する end-to-end のスライスである: 通知イベントが内部ハンドラに届き、ストレージに落ち、in-app 配信のエンドポイントに現れる。conductor は notification-core の 3.1–3.4 を横断する 1 回の質問ラウンドで開き、すべての設計成果物を生成し、コード生成を aidlc-developer-agent の subagent に委譲する。</p>
+<ul>
+<li><strong>3.1 Functional Design</strong> — ドメインエンティティ（Notification、NotificationEvent）、ビジネスルール（重複排除、レート制限）</li>
+<li><strong>3.5 Code Generation</strong> — イベントハンドラ、通知リポジトリ、in-app 配信エンドポイント。ソース 3 ファイル、テスト 4 ファイル。</li>
+</ul>
+<p>walking-skeleton の gate — Bolt 1 のコードサマリをレビューして承認する。</p>
+<p>承認の直後、<strong>ladder prompt</strong> が発火する:</p>
+<pre class="term"><code>The walking skeleton shipped. How should the remaining Bolts run?
+<span class="t-prompt">  ▸ Continue autonomously</span>
+    Run remaining Bolts without gates. Failures still halt and ask.
+<span class="t-prompt">  ▸ Gate every Bolt</span>
+    Present an approval gate after each Bolt (or parallel batch).</code></pre>
+<p>形が動くのを見たので、<strong>Continue autonomously</strong> を選ぶ。conductor は <code>aidlc-state.md</code> に <code>Construction Autonomy Mode: autonomous</code> を記録し、<code>AUTONOMY_MODE_SET</code> を発行する。</p>
+<p><strong>Bolt 2: notification-preferences + notification-email</strong> — 並列バッチ</p>
+<p>どちらも notification-core だけに依存し、互いに依存しないため、2.8 の計画は単一のバッチにスケジュールする。conductor は Bolt ごとに質問を集めて設計成果物を生成し、1 ターンで 2 つの <code>Task</code> 呼び出しを発行して<strong>両方の code-generation stage を並行 dispatch</strong> する。</p>
+<ul>
+<li><strong>notification-preferences — 3.1 Functional Design</strong> — Preference エンティティ、既定値、チャネルのトグル</li>
+<li><strong>notification-preferences — 3.5 Code Generation</strong> — CRUD API エンドポイント、設定リポジトリ、検証。ソース 2 ファイル、テスト 3 ファイル。</li>
+<li><strong>notification-email — 3.2 NFR Requirements</strong> — メール配信の信頼性（指数バックオフ付き再試行）、ダイジェストスケジューリングの正確性</li>
+<li><strong>notification-email — 3.4 Infrastructure Design</strong> — SQS キュー、SES 統合、dead-letter キューの CloudWatch アラーム</li>
+<li><strong>notification-email — 3.5 Code Generation</strong> — メール描画、SQS コンシューマ、ダイジェストの cron ジョブ。ソース 4 ファイル、テスト 5 ファイル。</li>
+</ul>
+<p>両方の subagent Task が次のターンで返る。autonomous を選んだためバッチの gate は無く、Construction はそのまま 3.6 へ進む。</p>
+<p><strong>失敗した場合はどうなるか。</strong> 仮に <code>notification-email</code> の Code Generation が壊れた SES モックで返ったとする。conductor は <code>notification-preferences</code> の完了を待ち、その成果物をディスクに保全して、こう提示する:</p>
+<pre class="term"><code>Bolt notification-preferences succeeded. Bolt notification-email failed during code generation:
+  "SES client mock could not be constructed — check test config."
+
+Options:
+<span class="t-prompt">  ▸ Retry         Re-run notification-email from code generation.</span>
+<span class="t-prompt">  ▸ Skip          Mark notification-email skipped and continue. Dependent Bolts may also fail.</span>
+<span class="t-prompt">  ▸ Abort         Stop Construction. Resume via /aidlc --stage code-generation.</span></code></pre>
+<p><strong>Retry</strong> を選び、モックの設定を直せば、notification-email だけが再実行される。preferences は既に <code>[x]</code> 完了である。</p>
+<p><strong>Stage 3.6 — Build and Test</strong>（aidlc-quality-agent。全 Bolt の後に 1 回）</p>
+<p>ビルド手順を生成し、3 Unit 全体でテストスイートを実行する: 47 テスト合格、失敗 0、カバレッジ 78%。</p>
+<p><strong>Stage 3.7 — CI Pipeline</strong>（aidlc-pipeline-deploy-agent）</p>
+<p>lint・build・test・セキュリティスキャンの stage を持つ CI パイプラインを構成する。品質 gate: カバレッジ &gt;= 75%、致命的な脆弱性なし。</p>
+<blockquote>
+<p>Progress: 25/32 overall | CONSTRUCTION complete. Verification Gate passed.</p>
+</blockquote>
+<h3 id="operation-phase-stages-41-47">Operation phase（stage 4.1-4.7）</h3>
+<p><strong>Stage 4.1 — Deployment Pipeline</strong> — ヘルスチェック gate 付きの blue-green デプロイ戦略</p>
+<p><strong>Stage 4.2 — Environment Provisioning</strong> — SQS キュー、SES 設定、通知保存用の DynamoDB テーブル</p>
+<p><strong>Stage 4.4 — Observability Setup</strong> — 通知配信遅延・メール送信レート・dead-letter キュー深度の CloudWatch ダッシュボード。配信失敗のアラーム。</p>
+<p><strong>Stage 4.7 — Feedback &amp; Optimization</strong> — SLO 目標（in-app 配信 99.9%、メールは 30 秒以内の配信 99%）、コスト分析、フィードバックループ文書。</p>
+<blockquote>
+<p>Progress: 32/32 overall | OPERATION complete. Feature workflow complete.</p>
+</blockquote>
+<h3 id="key-differences-from-bugfix">bugfix との主要な違い</h3>
+<table>
+<thead>
+<tr>
+<th>観点</th>
+<th>Bugfix</th>
+<th>Feature</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>実行 stage 数</td>
+<td>7</td>
+<td>32</td>
+</tr>
+<tr>
+<td>Depth</td>
+<td>Minimal</td>
+<td>Standard</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Initialization + Inception + Construction</td>
+<td>全 5</td>
+</tr>
+<tr>
+<td>unit of work 数</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Bolt 単位の Construction</td>
+<td>なし（bugfix は単一 Bolt）</td>
+<td>あり — 2 Bolt（walking skeleton + 並列バッチ 1）</td>
+</tr>
+<tr>
+<td>条件付き stage</td>
+<td>大半をスキップ</td>
+<td>大半を実行</td>
+</tr>
+<tr>
+<td>承認 gate</td>
+<td>4</td>
+<td>walking skeleton + ladder prompt。残りの Bolt は autonomy mode に従う</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> — scope がどの stage を走らせるかを決める仕組み</li>
+<li><a href="04-phases-and-stages.html">stage はどう走るか</a> — stage プロトコルの詳細</li>
+<li><a href="06-agents.html">エージェント</a> — エージェントのペルソナと責務</li>
+<li><a href="14-artifacts-reference.html">成果物リファレンス</a> — 成果物ディレクトリツリーの全体</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/16-worked-examples.md"><code>docs/guide/16-worked-examples.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

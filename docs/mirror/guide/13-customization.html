@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>カスタマイズ — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/13-customization</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html" class="here">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#settings-overrides-settingslocaljson">設定の上書き（settings.local.json）</a>
+  <a href="#agent-models-and-effort-tiers">エージェントのモデルと effort（tier）</a>
+  <a href="#per-project-default-scope">プロジェクト単位の既定 scope</a>
+  <a href="#scope-configuration">scope の構成</a>
+  <a href="#stage-customization">stage のカスタマイズ</a>
+  <a href="#statusline-claude-code-only">ステータスライン（Claude Code のみ）</a>
+  <a href="#tool-permissions">ツール権限</a>
+  <a href="#extending-ai-dlc">AI-DLC の拡張</a>
+  <a href="#knowledge-and-rules">ナレッジと Rule</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="customization">カスタマイズ</h1>
+<p>AI-DLC はチームのニーズへ適応するように設計されている。本章では設定の上書き、scope の構成、stage のカスタマイズ、ステータスライン、ツール権限を扱う。</p>
+<blockquote>
+<p><strong>Harness 固有の設定。</strong> harness 非依存のカスタマイズ — scope 構成・stage の depth・
+ナレッジ・rule — はどの harness でも適用される。本章の機構レベルの設定
+（<code>settings.json</code> / <code>settings.local.json</code>、statusline コマンド、<code>$CLAUDE_PROJECT_DIR</code>、
+ツール権限ブロック）は <strong>Claude Code 固有</strong>である。Kiro は同等物を
+<code>.kiro/settings/cli.json</code> + エージェント設定で、Codex は <code>.codex/config.toml</code></p>
+<ul>
+<li>Starlark rules で、opencode はプロジェクトルートの <code>opencode.json</code> で構成する —
+各 harness のサーフェスは
+<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-cli.md">Kiro CLI で動かす</a>、
+<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-ide.md">Kiro IDE で動かす</a>、
+<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/codex-cli.md">Codex CLI で動かす</a>、
+<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/opencode.md">opencode 上の AI-DLC</a> を参照。</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="settings-overrides-settingslocaljson">設定の上書き（<code>settings.local.json</code>）</h2>
+<p>共有の <code>.claude/settings.json</code> はフレームワークに同梱され、バージョン管理にコミットされる。チームに影響させずローカル環境の設定を上書きするには、個人用の上書きファイルを作る:</p>
+<pre><code class="language-bash">cp .claude/settings.local.json.example .claude/settings.local.json
+</code></pre>
+<p>このファイルは <code>.gitignore</code> に載っており、個人の変更がコミットされることはない。用途:</p>
+<ul>
+<li>モデル選択の上書き（例: 別の Opus / Sonnet のモデル ID へ切り替え）</li>
+<li>ローカル環境向けの環境変数の設定</li>
+<li>セキュリティ要件に合わせたツール権限の調整</li>
+</ul>
+<hr>
+<h2 id="agent-models-and-effort-tiers">エージェントのモデルと effort（tier）</h2>
+<p>同梱エージェントは <code>tier:</code>（<code>judgment</code> | <code>balanced</code> | <code>templated</code>）付きで書かれており、ビルドが各 harness ネイティブの model / effort キーへ投影する — judgment のエージェントはセッションのモデルと effort を継承し、balanced のエージェントは中型モデルを固定し（Claude Code・Codex・opencode。Kiro では全 tier がセッションモデルを継承）、templated のエージェントは同じ非 Kiro harness で effort も下げる。完全な投影表は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/05-agent-system.md">エージェントシステム</a> を参照。</p>
+<p>インストール済みコピーで 1 体のエージェントだけ挙動を変えるには、投影された値を直接編集する — 例えば Claude のエージェント <code>.claude/agents/aidlc-*-agent.md</code> の frontmatter に <code>model: opus</code> を設定する。Kiro ではサーフェスが harness に依存する: Kiro CLI ではエージェントの <code>.kiro/agents/aidlc-*-agent.json</code> に <code>&quot;model&quot;</code> フィールドを足し、Kiro IDE ではエージェントの <code>.kiro/agents/aidlc-*-agent.md</code> frontmatter に <code>model:</code> 行を設定する（エージェントの JSON ファイルは CLI 専用 — IDE は spawn 時に <code>.md</code> frontmatter を読む）。どちらの場合もインストールで有効なモデル ID を使うこと。Kiro のエージェントはモデル固定なしで出荷されるため、既定ではセッションモデルを継承する。この編集は <code>dist/&lt;harness&gt;/</code> シェルを再コピーするまで生き残る。ソースから自分のディストリビューションをビルドする際に全エージェントへ上限を掛けるには、<code>core/memory/org.md</code>/<code>project.md</code> の frontmatter に <code>tier_cap:</code> を設定するか、パッケージャを <code>AIDLC_TIER_CAP=&lt;tier&gt;</code> で実行する — どちらも <code>bun scripts/package.ts</code> のパック時のノブであり、ランタイム設定ではない。</p>
+<hr>
+<h2 id="per-project-default-scope">プロジェクト単位の既定 scope</h2>
+<p>プロジェクト内のすべてのワークフローを同じ scope から始めるべきとき — 例えば全参加者が <code>workshop</code> で走るべきワークショップ — <code>.claude/settings.json</code> の <code>env</code> ブロックに <code>AWS_AIDLC_DEFAULT_SCOPE</code> を設定する（同梱ファイルは既にこれを <code>workshop</code> に設定している）:</p>
+<pre><code class="language-json">{
+  &quot;env&quot;: {
+    &quot;AWS_AIDLC_DEFAULT_SCOPE&quot;: &quot;workshop&quot;
+  }
+}
+</code></pre>
+<blockquote>
+<p>同梱の <code>env</code> ブロックには Bedrock のモデル ID（<code>CLAUDE_CODE_USE_BEDROCK</code>、<code>ANTHROPIC_DEFAULT_OPUS_MODEL</code> 等）も含まれる。それらは別に列挙されている — 上の例は分かりやすさのため scope のキーだけを示す。</p>
+</blockquote>
+<p>これを設定すると、裸の <code>/aidlc</code> 呼び出しが <code>workshop</code> を既定 scope として使う。参加者は毎回 <code>/aidlc workshop</code> を覚える必要がない。env 変数はワークフローの初期化時にのみ読まれる。intent の <code>aidlc-state.md</code> が（record dir 配下に）存在するようになった後は状態ファイルが正であり、env の変更は実行中のワークフローに影響しない。</p>
+<p><strong>優先順位（高い順）:</strong></p>
+<ol>
+<li>明示的な CLI フラグ: <code>/aidlc feature</code> や <code>/aidlc --scope bugfix</code> が勝つ。</li>
+<li>自由記述のキーワード検出: <code>/aidlc fix the login bug</code> は引き続き <code>bugfix</code> に対応する。検出された scope は既存の確認プロンプトで上書きできる。</li>
+<li><code>.claude/settings.json</code> の <code>AWS_AIDLC_DEFAULT_SCOPE</code> env 変数。</li>
+<li>ハードコードされたフォールバック（intent birth では <code>poc</code>、マッチしない自由記述では <code>feature</code>）。</li>
+</ol>
+<p><strong>有効値:</strong> <code>enterprise</code>、<code>feature</code>、<code>mvp</code>、<code>poc</code>、<code>bugfix</code>、<code>refactor</code>、<code>infra</code>、<code>security-patch</code>、<code>workshop</code>。無効な値は呼び出し時に明確なメッセージでエラーになる。チームは <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイルを置いてメンバー stage の <code>scopes:</code> リストにタグ付けすることで追加の scope を定義できる — <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md#adding-a-scope">コントリビューション: scope の追加</a> を参照。<code>.claude/agents/</code> に追加のエージェントも定義できる — <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md#adding-an-agent">コントリビューション: エージェントの追加</a> を参照。</p>
+<p><strong>設定の検証:</strong> <code>/aidlc --doctor</code> で env 変数が設定済み・有効であることを確認する:</p>
+<pre class="term"><code><span class="t-ok">✓  AWS_AIDLC_DEFAULT_SCOPE=workshop (valid)</span></code></pre>
+<p><strong>初期化時の通知:</strong> env の既定が適用されるとき、orchestrator はワークフロー開始時に 1 行の通知（<code>Using scope=&lt;value&gt; from AWS_AIDLC_DEFAULT_SCOPE (.claude/settings.json)</code>）を表示し、scope の出所が効いた瞬間に見えるようにする。</p>
+<p>なぜ scope だけで depth や test-strategy は無いのか？ 各 scope は既に自分の depth と test-strategy の既定を宣言している（workshop → Standard depth・Minimal テスト戦略）。scope を設定すればそれらが自動で連鎖する。どちらかを上書きしたければ CLI で <code>--depth</code> か <code>--test-strategy</code> を渡す。</p>
+<p><strong>機微な値:</strong> <code>.claude/settings.json</code> はバージョン管理にコミットされる。秘密情報・認証情報・個人の上書きをここに置かないこと — 機微なものには <code>.claude/settings.local.json</code>（gitignore 済み）を使う。</p>
+<hr>
+<h2 id="scope-configuration">scope の構成</h2>
+<p>scope は、どの stage をどの depth・テスト戦略で実行するかを制御する。AI-DLC は 9 つの名前付き scope を提供する。完全な表（各 scope の EXECUTE/総 stage 数・既定 depth・テスト戦略・ユースケース）の単一のソースは <a href="05-scopes-and-depth.html#the-9-core-scopes">Scope・Depth・テスト戦略 § 9 つのコア scope</a> である。本節はその<em>構成</em>と上書きを扱う。</p>
+<h3 id="choosing-a-scope">scope の選択</h3>
+<p>明示的に指定するか、orchestrator に自動検出させる:</p>
+<pre class="term"><code>/aidlc enterprise<span class="t-comment">       # Explicit scope</span>
+/aidlc Build a payments API<span class="t-comment">  # Auto-detects "feature"</span>
+/aidlc Fix the login bug<span class="t-comment">     # Auto-detects "bugfix"</span></code></pre>
+<h3 id="overriding-at-runtime">実行時の上書き</h3>
+<p>ワークフロー中はいつでも scope を上書きできる:</p>
+<ul>
+<li><strong>任意の承認 gate で</strong>: 別の scope や depth を要望する</li>
+<li><strong>ユーティリティコマンドで</strong>: <code>/aidlc --scope enterprise</code> がアクティブな scope を変更する</li>
+<li><strong>stage の追加</strong>: Ideation と Inception の承認 gate では、以前スキップされた stage をワークフローに戻せる</li>
+</ul>
+<hr>
+<h2 id="stage-customization">stage のカスタマイズ</h2>
+<p>各 stage は <code>.claude/aidlc-common/stages/[phase]/</code> にある自己完結の <code>.md</code> ファイルである。stage ファイルは次を指定する:</p>
+<ul>
+<li><strong>メタデータ</strong> — stage 番号、phase、実行モード、リード / 支援エージェント</li>
+<li><strong>入力</strong> — 読み込む先行成果物</li>
+<li><strong>手順</strong> — 番号付きの実行シーケンス</li>
+<li><strong>出力</strong> — 生成する成果物</li>
+<li><strong>完了</strong> — 承認 gate のパターン</li>
+</ul>
+<p>stage の振る舞いを変えるには、その stage ファイルを直接編集する。すべての stage は共有パターン（承認 gate・質問形式・状態追跡）について stage プロトコルを参照する。</p>
+<h3 id="depth-levels">depth レベル</h3>
+<p>各 scope は成果物の詳細度を制御する既定 depth を持つ:</p>
+<table>
+<thead>
+<tr>
+<th>Depth</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Minimal</strong></td>
+<td>簡潔な成果物、的を絞った分析、任意コンテンツなし</td>
+</tr>
+<tr>
+<td><strong>Standard</strong></td>
+<td>バランスの取れた詳細、主要・副次の関心事をカバー</td>
+</tr>
+<tr>
+<td><strong>Comprehensive</strong></td>
+<td>完全な詳細、広範な分析、任意コンテンツをすべて含む</td>
+</tr>
+</tbody></table>
+<p>任意の承認 gate で、別のレベルを要望して depth を上書きできる。</p>
+<hr>
+<h2 id="statusline-claude-code-only">ステータスライン（Claude Code のみ）</h2>
+<p><strong>Claude Code</strong> では、この実装はターミナルのステータスバーにワークフロー進捗を示すステータスラインを表示する。他の harness にステータスラインは無い — ワークフローの位置は <code>/aidlc --status</code>（Kiro・opencode）や、<code>update_plan</code> のタスク進捗項目 + <code>$aidlc --status</code>（Codex）で表示する:</p>
+<pre class="term"><code><span class="t-status">[AIDLC] IDEATION [▓▓▓▓▓░░░░░] 4/7 &gt; Intent Capture -- Product Agent</span></code></pre>
+<p>表示は順に: 現在の phase、phase の進捗（バーと比 — どちらも現在 phase の範囲）、stage の表示名、リードエージェント。コンテキスト使用量は右側に現れ（例: <code>ctx:15%</code>）、残りが減るにつれて色分けされる。</p>
+<h3 id="configuration">設定</h3>
+<p>ステータスラインは <code>.claude/settings.json</code> で設定される:</p>
+<pre><code class="language-json">&quot;statusLine&quot;: {
+  &quot;type&quot;: &quot;command&quot;,
+  &quot;command&quot;: &quot;bun \&quot;$CLAUDE_PROJECT_DIR/.claude/hooks/aidlc-statusline.ts\&quot;&quot;
+}
+</code></pre>
+<h3 id="customizing-the-format">形式のカスタマイズ</h3>
+<p><code>.claude/hooks/aidlc-statusline.ts</code> を直接編集する。出力形式はファイル末尾近くの <code>main()</code> 関数に定義されている。hook は <code>aidlc-state.md</code> から phase・stage・エージェントを読み、stage の slug を表示名に対応させ、同じ phase ローカルのチェックボックス解析から unicode の進捗バーと <code>n/m</code> 比の両方を組み立てる。</p>
+<h3 id="disabling-the-statusline">ステータスラインの無効化</h3>
+<p><code>settings.json</code> から <code>statusLine</code> ブロックを削除する。ターミナルのステータスバーは Claude Code の既定に戻る。</p>
+<hr>
+<h2 id="tool-permissions">ツール権限</h2>
+<p><code>.claude/settings.json</code> の <code>permissions.allow</code> リストは、ワークフローが呼び出しごとの許可プロンプトなしに走るよう Claude Code のツールを事前承認する:</p>
+<pre><code class="language-json">&quot;permissions&quot;: {
+  &quot;allow&quot;: [
+    &quot;Read&quot;, &quot;Edit&quot;, &quot;Write&quot;,
+    &quot;Bash(bun \&quot;$CLAUDE_PROJECT_DIR/.claude/tools/\&quot;*)&quot;,
+    &quot;Bash&quot;, &quot;Glob&quot;, &quot;Grep&quot;, &quot;Task&quot;, &quot;WebSearch&quot;
+  ]
+}
+</code></pre>
+<p>スコープ付きの <code>Bash(bun &quot;$CLAUDE_PROJECT_DIR/.claude/tools/&quot;*)</code> エントリは裸の <code>Bash</code> より前に置かれ、フレームワーク自身のツール呼び出しが常により狭いルールに先にマッチする。<code>$CLAUDE_PROJECT_DIR</code> はダブルクォートのまま（<code>*</code> はクォートの外）にすることで、プロジェクトパスに空白があっても単語分割するシェルでコマンドが生き残り、権限マッチャは引き続き glob できる。</p>
+<h3 id="how-permissions-work">権限の仕組み</h3>
+<ul>
+<li><strong>プロジェクト全体の天井</strong>: <code>settings.json</code> の allow リストが利用可能なツールの最大集合である</li>
+<li><strong>エージェントは既定でセッションの完全なツールセットを継承する</strong>。同梱の唯一の制限は、入れ子の subagent 生成をブロックする <code>disallowedTools: Task</code> である</li>
+<li><strong>任意のエージェント別の絞り込み</strong>: frontmatter に <code>tools:</code> 許可リストを足すことでエージェントを絞れる — 省略すればすべてを継承する。<code>tools:</code> を列挙すると、完全修飾の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id も併記しない限り、継承していた MCP ツールが落ちる</li>
+</ul>
+<h3 id="expanding-permissions">権限の拡張</h3>
+<p>追加の能力を要するカスタム stage を作る場合にだけ、allow リストにツールを足す。</p>
+<h3 id="narrowing-permissions">権限の絞り込み</h3>
+<p>allow リストからツールを外すと、使用のたびに手動承認が要るようになる。<code>Task</code> を外すと、4 つの dispatch される stage（2.1 Reverse Engineering の pipeline、2.2 Practices Discovery の subagent、2.4 User Stories の mob、3.5 Code Generation の subagent）が委譲のたびに許可を求めるようになる点に注意。ワークスペース検出（0.2）は <code>aidlc-utility intent-birth</code> の中で決定論的に実行される — <code>Task</code> は使わない。</p>
+<hr>
+<h2 id="extending-ai-dlc">AI-DLC の拡張</h2>
+<p>上記の settings・scope・depth・stage の編集は、あなたが走らせるワークフローの日々の調整を覆う。フレームワークそのものをチーム向けに作り変えたいとき — stage の追加、エージェントの追加、scope の定義、常設 rule の教示、決定論チェックの束線、ドメイン知識の追加 — それは独自のガイドを持つ別の仕事である: <strong><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md">Harness Engineer ガイド</a></strong>。</p>
+<p>分かれ目はデータ対コードである。そのガイドにあるものはすべて、フレームワークが読む YAML frontmatter 付きの Markdown ファイルか JSON 設定であり、TypeScript の編集は無い。拡張ごとの行き先:</p>
+<table>
+<thead>
+<tr>
+<th>やりたいこと</th>
+<th>出発点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>stage の動作を編集する、新しい stage を足す</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/01-anatomy-of-a-stage.md">Stage の解剖</a>、<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/02-adding-a-stage.md">Stage の追加</a></td>
+</tr>
+<tr>
+<td>エージェントの追加・変更</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/03-adding-an-agent.md">エージェントの追加</a></td>
+</tr>
+<tr>
+<td>scope の定義・調整</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/04-scopes.md">Scope</a></td>
+</tr>
+<tr>
+<td>常設 rule の教示、学習ループの運用</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/05-rules-and-the-loop.md">Rule と学習ループ</a></td>
+</tr>
+<tr>
+<td>決定論チェック（sensor）を stage に束線する</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/06-sensors.md">Sensor</a></td>
+</tr>
+<tr>
+<td>チームのドメイン知識を足す</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/07-team-knowledge.md">チームナレッジ</a></td>
+</tr>
+</tbody></table>
+<p>変更がフレームワークの<em>コード</em> — orchestrator・hook・CLI ツール・コンパイルパイプライン — に及ぶなら、それは <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">開発者リファレンス</a> である。</p>
+<hr>
+<h2 id="knowledge-and-rules">ナレッジと Rule</h2>
+<p>2 層ナレッジシステムと rule / 学習ループの詳細は次を参照:</p>
+<ul>
+<li><a href="08-knowledge.html">ナレッジ</a> — チームナレッジのディレクトリと方法論リファレンスファイル</li>
+<li><a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> — 行動ルールと自己学習のフロー</li>
+</ul>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> — scope と stage の完全な対応</li>
+<li><a href="06-agents.html">エージェント</a> — エージェントの権限と能力</li>
+<li><a href="15-troubleshooting.html">トラブルシューティング</a> — ステータスラインの問題、hook の設定</li>
+<li><a href="glossary.html">用語集</a> — scope・depth・guardrail・knowledge の定義</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/13-customization.md"><code>docs/guide/13-customization.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

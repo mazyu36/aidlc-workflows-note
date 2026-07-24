@@ -1,0 +1,185 @@
+# Rule と学習ループ
+
+rule は、エージェントがプロジェクトでどう働くかを形作る、永続的な散文の指示である。学習ループはその rule が書かれる仕組みだ: ワークフロー中にエージェントを修正し、stage の承認 gate でその修正を確認すると、フレームワークが保存して同じ修正が二度と要らなくなる。
+
+本章はユーザー向けのツアーである。rule がどこに住むか、5 つの層がどう積み重なるか、学習ループが修正をどう捕捉するか、そして Sensor が rule と並んで決定論的なセカンドオピニオンをどう与えるかを扱う。スキーマレベルの機構は、各所で開発者リファレンスへ相互リンクする。
+
+---
+
+## rule の全体像
+
+rule は、アクティブ space の memory 層 `aidlc/spaces/<active-space>/memory/` に Markdown ファイルとして住む — ワークスペースルートにある、手で編集できる単一のセットで、すべての harness がネイティブの取り込み（Claude の `@`-import スタブ、Kiro の resources glob、Codex の `AIDLC_RULES_DIR`）経由で読む。各ファイルは scope の名を持つ:
+
+```
+aidlc/spaces/<active-space>/memory/
+├── org.md                 # framework + organization-wide defaults
+├── team.md                # your team's affirmed practices
+├── project.md             # this project's specialization
+└── phases/
+    ├── ideation.md
+    ├── inception.md
+    ├── construction.md
+    └── operation.md
+```
+
+ファイル内に `scope:` フィールドは無い — scope はファイル名から来る。`org.md` はフレームワークの既定（トランクベース開発・テスト姿勢・walking-skeleton ポリシー）を運ぶ。`team.md` はチームが確認した practices を持つ。`project.md` はこの 1 プロジェクトに固有のものを持つ。4 つの `phases/<phase>.md` は、ある phase のすべての stage に適用される rule を運ぶ — 例えば inception phase の rule は、すべてのアーキテクチャ決定に少なくとも 2 つの代替案の記録を求める。
+
+各ファイルはトピック見出し（`## Way of Working`、`## Testing Posture`、`## Deployment`、`## Code Style` 等）の下の素の散文である。あなたが読み、手で編集でき、フレームワークは学習ループを通じて書き込む。
+
+スキーマ、ファイル名と scope の対応表、リゾルバの機構は、開発者リファレンスの [Rule システム](../reference/08-rule-system.md) に文書化されている。
+
+---
+
+## 5 層の連鎖
+
+rule はすべてのワークフローの開始時に 5 層の連鎖で解決される:
+
+```
+org → team → project → phase → stage
+```
+
+モデルは**厳密加算**である。適用されるすべての rule がエージェントのコンテキストに現れる — 実行時に黙って落とされたり上書きされたりするものは無い。org の既定、team の practices、project の特化が連結される。stage は自分の phase を宣言しているため、一致する phase の rule が付く。（第 5 層の stage 別 rule は将来のリリースのために予約されている。）
+
+これは以前のバージョンからの意図的な変更である。`overrides:` ブロックも `enforcement:` キーワードももう無い。適用される層はすべて同時に存在し、衝突は rule が書かれた時点 — ランタイムに届く前 — に捕まえられる（下の [受け入れ時の衝突チェック](#admission-time-conflict-checks) を参照）。
+
+連鎖は、フレームワークが stage 定義・rule・sensor を単一のグラフへコンパイルするワークフロー開始時に、**一度だけ**解決される。ワークフローの間、エージェントは解決済みのビューを読む。実行の途中で連鎖を歩き直すことはない。このコンパイル境界は planes モデルが記述するものと同じである — 本章末尾の [Planes: 全体がどう噛み合うか](#planes-how-it-fits-together) を参照。
+
+---
+
+## 学習ループ
+
+学習ループは、一度きりの修正を永続的な rule に変える機構である。ほとんどの stage 実行は何も足さない — そしてそれが健全である。ループが発火するのは、stage 中に浮かび上がった何かを、残す価値があるとあなたが判断したときだけだ。
+
+ループにはユーザーに見える瞬間が 4 つある: stage の実行中にエージェントが日誌を付け、gate が候補を提示し、あなたが残すものを確認し、フレームワークが次回のためにそれを書き込む。
+
+### memory.md 日誌
+
+stage の実行中、フレームワークは `<record>/<phase>/<stage>/memory.md` — intent の record dir（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`）配下 — に観察ログを付け続ける。stage 開始時に自動で作られ、あなたの代わりに維持される — 手で編集することは決してない。エントリは 4 つの標準見出しの下に落ちる:
+
+- **Interpretations** — stage の記述が曖昧だった箇所でエージェントが行った選択
+- **Deviations** — エージェントが stage の記述から意図的に逸脱した箇所と、その理由
+- **Tradeoffs** — 検討した代替案と、選んだ理由
+- **Open questions** — 次の実行までに確認すべきこと、まだ不確かな文脈
+
+各エントリにはタイムスタンプが付く。日誌はこのループで言語モデルが持つ唯一の仕事である: stage 中に観察を `memory.md` に書くこと。stage が終わった後のすべて — エントリを数え、提示し、正しいファイルへルーティングし、書き込む — は、決定論的なツーリングか、gate でのあなたの明示的な選択が行う。
+
+### gate の儀式
+
+各承認 gate の前に、フレームワークは学習 gate（プロトコルは §13 の儀式と呼ぶ）を実行する。2 つのソースから候補を集め、1 つの確認リストとして提示する:
+
+1. **エージェントの日誌が、そのまま提示される。** 決定論的なツールが `memory.md` を読み、4 見出しの下の非空行それぞれを、出所の見出し付きで候補として出す。言い換えも「面白いもの」フィルタも無し — 行は書かれたとおりに表示される。
+2. **常に「次回のために足すことは？」と尋ねる自由記述チャネル。** 観察を打ち込み、4 見出しのどれに属するかを選ぶ。この見出し選びが、あなたに求められる唯一の分類である。
+
+残したい候補にチェックを付ける。その stage の `memory.md` が空だった場合、日誌が付けられていたかの証言を求められることはない — フレームワークは静かに記録して先へ進む。
+
+### 残した学びはどこへ行くか
+
+ファイルパスを選ぶことはない。見出しが宛先を決める:
+
+- Interpretations・Deviations・Tradeoffs は practice として `aidlc/spaces/<active-space>/memory/project.md`（確認済みの学びは practice *である*）のトピック見出しの下に落ちる。
+- Open questions は昇格しない — 調査項目であって、導入すべき rule ではない。
+
+既定の scope は **project** である。ワンクリックの「promote to team」により、この 1 プロジェクトを超えて当てはまる学びを `memory/project.md` から `memory/team.md` へ広げられる。org へ広げる経路は無い: org の rule はフレームワーク同梱か、別プロセスで組織が書くものであり、学習ループが org scope に書くことは決してない。最も狭い scope を既定にすることで、1 プロジェクトの驚きがうっかり組織全体の rule になることを防ぐ。
+
+確認済みの学びは practice *である*: practices-discovery が確認するのと同じアクティブ space の memory ファイル（`aidlc/spaces/<active-space>/memory/project.md`、`team.md`）に落ち、別建ての回転式 `*-learnings.md` サーフェスは存在しない。この 2 つの経路はライフサイクルで異なる: practices-discovery はセクション全体を決定論的に確認し、学習ループは gate を通じて日付とトピック見出しの付いたエントリを 1 つずつ追記する。
+
+残した学びが rule ではなく **sensor の束縛**（ある stage の出力に新しい決定論チェックを発火させたい）である場合、フレームワークは 2 書き込みのインストールをアトミックに行う: sensor マニフェストを雛形生成し、由来の stage のインポートリストへ新 sensor の id を追記する。日誌・gate の確認・結果のファイル書き込みは、それぞれ audit の行（`RULE_LEARNED` または `SENSOR_PROPOSED`）を残す — rule が黙ってインストールされることは決してない。
+
+### 受け入れ時の衝突チェック
+
+残した学びがディスクに着地する前に、フレームワークは `memory/org.md` に対するセクションレベルのチェックを実行する。提案されたエントリが同じ見出しの下の org rule と矛盾する場合、gate は停止し、矛盾する org の文をインラインで引用する。あなたはエントリの修正・スキップ・org rule 所有者への上申を選ぶ。矛盾を抱えたままの rule が着地することは無いため、ランタイムのリゾルバは単純なまま保たれる — 衝突チェックを既に通過した rule だけを見る。
+
+同じセクションレベルのチェックが practices-discovery の確認 gate も守る。そして org のポリシーが team や project の rule のディスク着地*後*に変わったときは、`/aidlc --doctor` が要求に応じて生じたドリフトを表示する: ファイル・セクション・矛盾する org の文を名指しするので、チームが対応できる。doctor のチェックは助言であり決してブロックしない。doctor の 2 つの advisory 行は [CLI コマンド](12-cli-commands.md) と [トラブルシューティング](15-troubleshooting.md) に記載がある。
+
+### 反映は次のワークフローから。実行中には効かない
+
+ある gate で捕捉された学びは、現在のワークフローの残りの rule を**変えない**。この実行についてはあなたが会話の中で既にエージェントを修正した。rule は次回のためのものだ。新しい行はディスクに載っているが、実行中のワークフローは開始時のコンパイル済みビューを保つ。
+
+次にワークフローを開始したとき、コンパイルが新しいファイルを読み、rule は stage 1 から適用される。これはルーターが BGP から得るのと同じ安定性である: 経路はパケットの飛行中に再計算されず、AI-DLC はワークフローの途中で再コンパイルしない。見返りは予測可能性だ — ワークフローの前半で承認した gate は安定した rule の集合を証言しており、フレームワークは進行中の実行の足元を変えない。
+
+---
+
+## 実例: ANZ 銀行プロジェクト
+
+具体的なウォークスルーでループを端から端まで見る。
+
+Sam は ANZ 銀行プロジェクトで `/aidlc feature` を実行する。ワークフローは `requirements-analysis` に至る。Sam は「the transaction shouldn't duplicate on retry」というステークホルダーノートを書く — 銀行のトランザクション、処理中の支払いの意味で。product agent は「transaction」をデータベーストランザクションと読み、ノートを ACID 意味論の要件と解釈する。Sam が修正する。エージェントは成果物を更新して続行する。
+
+フレームワークの何もこれを予測していなかった。ANZ 固有の用語に関する rule は無く、一般語とドメイン語の衝突を捕まえる sensor も無い。エージェントは単に曖昧さに突き当たった。
+
+**1. 日誌が記録する。** フレームワークは `<record>/inception/requirements-analysis/memory.md` の `## Interpretations` の下にエントリを追記する:
+
+```
+- 2026-05-21T09:14:32Z — Stakeholder note used "transaction"; interpreted as
+  database-transaction. Sam corrected to mean banking-transaction (the payment
+  being processed, not the DB write). Worth flagging for ANZ project context.
+```
+
+まだ rule はインストールされていない — これはエージェントの日誌にすぎない。
+
+**2. gate が提示する。** stage が終わる。承認 gate の前に、学習 gate が `memory.md` を読み、この解釈の行を候補として表示する。「次回のために足すことは？」も尋ねる。Sam はトランザクション用語の候補にチェックを付け（Interpretation → `memory/project.md` に着地）、自由記述を足す:「エージェントが AWS アカウントの用語に寄り続けた — 銀行の顧客エンティティは常に『ANZ customer』と言うべき」。Sam はこの追加に Deviation の見出しを選び、同じ `memory/project.md` へルーティングされる。
+
+**3. 衝突チェックが走る。** フレームワークは両エントリを org の practices（`memory/org.md`）と比較する。「ANZ transaction」「ANZ customer」のどちらの用語も org rule には無いので、両方通過する。決定論的なツールが両行を出所情報付きで `memory/project.md` に書き、audit ログがそれぞれに `RULE_LEARNED` イベントを記録する。
+
+**4. 現在のワークフローは変わらず続く。** stage は承認され、ワークフローは `user-stories` へ進む。新しい行はディスクにあるが、このワークフローのコンパイル済みビューには入らない — この実行では Sam が既に stage 内でエージェントを修正済みだ。
+
+**5. 次のワークフローが拾う。** その日のうちに Sam は `/aidlc bugfix` を実行する。ワークフロー開始時のコンパイルが space の memory 層を歩き、`memory/project.md` を拾い、すべての stage のコンテキストに含める。bugfix ワークフローの stage 1 から、エージェントは「transaction」が支払いを意味し、顧客エンティティが「ANZ customer」であることを知っている。
+
+コストは一度だけ支払われた — gate の確認 1 回、ファイル書き込み 1 回 — そして、ディレクトリ走査にファイルが 1 つ増えるだけの値段で、将来のすべてのワークフローで回収される。
+
+---
+
+## Sensor: 決定論のセカンドオピニオン
+
+rule はエージェントが読む散文である。sensor は、エージェントが stage の出力を書いたときに自動で走る決定論チェックである。rule が「ユーザーストーリーは Given/When/Then 形式に従う」と言うところを、sensor は必須見出しが実際にファイルに存在することをバイト単位で検証できる。rule はエージェントを stage へ前向きに供給し（feedforward）、sensor はエージェントが実際に作ったものを還す（feedback）。
+
+### sensor の発火のしかた
+
+stage 中にエージェントが出力ファイルを書く・編集すると、PostToolUse hook がその stage に適用される sensor を確認し、一致するものをそれぞれ実行する。マッチングはファイルの形による — code-quality の sensor は `**/*.{ts,js}` を分析すると宣言しているので TypeScript / JavaScript の書き込みでのみ発火し、どの stage 出力にも発火する document-shape の sensor はフィルタを省く。ワークフロー中に sensor を手で起動することはない。すべての Write と Edit に相乗りする。
+
+このリリースでは sensor の結果は**助言**である。失敗した sensor は audit の行と、何が欠けているかを正確に指す詳細ファイルを作るが、stage の承認 gate をブロックせず、ワークフローを止めない。シグナルを見るのはあなた、どうするか決めるのもあなたである。
+
+### audit ログに見えるもの
+
+sensor の活動は intent の `audit/` シャードに `Sensor Fired`・`Sensor Passed`・`Sensor Failed` の行として現れる。失敗の行は、具体的なギャップ — 欠けた見出し、参照されていない上流成果物、lint エラー — を列挙する詳細ファイル（例: `<record>/.aidlc-sensors/<stage-slug>/required-sections-<timestamp>.md`）にリンクする。audit ログは [状態と audit](10-state-and-audit.md) で扱う。
+
+### 4 つのフレームワーク sensor
+
+フレームワークには 4 つの sensor が同梱される:
+
+| Sensor | 発火対象 | チェック内容 |
+|--------|----------|--------|
+| `required-sections` | record dir の任意の markdown 出力 | 出力が必須の H2 見出しを含むこと（汎用のコンテンツ形状チェック） |
+| `upstream-coverage` | record dir の任意の markdown 出力 | stage の成果物（集合として評価）が、stage が consume すると宣言した各上流成果物を、slug・wikilink・生成元 stage のディレクトリパスのいずれかで参照していること |
+| `linter` | `.ts` / `.js` のコード出力 | 設定済みの linter（既定は ESLint）をラップ |
+| `type-check` | `.ts` / `.tsx` のコード出力 | 設定済みの型チェッカ（既定は `tsc`）をラップ |
+
+どの sensor が自分の出力に発火するかは各 stage が宣言する。自分の sensor も追加できる — `.claude/sensors/` にマニフェストを書き、実行すべき stage にその id を足す。gate で確認すれば、学習ループが sensor をインストールしてくれることもある。マニフェスト形式・stage 別マトリクス・執筆のウォークスルーは [Sensor システム](../reference/07-sensor-system.md) にある。自分のプロジェクトへの追加は [カスタマイズ](13-customization.md) を参照。
+
+---
+
+## Planes: 全体がどう噛み合うか
+
+上記のすべては planes を考えずに使える。しかし土台の設計はネットワーキングの規律を借りており、名前を付けると「反映は次のワークフローから」の挙動が腑に落ちる。
+
+現代のルーターは仕事を 3 つのプレーンに分け、AI-DLC はその分割を鏡写しにする:
+
+- **制御プレーン** — 何が走るべきかの*スキーマ*。stage 定義・rule・sensor。ネットワーキングで言えば経路計算: 設定を所与として、何がどこに適用されるかを決める。一度しか走らないから、制御プレーンは遅くて賢くてよい。
+- **データプレーン** — *実際の実行*。stage の実行、エージェントの起動、intent の record dir のファイル。ネットワーキングで言えばパケット転送: 速く、繰り返し、ルックアップで。データプレーンは解決済みの答えを読む。導出し直さない。
+- **管理プレーン** — *観察と設定*のサーフェス。`/aidlc --doctor`、audit ログ、`CLAUDE.md`。ここで設定し、ここで照会する。人間のリズムで。
+
+制御プレーンは rule と sensor を、ワークフロー開始時に**一度だけ**グラフへコンパイルする。データプレーンは実行の残りの間、そのグラフから事前解決済みの答えを読む。ワークフロー途中に捕捉された学びが次のコンパイルを待つのはこのためだ: フレームワークは答えを「トポロジー変更時」（ワークフロー開始）に計算するのであって、「パケット時」（各 stage）ではない。結果は再現可能な実行と、再起動後のクリーンな復旧である。
+
+ユーザーとしては、たいてい一度に 1 つの水平スライス — ワークフローの実行、学びの捕捉、チーム practices のカスタマイズ、起きたことの監査 — に触れる。各スライスは、planes について考えさせることなく、その下のプレーンに触れる。モデルの全体、コンパイル境界、復旧の性質は [Plane アーキテクチャ](../reference/02-plane-architecture.md) に、それが生む遠隔測定の成果物は [Runtime グラフ](../reference/13-runtime-graph.md) にある。
+
+---
+
+## 次のステップ
+
+- [ナレッジ](08-knowledge.md) — エージェントの振る舞いを（制約ではなく）情報で支える 2 層ナレッジシステム
+- [カスタマイズ](13-customization.md) — rule の追加、sensor の追加、ループの拡張、stage やエージェントの追加
+- [対話モード](07-interaction-modes.md) — stage 中に修正がどう起きるか
+- [状態と audit](10-state-and-audit.md) — 学習ループのイベントがどう記録されるか
+- [CLI コマンド](12-cli-commands.md) — doctor の rule ドリフトとペアカバレッジの advisory 行
+- [Rule システム](../reference/08-rule-system.md) · [Sensor システム](../reference/07-sensor-system.md) · [Plane アーキテクチャ](../reference/02-plane-architecture.md) — スキーマ・設計レベルのリファレンス
+- [用語集](glossary.md) — 用語リファレンス

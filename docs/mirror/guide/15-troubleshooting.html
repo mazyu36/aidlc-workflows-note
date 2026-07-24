@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>トラブルシューティング — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/15-troubleshooting</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html" class="here">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#quick-fix-table">クイックフィックス表</a>
+  <a href="#hooks-not-firing">hook が発火しない</a>
+  <a href="#state-file-issues">状態ファイルの問題</a>
+  <a href="#dispatched-stage-timeouts">dispatch された stage のタイムアウト</a>
+  <a href="#approval-gate-stuck">承認 gate で詰まる</a>
+  <a href="#context-compaction">コンテキストコンパクション</a>
+  <a href="#audit-log-growing-too-large">audit ログが大きくなりすぎる</a>
+  <a href="#lock-files-left-behind">残されたロックファイル</a>
+  <a href="#statusline-issues">ステータスラインの問題</a>
+  <a href="#using---doctor">--doctor の使い方</a>
+  <a href="#sharing-a-diagnostic-report">診断レポートの共有</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="troubleshooting">トラブルシューティング</h1>
+<p>本章では、よくある問題とその解決策を症状別に整理する。</p>
+<blockquote>
+<p><strong>Harness に関する注記。</strong> 以下の症状と対処は <strong>Claude Code</strong> 向けに書かれている
+（hook のファイル名、<code>settings.json</code> のブロック、コンパクションの挙動）。決定論の中核
+— 状態・audit・エンジン — はどの harness でも同一に振る舞うが、シェルレベルの
+サーフェスは異なる: 他の harness は hook と設定を独自の方法で束線する
+（<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> を参照）。対処が <code>.claude/</code> のパスや
+Claude の機構を名指しする箇所は、利用 harness の設定ディレクトリに同等物がある。</p>
+</blockquote>
+<hr>
+<h2 id="quick-fix-table">クイックフィックス表</h2>
+<table>
+<thead>
+<tr>
+<th>症状</th>
+<th>クイックフィックス</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>audit エントリが現れない</td>
+<td><code>bun</code> がインストール済みで PATH にあることを確認</td>
+</tr>
+<tr>
+<td>状態ファイルの破損</td>
+<td><code>/aidlc --doctor</code> を実行し、状態テンプレートと比較</td>
+</tr>
+<tr>
+<td>承認 gate で詰まる</td>
+<td>応答を入力する。飛ばすには <code>/aidlc --stage &lt;target&gt;</code> でジャンプ</td>
+</tr>
+<tr>
+<td>セッション途中でコンテキストがコンパクション</td>
+<td><code>/aidlc</code> を実行してチェックポイントから再開</td>
+</tr>
+<tr>
+<td>audit ログが大きすぎる</td>
+<td><code>audit-YYYY-MM.md</code> にリネームする。新しいものが自動で作られる</td>
+</tr>
+<tr>
+<td>hook がハングして見える</td>
+<td>システム一時ディレクトリの古いロックディレクトリを削除（下記参照）</td>
+</tr>
+<tr>
+<td>ステータスラインが &quot;ready&quot; を表示</td>
+<td><code>aidlc-state.md</code> に <code>**Lifecycle Phase**</code> フィールドがあるか確認</td>
+</tr>
+<tr>
+<td>ステータスラインが出ない</td>
+<td><code>bun</code> が PATH にあり、<code>settings.json</code> の <code>statusLine.command</code> が <code>aidlc-statusline.ts</code> を参照しているか確認</td>
+</tr>
+<tr>
+<td>subagent がタイムアウト</td>
+<td><code>/aidlc</code> を実行して再試行するか、stage を inline で実行</td>
+</tr>
+<tr>
+<td>ワークフローが詰まる・挙動不審で助けが要る</td>
+<td><code>/aidlc --doctor --export</code> を実行し、生成された <code>.tar.gz</code> を共有（マスキング済み・作業成果物は含まない）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="hooks-not-firing">hook が発火しない</h2>
+<p><strong>症状</strong>: ファイル書き込み後に intent の <code>audit/</code> シャードにエントリが現れない。または subagent の完了ログが無い。</p>
+<h3 id="bun-not-installed-or-not-on-path"><code>bun</code> が未インストール、または PATH に無い</h3>
+<p>13 の TypeScript hook（<code>aidlc-mint-presence.ts</code>、<code>aidlc-state-transition-guard.ts</code>、<code>aidlc-reviewer-scope.ts</code>、<code>aidlc-audit-logger.ts</code>、<code>aidlc-sensor-fire.ts</code>、<code>aidlc-runtime-compile.ts</code>、<code>aidlc-log-subagent.ts</code>、<code>aidlc-stop.ts</code>、<code>aidlc-validate-state.ts</code>、<code>aidlc-sync-statusline.ts</code>、<code>aidlc-session-start.ts</code>、<code>aidlc-session-end.ts</code>、<code>aidlc-statusline.ts</code>）はすべて <code>bun</code> を必要とする。<code>bun</code> が無い、または非対話シェルの PATH に無い場合、これらの hook は発火しない。</p>
+<pre><code class="language-bash"># macOS / Linux
+curl -fsSL https://bun.sh/install | bash
+
+# Windows
+npm install -g bun
+# or: powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;
+
+# Verify
+bun --version
+</code></pre>
+<p><code>bun</code> が <code>~/.zshenv</code>（zsh）や <code>~/.bashrc</code>（bash / Windows の Git Bash）で PATH に載っていることを確認する -- <code>~/.zshrc</code> だけでは不十分。ネイティブ Windows PowerShell では、<code>npm install -g bun</code> が設定するシステム PATH エントリで足りる。</p>
+<h3 id="reviewer-tool-calls-refused-reviewer-read-scope-">レビュアーのツール呼び出しが拒否される（&quot;reviewer read-scope: ...&quot;）</h3>
+<p>unit 単位の Construction レビュー中、reviewer-scope hook は、dispatch されたレビュアーが兄弟 unit の <code>construction/</code> パスへ届くツール呼び出しを拒否する（stage-protocol §12a の読み取りスコープ境界）。拒否メッセージはスコープ対象の unit と渡された契約パスを名指しし、各拒否は <code>REVIEWER_SCOPE_BLOCKED</code> の audit 行を記録する。自分のソースツリーに AI-DLC の unit と無関係な <code>construction/</code> ディレクトリがあり、正当なレビュアーの読み取りが拒否される場合は、<code>AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1</code> で強制を無効化できる。散文の境界は引き続き有効である。レビューが走っていないのにレビュアーが拒否される場合は古い dispatch 記録を意味する - <code>/aidlc --doctor</code> の hook ドロップカウンタ（<code>reviewer-scope.drops</code>）を確認し、<code>&lt;record&gt;/.aidlc-reviewer-dispatch.json</code> があれば削除する（6 時間より古い記録は無視され自動で掃除される）。</p>
+<h3 id="hook-not-configured">hook が設定されていない</h3>
+<p>hook はプロジェクト全体で <code>.claude/settings.json</code> に登録される（v0.6.0 以降。以前のバージョンはワークフローの背骨の hook を SKILL.md の frontmatter で宣言していた）。<code>settings.json</code> に <code>PreToolUse</code>・<code>PostToolUse</code>・<code>PreCompact</code>・<code>SubagentStop</code>・<code>Stop</code>（加えて <code>SessionStart</code>/<code>SessionEnd</code>）のエントリを持つ <code>hooks</code> ブロックがあることを確認する。これらを移動したアップグレードを取り込んだのにディスク上の <code>settings.json</code> がそれ以前のものである場合は、同梱の <code>settings.json</code> の hooks ブロックを再コピーする。</p>
+<hr>
+<h2 id="state-file-issues">状態ファイルの問題</h2>
+<p><strong>症状</strong>: orchestrator が状態の破損を報告する。またはワークフローの挙動がおかしい。</p>
+<h3 id="state-file-missing">状態ファイルが無い</h3>
+<p>状態ファイルは Initialization 中、または <code>/aidlc</code> に scope が渡されたときに作られる。</p>
+<ul>
+<li><code>/aidlc --status</code> でアクティブなワークフローが無いことを確認する</li>
+<li><code>/aidlc</code> または <code>/aidlc &lt;scope&gt;</code> で新しいワークフローを開始する</li>
+</ul>
+<h3 id="state-file-corrupted">状態ファイルの破損</h3>
+<p><code>validate-state.ts</code> hook はコンパクションのたびに 2 つの必須セクション — <code>## Stage Progress</code> と <code>## Current Status</code> — を確認する。修復手順:</p>
+<ol>
+<li><code>/aidlc --doctor</code> を実行し、報告された状態・グラフ・hook の問題に対処する</li>
+<li>生成された Stage Progress の行が古い場合、状態の再同期を担うエンジン経路を再実行する: <code>/aidlc</code> でワークフローを開始・再開するか、<code>/aidlc --scope &lt;scope&gt;</code> で scope を変えてコンパイル済みグラフと scope グリッドを再適用させる</li>
+<li><code>.claude/knowledge/aidlc-shared/state-template.md</code> はセクションとフィールドの契約としてのみ使う。テンプレートから stage の行を手で復元しないこと</li>
+</ol>
+<hr>
+<h2 id="dispatched-stage-timeouts">dispatch された stage のタイムアウト</h2>
+<p><strong>症状</strong>: dispatch される stage（Reverse Engineering・Practices Discovery・User Stories・Code Generation）がエラーや途切れた出力を返す。</p>
+<h3 id="what-happens">何が起きるか</h3>
+<p>フレームワークは組み込みの再試行プロトコルに従う:</p>
+<ol>
+<li>コンテキストを減らしたプロンプトで<strong>自動再試行</strong></li>
+<li><strong>再試行も失敗した場合</strong>、2 つの選択肢:<ul>
+<li><strong>inline で実行</strong> — subagent の境界なしに、メインの会話で stage を直接実行する</li>
+<li><strong>スキップして後で戻る</strong> — stage を未完了のまま印を付け、後で戻る</li>
+</ul>
+</li>
+</ol>
+<h3 id="manual-recovery">手動での復旧</h3>
+<p><code>/aidlc</code> を再実行する — <code>[-]</code>（進行中）の状態を検出し、再開かやり直しを提案する。何が失敗したかは <code>audit/</code> シャードのエラーエントリで確認する。</p>
+<hr>
+<h2 id="approval-gate-stuck">承認 gate で詰まる</h2>
+<p><strong>症状</strong>: ワークフローが承認 gate であなたの応答を待っている。</p>
+<h3 id="how-to-proceed">進め方</h3>
+<p>促されたら応答を入力する。選択肢:</p>
+<ul>
+<li><strong>Approve</strong> — 次の stage へ続行</li>
+<li><strong>Request Changes</strong> — 修正のためのフィードバックを渡す</li>
+</ul>
+<h3 id="revision-loop-escape-hatch">修正ループのエスケープハッチ</h3>
+<p>同じ stage で 3 回の修正サイクルの後、3 つ目の選択肢 <strong>Accept as-is</strong> が現れる。現行版をアーカイブして先へ進む。</p>
+<h3 id="skipping-a-stage">stage のスキップ</h3>
+<p><code>/aidlc --stage &lt;target&gt;</code> で別の stage へジャンプする。間の stage は状態ファイルで <code>[S]</code>（スキップ）になる。</p>
+<hr>
+<h2 id="context-compaction">コンテキストコンパクション</h2>
+<p><strong>症状</strong>: Claude Code が以前の会話コンテキストを要約した。セッションが直近の議論を「忘れた」ように感じられることがある。</p>
+<h3 id="what-is-preserved">保たれるもの</h3>
+<p>record dir のすべての成果物、<code>aidlc-state.md</code>、<code>audit/</code> シャード、<code>.aidlc-recovery.md</code> はディスクに永続する。失われるのは、メモリ内の会話コンテキストと、まだファイルに書かれていない途中の作業だけである。</p>
+<h3 id="how-to-recover">復旧方法</h3>
+<p>コンパクション後に <code>/aidlc</code> を実行する。フレームワークは:</p>
+<ol>
+<li><code>aidlc-state.md</code> を読んでワークフローの位置を読み込む</li>
+<li><code>.aidlc-recovery.md</code> を状態ファイルと比較する — 食い違えば警告する</li>
+<li>4 つの再開オプションを提案する</li>
+</ol>
+<p>復旧ブレッドクラムが不一致を警告したら、<strong>Redo current stage</strong> を選び、コンパクション中に進行していた stage を安全に再実行する。</p>
+<hr>
+<h2 id="audit-log-growing-too-large">audit ログが大きくなりすぎる</h2>
+<p><strong>症状</strong>: 長いプロジェクトで、このクローンの audit シャードが数千行に育った。</p>
+<h3 id="how-to-archive">アーカイブの方法</h3>
+<pre><code class="language-bash"># from the intent&#39;s record dir; &lt;host&gt;-&lt;clone&gt;.md is this clone&#39;s shard
+mv audit/&lt;host&gt;-&lt;clone&gt;.md audit-archive/&lt;host&gt;-&lt;clone&gt;-2026-02.md
+</code></pre>
+<p>次の <code>/aidlc</code> 呼び出し（または hook が引き起こす任意の書き込み）が新しいシャードを作る。audit の内容はすべて安全にアーカイブできる — エンジンはルーティング判断のために <code>audit/</code> シャードを読まない。</p>
+<h3 id="git-considerations">git 上の考慮</h3>
+<p><code>audit/</code> シャードはコミットされる（gitignore ではない）— <a href="14-artifacts-reference.html#what-to-commit-vs-gitignore">コミットするもの・gitignore するもの</a> を参照。各クローンは自分の <code>&lt;host&gt;-&lt;clone&gt;.md</code> シャードに書くため、並行追記がマージコンフリクトすることはない。diff を扱いやすく保つため、コミット前のアーカイブ（上記）を検討する。</p>
+<hr>
+<h2 id="lock-files-left-behind">残されたロックファイル</h2>
+<p><strong>症状</strong>: hook が短時間ハングしてからスキップするように見える。以後の audit エントリが書かれない。</p>
+<p>audit の hook は並行書き込みを防ぐために <code>mkdir</code> ベースのロック（<code>lib.ts</code> 経由）を使う。hook が中断されるとロックディレクトリが残ることがある。ロックファイルはシステム一時ディレクトリ（<code>os.tmpdir()</code> -- macOS/Linux では通常 <code>/tmp/</code>、Windows では <code>%TEMP%</code>）に作られる。</p>
+<h3 id="finding-stale-locks">古いロックを見つける</h3>
+<pre><code class="language-bash"># macOS / Linux
+ls -la /tmp/.aidlc-*
+
+# Windows (PowerShell)
+Get-ChildItem $env:TEMP -Filter &quot;.aidlc-*&quot;
+</code></pre>
+<p>ロックディレクトリの名前は、システム一時ディレクトリ内の <code>.aidlc-audit-&lt;hash&gt;.lock</code> と <code>.aidlc-subagent-&lt;hash&gt;.lock</code> である。</p>
+<h3 id="clearing-stale-locks">古いロックの掃除</h3>
+<pre><code class="language-bash"># macOS / Linux
+rm -rf /tmp/.aidlc-audit-*.lock /tmp/.aidlc-subagent-*.lock
+
+# Windows (PowerShell)
+Remove-Item &quot;$env:TEMP\.aidlc-audit-*.lock&quot;, &quot;$env:TEMP\.aidlc-subagent-*.lock&quot; -Recurse -Force
+</code></pre>
+<p>AI-DLC のワークフローが実行中でなければ、いつ実行しても安全である。ロックは一時的なもので、hook の呼び出しごとに再作成される。</p>
+<hr>
+<h2 id="statusline-issues">ステータスラインの問題</h2>
+<h3 id="shows-ready-when-workflow-is-active">ワークフローが動いているのに &quot;ready&quot; と表示される</h3>
+<p>ステータスラインは <code>aidlc-state.md</code> の <code>**Lifecycle Phase**</code> フィールドを読む。フィールドが無いか空だと <code>[AIDLC] ready</code> へフォールバックする。</p>
+<p><strong>対処:</strong> <code>/aidlc --doctor</code> で状態ファイルの整合性を確認する。<code>## Current Status</code> セクションに <code>**Lifecycle Phase**</code> のエントリがあることを確認する。</p>
+<h3 id="shows-stale-data">古いデータが表示される</h3>
+<p>想定どおりの挙動 — ステータスラインは状態ファイルが次に書かれたとき、典型的には stage の遷移で更新される。</p>
+<h3 id="not-appearing-at-all">まったく表示されない</h3>
+<ol>
+<li><code>bun</code> が PATH に無い -- ステータスラインは <code>bun .claude/hooks/aidlc-statusline.ts</code> として起動される</li>
+<li><code>settings.json</code> のブロックが無い -- <code>statusLine</code> の設定が存在するか確認する</li>
+<li>状態ファイルが無い -- ワークフローが無いとき、ステータスラインは正しく <code>[AIDLC] ready</code> を表示する</li>
+</ol>
+<hr>
+<h2 id="using---doctor"><code>--doctor</code> の使い方</h2>
+<p><code>--doctor</code> ユーティリティコマンドはセットアップを検証する。何かがおかしいと感じたらいつでも実行する:</p>
+<pre class="term"><code>/aidlc --doctor</code></pre>
+<p>チェック内容: 前提条件（<code>bun</code>）、hook の存在（<code>settings.json</code> が束線するすべての hook — フレームワークの全 13 hook — が <code>.claude/hooks/</code> に存在すること。束線済みなのに無い hook は大きく失敗する）、プロジェクト構造（<code>settings.json</code>）、ワークスペースシェルの準備（<code>.claude/</code> + <code>aidlc/spaces/default/memory/</code>）、状態と audit の一貫性、hook のハートビート、グラフ整合性（サイクル無し・全グラフエントリにファイルがある）、全 9 scope の scope 検証、stage スキーマ + グラフ参照、scope 間のキーワード重複。さらに、常に合格する（終了コードを変えない）2 つの advisory 行を表示する: <strong>Rule drift</strong>（org ポリシーの記入済み見出しと重なる team/project の rule。矛盾レビューのためのフラグ）と <strong>Paired sensor coverage</strong>（<code>pairing:</code> を持つ rule の、名指しされた Sensor が stage に解決すること）。もう 1 行の <strong>Hook drops</strong> は条件付きである: 静かに劣化した hook（例: contribution を適用できなかった plugin compose、失敗した再コンパイル）は、重大度タグ付きの行を <code>&lt;hooks-health&gt;/&lt;hook&gt;.drops</code> に記録する。<code>[degraded]</code> のドロップは doctor を<strong>失敗</strong>させ（CI の gate が中途半端に適用された plugin を捕まえられる）、<code>[advisory]</code> のドロップ（想定内・無害な状態）は合格の行になる。plugin compose の hook は実行のたびに drops ファイルを書き直すため、原因を直して再 compose すれば自己クリアする。全合格で 0、いずれかの失敗で 1 で終了し、レポートはどちらでも stdout に書かれる。<code>--doctor</code> は<strong>読み取り専用</strong>である: intent がまだ無い新しいシェルでは何も作らない — 最初の intent が生まれる前でも安全に実行でき、何かがおかしいと感じたら最初に試すものである。intent が存在するようになると、<code>HEALTH_CHECKED</code>（と <code>GUARDRAIL_LOADED</code>）の audit 行を記録する。</p>
+<p>ワークフローに問題があるとき、<code>--doctor</code> は構造化された指摘（未解決の gate、古い・欠けた runtime グラフ、冷えた hook、その他の「前に進まない」原因）を列挙する <strong>Workflow diagnosis</strong> セクションも表示する — <code>--doctor --export</code> がレポートに書くのと同じ分析である。</p>
+<p>各チェックが何を検証し、失敗をどう直すかの詳細は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md#aidlc-doctor-health-check">CLI コマンド</a> を参照。</p>
+<hr>
+<h2 id="sharing-a-diagnostic-report">診断レポートの共有</h2>
+<p>ワークフローが詰まる・挙動不審 — 開かない gate、進まない stage、承認済みレポートの
+繰り返し拒否 — でメンテナに見てほしいときは、次を実行する:</p>
+<pre class="term"><code>/aidlc --doctor --export</code></pre>
+<p>これは新しい <code>--doctor</code> パスを実行し、小さな<strong>マスキング済み</strong>の診断レポートを
+<code>aidlc/diagnostics/</code> に書く（<code>--output &lt;dir&gt;</code> で変更可）。システムの <code>tar</code> が
+使えるときはタイムスタンプ付きの <code>.tar.gz</code> にまとめ、無ければレポートディレクトリを
+残して自分で圧縮するよう伝える。そのアーカイブ（またはディレクトリ）を共有する —
+診断とマスキング済みの証拠を運ぶが、<strong>あなたの作業成果物は運ばない</strong>。ワークスペースの
+ソース、生の状態 / audit / runtime グラフのファイル、成果物 / contribution / 質問 /
+memory の本文は含まれない。パスは正規化され、intent の id はハッシュ化され、
+秘密らしき値はスクラブされる。</p>
+<p>レポートは audit トレイルからワークフローのタイムラインを再構成し、決定論的な
+条件→対処のルールを実行する。捕まえる最も多い 2 つの原因:</p>
+<ul>
+<li><strong>未解決の承認 gate</strong> — gate が解決されないままの stage は、「前に進まない」原因として
+単独で最も多い。</li>
+<li><strong>古い・欠けた runtime グラフ / 冷えた hook</strong> — authored な入力より古い（または無い）
+runtime グラフ、長時間発火していない hook は、走らなかった再コンパイルを指す。</li>
+</ul>
+<p>レポート内の <code>report.md</code> はすべての指摘を対処付きで列挙する。復旧バイパス
+（<code>AIDLC_DISABLE_*</code> の env 変数のような）を名指しする対処には、自動化は安全でない
+というフラグが付く。レポートの完全な内容と安全モデルは
+<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md#aidlc-doctor-export-write-a-diagnostic-report">CLI コマンド</a> を参照。</p>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="10-state-and-audit.html">状態の追跡と audit トレイル</a> — 状態ファイルの構造</li>
+<li><a href="11-session-management.html">セッション管理</a> — コンパクション後の再開オプション</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> — <code>--doctor</code>・<code>--status</code>・<code>--stage</code> の使い方</li>
+<li><a href="glossary.html">用語集</a> — コンパクション・復旧ブレッドクラム・hook の定義</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/15-troubleshooting.md"><code>docs/guide/15-troubleshooting.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

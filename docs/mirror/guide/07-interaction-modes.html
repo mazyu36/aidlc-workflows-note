@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>対話モード — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/07-interaction-modes</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html" class="here">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#tri-mode-question-flow">3 モードの質問フロー</a>
+  <a href="#approval-gates">承認 gate</a>
+  <a href="#the-3-strike-revision-escape-hatch">3 ストライクの修正エスケープハッチ</a>
+  <a href="#add-skipped-stage-option">スキップ済み stage の追加オプション</a>
+  <a href="#skipping-and-navigating-stages">stage のスキップと移動</a>
+  <a href="#progress-tracking">進捗の追跡</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="interaction-modes">対話モード</h1>
+<p>AI-DLC は、stage の中でエージェントと対話する 3 つの方法と、あらゆる意思決定ポイントで制御を保つ承認 gate を提供する。</p>
+<blockquote>
+<p><strong>Harness に関する注記。</strong> gate と質問の描画は harness ごとに異なる: Claude Code は
+<code>AskUserQuestion</code> ウィジェットを使い、他の harness は番号付きの散文の選択肢を描画する
+（番号か自由文で回答）。questions ファイルが正である。gate がいつ発火し、何を尋ね、
+あなたが制御を保つという<em>意味論</em>はエンジン側にあるため同一である。
+<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> を参照。</p>
+</blockquote>
+<hr>
+<h2 id="tri-mode-question-flow">3 モードの質問フロー</h2>
+<p>stage が入力を集めるとき、エージェントは 3 つの対話モードを提示する。いまの stage に最も合うモードを選ぶ。</p>
+<pre class="term"><code><span class="t-prompt">▸ Choose interaction mode:</span>
+  (1) Guide Me — agent asks structured questions
+  (2) Edit File — write directly to the artifact
+  (3) Chat — freeform discussion</code></pre>
+<h3 id="guide-me">Guide Me</h3>
+<p>エージェントが構造化されたプロンプトで質問を 1 つずつ対話的に進める。エージェントに会話をリードさせ、抜け漏れを防ぎたいときに最適。</p>
+<ul>
+<li>エージェントが質問を 1 つずつ（またはまとめて）提示する</li>
+<li>各質問に直接答える</li>
+<li>回答はトレーサビリティのために stage の questions ファイルに記録される</li>
+</ul>
+<h3 id="edit-file">Edit File</h3>
+<p>エージェントが questions ファイルを作成（または開き）、あなたが直接編集する。欲しいものが既に分かっていて、質問に答えるより書き下ろしたいときに最適。</p>
+<ul>
+<li>questions ファイルが空欄の回答フィールド付きで intent の record dir に現れる</li>
+<li>自分のペースで回答を埋める</li>
+<li>エージェントが完成したファイルを読んで先へ進む</li>
+</ul>
+<h3 id="chat">Chat</h3>
+<p>エージェントとの自由な会話。アイデアを探索したいときや、要件がまだ固まっていないときに最適。</p>
+<ul>
+<li>エージェントと自由に議論する</li>
+<li>エージェントが会話から決定事項を抽出する</li>
+<li>抽出された決定事項が、正としての questions ファイルへ書き戻される</li>
+</ul>
+<h3 id="switching-modes-mid-stage">stage 途中のモード切り替え</h3>
+<p>stage の途中でいつでもモードを切り替えられる。3 つのモードはすべて、決定事項の正準記録としての questions ファイルに収斂する。切り替えで進捗は失われない — 捕捉済みの回答はファイルに残る。</p>
+<hr>
+<h2 id="approval-gates">承認 gate</h2>
+<p>すべての stage（Initialization の 3 stage を除く）は承認 gate で終わる。ワークフローが先に進む前にエージェントの仕事をレビューする、あなたのチェックポイントである。</p>
+<h3 id="standard-gate">標準の gate</h3>
+<p>既定の承認 gate は 2 つの選択肢を提示する:</p>
+<pre class="term"><code><span class="t-prompt">▸ How would you like to proceed?</span>
+  (1) Approve — Continue to [next stage]
+  (2) Request Changes — Provide revision feedback</code></pre>
+<p><code>[next stage]</code> にはワークフローが実際に次に走らせる stage（例:「Continue to NFR Requirements」）、最終 stage では「Complete workflow」が入る。エンジンが計算するため、推測ではなく常に正しい。</p>
+<ul>
+<li><strong>Approve</strong> は結果を報告する。エンジンが stage を完了にし、<code>aidlc-state.md</code> を更新し、
+進捗行を表示して、次の stage へ進む</li>
+<li><strong>Request Changes</strong> は具体的なフィードバックを渡せる。エージェントが作業を修正して承認 gate を再提示する</li>
+</ul>
+<p>gate は本物の人間の応答を要求する: プロンプトの入力や <code>AskUserQuestion</code> ウィジェットへの回答は、audit の台帳に human turn（<code>HUMAN_TURN</code> イベント）を記録し、承認（および明確化質問への回答）は、直近の gate 解決以降に human turn が 1 つも記録されていなければ拒否される — つまり autopilot で走るモデルが、人間が何も行動していないのに承認を捏造することはできない。gate ウィジェットが human turn を記録しない harness では、一度だけ短いメッセージ（例えば「approve」）を打って記録を残す。（台帳にまだ human turn が無い harness では、gate は fail open となりこれを要求しない。）</p>
+<h3 id="approval-gate-flow">承認 gate のフロー</h3>
+<pre class="mermaid">
+flowchart TD
+    COMPLETE["Stage work complete"]
+    AUDIT_PRE["Append to this clone's audit shard:\nstage summary + options\n(fresh ISO timestamp)"]
+    ASK["AskUserQuestion:\nApproval Gate"]
+
+    APPROVE["Approve"]
+    CHANGES["Request Changes"]
+    ACCEPT["Accept as-is\n(escape hatch)"]
+    ADD_STAGE["Add Skipped Stage\n(Ideation/Inception only)"]
+
+    AUDIT_POST_A["Log: User approved\n(fresh timestamp)"]
+    AUDIT_POST_C["Log: User requested changes\n(fresh timestamp)"]
+    AUDIT_POST_ACC["Log: User accepted as-is\n(fresh timestamp)"]
+    AUDIT_POST_ADD["Log: User added stage\n(fresh timestamp)"]
+
+    REVISION_COUNT{"Revision\ncycle &gt;= 3?"}
+    NOTE_2ND["After 2nd revision:\nnote that escape hatch\nactivates next cycle"]
+
+    REPORT_APPROVED["Report approved:\nengine completes + routes"]
+    PROGRESS["Display progress line:\nN/total overall"]
+    NEXT_STAGE["Proceed to next stage"]
+
+    REVISE["Apply user feedback\nto stage artifacts"]
+    RE_PRESENT["Re-present completion\nmessage"]
+
+    ADD_EXEC["Insert skipped stage\ninto workflow"]
+
+    COMPLETE --&gt; AUDIT_PRE --&gt; ASK
+    ASK --&gt; APPROVE
+    ASK --&gt; CHANGES
+    ASK --&gt; ACCEPT
+    ASK --&gt; ADD_STAGE
+
+    APPROVE --&gt; AUDIT_POST_A --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
+    ACCEPT --&gt; AUDIT_POST_ACC --&gt; REPORT_APPROVED
+
+    CHANGES --&gt; AUDIT_POST_C --&gt; REVISION_COUNT
+    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; RE_PRESENT --&gt; AUDIT_PRE
+    REVISION_COUNT --&gt;|"&gt;= 3"| REVISE
+
+    ADD_STAGE --&gt; AUDIT_POST_ADD --&gt; ADD_EXEC
+
+    style COMPLETE fill:#1d332b,stroke:#57d9a9
+    style ASK fill:#1b2c47,stroke:#6db3ff
+    style APPROVE fill:#1d332b,stroke:#57d9a9
+    style CHANGES fill:#35301b,stroke:#e5cf63
+    style ACCEPT fill:#38291a,stroke:#f2b35c
+    style ADD_STAGE fill:#2a2440,stroke:#b895ff
+    style NEXT_STAGE fill:#1d332b,stroke:#57d9a9
+</pre>
+<hr>
+<h2 id="the-3-strike-revision-escape-hatch">3 ストライクの修正エスケープハッチ</h2>
+<p>同じ stage で 3 回以上変更を要求すると、3 つ目の選択肢が現れる:</p>
+<pre class="term"><code><span class="t-prompt">▸ This is revision cycle 4. How would you like to proceed?</span>
+  (1) Approve — Continue to [next stage]
+  (2) Request Changes — Provide revision feedback
+  (3) Accept as-is — Archive current version and move on</code></pre>
+<p><strong>Accept as-is</strong> は stage 成果物の現行版をアーカイブしてワークフローを前進させる。完璧が善の敵になったときの、無限の修正ループを防ぐ。</p>
+<h3 id="how-it-activates">有効化のされ方</h3>
+<table>
+<thead>
+<tr>
+<th>修正サイクル</th>
+<th>起きること</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1 回目</td>
+<td>標準の 2 択 gate</td>
+</tr>
+<tr>
+<td>2 回目</td>
+<td>標準の 2 択 gate に注記を添える:「あと 1 回修正すると『Accept as-is』が選べるようになる」</td>
+</tr>
+<tr>
+<td>3 回目以降</td>
+<td>Accept as-is 付きの 3 択 gate</td>
+</tr>
+</tbody></table>
+<p>修正カウントは次の stage へ進むとリセットされる。</p>
+<hr>
+<h2 id="add-skipped-stage-option">スキップ済み stage の追加オプション</h2>
+<p><strong>Ideation</strong> と <strong>Inception</strong> の phase では、承認 gate に、以前スキップされた stage をワークフローへ戻す条件付きの選択肢が含まれることがある:</p>
+<pre class="term"><code><span class="t-prompt">▸ How would you like to proceed?</span>
+  (1) Approve — Continue to Scope Definition
+  (2) Request Changes — Provide revision feedback
+  (3) Add Market Research — Include Market Research which was skipped</code></pre>
+<p>この選択肢が現れるのは次のときだけである:</p>
+<ul>
+<li>現在の stage が Ideation か Inception にある</li>
+<li>先にある stage が scope ルーティングでスキップされた</li>
+<li>そのスキップ済み stage が現在の文脈に関連する</li>
+</ul>
+<p>選択すると、スキップされていた stage がワークフロー計画に挿入される。追加された stage を通ってワークフローは通常どおり続く。</p>
+<hr>
+<h2 id="skipping-and-navigating-stages">stage のスキップと移動</h2>
+<p>承認 gate 以外にも、移動の選択肢がある:</p>
+<table>
+<thead>
+<tr>
+<th>コマンド</th>
+<th>効果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/aidlc --stage &lt;name&gt;</code></td>
+<td>特定の stage へジャンプ（間の stage は <code>[S]</code> が付く）</td>
+</tr>
+<tr>
+<td><code>/aidlc --phase &lt;name&gt;</code></td>
+<td>phase の先頭へジャンプ</td>
+</tr>
+</tbody></table>
+<p>詳細は <a href="11-session-management.html">セッション管理</a> と <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> を参照。</p>
+<hr>
+<h2 id="progress-tracking">進捗の追跡</h2>
+<p>すべての承認の後、進捗行が表示される:</p>
+<pre class="term"><code>Progress: 13/32 overall | 3/7 IDEATION stages complete. Next: Approval &amp; Handoff</code></pre>
+<p>表示内容:</p>
+<ul>
+<li>全 stage を通した合計の進捗</li>
+<li>現在の phase 内の進捗</li>
+<li>次の stage の名前</li>
+</ul>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="02-your-first-workflow.html">最初のワークフロー</a> — 対話モードを文脈の中で見る</li>
+<li><a href="10-state-and-audit.html">状態と audit</a> — 決定がどう追跡されるか</li>
+<li><a href="11-session-management.html">セッション管理</a> — 再開・やり直し・ジャンプ</li>
+<li><a href="glossary.html">用語集</a> — 用語リファレンス</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/07-interaction-modes.md"><code>docs/guide/07-interaction-modes.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

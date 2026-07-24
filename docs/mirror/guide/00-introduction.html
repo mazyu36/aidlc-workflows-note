@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>はじめに — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/00-introduction</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html" class="here">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#what-is-ai-dlc">AI-DLC とは</a>
+  <a href="#philosophy-small-mob-broad-agents">哲学: Small Mob, Broad Agents</a>
+  <a href="#how-the-orchestrator-works">orchestrator の仕組み</a>
+  <a href="#who-this-guide-is-for">本ガイドの対象読者</a>
+  <a href="#key-numbers">主要な数値</a>
+  <a href="#guide-map">ガイドマップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="introduction">はじめに</h1>
+<blockquote>
+<p><a href="../README.html">AI-DLC ドキュメント</a> の一部 · <strong>ユーザーガイド</strong> · <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md">Harness Engineer ガイド</a> · <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">開発者リファレンス</a></p>
+</blockquote>
+<h2 id="what-is-ai-dlc">AI-DLC とは</h2>
+<p>AI-DLC（AI-Driven Development Life Cycle）は、AI 支援によるソフトウェア開発を、再現可能で追跡可能な phase に構造化するための方法論である。これは <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AWS AI-DLC methodology</a> を起源とする。本リポジトリはこれを単一の harness 非依存なコアからネイティブに実装しており、すでに利用している CLI harness の中で動作する。現時点では Claude Code、Kiro CLI、Kiro IDE、Codex CLI、opencode である。本ガイドは harness 非依存であり、harness ごとに詳細が異なる箇所ではその旨を明記し、対応する harness の章へ誘導する（<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で実行する</a> を参照）。特に断りがない限り、例は Claude Code で示す。</p>
+<p>呼び出しは単一のコマンドで行う:</p>
+<pre class="term"><code>/aidlc Build a REST API for inventory management</code></pre>
+<p>その後 AI-DLC は、intent の捕捉から要件・設計・実装・テスト・デプロイに至る構造化されたワークフローを通じて利用者を導きつつ、あらゆる意思決定ポイントで制御を利用者の手に残す。</p>
+<h2 id="philosophy-small-mob-broad-agents">哲学: Small Mob, Broad Agents</h2>
+<p>数十もの狭い専門家（ウォーターフォールの引き継ぎの連鎖を再現してしまうアプローチ）ではなく、AI-DLC は<strong>広範な能力を持つ 11 個のエージェント</strong>を用いる。各エージェントは複数の stage と phase にまたがって関与する。各エージェントは stage をまたいでコンテキストを引き継ぐため、引き継ぎが不要になり、調整のオーバーヘッドが減る。</p>
+<p>これは効果的な人間のチームの働き方を反映している。3〜5 人の mob が機能全体をカバーし、各人が単一の狭い専門性ではなく広範なスキルを持ち寄る。</p>
+<h2 id="how-the-orchestrator-works">orchestrator の仕組み</h2>
+<p>AI-DLC は本質的にシンプルなループを実行する。決定論的な <strong>engine</strong> が次に起きることを決定し、<strong>conductor</strong>（<code>/aidlc</code> セッション、<code>SKILL.md</code>）がそれを実行し、次の一手を engine に問い合わせる。このループ全体を通じて、フレームワークは次を行う:</p>
+<ol>
+<li><strong>stage ファイルを読む</strong> — 5 つの phase にまたがる 32 個の stage 定義。各定義が入力・手順・出力・リードエージェントを指定する</li>
+<li><strong>エージェントペルソナを読み込む</strong> — 専門知識を備えたドメインエキスパートの視点（アーキテクト、開発者、プロダクトマネージャーなど）を有効化する</li>
+<li><strong>状態と audit を管理する</strong> — <code>aidlc-state.md</code> で進捗を追跡し、追跡可能性のためにすべての意思決定を intent の <code>audit/</code> シャードに記録する</li>
+<li><strong>stage トポロジーにまたがって委譲する</strong> — 集中的な自律作業やマルチエージェント協働のために、subagent を hub-and-spoke、pipeline、mob として dispatch する</li>
+<li><strong>承認 gate を提示する</strong> — 各 stage の後、workflow が進む前に利用者がレビューして承認する</li>
+</ol>
+<p>engine はルーティングを担う（次はどの stage か、どの scope か、いつ止まるか）。conductor は実行品質を担う（stage をうまく回し、良い質問をし、意思決定を利用者に提示する）。ほとんどの stage は <strong>inline</strong> で実行される。conductor がエージェントの視点を採用し、会話の中で利用者と直接作業する。4 つの stage は dispatch されるトポロジーを使う。Practices Discovery と Code Generation は <code>subagent</code> ハブとして、Reverse Engineering は 2 リンクの <code>pipeline</code> として、User Stories は <code>mob</code> として実行される。完全なトポロジーは 28 inline / 2 subagent / 1 pipeline / 1 mob である。全体アーキテクチャについては、開発者リファレンスの <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine and Skill System</a> を参照。</p>
+<h2 id="who-this-guide-is-for">本ガイドの対象読者</h2>
+<p>本ガイドは、ソフトウェアを構築するために AI-DLC を<strong>使う</strong>すべての人に向けたものである:</p>
+<ul>
+<li><strong>新規ユーザー</strong> — <a href="01-getting-started.html">はじめかた</a>、<a href="02-your-first-workflow.html">最初のワークフロー</a>、<a href="03-spaces-and-intents.html">Space と Intent</a> から始めるとよい</li>
+<li><strong>通常ユーザー</strong> — <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a>、<a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>、<a href="15-troubleshooting.html">トラブルシューティング</a> を参照する</li>
+<li><strong>チームリード</strong> — チームの標準に合わせて AI-DLC をカスタマイズするには、<a href="08-knowledge.html">ナレッジ</a> と <a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照する</li>
+</ul>
+<p>AI-DLC の<em>振る舞いそのもの</em>を作り変えるには — stage やエージェントの追加、scope の定義、rule や sensor の作成、チームナレッジの追加（すべて設定であり、コードは不要）— <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md">Harness Engineer ガイド</a> を参照。AI-DLC のコードベース自体を変更するには、<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">開発者リファレンス</a> を参照。</p>
+<h2 id="key-numbers">主要な数値</h2>
+<table>
+<thead>
+<tr>
+<th>指標</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>5（Initialization、Ideation、Inception、Construction、Operation）</td>
+</tr>
+<tr>
+<td>Stage</td>
+<td>32</td>
+</tr>
+<tr>
+<td>エージェント</td>
+<td>合計 14: 11 のドメインエキスパート、2 のレビュアー、および composer</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>9（enterprise から workshop まで）+ 自動検出</td>
+</tr>
+<tr>
+<td>Depth レベル</td>
+<td>3（Minimal、Standard、Comprehensive）</td>
+</tr>
+<tr>
+<td>テスト戦略レベル</td>
+<td>3（Minimal、Standard、Comprehensive）</td>
+</tr>
+<tr>
+<td>Audit イベントタイプ</td>
+<td>74</td>
+</tr>
+</tbody></table>
+<h2 id="guide-map">ガイドマップ</h2>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>学べる内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="01-getting-started.html">はじめかた</a></td>
+<td>前提条件、インストール、最初のヘルスチェック</td>
+</tr>
+<tr>
+<td><a href="02-your-first-workflow.html">最初のワークフロー</a></td>
+<td>完全な実行の注釈付きウォークスルー</td>
+</tr>
+<tr>
+<td><a href="03-spaces-and-intents.html">Space と Intent</a></td>
+<td>workspace のレイアウト: 複数の作業を space と intent にまたがって実行する</td>
+</tr>
+<tr>
+<td><a href="04-phases-and-stages.html">Phase と Stage</a></td>
+<td>5 つの phase と 32 個の stage を解説</td>
+</tr>
+<tr>
+<td><a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a></td>
+<td>scope / depth / テスト戦略の選び方と上書き方法</td>
+</tr>
+<tr>
+<td><a href="06-agents.html">エージェント</a></td>
+<td>14 エージェントの一覧: 11 のドメインエキスパート、2 のレビュアー、および composer</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/README.md">エージェント詳解</a></td>
+<td>エージェントごとのリファレンスページ: 責務、stage、ナレッジ</td>
+</tr>
+<tr>
+<td><a href="07-interaction-modes.html">インタラクションモード</a></td>
+<td>Guide Me / Edit File / Chat と承認 gate</td>
+</tr>
+<tr>
+<td><a href="08-knowledge.html">ナレッジ</a></td>
+<td>会社の標準や規約を追加する</td>
+</tr>
+<tr>
+<td><a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a></td>
+<td>自己学習する振る舞いの rule</td>
+</tr>
+<tr>
+<td><a href="10-state-and-audit.html">状態と Audit</a></td>
+<td>進捗と意思決定がどう追跡されるか</td>
+</tr>
+<tr>
+<td><a href="11-session-management.html">セッション管理</a></td>
+<td>resume、redo、jump、recovery、セッションレポートのスキル</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a></td>
+<td>例付きの完全なフラグリファレンス</td>
+</tr>
+<tr>
+<td><a href="13-customization.html">カスタマイズ</a></td>
+<td>設定、scope 設定、エージェントのチューニング</td>
+</tr>
+<tr>
+<td><a href="14-artifacts-reference.html">成果物リファレンス</a></td>
+<td>intent ごとの record dir（<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>）を解説</td>
+</tr>
+<tr>
+<td><a href="15-troubleshooting.html">トラブルシューティング</a></td>
+<td>症状ベースの問題解決</td>
+</tr>
+<tr>
+<td><a href="16-worked-examples.html">実例集</a></td>
+<td>bugfix と feature の完全なウォークスルー</td>
+</tr>
+<tr>
+<td><a href="17-skills.html">スキルとランナーコマンド</a></td>
+<td><code>/aidlc-*</code> の stage ランナー・scope ランナーコマンドと、独自ランナー作成の道筋</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/workshop-mode.md">Workshop モード</a></td>
+<td>workshop scope 向けのマルチ開発者手動レシピ（git push による claim セマンティクス）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で実行する</a></td>
+<td>Kiro CLI、Kiro IDE、Codex CLI、opencode でのインストールと実行、および harness ごとの差異</td>
+</tr>
+<tr>
+<td><a href="glossary.html">用語集</a></td>
+<td>全用語の定義</td>
+</tr>
+</tbody></table>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/00-introduction.md"><code>docs/guide/00-introduction.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

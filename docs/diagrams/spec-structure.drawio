@@ -1,0 +1,56 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="spec-structure" name="spec-structure">
+    <mxGraphModel dx="1300" dy="700" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="620" math="0" shadow="0" background="#161d29">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="zlib" value="ライブラリ（ツール非依存の正・DRY）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="340" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="lb1" value="Persona-Agents&#10;専門家の協働をモデル化した&#10;マルチエージェント構成の単位" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="300" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="lb2" value="Stages&#10;何の作業を行い、完了時に&#10;どの成果物が在るべきかの定義&#10;（三区画モデルで記述）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="300" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="lb3" value="Knowledge&#10;エージェントが生成と自己修正に&#10;用いる知識の集積" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="310" width="300" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="lb4" value="stage 横断の事後条件ライブラリ&#10;命名規約・セキュリティポリシー等の&#10;ワークフロー全域の不変条件" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="430" width="300" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="orch" value="orchestrator — 5 つの機能&#10;&#10;a. ゴールの所有（end-to-end の結果に責任）&#10;b. ワークフロー構成（可変の計画・rigid pipeline にしない）&#10;c. ルーティング・可観測性・制御（停止条件と監査）&#10;d. 抽象化境界（stage はブラックボックス。&#10;    事後条件の充足だけを検証）&#10;e. stage 横断の不変条件の実施" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=14;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="440" y="140" width="360" height="300" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pm" value="package manager&#10;&#10;正規定義をツール別構成へ投影&#10;（参照で共有・物理コピーしない = DRY）&#10;&#10;共有境界: stage 構造 / 区画 1・2 / hints&#10;ツール固有機能は各 emitter が上乗せ&#10;（最小公倍数に落とさない）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=12;align=left;spacing=14;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="880" y="160" width="330" height="260" as="geometry" />
+        </mxCell>
+
+        <mxCell id="t1" value="Kiro" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="880" y="490" width="150" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="t2" value="Claude Code" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="1060" y="490" width="150" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="t3" value="Cursor / GitHub Copilot ほか" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;dashed=1;fontColor=#aab6cc;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="880" y="548" width="330" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1" value="宣言されたメタデータで構成" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="lb2" target="orch"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="s2" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.25" edge="1" parent="1" source="lb1" target="orch"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="s3" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.75" edge="1" parent="1" source="lb3" target="orch"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="s4" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0.25;entryY=1" edge="1" parent="1" source="lb4" target="orch">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="530" y="480" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="s5" value="定義一式をパッケージ化" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="orch" target="pm"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="s6" value="subagent / skill 等のネイティブ構成として出力" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="pm" target="t1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="66" y="0" as="offset" /></mxGeometry>
+        </mxCell>
+        <mxCell id="s7" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;endArrow=block;rounded=1;exitX=0.8;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="pm" target="t2"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

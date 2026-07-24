@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scope・Depth・テスト戦略 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/05-scopes-and-depth</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html" class="here">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#the-9-core-scopes">9 つのコア scope</a>
+  <a href="#scope-routing-table">scope ルーティング表</a>
+  <a href="#auto-detection-from-freeform-intent">自由記述 intent からの自動検出</a>
+  <a href="#the-adaptive-composer">適応コンポーザー</a>
+  <a href="#the-3-depth-levels">3 つの depth レベル</a>
+  <a href="#specifying-scope-directly">scope の直接指定</a>
+  <a href="#the-3-test-strategy-levels">3 つのテスト戦略レベル</a>
+  <a href="#choosing-the-right-scope">正しい scope の選び方</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="scopes-depth-and-test-strategy">Scope・Depth・テスト戦略</h1>
+<p>scope は<strong>どの stage を実行するか</strong>を制御する。depth は各 stage が<strong>どれだけ詳細に</strong>成果物を作るかを制御する。テスト戦略は<strong>いくつのテストを</strong>生成するかを制御する。3 つが合わさって、包括的なエンタープライズ機能から素早い bugfix まで、ライフサイクルをタスクに適応させる。</p>
+<hr>
+<h2 id="the-9-core-scopes">9 つのコア scope</h2>
+<p>core は 9 つの名前付き scope を同梱する。各 scope は stage の集合と既定の depth レベルを定義する。plugin のインストールで scope を追加でき、<code>bun .claude/tools/aidlc-utility.ts select-plugins &lt;names&gt;</code> で可視の plugin scope を絞れる。<code>plugins</code> の選択が core を無効化した（<code>aidlc</code> を外した）場合、core の scope ファイルはインストールされたまま残るが、core が再有効化されるまで有効なランタイム scope にはならない。Initialization の stage は有効な全 scope で引き続き実行される。</p>
+<h3 id="enterprise">enterprise</h3>
+<p><strong>使いどころ:</strong> 完全な audit トレイル・コンプライアンスレビュー・本番級の運用を要する、規制下のエンタープライズ機能を作るとき。</p>
+<ul>
+<li><strong>Stage:</strong> 全 32</li>
+<li><strong>既定 depth:</strong> Comprehensive</li>
+<li><strong>含むもの:</strong> コンプライアンス・セキュリティ・運用の stage 一式</li>
+</ul>
+<h3 id="feature">feature</h3>
+<p><strong>使いどころ:</strong> 規模を問わず新機能を作るとき。AI-DLC がより特定的なマッチを決められないときの既定 scope である。</p>
+<ul>
+<li><strong>Stage:</strong> 全 32</li>
+<li><strong>既定 depth:</strong> Standard</li>
+<li><strong>含むもの:</strong> 全 stage、標準の成果物詳細度</li>
+</ul>
+<h3 id="mvp">mvp</h3>
+<p><strong>使いどころ:</strong> greenfield の minimum viable product を作るとき。後段の運用をスキップするが、設計と construction は完全に保つ。</p>
+<ul>
+<li><strong>Stage:</strong> 32 中 22</li>
+<li><strong>既定 depth:</strong> Standard</li>
+<li><strong>スキップ:</strong> Operation の全 7 stage（deployment pipeline・environment provisioning・deployment execution・observability・incident response・performance validation・feedback）に加え、Ideation の Market Research・Team Formation・Approval Handoff（スキップ 10・実行 22）</li>
+</ul>
+<h3 id="poc">poc</h3>
+<p><strong>使いどころ:</strong> 実現可能性を素早く証明するとき。Ideation と Inception の大半をスキップし、早くコードに到達することに集中する。</p>
+<ul>
+<li><strong>Stage:</strong> 32 中 8</li>
+<li><strong>既定 depth:</strong> Minimal</li>
+<li><strong>スキップ:</strong> Market Research、Feasibility、Team Formation、Mockups、User Stories、Operation の大半</li>
+</ul>
+<h3 id="bugfix">bugfix</h3>
+<p><strong>使いどころ:</strong> 特定のバグを直すとき。intent の捕捉からコード生成・テストまでの効率化された経路。</p>
+<ul>
+<li><strong>Stage:</strong> 32 中 7</li>
+<li><strong>既定 depth:</strong> Minimal</li>
+<li><strong>スキップ:</strong> Market Research、Feasibility、Team Formation、Mockups、設計・アーキテクチャ系の大半、Operation の全 stage</li>
+</ul>
+<h3 id="refactor">refactor</h3>
+<p><strong>使いどころ:</strong> 機能を変えずに既存コードを整理・再構成するとき。</p>
+<ul>
+<li><strong>Stage:</strong> 32 中 8</li>
+<li><strong>既定 depth:</strong> Minimal</li>
+<li><strong>スキップ:</strong> bugfix に類似 — コード分析・設計・実装に集中</li>
+</ul>
+<h3 id="infra">infra</h3>
+<p><strong>使いどころ:</strong> インフラの変更（新しい環境、CDK/CloudFormation の更新、コスト最適化）を行うとき。</p>
+<ul>
+<li><strong>Stage:</strong> 32 中 13</li>
+<li><strong>既定 depth:</strong> Standard</li>
+<li><strong>スキップ:</strong> ユーザー向けの stage（ストーリー・モックアップ・ユーザーフロー）— アーキテクチャ・インフラ・デプロイに集中</li>
+</ul>
+<h3 id="security-patch">security-patch</h3>
+<p><strong>使いどころ:</strong> CVE やセキュリティ脆弱性への対応。セキュリティ関連 stage を通る高速経路。</p>
+<ul>
+<li><strong>Stage:</strong> 32 中 10</li>
+<li><strong>既定 depth:</strong> Minimal</li>
+<li><strong>スキップ:</strong> Market Research、Team Formation、Mockups、セキュリティ以外の設計 stage</li>
+</ul>
+<h3 id="workshop">workshop</h3>
+<p><strong>使いどころ:</strong> AI-DLC のワークショップやトレーニングを運営するとき。プロジェクトはファシリテーターが事前決定しており、参加者は mob として inception・construction・operation を進める。</p>
+<ul>
+<li><strong>Stage:</strong> 32 中 25</li>
+<li><strong>既定 depth:</strong> Standard</li>
+<li><strong>既定テスト戦略:</strong> Minimal（Nyquist）— ワークショップのペースを速く保つ</li>
+<li><strong>スキップ:</strong> Ideation の全 stage（1.1-1.7）— プロジェクトの scope は事前決定済み</li>
+</ul>
+<p>複数開発者での手動レシピと claim の意味論は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/workshop-mode.md">Workshop モード</a> を参照。</p>
+<hr>
+<h2 id="scope-routing-table">scope ルーティング表</h2>
+<p>権威あるデータは <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイル（scope の同一性）、plugin の scope ファイル、そして各 stage の <code>scopes:</code> frontmatter（所属）にあり、<code>.claude/tools/data/scope-grid.json</code> へコンパイルされる。コンパイル済みグリッドは現在の plugin 選択で有効な scope だけを含む。生きたコンパイル済みの表は <code>bun .claude/tools/aidlc-utility.ts scope-table</code> で（ユーザー向けの 1 行説明は <code>bun .claude/tools/aidlc-utility.ts help</code> で）確認できる。</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>EXECUTE / 総数</th>
+<th>Depth</th>
+<th>テスト戦略</th>
+<th>ユースケース</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>enterprise</code></td>
+<td>32 / 32</td>
+<td>Comprehensive</td>
+<td>Comprehensive</td>
+<td>規制下のエンタープライズ機能、完全な audit トレイル</td>
+</tr>
+<tr>
+<td><code>feature</code></td>
+<td>32 / 32</td>
+<td>Standard</td>
+<td>Standard</td>
+<td>新機能の既定</td>
+</tr>
+<tr>
+<td><code>mvp</code></td>
+<td>22 / 32</td>
+<td>Standard</td>
+<td>Standard</td>
+<td>greenfield、後段の運用をスキップ</td>
+</tr>
+<tr>
+<td><code>poc</code></td>
+<td>8 / 32</td>
+<td>Minimal</td>
+<td>Minimal</td>
+<td>実現可能性を素早く証明</td>
+</tr>
+<tr>
+<td><code>bugfix</code></td>
+<td>7 / 32</td>
+<td>Minimal</td>
+<td>Minimal</td>
+<td>特定のバグを修正</td>
+</tr>
+<tr>
+<td><code>refactor</code></td>
+<td>8 / 32</td>
+<td>Minimal</td>
+<td>Minimal</td>
+<td>既存コードの整理</td>
+</tr>
+<tr>
+<td><code>infra</code></td>
+<td>13 / 32</td>
+<td>Standard</td>
+<td>Standard</td>
+<td>インフラ変更</td>
+</tr>
+<tr>
+<td><code>security-patch</code></td>
+<td>10 / 32</td>
+<td>Minimal</td>
+<td>Minimal</td>
+<td>CVE 対応</td>
+</tr>
+<tr>
+<td><code>workshop</code></td>
+<td>25 / 32</td>
+<td>Standard</td>
+<td><strong>Minimal</strong></td>
+<td>AI-DLC ワークショップ・トレーニング</td>
+</tr>
+<tr>
+<td>（自動検出）</td>
+<td>可変</td>
+<td>可変</td>
+<td>可変</td>
+<td>自由記述の intent から AI が判定</td>
+</tr>
+</tbody></table>
+<p>scope の儀式の重さは桁で違う: <code>poc</code> は 8 stage・承認 gate 5 個で走り、<code>feature</code> は全 32 stage・gate 29 個で、Construction では Unit of Work ごとにファンアウトする設計 stage が 5 つある。そのため scope 確認の行は常に正確な数 — stage 数・承認 gate 数・unit ごとのファンアウト — を、推定ではなくコンパイル済みグリッドから計算して名指しする。ワークフローが始まる前に、自分が何に同意しているのかが分かる。</p>
+<blockquote>
+<p><strong>プロジェクト単位の既定 scope:</strong> チームは <code>.claude/settings.json</code> の <code>AWS_AIDLC_DEFAULT_SCOPE</code> でプロジェクトの既定 scope を事前設定できる — 全参加者がフラグを覚えずに <code>workshop</code> から始めるべきワークショップで有用である。<a href="13-customization.html#per-project-default-scope">カスタマイズ § プロジェクト単位の既定 scope</a> を参照。</p>
+</blockquote>
+<hr>
+<h2 id="auto-detection-from-freeform-intent">自由記述 intent からの自動検出</h2>
+<p>scope を明示的に指定する必要はない。作りたいものを記述すれば、orchestrator がキーワードから適切な scope を検出する:</p>
+<pre class="term"><code>/aidlc Build a REST API for inventory management</code></pre>
+<p>エンジンは intent をキーワードパターンに照らして分析する:</p>
+<table>
+<thead>
+<tr>
+<th>キーワード</th>
+<th>検出される scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&quot;fix&quot;、&quot;bug&quot;、&quot;broken&quot;</td>
+<td><code>bugfix</code></td>
+</tr>
+<tr>
+<td>&quot;refactor&quot;、&quot;clean up&quot;、&quot;simplify&quot;</td>
+<td><code>refactor</code></td>
+</tr>
+<tr>
+<td>&quot;infrastructure&quot;、&quot;deploy&quot;、&quot;infra&quot;</td>
+<td><code>infra</code></td>
+</tr>
+<tr>
+<td>&quot;security&quot;、&quot;CVE&quot;、&quot;vulnerability&quot;、&quot;patch&quot;</td>
+<td><code>security-patch</code></td>
+</tr>
+<tr>
+<td>&quot;proof of concept&quot;、&quot;prototype&quot;、&quot;poc&quot;、&quot;spike&quot;</td>
+<td><code>poc</code></td>
+</tr>
+<tr>
+<td>&quot;mvp&quot;、&quot;minimum viable&quot;</td>
+<td><code>mvp</code></td>
+</tr>
+<tr>
+<td>&quot;workshop&quot;、&quot;lab&quot;、&quot;training&quot;</td>
+<td><code>workshop</code></td>
+</tr>
+<tr>
+<td>それ以外すべて</td>
+<td>core 有効時は <code>feature</code>。そうでなければ、一意に決まる場合に唯一有効な plugin の最初の scope</td>
+</tr>
+</tbody></table>
+<p><strong>曖昧性解消の規則:</strong> 入力に scope キーワードと長いプロジェクト記述（5 語超）の両方が含まれる場合、マッチは偶発的なものとして扱われ、代わりに compose の提案（後述）が発火する。これは「Fix the infrastructure monitoring dashboard」が <code>infra</code> にルーティングされてしまうようなミスマッチを防ぐ — 仕立てられた計画の方が適切な場面だからだ。</p>
+<p>明確なキーワードマッチの後は、マッチした scope とその儀式の重さを、コンパイル済みグリッドから直接名指しする 1 行の確認が出る:</p>
+<pre class="term"><code>Starting a "bugfix" workflow for: "fix login bug" - 7 of 32 stages, 4 approval gates, 1 stage repeats per unit of work in Construction. Confirm to proceed,
+name a different scope, or say "compose" for a tailored plan.</code></pre>
+<p>確認して進むか、別の scope（または <code>compose</code>）を返信して、ワークフロー開始前に軌道修正する。</p>
+<hr>
+<h2 id="the-adaptive-composer">適応コンポーザー</h2>
+<p>どの既成 scope も明確には合わないとき（キーワードに当たらない豊かな散文、長い記述に埋もれたキーワード）、<code>/aidlc</code> は黙って <code>feature</code> に落とすのではなく、仕立てた計画の COMPOSE を提案する。強制もできる:</p>
+<pre class="term"><code>/aidlc compose "harden the deployment pipeline and add observability"
+/aidlc-compose "same thing, as a typeable shortcut"
+/aidlc compose --report sonar.json<span class="t-comment">     # compose from a scan report</span>
+/aidlc --new-scope "..."<span class="t-comment">               # force a custom scope even on a stock match</span></code></pre>
+<p>composer エージェントはタスクを読み、5 つの実装エントロピー成分 — intent の曖昧さ、コードベースの構造的不確実性、検証エントロピー、リスク、未解決の仮定 — を推定し、最小実行可能なワークフロー: 結果が依存するすべての成果物をなお生み出す、最小十分な EXECUTE/SKIP グリッドを構成する。構造の推定は、CodeKB サーバーが設定・索引済みのときは CodeKB MCP のコールグラフとコンポーネント分析に接地する（任意の外部ツールで、AI-DLC には同梱されない）。無ければ composer は有界のワークスペーススキャン（brownfield/greenfield、言語）にフォールバックする。gate で見る提案には、スコアの内訳（各成分の LOW/MED/HIGH バンドと根拠）、参考の複合値、そしてすべての EXECUTE と SKIP に理由が付いた stage 別の判断表が載る。承認・編集・拒否はあなたが行い、明示的な承認の前には何も書かれず、どのワークフローも始まらない。承認すると:</p>
+<ul>
+<li>提案が既成 scope にマッチしていた場合、ワークフローはその scope で直接 birth する（コードレベルの指摘に満ちたスキャンレポートは、たいていこの経路で <code>bugfix</code> か <code>security-patch</code> にルーティングされる）。</li>
+<li>カスタムのグリッドでは、composer が本物の scope（<code>scopes/aidlc-&lt;name&gt;.md</code> と <code>scope-grid.json</code> のエントリ）を書き、同じターンでワークフローがその scope で birth する。合成された scope は以後どの既成 scope とも同様に解決され（<code>/aidlc --scope &lt;name&gt;</code>）、グラフ再コンパイルでも生き残る: <code>aidlc-graph.ts compile</code> は合成済みグリッドエントリを、stage frontmatter だけからグリッドを再構築するのではなく、再生成された <code>scope-grid.json</code> に折り戻す。</li>
+</ul>
+<p><strong>CodeKB による接地（任意）:</strong> CodeKB は、コードベースの事前計算された構造分析（コールグラフ、コンポーネントインベントリ、パッケージ間結合）を提供する外部の MCP サーバーである。AI-DLC は同梱も要求もしない — 無い場合 composer は有界のワークスペーススキャンで構造をスコアし、それが通常の経路である。接続した場合、composer はそれを唯一の構造的根拠源として使い、提案に引用する（<code>method: codekb</code>）。接続方法は harness に依存する: Claude Code ではプロジェクトの <code>.mcp.json</code> にサーバーを追加（subagent はセッションの MCP サーバーを継承）、Codex では <code>config.toml</code> に <code>mcp_servers</code> エントリを追加、opencode では opencode の設定に追加する。Kiro CLI と Kiro IDE では同梱の composer エージェント設定が MCP ツールを許可していないため、常にワークスペーススキャンのフォールバックを使う。CodeKB をフレームワーク自身の「codekb」ディレクトリ（<code>aidlc/spaces/&lt;space&gt;/codekb/</code>）と混同しないこと — あちらは Reverse Engineering stage が書くローカルの成果物ストアで、MCP サーバーとは無関係である。CodeKB の根拠があると composer は Reverse Engineering のスキップを提案することがある。その場合、下流 stage がローカルストア無しで動くことを提案が開示しなければならず、gate で判断するのはあなたである。</p>
+<p><strong>キーワードの衛生:</strong> 合成された scope は <code>keywords: []</code> で出荷されるため、一度きりの計画がキーワード自動検出に参加することはない。合成 scope を将来のプロンプトから推測可能にするのは gate での明示的な質問であり、副作用では決して起きない。</p>
+<p><strong>実行中の recompose:</strong> ワークフローの途中で <code>/aidlc compose</code> は、実行中ワークフローの PENDING な stage の再形成を提案する — 不要になったものをスキップし、必要と気づいた保留 stage を戻す。composer は完了した stage が実際に解決した内容からエントロピー成分を再推定するため、提案される各フリップにはスコアを動かした根拠が付く（「feasibility が統合の疑問を解消した — リスクは MED に再スコア」）。フリップはカーソルより先の pending な stage にだけ適用され（完了・実行中の stage は凍結）、残りのどの stage も必須入力を欠かないよう厳格に検証され、決定論的な <code>recompose</code> 動詞を通じて audit ロックの下で <code>RECOMPOSED</code> audit イベントとともに着地する。Construction の最初の EXECUTE stage（walking-skeleton gate のアンカー）はフリップできない。</p>
+<p>文字どおりの動詞は必要ない: 「market research はスキップできる？この市場はもう分かってる」のような普通のチャットも、ワークフロー途中では再形成の要望として認識され、同じ gate と同じ <code>recompose</code> 動詞にルーティングされる。stage を自分で名指しした場合（「market-research と team-formation を落として」）、conductor は composer エージェントを dispatch せずに gate を直接提示することがある — 承認 gate と検証はどちらでも同一である。非 Claude harness では、文字どおりの <code>/aidlc compose &quot;&lt;request&gt;&quot;</code> 動詞が文書化された確実な経路であり続ける。</p>
+<hr>
+<h2 id="the-3-depth-levels">3 つの depth レベル</h2>
+<p>depth は各 stage で生み出される成果物の詳細度を制御する。scope が既定 depth を設定するが、上書きできる。</p>
+<table>
+<thead>
+<tr>
+<th>Depth</th>
+<th>成果物の詳細度</th>
+<th>使いどころ</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Minimal</strong></td>
+<td>中核の要点のみ。短い文書、主要な決定、最小限の補助分析。</td>
+<td>素早い修正、パッチ、proof of concept</td>
+</tr>
+<tr>
+<td><strong>Standard</strong></td>
+<td>バランスの取れた詳細。完全な要件、根拠付きのアーキテクチャ決定、行き届いたテスト計画。</td>
+<td>大半の機能と MVP</td>
+</tr>
+<tr>
+<td><strong>Comprehensive</strong></td>
+<td>エンタープライズの完全詳細。網羅的な要件、コンプライアンスマトリクス、詳細な NFR 仕様、完全な監査文書。</td>
+<td>規制下の機能、エンタープライズ展開</td>
+</tr>
+</tbody></table>
+<h3 id="how-depth-affects-stages">depth が stage に与える影響</h3>
+<p>各 stage で、エージェントはアクティブな depth に基づいて出力を調整する:</p>
+<ul>
+<li><strong>Minimal:</strong> 1〜2 ページの成果物、主要な決定のみ、任意セクションはスキップ</li>
+<li><strong>Standard:</strong> 完全な成果物、必須セクションすべて、簡潔な根拠</li>
+<li><strong>Comprehensive:</strong> 拡張された成果物、任意セクションも含む、詳細な正当化、コンプライアンスの相互参照</li>
+</ul>
+<h3 id="overriding-depth">depth の上書き</h3>
+<p>depth は 3 つの時点で変えられる:</p>
+<ol>
+<li><strong><code>--depth</code> CLI フラグ</strong> — 呼び出し時に上書き:</li>
+</ol>
+<pre class="term"><code>   /aidlc --depth comprehensive
+   /aidlc --scope bugfix --depth standard
+   /aidlc --stage code-generation --depth minimal</code></pre>
+<ol start="2">
+<li><strong>scope 確認時</strong> — orchestrator が検出 scope を確認するとき、単に確認する代わりに <code>--depth &lt;level&gt;</code> を添えて返信する</li>
+<li><strong>任意の承認 gate</strong> — フィードバックの一部として別の depth レベルを要望する</li>
+</ol>
+<p>各セッション最初の完了メッセージが思い出させてくれる:</p>
+<pre class="term"><code>**Project depth**: Standard — depth adapts artifact detail.
+**Test strategy**: Standard — test strategy controls test volume.
+You can request different depth or test strategy at any approval gate.</code></pre>
+<hr>
+<h2 id="specifying-scope-directly">scope の直接指定</h2>
+<h3 id="explicit-scope">明示的な scope</h3>
+<pre class="term"><code>/aidlc feature
+/aidlc bugfix
+/aidlc enterprise</code></pre>
+<h3 id="scope-with-description">記述付きの scope</h3>
+<pre class="term"><code>/aidlc bugfix Fix the login timeout issue
+/aidlc poc Build a quick prototype for the search feature</code></pre>
+<h3 id="override-scope-with-utility-command">ユーティリティコマンドでの scope 上書き</h3>
+<pre class="term"><code>/aidlc --scope bugfix
+/aidlc --scope enterprise --stage code-generation</code></pre>
+<p><code>--scope</code> フラグはジャンプ操作のために <code>--stage</code>・<code>--phase</code>・<code>--depth</code> と組み合わせられる。</p>
+<h3 id="override-depth">depth の上書き</h3>
+<pre class="term"><code>/aidlc --depth minimal
+/aidlc --scope bugfix --depth comprehensive
+/aidlc --scope enterprise --depth standard --stage code-generation</code></pre>
+<p><code>--depth</code> フラグは scope の既定 depth レベルを上書きする。有効値: <code>minimal</code>、<code>standard</code>、<code>comprehensive</code>（大文字小文字は区別しない）。</p>
+<h3 id="override-test-strategy">テスト戦略の上書き</h3>
+<pre class="term"><code>/aidlc --test-strategy minimal
+/aidlc --depth standard --test-strategy minimal</code></pre>
+<p><code>--test-strategy</code> フラグは depth と独立にテスト戦略を上書きする。完全な説明は下の <a href="#the-3-test-strategy-levels">3 つのテスト戦略レベル</a> を参照。</p>
+<hr>
+<h2 id="the-3-test-strategy-levels">3 つのテスト戦略レベル</h2>
+<p>テスト戦略は<strong>いくつのテストを</strong>生成し、<strong>どのテスト種別を</strong>含めるかを制御する。depth からは独立している — depth は成果物の詳細度（文書・図・質問）を制御し、テスト戦略はテスト量だけを制御する。この分離により、速度がテストカバレッジより重要な場面で、Standard depth の完全なワークフローを Minimal のテストで走らせられる。</p>
+<h3 id="minimal--nyquist-model">Minimal — Nyquist モデル</h3>
+<p>信号処理の Nyquist レート — 信号を再構成するのに必要な最小サンプリング周波数 — に着想を得ている。Minimal のテスト戦略は、すべての要件を検証するのに必要な最小限のテストを生成する — それ以上でも以下でもない。</p>
+<ul>
+<li><strong>特定された要件 1 つにつき 1 テスト</strong>（要件駆動であり、コンポーネント駆動ではない）</li>
+<li><strong>ハッピーパスの床:</strong> 要件が対応しないコンポーネントにも、少なくとも 1 つのハッピーパス単体テスト</li>
+<li><strong>単体テストのみ</strong> — 統合・E2E・性能・セキュリティテストはスキップ</li>
+<li>典型的なプロジェクトで<strong>合計 約 5〜15 テスト</strong></li>
+<li>ソフトなガイドライン — 安全性が重要な文脈が要求すればエージェントは超過できる</li>
+</ul>
+<p><strong>向いているもの:</strong> ワークショップ、トレーニング、proof of concept、素早い bugfix — 完全なテストスイートに投資せず正しさを検証したいあらゆる文脈。</p>
+<h3 id="standard--per-component-model">Standard — コンポーネント単位モデル</h3>
+<p>コンポーネント間の境界を検証する、バランスの取れたテストカバレッジ。</p>
+<ul>
+<li><strong>コンポーネントごとに 5〜8 テスト</strong></li>
+<li><strong>単体 + 統合テスト</strong>（コンポーネント間の主要な境界）</li>
+<li>E2E・性能・セキュリティテストは NFR 要件が明示的に求める場合のみ</li>
+<li><strong>テストピラミッドの比率:</strong> 単体 約 75% / 統合 約 20% / E2E 約 5%</li>
+<li>ソフトなガイドライン</li>
+</ul>
+<p><strong>向いているもの:</strong> 大半の機能と MVP — テストに過剰投資しない良好なカバレッジ。</p>
+<h3 id="comprehensive--full-coverage-model">Comprehensive — 完全カバレッジモデル</h3>
+<p>全テスト種別にわたる徹底したテストカバレッジ。</p>
+<ul>
+<li><strong>コンポーネントごとに 10〜15 テスト</strong></li>
+<li><strong>全テスト種別:</strong> 単体 + 統合 + E2E + 性能（NFR があれば） + セキュリティ（NFR があれば）</li>
+<li><strong>テストピラミッドの比率</strong>が全種別に適用される</li>
+<li>ソフトなガイドライン</li>
+</ul>
+<p><strong>向いているもの:</strong> エンタープライズ機能、規制下のシステム、テストカバレッジの監査証跡を要するあらゆる文脈。</p>
+<h3 id="how-test-strategy-defaults-work">テスト戦略の既定の決まり方</h3>
+<p>テスト戦略は大半の scope で <strong>depth レベル</strong>に従う — depth が Standard ならテスト戦略も Standard になる。ただし一部の scope は独自の既定を宣言する:</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Depth</th>
+<th>テスト戦略</th>
+<th>なぜ違う？</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>workshop</code></td>
+<td>Standard</td>
+<td><strong>Minimal</strong></td>
+<td>学習用に完全な成果物を作りつつ、ペースを保つ高速な Nyquist テスト</td>
+</tr>
+</tbody></table>
+<p>他のすべての scope は depth からテスト戦略を継承する。<code>--test-strategy</code> でいつでも上書きできる。</p>
+<h3 id="overriding-test-strategy">テスト戦略の上書き</h3>
+<p>テスト戦略は 3 つの時点で変えられる:</p>
+<ol>
+<li><strong><code>--test-strategy</code> CLI フラグ</strong> — 呼び出し時に上書き:</li>
+</ol>
+<pre class="term"><code>   /aidlc --test-strategy minimal
+   /aidlc --depth standard --test-strategy minimal
+   /aidlc --scope bugfix --test-strategy comprehensive</code></pre>
+<ol start="2">
+<li><strong>ワークフロー途中</strong> — アクティブなワークフローのテスト戦略を変更:</li>
+</ol>
+<pre class="term"><code>   /aidlc --test-strategy comprehensive</code></pre>
+<ol start="3">
+<li><strong>任意の承認 gate</strong> — フィードバックの一部として別のテスト戦略を要望する</li>
+</ol>
+<h3 id="common-depth--test-strategy-combinations">よくある depth + テスト戦略の組み合わせ</h3>
+<table>
+<thead>
+<tr>
+<th>Depth</th>
+<th>テスト戦略</th>
+<th>効果</th>
+<th>使いどころ</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Standard</td>
+<td>Standard</td>
+<td>完全な成果物、バランスの取れたテスト</td>
+<td>大半の機能(既定)</td>
+</tr>
+<tr>
+<td>Standard</td>
+<td>Minimal</td>
+<td>完全な成果物、Nyquist テスト</td>
+<td>ワークショップ、時間制限のあるセッション</td>
+</tr>
+<tr>
+<td>Minimal</td>
+<td>Minimal</td>
+<td>軽量な成果物、軽量なテスト</td>
+<td>素早い bugfix、パッチ</td>
+</tr>
+<tr>
+<td>Comprehensive</td>
+<td>Comprehensive</td>
+<td>すべて完全</td>
+<td>規制下のエンタープライズ機能</td>
+</tr>
+<tr>
+<td>Comprehensive</td>
+<td>Standard</td>
+<td>完全な成果物、バランスの取れたテスト</td>
+<td>現実的なテストで進めるエンタープライズ</td>
+</tr>
+<tr>
+<td>Minimal</td>
+<td>Comprehensive</td>
+<td>軽量な成果物、徹底したテスト</td>
+<td>確信が要る重大な bugfix</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="choosing-the-right-scope">正しい scope の選び方</h2>
+<table>
+<thead>
+<tr>
+<th>状況</th>
+<th>推奨 scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>本番アプリケーションの新機能</td>
+<td><code>feature</code></td>
+</tr>
+<tr>
+<td>ゼロからの greenfield プロダクト</td>
+<td><code>mvp</code> または <code>feature</code></td>
+</tr>
+<tr>
+<td>アプローチの素早い検証</td>
+<td><code>poc</code></td>
+</tr>
+<tr>
+<td>直すべきバグが分かっている</td>
+<td><code>bugfix</code></td>
+</tr>
+<tr>
+<td>挙動を変えないコード整理</td>
+<td><code>refactor</code></td>
+</tr>
+<tr>
+<td>新しい AWS 環境や CDK の変更</td>
+<td><code>infra</code></td>
+</tr>
+<tr>
+<td>CVE・セキュリティ脆弱性への対応</td>
+<td><code>security-patch</code></td>
+</tr>
+<tr>
+<td>コンプライアンスを要する規制下の機能</td>
+<td><code>enterprise</code></td>
+</tr>
+<tr>
+<td>AI-DLC ワークショップ・トレーニングラボ</td>
+<td><code>workshop</code></td>
+</tr>
+</tbody></table>
+<p>迷ったら <code>feature</code> から始める — 全 32 stage を含み、個々の stage は承認 gate でスキップできる。</p>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="04-phases-and-stages.html">Phase と Stage</a> — 各 stage が何をするか</li>
+<li><a href="06-agents.html">エージェント</a> — どのエージェントがどの scope に参加するか</li>
+<li><a href="17-skills.html">Skill とランナーコマンド</a> — bugfix・feature・mvp・security-patch の一語 <code>/aidlc-&lt;scope&gt;</code> ランナー</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> — コマンドの完全リファレンス</li>
+<li><a href="glossary.html">用語集</a> — 用語リファレンス</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/05-scopes-and-depth.md"><code>docs/guide/05-scopes-and-depth.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

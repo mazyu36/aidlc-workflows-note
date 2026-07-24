@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>状態の追跡と audit トレイル — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/10-state-and-audit</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html" class="here">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#state-file-aidlc-statemd">状態ファイル（aidlc-state.md）</a>
+  <a href="#audit-trail-audit">audit トレイル（audit/）</a>
+  <a href="#how-state-and-audit-work-together">状態と audit の協働</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="state-tracking-and-audit-trail">状態の追跡と audit トレイル</h1>
+<p>AI-DLC は、intent から本番までの完全なトレーサビリティを合わせて提供する 2 つの永続ファイルを維持する: <strong>状態ファイル</strong>はワークフローのどこにいるかを追跡し、<strong>audit トレイル</strong>は道中のすべての決定・行動・イベントを記録する。</p>
+<hr>
+<h2 id="state-file-aidlc-statemd">状態ファイル（<code>aidlc-state.md</code>）</h2>
+<p>各 intent は <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/aidlc-state.md</code>（intent の record dir 配下）に自分の状態ファイルを持つ — その intent のワークフロー進捗にとっての単一の正である。エンジンはセッション開始のたびにアクティブ intent の状態ファイルを読み、何が完了し、何が進行中で、次に何が来るかを判定する。</p>
+<h3 id="what-it-contains">含まれるもの</h3>
+<table>
+<thead>
+<tr>
+<th>セクション</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Project Information</strong></td>
+<td>プロジェクト記述、種別（greenfield/brownfield）、scope、開始日、現在の phase、アクティブなエージェント</td>
+</tr>
+<tr>
+<td><strong>Scope Configuration</strong></td>
+<td>実行する stage、スキップする stage（理由付き）、depth レベル</td>
+</tr>
+<tr>
+<td><strong>Workspace State</strong></td>
+<td>プロジェクトルート、検出された言語、フレームワーク、ビルドシステム</td>
+</tr>
+<tr>
+<td><strong>Execution Plan Summary</strong></td>
+<td>総 stage 数、完了数、進行中の stage</td>
+</tr>
+<tr>
+<td><strong>Runtime State</strong></td>
+<td>現在 stage の修正カウント</td>
+</tr>
+<tr>
+<td><strong>Stage Progress</strong></td>
+<td>stage ごとの完了状態を追跡するチェックボックス</td>
+</tr>
+<tr>
+<td><strong>Current Status</strong></td>
+<td>ライフサイクル phase、現在 / 次の stage、状態、最終更新タイムスタンプ</td>
+</tr>
+<tr>
+<td><strong>Session Resume Point</strong></td>
+<td>最後に完了した stage、次のアクション、保留中の成果物</td>
+</tr>
+</tbody></table>
+<h3 id="six-state-checkboxes">6 状態のチェックボックス</h3>
+<p>stage の進捗は 6 状態のチェックボックス記法を使う:</p>
+<table>
+<thead>
+<tr>
+<th>チェックボックス</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[ ]</code></td>
+<td>未着手</td>
+</tr>
+<tr>
+<td><code>[-]</code></td>
+<td>進行中</td>
+</tr>
+<tr>
+<td><code>[?]</code></td>
+<td>あなたの承認待ち（gate が開いている）</td>
+</tr>
+<tr>
+<td><code>[R]</code></td>
+<td>修正中（gate で差し戻し、stage を修正している）</td>
+</tr>
+<tr>
+<td><code>[x]</code></td>
+<td>完了</td>
+</tr>
+<tr>
+<td><code>[S]</code></td>
+<td>スキップ（scope 対象外、<code>skip</code> で切除、または <code>--stage</code>/<code>--phase</code> ジャンプで迂回）</td>
+</tr>
+</tbody></table>
+<p>ハッピーパスでは stage は <code>[ ]</code> → <code>[-]</code> → <code>[?]</code> → <code>[x]</code> と遷移する。gate で差し戻すと、修正の間 <code>[R]</code> へ移り、準備ができると <code>[?]</code> に戻り、承認で最終的に <code>[x]</code> になる。<code>/aidlc --status</code> はチェックボックスを読んで誰が詰まりの原因かを教える — <code>[?]</code> なら「Awaiting your approval on &amp;lt;stage&gt;」、<code>[R]</code> なら「Revising &amp;lt;stage&gt; (revision N of 3)」。</p>
+<p>正準の状態機械リファレンス（遷移表・audit イベントの発行元）は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/12-state-machine.md">開発者リファレンス: 状態機械</a> を参照。</p>
+<h3 id="state-transitions">状態遷移</h3>
+<pre class="mermaid">
+stateDiagram-v2
+    state "[ ] Not Started" as NotStarted
+    state "[-] In Progress" as InProgress
+    state "[?] Awaiting Approval" as Awaiting
+    state "[R] Revising" as Revising
+    state "[x] Completed" as Completed
+    state "[S] Skipped" as Skipped
+
+    [*] --&gt; NotStarted
+    NotStarted --&gt; InProgress : Stage begins
+    InProgress --&gt; Awaiting : Work done, gate opens
+    Awaiting --&gt; Completed : You approve
+    Awaiting --&gt; Revising : You request changes
+    Revising --&gt; Awaiting : Revision done, re-enter gate
+    NotStarted --&gt; Skipped : --stage/--phase jump or scope excludes
+    InProgress --&gt; Skipped : Cut mid-flight
+    Revising --&gt; Skipped : Abandon after rejection
+    Completed --&gt; NotStarted : Redo (artifacts deleted)
+</pre>
+<h3 id="normal-revision-skip-redo-and-jump-flows">通常・修正・スキップ・やり直し・ジャンプの各フロー</h3>
+<ul>
+<li><strong>通常フロー</strong>: <code>[ ]</code> -&gt; <code>[-]</code> -&gt; <code>[?]</code> -&gt; <code>[x]</code>（stage 開始、作業完了、gate が開く、承認）</li>
+<li><strong>修正フロー</strong>: <code>[?]</code> -&gt; <code>[R]</code> -&gt; <code>[?]</code> -&gt; <code>[x]</code>（差し戻し、stage を修正、gate 再開、承認）</li>
+<li><strong>scope スキップフロー</strong>: <code>[ ]</code> -&gt; <code>[S]</code>（このワークフローの scope に無い stage。初期化時に付く）</li>
+<li><strong>やり直しフロー</strong>: <code>[x]</code> または <code>[-]</code> -&gt; <code>[ ]</code> -&gt; <code>[-]</code>（やり直しを要望、成果物が削除され、stage が再実行）</li>
+<li><strong>ジャンプフロー</strong>: stage A が <code>[-]</code> のとき stage B へのジャンプを要望すると、間の stage に <code>[S]</code> が付く</li>
+</ul>
+<hr>
+<h2 id="audit-trail-audit">audit トレイル（<code>audit/</code>）</h2>
+<p>audit トレイルは intent の record dir の <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/audit/</code> に住む。<strong>クローンごとのシャード</strong>（<code>&lt;host&gt;-&lt;clone&gt;.md</code>）として書かれる追記専用のイベントログで、各クローンは自分のシャードにだけ追記するため、兄弟 worktree からの並行追記が git コンフリクトを起こすことは決してない。読む側は <code>audit/*.md</code> を glob し、ISO タイムスタンプでマージソートして、決定とイベントの完全な時系列を再構成する。</p>
+<h3 id="74-event-taxonomy">74 イベントの分類</h3>
+<p>イベントは 19 カテゴリに編成される:</p>
+<table>
+<thead>
+<tr>
+<th>カテゴリ</th>
+<th align="right">数</th>
+<th>イベント</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Workflow Lifecycle</strong></td>
+<td align="right">4</td>
+<td><code>WORKFLOW_STARTED</code>、<code>WORKFLOW_COMPLETED</code>、<code>WORKFLOW_PARKED</code>、<code>WORKFLOW_UNPARKED</code></td>
+</tr>
+<tr>
+<td><strong>Phase Lifecycle</strong></td>
+<td align="right">4</td>
+<td><code>PHASE_STARTED</code>、<code>PHASE_COMPLETED</code>、<code>PHASE_VERIFIED</code>、<code>PHASE_SKIPPED</code></td>
+</tr>
+<tr>
+<td><strong>Stage Lifecycle</strong></td>
+<td align="right">6</td>
+<td><code>STAGE_STARTED</code>、<code>STAGE_AWAITING_APPROVAL</code>、<code>STAGE_REVISING</code>、<code>STAGE_COMPLETED</code>、<code>STAGE_SKIPPED</code>、<code>STAGE_JUMPED</code></td>
+</tr>
+<tr>
+<td><strong>Session</strong></td>
+<td align="right">5</td>
+<td><code>SESSION_STARTED</code>、<code>SESSION_RESUMED</code>、<code>SESSION_COMPACTED</code>、<code>SESSION_ENDED</code>、<code>HUMAN_TURN</code>（hook が発行）</td>
+</tr>
+<tr>
+<td><strong>Initialization</strong></td>
+<td align="right">3</td>
+<td><code>WORKSPACE_SCAFFOLDED</code>、<code>WORKSPACE_SCANNED</code>、<code>WORKSPACE_INITIALISED</code></td>
+</tr>
+<tr>
+<td><strong>Navigation</strong></td>
+<td align="right">6</td>
+<td><code>SCOPE_CHANGED</code>、<code>SCOPE_DETECTED</code>、<code>DEPTH_CHANGED</code>、<code>TEST_STRATEGY_CHANGED</code>、<code>RECOMPOSED</code>、<code>PLUGIN_SELECTION_CHANGED</code></td>
+</tr>
+<tr>
+<td><strong>Interaction</strong></td>
+<td align="right">6</td>
+<td><code>DECISION_RECORDED</code>、<code>GATE_APPROVED</code>、<code>GATE_REJECTED</code>、<code>QUESTION_ANSWERED</code>、<code>REVIEW_REQUESTED</code>、<code>REVIEW_COMPLETED</code></td>
+</tr>
+<tr>
+<td><strong>Artifact</strong></td>
+<td align="right">3</td>
+<td><code>ARTIFACT_CREATED</code>、<code>ARTIFACT_UPDATED</code>（audit-logger hook）、<code>ARTIFACT_REUSED</code></td>
+</tr>
+<tr>
+<td><strong>Subagent</strong></td>
+<td align="right">1</td>
+<td><code>SUBAGENT_COMPLETED</code>（log-subagent hook）</td>
+</tr>
+<tr>
+<td><strong>Reviewer Scope</strong></td>
+<td align="right">1</td>
+<td><code>REVIEWER_SCOPE_BLOCKED</code>（reviewer-scope hook）</td>
+</tr>
+<tr>
+<td><strong>Utility</strong></td>
+<td align="right">1</td>
+<td><code>HEALTH_CHECKED</code></td>
+</tr>
+<tr>
+<td><strong>Error/Recovery</strong></td>
+<td align="right">2</td>
+<td><code>ERROR_LOGGED</code>、<code>RECOVERY_COMPLETED</code></td>
+</tr>
+<tr>
+<td><strong>Construction Bolt</strong></td>
+<td align="right">4</td>
+<td><code>BOLT_STARTED</code>、<code>BOLT_COMPLETED</code>、<code>BOLT_FAILED</code>、<code>AUTONOMY_MODE_SET</code></td>
+</tr>
+<tr>
+<td><strong>Worktree</strong></td>
+<td align="right">7</td>
+<td><code>WORKTREE_CREATED</code>、<code>WORKTREE_MERGED</code>、<code>WORKTREE_DISCARDED</code>、<code>STATE_FORKED</code>、<code>STATE_MERGED</code>、<code>AUDIT_FORKED</code>、<code>AUDIT_MERGED</code></td>
+</tr>
+<tr>
+<td><strong>Practices</strong></td>
+<td align="right">4</td>
+<td><code>PRACTICES_DISCOVERED</code>、<code>PRACTICES_AFFIRMED</code>、<code>PRACTICES_OVERRIDE</code>、<code>PRACTICES_SECTION_EMPTY</code></td>
+</tr>
+<tr>
+<td><strong>Merge Dispatch</strong></td>
+<td align="right">3</td>
+<td><code>MERGE_DISPATCH_INVOKED</code>、<code>MERGE_DISPATCH_RETURNED</code>、<code>MERGE_DISPATCH_FALLBACK</code></td>
+</tr>
+<tr>
+<td><strong>Sensors</strong></td>
+<td align="right">5</td>
+<td><code>SENSOR_FIRED</code>、<code>SENSOR_PASSED</code>、<code>SENSOR_FAILED</code>、<code>SENSOR_BUDGET_OVERRIDE</code>、<code>GUARDRAIL_LOADED</code></td>
+</tr>
+<tr>
+<td><strong>Learning Loop</strong></td>
+<td align="right">3</td>
+<td><code>MEMORY_EMPTY</code>、<code>RULE_LEARNED</code>、<code>SENSOR_PROPOSED</code></td>
+</tr>
+<tr>
+<td><strong>Swarm</strong></td>
+<td align="right">6</td>
+<td><code>SWARM_STARTED</code>、<code>SWARM_UNIT_CONVERGED</code>、<code>SWARM_UNIT_FAILED</code>、<code>SWARM_BATON_RETURNED</code>、<code>SWARM_COMPLETED</code>、<code>SWARM_DEGRADED</code></td>
+</tr>
+</tbody></table>
+<h3 id="what-gets-logged-and-when">何がいつ記録されるか</h3>
+<ul>
+<li><strong>すべての stage の開始と完了</strong>が <code>STAGE_STARTED</code> と <code>STAGE_COMPLETED</code> イベントで記録される</li>
+<li>intent の record dir への<strong>すべてのファイル書き込み</strong>（<code>audit/</code> シャード自身を除く）が audit-logger hook により自動記録される</li>
+<li><strong>すべての承認 gate の決定</strong>（承認・変更要求・accept-as-is）が記録される</li>
+<li>あなたが与えた<strong>すべての質問回答</strong>が記録される</li>
+<li><strong>すべての subagent の完了</strong>が log-subagent hook により記録される</li>
+<li><strong>すべてのエラーと復旧</strong>が記録される</li>
+</ul>
+<h3 id="how-to-read-the-audit-log">audit ログの読み方</h3>
+<p>各エントリは次のフィールドを持つ構造化形式に従う:</p>
+<ul>
+<li><strong>Timestamp</strong> — ISO 8601 タイムスタンプ</li>
+<li><strong>Event</strong> - 74 イベント種別のいずれか</li>
+<li><strong>Details</strong> — イベント固有のデータ（stage 名、決定、成果物パス 等）</li>
+</ul>
+<p>エントリは時系列に追記される。特定の stage の履歴を確認するには、その <code>STAGE_STARTED</code> と <code>STAGE_COMPLETED</code> のエントリと、その間のすべてを探す。</p>
+<h3 id="audit-event-flow">audit イベントのフロー</h3>
+<p>stage が実行され成果物を作るとき、audit トレイルは一連の流れを完全に捕捉する:</p>
+<pre class="mermaid">
+sequenceDiagram
+    participant O as Orchestrator
+    participant E as Engine
+    participant S as Stage Execution
+    participant H as Audit Hook
+    participant A as audit/ shard
+
+    O-&gt;&gt;E: Request next directive
+    E-&gt;&gt;A: Emit STAGE_STARTED
+    O-&gt;&gt;S: Execute stage work
+    S-&gt;&gt;S: Write artifact to the intent's record dir
+    S-&gt;&gt;H: PostToolUse hook fires
+    H-&gt;&gt;A: Append ARTIFACT_CREATED or ARTIFACT_UPDATED
+    S-&gt;&gt;O: Stage work complete
+    O-&gt;&gt;A: Log approval gate options
+    O-&gt;&gt;O: Present approval gate to user
+    O-&gt;&gt;E: Report approved or rejected
+    E-&gt;&gt;A: Emit gate outcome
+    E-&gt;&gt;A: Emit STAGE_COMPLETED on approval
+</pre>
+<hr>
+<h2 id="how-state-and-audit-work-together">状態と audit の協働</h2>
+<p>状態ファイルと audit トレイルは補完的な目的を担う:</p>
+<table>
+<thead>
+<tr>
+<th>関心事</th>
+<th>状態ファイル</th>
+<th>audit トレイル</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>目的</strong></td>
+<td>現在位置と進捗の追跡</td>
+<td>イベントの完全な履歴の記録</td>
+</tr>
+<tr>
+<td><strong>読む者</strong></td>
+<td>orchestrator（ルーティングと再開のため）</td>
+<td>ユーザーと監査者（トレーサビリティのため）</td>
+</tr>
+<tr>
+<td><strong>更新パターン</strong></td>
+<td>状態変化のたびに上書き</td>
+<td>追記専用（決して変更しない）</td>
+</tr>
+<tr>
+<td><strong>セッション再開</strong></td>
+<td>どこから続けるかを決める第一のソース</td>
+<td>元のプロジェクト記述と決定の文脈を提供</td>
+</tr>
+<tr>
+<td><strong>Git ポリシー</strong></td>
+<td>バージョン管理にコミット</td>
+<td>コミット（<code>audit/</code> 配下のクローン別シャード。マージコンフリクトなし）</td>
+</tr>
+</tbody></table>
+<p>orchestrator はすべてのルーティング判断に <code>aidlc-state.md</code> を使う。ルーティングのために <code>audit/</code> シャードを読むことはない。audit トレイルは、intent から本番まですべての決定を追跡できるようにするトレーサビリティの記録である。</p>
+<p>状態ファイルが壊れた場合、<code>STAGE_STARTED</code> と <code>STAGE_COMPLETED</code> のイベントを確認して audit トレイルから再構成できる。修復手順は <a href="15-troubleshooting.html">トラブルシューティング</a> を参照。</p>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="11-session-management.html">セッション管理</a> — セッション再開で状態がどう使われるか</li>
+<li><a href="14-artifacts-reference.html">成果物リファレンス</a> — intent の record dir に何が保存されるか</li>
+<li><a href="15-troubleshooting.html">トラブルシューティング</a> — 状態破損の修復</li>
+<li><a href="glossary.html">用語集</a> — 状態ファイル・audit トレイル・チェックポイント・コンパクションの定義</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/10-state-and-audit.md"><code>docs/guide/10-state-and-audit.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

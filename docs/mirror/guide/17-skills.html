@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill とランナーコマンド — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/17-skills</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html" class="here">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#many-skills-one-engine">多くの skill、1 つのエンジン</a>
+  <a href="#scope-runners--a-named-door-per-problem-class">scope ランナー — 問題クラスごとの名前付きの扉</a>
+  <a href="#stage-runners--run-one-stage-leave-your-workflow-alone">stage ランナー — 1 stage だけ実行し、ワークフローには触れない</a>
+  <a href="#the-runner-families-at-a-glance">ランナー各族の一覧</a>
+  <a href="#author-your-own-runner--write-a-stage-file">自分のランナーを作る — stage ファイルを書く</a>
+  <a href="#quick-reference">クイックリファレンス</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="skills-and-runner-commands">Skill とランナーコマンド</h1>
+<p><strong>AI-DLC はコマンドの一族である。</strong> <code>/aidlc</code> orchestrator の隣に、打ちやすい一語のランナーコマンド一式 — scope ごとに 1 つ、stage ごとに 1 つ、セットアップ用に 1 つ — が付いてくる。これらは orchestrator が既に公開しているスライスへの便利な扉であり、<code>/aidlc</code> だけでフレームワーク全体に届くし、フラグを飛ばして欲しい扉を直接打つこともできる。</p>
+<blockquote>
+<p><strong>Harness に関する注記。</strong> 本章は Claude Code のサーフェス — <code>.claude/skills/</code> 配下の
+skill を、ピッカーから先頭 <code>/</code> で打つ — を使う。Kiro は同じランナー一式を
+<code>.kiro/skills/</code> に同梱し（同じく <code>/</code> で打つ）、Codex は <code>.agents/skills/</code> へ出荷して
+<code>$</code> で打つ（<code>$aidlc-bugfix</code>）。ランナーの<em>集合</em>と各々の役割は harness 間で同一で、
+異なるのはディレクトリとプレフィクスだけである。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> を参照。</p>
+</blockquote>
+<hr>
+<h2 id="many-skills-one-engine">多くの skill、1 つのエンジン</h2>
+<p>この実装が同梱するすべてのコマンドは <code>.claude/skills/</code> 配下の skill である。すべて同じ決定論エンジンを駆動し、違うのは開始前に何を焼き込むかだけである:</p>
+<ul>
+<li><strong><code>/aidlc</code></strong> — 完全な orchestrator。フラグの焼き込みなし。scope を検出し（または作りたいものを記述し）、scope 内のすべての stage を完了まで駆動する。最も手が伸びるのはこれである。</li>
+<li><strong>scope ランナー</strong> — <code>/aidlc-bugfix</code>、<code>/aidlc-feature</code>、<code>/aidlc-mvp</code>、<code>/aidlc-security-patch</code>。同じ完全なワークフローで、scope が固定され scope 検出がスキップされる。</li>
+<li><strong>stage ランナー</strong> — <code>/aidlc-application-design</code>、<code>/aidlc-code-generation</code> ほか 27 個。1 つの stage を隔離して実行し、メインのワークフローには決して触れない。plugin 所有の stage は素の plugin プレフィクス付きコマンド名を使う（例: <code>/test-pro-integration</code>）。</li>
+<li><strong><code>/aidlc-init</code></strong> — 最初の intent を 1 手で birth する（Initialization phase 全体を実行）。エンジンの自動 birth に対するオプトインのパッケージング。</li>
+<li><strong>セッションスキル</strong> — <code>/aidlc-session-cost</code>、<code>/aidlc-replay</code>、<code>/aidlc-outcomes-pack</code>。ワークフローの読み取り専用ビュー。<a href="11-session-management.html">セッション管理</a> で扱う。</li>
+</ul>
+<p>ランナーができることはすべて <code>/aidlc</code> のフラグから届く。ランナーはパッケージングである — <code>/aidlc-bugfix</code> と打てて <code>/</code> メニューに見えるのは良いエルゴノミクスであり、それ以上ではない。全ランナーを消せばショートカットは消えるが、能力は残り、<code>/aidlc</code> のフラグから届く。</p>
+<hr>
+<h2 id="scope-runners--a-named-door-per-problem-class">scope ランナー — 問題クラスごとの名前付きの扉</h2>
+<p>scope ランナーは 1 つの scope を固定して完全なワークフローを駆動する。どの種類の仕事か既に分かっていて、scope 検出を飛ばしたいときに使う。</p>
+<pre class="term"><code>/aidlc-bugfix          Fix a specific bug — minimal depth, streamlined path
+/aidlc-feature         Build a new feature — standard depth, all stages
+/aidlc-mvp             Ship the core — skips late operations stages
+/aidlc-security-patch  CVE / vulnerability response</code></pre>
+<p>それぞれ orchestrator に <code>--scope</code> を渡すのと同一である:</p>
+<pre class="term"><code>/aidlc-bugfix          ==  /aidlc --scope bugfix
+/aidlc-feature         ==  /aidlc --scope feature</code></pre>
+<p>記述とフラグは <code>/aidlc</code> に渡すのとまったく同じように素通しできる:</p>
+<pre class="term"><code>/aidlc-bugfix The profile API returns 500 when display_name is null
+/aidlc-feature --status</code></pre>
+<p><strong>ランナーを同梱するのはコア scope のうち 4 つだけ</strong> — scope ファイルで <code>runner: true</code> の印が付いた、往来の多いものである。フレームワークは全部で 9 つの scope を定義しており（<a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> を参照）、それ以外 — <code>enterprise</code>・<code>poc</code>・<code>infra</code>・<code>refactor</code>・<code>workshop</code> — は常に orchestrator から届く。plugin 所有の scope も <code>runner: true</code> を設定でき、そのランナーは素の plugin プレフィクス付き scope 名を使う（例: <code>/test-pro-validation</code>）。</p>
+<pre class="term"><code>/aidlc --scope enterprise
+/aidlc --scope poc</code></pre>
+<p>ワークフローが始まると scope は <code>aidlc-state.md</code> に固定されるため、同じランナーの再実行はワークフローを再起動せず再開する。別の scope で走らせるには <code>/aidlc --scope &lt;name&gt;</code> を使う。</p>
+<hr>
+<h2 id="stage-runners--run-one-stage-leave-your-workflow-alone">stage ランナー — 1 stage だけ実行し、ワークフローには触れない</h2>
+<p>stage ランナーは<strong>単一の stage を隔離して</strong>実行する。stage の構成済みエージェントとレビュアーを使い、合成の完了を記録し、ワークフローの learnings も承認 gate も無しに停止する。メインワークフローの <code>Current Stage</code> を決して前進させない — その隔離はツール自身が強制する。</p>
+<pre class="term"><code>/aidlc-application-design
+/aidlc-code-generation
+/aidlc-requirements-analysis
+/aidlc-reverse-engineering</code></pre>
+<p>それぞれ <code>/aidlc --stage &lt;slug&gt; --single</code> をパッケージしている:</p>
+<pre class="term"><code>/aidlc-code-generation    ==  /aidlc --stage code-generation --single</code></pre>
+<h3 id="when-youd-use-one">使いどころ</h3>
+<ul>
+<li><strong>ワークフローにコミットせず、方法論の一片だけを適用する。</strong> ある問題に要件分析はしたいが、ライフサイクル全体を駆動する準備はない。<code>/aidlc-requirements-analysis</code> を実行し、成果物を得て、止める。</li>
+<li><strong>自分が orchestrator になる。</strong> 手作業で仕事の順序を決めていて、目の前の stage だけをフレームワークに実行させたい — 人間が運転し、フレームワークが方法論の 1 stage を供給する。</li>
+<li><strong>メインワークフローが別の地点に park している間に、stage を隔離して再実行する</strong> — 単一 stage の実行はそれを乱せない。</li>
+</ul>
+<h3 id="why-its-safe">なぜ安全か</h3>
+<p><code>--single</code> の不変条件はツールが強制する。単一 stage 実行は合成のワークフロー id の下に作業を記録し、メインワークフローの <code>Current Stage</code> への書き込みを拒否する。ランナーがメインのポインタを前進させようとしたら、エンジンは代わりにエラーを返す。エンジンが保証するため、ドキュメントが間違っていてもこの安全性は保たれる。</p>
+<p>3 つのブートストラップ <strong>initialization</strong> stage には stage ランナーが無い — intent を半分だけ birth することに独立した意味が無いからだ。代わりに initialization phase 全体が 1 つのコマンドとしてパッケージされている:</p>
+<pre class="term"><code>/aidlc-init [--scope &lt;name&gt;] [description]   birth the first intent (== running /aidlc on a fresh workspace)</code></pre>
+<hr>
+<h2 id="the-runner-families-at-a-glance">ランナー各族の一覧</h2>
+<table>
+<thead>
+<tr>
+<th>族</th>
+<th>例</th>
+<th>すること</th>
+<th>orchestrator での等価</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Orchestrator</td>
+<td><code>/aidlc</code></td>
+<td>完全なワークフロー。scope は検出</td>
+<td>—</td>
+</tr>
+<tr>
+<td>scope ランナー</td>
+<td><code>/aidlc-bugfix</code>、<code>/aidlc-feature</code>、<code>/aidlc-mvp</code>、<code>/aidlc-security-patch</code></td>
+<td>完全なワークフロー。scope 固定・検出なし</td>
+<td><code>/aidlc --scope &lt;name&gt;</code></td>
+</tr>
+<tr>
+<td>stage ランナー</td>
+<td><code>/aidlc-application-design</code>、<code>/aidlc-code-generation</code>、…（計 29）</td>
+<td>1 stage を隔離実行。ワークフローを決して前進させない</td>
+<td><code>/aidlc --stage &lt;slug&gt; --single</code></td>
+</tr>
+<tr>
+<td>init ラッパー</td>
+<td><code>/aidlc-init</code></td>
+<td>最初の intent を birth（Initialization を実行）</td>
+<td>新しいワークスペースでの <code>/aidlc</code></td>
+</tr>
+<tr>
+<td>セッションビュー</td>
+<td><code>/aidlc-session-cost</code>、<code>/aidlc-replay</code>、<code>/aidlc-outcomes-pack</code></td>
+<td>読み取り専用のワークフローレポート</td>
+<td><a href="11-session-management.html">セッション管理</a> を参照</td>
+</tr>
+</tbody></table>
+<p>実行可能なライフサイクルの各 stage につき stage ランナーが 1 つある。完全な一覧は skills ディレクトリを見る:</p>
+<pre><code class="language-bash">ls .claude/skills/
+</code></pre>
+<hr>
+<h2 id="author-your-own-runner--write-a-stage-file">自分のランナーを作る — stage ファイルを書く</h2>
+<p>フレームワークをカスタマイズするなら、ここが肝心である: <strong>ランナーは手で書かない。</strong> コンパイル済み stage グラフと scope ファイルから生成される。</p>
+<p>stage ランナーを足すには、stage を足す。stage ファイルを書き、グラフを再コンパイルし、再生成する:</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-runner-gen.ts write
+</code></pre>
+<p>ジェネレータはコンパイル済み stage リスト（唯一の正）を読み、実行可能な stage ごとにランナーシェルを出力する。新しい stage の <code>/aidlc-&lt;your-stage&gt;</code> コマンドは自動で現れる — 書くべきランナーファイルも、コピーする定型文も無い。scope ランナーも、frontmatter が <code>runner: true</code> を宣言する scope について同じように動く。<code>scopes --all</code> はすべての scope ファイルのランナーを出力する。</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-runner-gen.ts scopes      # generate scope-runners
+</code></pre>
+<p>ランナー一式は手で維持されるのではなく導出されるため、カバーする stage や scope からドリフトできない。ディスク上の集合が正から乖離した瞬間、2 つのチェックが CI を落とす:</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-runner-gen.ts check            # stage-runner drift
+bun .claude/tools/aidlc-runner-gen.ts scopes --check   # scope-runner drift
+</code></pre>
+<p>再生成されないままグラフに足された stage — あるいは消えた stage の孤児ランナー — は diff とともに大きく失敗する。stage ファイルを足して再生成することが執筆経路のすべてであり、ランナーはジェネレータが維持する帰結として付いてくる。</p>
+<p>stage ファイルの書き方の実際は <a href="13-customization.html">カスタマイズ</a> と <a href="04-phases-and-stages.html">Phase と Stage</a> を参照。エンジン・directive の契約・ランナーシェルが内部で <code>next</code>/<code>report</code> をどう駆動するかは、リファレンスの <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Skill システム</a> の章を参照。</p>
+<hr>
+<h2 id="quick-reference">クイックリファレンス</h2>
+<pre class="term"><code><span class="t-hdr"># Full workflow</span>
+/aidlc                              detect scope, run everything
+/aidlc --scope enterprise           any of the 9 scopes
+
+<span class="t-hdr"># Scope-runners (the 4 high-traffic doors)</span>
+/aidlc-bugfix · /aidlc-feature · /aidlc-mvp · /aidlc-security-patch
+
+<span class="t-hdr"># One stage, isolated (never advances your workflow)</span>
+/aidlc-code-generation              == /aidlc --stage code-generation --single
+
+<span class="t-hdr"># Birth the first intent (Initialization phase)</span>
+/aidlc-init [--scope &lt;name&gt;]        == /aidlc on a fresh workspace
+
+<span class="t-hdr"># Add your own: write a stage/scope file, then</span>
+bun .claude/tools/aidlc-runner-gen.ts write
+bun .claude/tools/aidlc-runner-gen.ts scopes</code></pre>
+<p>参照: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> · <a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> · <a href="13-customization.html">カスタマイズ</a></p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/17-skills.md"><code>docs/guide/17-skills.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

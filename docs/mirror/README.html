@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-DLC ドキュメント — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script defer src="../assets/mermaid.min.js"></script>
+<script defer src="../assets/highlight.min.js"></script>
+<script defer src="../assets/app.js"></script>
+<script type="module" src="../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / README</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="index.html">総合索引</a>
+  <a href="../index.html">Atlas トップ</a>
+  <div class="group">docs</div>
+  <a href="README.html" class="here">AI-DLC ドキュメント</a>
+  <a href="roadmap.html">AI-DLC Workflows 2.0 - ロードマップ</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#three-guides-one-per-reader">3 つのガイド、読者ごとに 1 つ</a>
+  <a href="#running-on-a-specific-harness">特定の harness 上で動かす</a>
+  <a href="#building-and-contributing">ビルドとコントリビュート</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / DOCS</p>
+<h1 id="ai-dlc-documentation">AI-DLC ドキュメント</h1>
+<p><strong>AI-DLC は方法論である</strong> — AI 駆動のソフトウェア開発に対する、構造化された gate 付きのアプローチである（AWS が定義）。<strong>このリポジトリは、そのネイティブかつ複数 harness 対応の実装である:</strong> 方法論を単一の harness 非依存な <code>core/</code> から skills・agents・hooks・tools として具現化したものであり、利用する CLI harness 上でネイティブに動作する — 現時点では Claude Code・Kiro CLI・Kiro IDE・Codex CLI・opencode、および移植先となる任意の対応 CLI である。方法論は <em>何を</em> に当たり、各 harness ディストリビューションは 1 つのランタイムに対する <em>どのように</em> に当たる。そして、すべてのディストリビューションは同一のソースから生成される。</p>
+<p>初めてだろうか？ <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/README.md">README</a> にインストールの Quick Start と「pick your harness」の表がある。このページはドキュメントそのものの地図である。</p>
+<h2 id="three-guides-one-per-reader">3 つのガイド、読者ごとに 1 つ</h2>
+<p>変更しようとしている対象で選ぶ:</p>
+<table>
+<thead>
+<tr>
+<th>ガイド</th>
+<th>あなたは…</th>
+<th>変更するのは…</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><a href="guide/00-introduction.html">ユーザーガイド</a></strong></td>
+<td>AI-DLC を <em>使って</em> ソフトウェアを構築する</td>
+<td>フレームワーク内は何も変更しない — <code>/aidlc</code> を実行し、gate で回答し、成果物をレビューする</td>
+</tr>
+<tr>
+<td><strong><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md">Harness Engineer ガイド</a></strong></td>
+<td>AI-DLC がチーム向けに <em>どのように</em> 振る舞うかを作り変える</td>
+<td>フレームワークが読み取る <strong>データ</strong>: stage・agent・scope・rule・sensor・knowledge、そして新しい harness への移植</td>
+</tr>
+<tr>
+<td><strong><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">開発者リファレンス</a></strong></td>
+<td>AI-DLC <em>それ自体</em> を変更する</td>
+<td>そのデータを読み取る <strong>コード</strong>: engine・hooks・CLI ツール・コンパイル pipeline・テストスイート</td>
+</tr>
+</tbody></table>
+<p>Harness Engineer ガイドと開発者リファレンスの境界は <strong>データ対コード</strong> であり、ユーザーガイドとその他の境界は <strong>使う</strong> か <strong>形作る</strong> かである。</p>
+<h2 id="running-on-a-specific-harness">特定の harness 上で動かす</h2>
+<p>各ガイドは harness 非依存である。各 harness のインストール手順と、異なるわずかな挙動は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> にまとめられている（Claude Code はユーザーガイド全体で扱われており、その例は Claude Code 上で動作する）。</p>
+<h2 id="building-and-contributing">ビルドとコントリビュート</h2>
+<p>メンテナは <code>core/</code> で執筆し、<code>bun scripts/package.ts</code> で <code>dist/&lt;harness&gt;/</code> ツリーを再生成する — ビルドとテストの一連のループについては <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md">コントリビューションガイド</a> を、harness を追加するには <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/09-porting-to-a-new-harness.md">新しい harness への移植</a> を参照。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/README.md"><code>docs/README.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

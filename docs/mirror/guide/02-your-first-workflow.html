@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>最初のワークフロー — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/02-your-first-workflow</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html" class="here">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#starting-the-workflow">ワークフローの開始</a>
+  <a href="#initialization-phase-automatic">Initialization phase（自動）</a>
+  <a href="#ideation-phase-interactive">Ideation phase（対話的）</a>
+  <a href="#inception-phase">Inception phase</a>
+  <a href="#construction-phase">Construction phase</a>
+  <a href="#operation-phase">Operation phase</a>
+  <a href="#how-execution-modes-work">実行モードの仕組み</a>
+  <a href="#artifacts-produced">生成される成果物</a>
+  <a href="#status-line">ステータスライン</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="your-first-workflow">最初のワークフロー</h1>
+<p>本章では AI-DLC ワークフローの完全な 1 実行を追いながら、各ステップで何が表示され、どんな意思決定をするのかを説明する。例として、REST API を構築する <code>feature</code> scope のワークフローを使う。</p>
+<hr>
+<h2 id="starting-the-workflow">ワークフローの開始</h2>
+<pre class="term"><code>/aidlc Build a REST API for inventory management</code></pre>
+<p>セッション開始時、Claude Code は <code>settings.json</code> の <code>companyAnnouncements</code> エントリ経由で AI-DLC のウェルカムメッセージを表示する。AI-DLC の仕組みを説明し、stage マップと scope の選択肢を示すものである。</p>
+<pre class="term"><code><span class="t-hdr"># Welcome to AI-DLC</span>
+
+**AI-DLC** (AI-Driven Development Life Cycle) is an adaptive methodology that
+structures AI-assisted software development into repeatable, traceable phases
+while keeping you in control at every decision point.
+
+<span class="t-hdr">## How It Works</span>
+
+- **You decide, AI executes.** Every material decision goes through an approval gate.
+- **Adaptive scope.** Choose a scope or let AI auto-detect from your intent.
+- **Traceable artifacts.** Every stage produces versioned documents in the intent's record dir.
+- **11 domain experts.** Specialized agent personas guide each stage.</code></pre>
+<hr>
+<h2 id="initialization-phase-automatic">Initialization phase（自動）</h2>
+<p>3 つの initialization stage は <code>aidlc-utility intent-birth</code> という単一のツール呼び出しの中で決定論的に実行され、1 秒未満で完了する。initialization で利用者が対話することはない。最初の intent をアクティブな space に自動で birth し、ワークフローのための record dir をブートストラップする。</p>
+<h3 id="stage-01-workspace-scaffold">Stage 0.1: Workspace Scaffold</h3>
+<p>フレームワークは最初の intent を birth し、その record dir を <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> に作成する（名前付き space を使わない限り <code>&lt;space&gt;</code> は <code>default</code>）:</p>
+<pre class="term"><code>Intent born — record dir scaffolded:
+  aidlc/spaces/default/intents/&lt;YYMMDD&gt;-&lt;label&gt;/initialization/<span class="t-comment">   (3 stage artifact dirs)</span>
+  aidlc/spaces/default/intents/&lt;YYMMDD&gt;-&lt;label&gt;/ideation/<span class="t-comment">         (7 stage artifact dirs)</span>
+  ...
+Space-level dirs ensured:
+  aidlc/spaces/default/knowledge/<span class="t-comment">                             (team knowledge — empty; you add files)</span></code></pre>
+<h3 id="stage-02-workspace-detection">Stage 0.2: Workspace Detection</h3>
+<p>決定論的なルールベースのスキャナが、プロジェクト直下 1 階層と既知のソースディレクトリ（<code>src/</code>、<code>app/</code>、<code>lib/</code>、<code>pages/</code>、<code>components/</code>、<code>tests/</code>）を走査する。ソースファイル・フレームワーク設定・パッケージマニフェストに基づいて greenfield か brownfield かを分類する。トップレベルでシグナルが検出されないときは、任意の名前のサブディレクトリそれぞれの 1 階層下にも降りるため、ソースがコンテナフォルダ（例: <code>wordbook/</code>、<code>backend/</code>）の中にあるプロジェクトも brownfield として検出される。</p>
+<h3 id="stage-03-state-initialization">Stage 0.3: State Initialization</h3>
+<p>orchestrator は、scope・depth・テスト戦略とスキャナの分類に基づいた完全な stage 計画を持つ、intent の <code>aidlc-state.md</code> を（record dir 配下に）書き込む。あわせて入力を分析し、scope を確認する:</p>
+<pre class="term"><code><span class="t-rule">─── Scope Detection ───────────────────────────────────────────────────────────</span>
+Detected scope: feature (Standard depth, Standard test strategy, all 32 stages)
+<span class="t-prompt">▸ Approve scope? [Yes / Change scope / Change depth / Change test strategy]</span>
+<span class="t-input">&gt; Yes</span></code></pre>
+<p>検出された scope をそのまま受け入れることも、別の scope（例: <code>mvp</code>）へ変更することも、depth レベルやテスト戦略を調整することもできる。指針は <a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> を参照。</p>
+<hr>
+<h2 id="ideation-phase-interactive">Ideation phase（対話的）</h2>
+<p>Initialization の後、ワークフローは Ideation に入る。ここから先の各 stage は、承認 gate を伴って対話的に実行される。</p>
+<h3 id="stage-11-intent-capture-aidlc-product-agent">Stage 1.1: Intent Capture（aidlc-product-agent）</h3>
+<p>ターミナル下部のステータスラインが更新される:</p>
+<pre class="term"><code><span class="t-status">[AIDLC] IDEATION &gt; Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product</span></code></pre>
+<p>表示内容は、現在の phase、stage の表示名、phase 進捗バー、phase 進捗比、リードエージェントである。バーと比は同じ範囲を数える — どちらも現在の phase 内の <code>[x]</code> の stage を数えるため、比が進むたびにバーも進む。残りコンテキスト（<code>ctx:N%</code>）は常に右側に表示され、減るにつれて色分けされる。</p>
+<p>aidlc-product-agent は対話モードの選択を求める:</p>
+<pre class="term"><code><span class="t-prompt">▸ Choose interaction mode:</span>
+  (1) Guide Me — agent asks structured questions
+  (2) Edit File — write directly to the artifact
+  (3) Chat — freeform discussion</code></pre>
+<ul>
+<li><strong>Guide Me</strong> は質問を 1 つずつ順に進める</li>
+<li><strong>Edit File</strong> は成果物を直接編集できるように開く</li>
+<li><strong>Chat</strong> は自由に議論でき、エージェントが決定事項を抽出する</li>
+</ul>
+<p>各モードの詳細は <a href="07-interaction-modes.html">対話モード</a> を参照。stage の途中でモードを切り替えることもできる。</p>
+<h3 id="approval-gate">承認 gate</h3>
+<p>エージェントが作業を終えると、完了サマリと承認 gate が表示される:</p>
+<pre class="term"><code><span class="t-hdr"># Intent Capture &amp; Framing Complete</span>
+
+| Artifact | Contents |
+|----------|----------|
+| intent-capture.md | Problem statement, target users, success criteria |
+| intent-capture-questions.md | 5 questions, all answered |
+
+**Review:** `&lt;record&gt;/ideation/intent-capture/` (the intent's record dir)
+
+<span class="t-prompt">▸ How would you like to proceed?</span>
+  (1) Approve — Continue to Market Research
+  (2) Request Changes — Provide revision feedback</code></pre>
+<p>続行するには <strong>Approve</strong> を、フィードバックを与えるには <strong>Request Changes</strong> を選ぶ。修正プロセスの詳細は <a href="07-interaction-modes.html">対話モード</a> を参照。</p>
+<p>承認後、進捗行が表示される:</p>
+<pre class="term"><code>Progress: 4/32 overall | 1/7 IDEATION stages complete. Next: Market Research</code></pre>
+<h3 id="remaining-ideation-stages">残りの Ideation stage</h3>
+<p>ワークフローは Market Research、Feasibility &amp; Constraints、Scope Definition、Team Formation、Rough Mockups、Approval &amp; Handoff へと続く。いずれも同じパターンに従う: エージェントが作業し、利用者がレビューし、承認する。</p>
+<p>一部の stage は<strong>条件付き</strong>であり、scope によってはスキップされることがある。stage がスキップされるとき、orchestrator は理由を表示して自動的に先へ進む。</p>
+<hr>
+<h2 id="inception-phase">Inception phase</h2>
+<p>Inception は要件を精緻化し、ソリューションを設計する。Stage 2.1（Reverse Engineering）は <strong>pipeline</strong>（2 リンクの連鎖）として実行される点で特筆に値する — conductor がコードスキャンを aidlc-developer-agent に委譲し、続いて統合と成果物の書き出しを aidlc-architect-agent に委譲する。この stage は <strong>brownfield</strong> プロジェクト（既存コードベース）でのみ実行される。</p>
+<pre class="term"><code><span class="t-rule">─── Stage 2.1: Reverse Engineering (pipeline) ─────────────────────────────</span>
+Delegating to aidlc-developer-agent for code scan...
+[Running in background — no interaction needed]
+...
+Developer scan complete. Delegating to aidlc-architect-agent for synthesis...
+...
+<span class="t-ok">✓ 9 reverse engineering artifacts produced</span></code></pre>
+<p>残りの Inception stage（Requirements Analysis から Delivery Planning まで）は利用者とともに inline で実行される。</p>
+<hr>
+<h2 id="construction-phase">Construction phase</h2>
+<p>Construction は <strong>Bolt 単位</strong> でソリューションを構築する。<a href="glossary.html">Bolt</a> は、1 つの Unit（または依存で結ばれた小さな Unit 群）に対する stage 3.1–3.5 の 1 パスである。各 Bolt はレビュー可能なスライスを届ける。2.8 の計画が順序を決め、最初の Bolt を <strong>walking skeleton</strong> — アーキテクチャを証明する最小の end-to-end スライス — として印付ける。</p>
+<pre class="term"><code><span class="t-rule">─── Construction: Bolt 1 — notification-core (walking skeleton) ───────────</span></code></pre>
+<p>walking skeleton は<strong>常に gate される</strong> — 他のどの Bolt よりも先に、その設計成果物と生成コードをレビューする。承認の直後、<strong>ladder prompt</strong> がちょうど 1 回だけ発火する:</p>
+<pre class="term"><code>The walking skeleton shipped. How should the remaining Bolts run?
+<span class="t-prompt">  ▸ Continue autonomously</span>
+<span class="t-prompt">  ▸ Gate every Bolt</span></code></pre>
+<p>回答は <code>aidlc-state.md</code> に <code>Construction Autonomy Mode</code> として記録され、このワークフローの残りすべての Bolt を統べる（セッション再開もこれを尊重する）。Stage 3.5（Code Generation）は Bolt 内の Unit ごとに subagent として実行され、その stage ファイルにある Unit 単位の gate は抑止される — 代わりに Bolt 単位（またはバッチ単位）の gate が 1 つ置かれる。</p>
+<p>依存が満たされ、互いに依存しない Bolt 同士は<strong>並列バッチ</strong>で実行される — orchestrator は 1 ターンで複数の <code>Task</code> 呼び出しを発行する。失敗時は、autonomous モードを選んでいても必ず停止して retry / skip / abort を尋ねる。</p>
+<p>すべての Bolt が完了した後、stage 3.6（Build and Test）と 3.7（CI Pipeline）がソリューション全体に対して 1 回だけ実行される。</p>
+<hr>
+<h2 id="operation-phase">Operation phase</h2>
+<p>Operation はソリューションをデプロイし、監視する。7 つの stage はすべて条件付きであり、<code>poc</code> や <code>bugfix</code> のような小さい scope ではこの phase 全体がスキップされることがある。</p>
+<p>最終 stage（4.7 Feedback &amp; Optimization）の後、ワークフローは完了する。</p>
+<hr>
+<h2 id="how-execution-modes-work">実行モードの仕組み</h2>
+<p>ワークフロー全体を通じて、2 つの実行モードに出会う:</p>
+<h3 id="inline-execution">inline 実行</h3>
+<p>ほとんどの stage は inline で実行される。conductor がエージェントペルソナを読み込み、stage の手順を会話の中で直接実行する。利用者はエージェントとリアルタイムに対話する。</p>
+<pre class="mermaid">
+sequenceDiagram
+    participant U as You
+    participant O as Conductor
+    participant S as Stage File
+    participant A as Agent Persona
+
+    U-&gt;&gt;O: /aidlc
+    O-&gt;&gt;S: Read stage file (inputs, steps, outputs)
+    O-&gt;&gt;A: Load agent persona + knowledge
+    A-&gt;&gt;U: Present interaction mode choice
+    U-&gt;&gt;A: Provide answers / feedback
+    A-&gt;&gt;A: Execute stage steps
+    A-&gt;&gt;U: Present completion summary
+    U-&gt;&gt;A: Approval gate response
+    A-&gt;&gt;O: Report approval or skip outcome
+    O-&gt;&gt;O: Engine updates state and routes
+</pre>
+<h3 id="subagent-delegation">subagent への委譲</h3>
+<p>4 つの stage は背景の subagent に dispatch される — 2.1 Reverse Engineering（pipeline: developer のスキャン、次いで architect の統合と書き出し）、2.2 Practices Discovery（subagent の hub-and-spoke: リードの草稿、相互に盲目な 3 つの支援レビュー、人間へのインタビュー、リードの統合）、2.4 User Stories（mob: collaborator が並列に貢献し、判断が割れた場合は stage の途中で利用者に提示されることがある）、3.5 Code Generation（subagent）である。Practices Discovery は、スポークと最終統合の間に意図的に利用者を輪の中へ招き入れる。User Stories の mob も判断の分かれ目を stage 途中で提示することがある。Workspace detection（0.2）は subagent ではなく <code>aidlc-utility intent-birth</code> の中で決定論的に実行される。</p>
+<pre class="mermaid">
+sequenceDiagram
+    participant U as You
+    participant O as Conductor
+    participant S as Stage File
+    participant T as Subagent (Task)
+
+    O-&gt;&gt;S: Read stage file
+    O-&gt;&gt;T: Prepare context + delegate via Task tool
+    T-&gt;&gt;T: Execute autonomously (no user interaction)
+    T--&gt;&gt;O: Return structured summary
+    O-&gt;&gt;U: Present completion summary
+    U-&gt;&gt;O: Approval gate response
+    O-&gt;&gt;O: Report outcome — engine updates state + advances
+</pre>
+<hr>
+<h2 id="artifacts-produced">生成される成果物</h2>
+<p><code>feature</code> scope のワークフローが終わる頃には、intent の record dir（<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>）には次が含まれる:</p>
+<pre class="term"><code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/
+├── aidlc-state.md         <span class="t-comment"> # Workflow state (all stages marked [x])</span>
+├── audit/                 <span class="t-comment"> # Full decision audit trail (per-clone shards, merged by timestamp)</span>
+├── ideation/              <span class="t-comment"> # Intent, market research, scope, mockups</span>
+├── inception/             <span class="t-comment"> # Requirements, stories, design, units</span>
+├── construction/          <span class="t-comment"> # Per-unit code + test artifacts</span>
+├── operation/             <span class="t-comment"> # Deployment, observability, incident plans</span>
+└── verification/          <span class="t-comment"> # Phase boundary verification reports</span></code></pre>
+<p>（チームナレッジは 1 階層上、space レベルの <code>aidlc/spaces/&lt;space&gt;/knowledge/</code> — <code>intents/</code> の兄弟 — にあり、すべての intent を横断して蓄積される。チームが確認した practices と learnings も、その隣にあるアクティブ space の memory 層 <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> にあり、同様に intent を横断して永続する。）</p>
+<hr>
+<h2 id="status-line">ステータスライン</h2>
+<p>ワークフロー全体を通じて、ターミナルのステータスラインが現在位置を示す:</p>
+<pre class="term"><code><span class="t-status">[AIDLC] IDEATION &gt; Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product</span></code></pre>
+<table>
+<thead>
+<tr>
+<th>セグメント</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>IDEATION</code></td>
+<td>現在の phase</td>
+</tr>
+<tr>
+<td><code>&gt; Intent Capture</code></td>
+<td>現在の stage の表示名</td>
+</tr>
+<tr>
+<td><code>[▓▓▓▓▓░░░░░]</code></td>
+<td>phase 進捗バー（10 文字。<code>n/m</code> 比と同じ範囲を数える）</td>
+</tr>
+<tr>
+<td><code>4/7</code></td>
+<td>phase 内の stage 進捗</td>
+</tr>
+<tr>
+<td><code>-- product</code></td>
+<td>この stage のリードエージェント</td>
+</tr>
+<tr>
+<td><code>ctx:N%</code></td>
+<td>残りコンテキスト（常に表示。減るにつれて色分け）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="03-spaces-and-intents.html">Space と Intent</a> — ワークスペースが複数の実行をどう保持するか、開始と切り替えの方法</li>
+<li><a href="04-phases-and-stages.html">Phase と Stage</a> — 全 5 phase・32 stage の詳細な内訳</li>
+<li><a href="07-interaction-modes.html">対話モード</a> — Guide Me・Edit File・Chat の解説</li>
+<li><a href="11-session-management.html">セッション管理</a> — 再開・やり直し・stage 間ジャンプ</li>
+<li><a href="glossary.html">用語集</a> — 用語リファレンス</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/02-your-first-workflow.md"><code>docs/guide/02-your-first-workflow.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

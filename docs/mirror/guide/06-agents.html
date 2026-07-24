@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>エージェント — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/06-agents</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html" class="here">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#philosophy-small-mob-broad-agents">哲学: Small Mob, Broad Agents</a>
+  <a href="#agent-collaboration-map">エージェント協働マップ</a>
+  <a href="#the-11-domain-agents">11 のドメインエージェント</a>
+  <a href="#phase-participation">Phase への参加</a>
+  <a href="#agent-tool-access">エージェントのツールアクセス</a>
+  <a href="#reviewer-agents">レビュアーエージェント</a>
+  <a href="#the-composer-agent">composer エージェント</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="agents">エージェント</h1>
+<p>AI-DLC は 14 のエージェントペルソナを同梱する: stage の作業を実行する 11 のドメインエキスパート、レビュー専任の 2 エージェント、そして適応ワークフローの composer である。本章では、ドメインエージェントから始めて、レビュアーと composer まで全一覧を説明する。</p>
+<hr>
+<h2 id="philosophy-small-mob-broad-agents">哲学: Small Mob, Broad Agents</h2>
+<p>数十の狭い専門家（ウォーターフォールの引き継ぎ連鎖を再現してしまう）ではなく、AI-DLC は複数の stage と phase にまたがって関与する<strong>広範な能力を持つ 11 エージェント</strong>を使う。</p>
+<h3 id="why-11-not-30">なぜ 30 ではなく 11 か？</h3>
+<p>人間のソフトウェアチームでは、3〜5 人の mob が要件からデプロイまで機能全体をカバーする。各人が複数の専門性にまたがる広いスキルセットを持ち寄る。AI-DLC はこのモデルを鏡写しにする:</p>
+<ul>
+<li><p><strong>各エージェントは多くのタスクにわたって 1 つのドメイン全体をカバーする。</strong> aidlc-architect-agent は feasibility、application design、units generation、functional design、NFR requirements、NFR design — 3 phase にまたがる 6 stage — を扱う。狭い専門家モデルなら、ほぼ同一の知識ベースを持つ 6 つの別エージェントが必要になる。</p>
+</li>
+<li><p><strong>エージェントが少ないほど引き継ぎが減る。</strong> すべてのエージェント境界は情報損失の潜在点である。同じ aidlc-architect-agent が Application Design と Functional Design の両方をリードすれば、明示的な引き継ぎ成果物を要さず自然にコンテキストが保たれる。</p>
+</li>
+<li><p><strong>支援ロールが、増殖なしの協働を可能にする。</strong> 「security-reviewer-agent」「compliance-reviewer-agent」「cost-reviewer-agent」を作るのではなく、aidlc-devsecops-agent と aidlc-compliance-agent が、他のエージェントがリードする stage に支援エージェントとして参加する。どう参加するかは stage の <code>mode</code> — その通信トポロジー — が決める: <code>inline</code> の stage では conductor が各支援エージェントを自分のコンテキスト内のペルソナとして纏う。<code>subagent</code>（hub-and-spoke）と <code>mob</code>（メッシュ）の stage では、各支援エージェントは本物の独立した協働者として dispatch され、自分の contribution ファイルを書き、リードが統合する（全員が書き、最終成果物はリードが所有する。user-stories が mob のショーケースとして出荷されている）。<code>pipeline</code>（連鎖）の stage ではリンクが成果物を順に直接前進させる（reverse-engineering が出荷されている連鎖である）。どのトポロジーでも、すべての委譲は conductor が行う — エージェント同士が呼び合うことはない。</p>
+</li>
+<li><p><strong>知識の読み込みはエージェント単位である。</strong> 各エージェントは方法論の知識を <code>.claude/knowledge/&lt;agent-name&gt;/</code> から、チームの知識を space レベルの <code>aidlc/knowledge/&lt;agent-name&gt;/</code>（チームが作っていれば）から読み込む。エージェントが少ないほど管理する知識ディレクトリが減り、矛盾する指針が生まれる機会も減る。</p>
+</li>
+</ul>
+<hr>
+<h2 id="agent-collaboration-map">エージェント協働マップ</h2>
+<p>次の図は、ワークフロー中にエージェントがどのように情報を交換するかを示す。実線の矢印は主要な成果物のフロー、破線の矢印は助言・レビューの関係である。operations から product へのフィードバックループがライフサイクル全体を閉じる。</p>
+<pre class="mermaid">
+flowchart TD
+    ORCH(["SKILL.md (Conductor)"])
+
+    PA["aidlc-product-agent\n(Product Manager)"]
+    DA["aidlc-design-agent\n(UX Designer)"]
+    DLA["aidlc-delivery-agent\n(Delivery Manager)"]
+    AA["aidlc-architect-agent\n(Solutions Architect)"]
+    AWSA["aidlc-aws-platform-agent\n(AWS Platform)"]
+    CA["aidlc-compliance-agent\n(Compliance)"]
+    DSA["aidlc-devsecops-agent\n(DevSecOps)"]
+    DEVA["aidlc-developer-agent\n(Developer)"]
+    QA["aidlc-quality-agent\n(QA Engineer)"]
+    PDA["aidlc-pipeline-deploy-agent\n(Pipeline &amp; Deploy)"]
+    OA["aidlc-operations-agent\n(SRE)"]
+
+    ORCH --&gt;|delegates| PA
+    ORCH --&gt;|delegates| DA
+    ORCH --&gt;|delegates| DLA
+    ORCH --&gt;|delegates| AA
+    ORCH --&gt;|delegates| AWSA
+    ORCH --&gt;|delegates| CA
+    ORCH --&gt;|delegates| DSA
+    ORCH --&gt;|delegates| DEVA
+    ORCH --&gt;|delegates| QA
+    ORCH --&gt;|delegates| PDA
+    ORCH --&gt;|delegates| OA
+
+    PA --&gt;|"requirements,\nstories, scope"| AA
+    PA --&gt;|"intent, scope"| DA
+    PA --&gt;|"prioritized backlog"| DLA
+    AA --&gt;|"architecture,\nunit specs"| DEVA
+    AA --&gt;|"NFR targets"| QA
+    AA --&gt;|"infra requirements"| AWSA
+    DA --&gt;|"mockups, UX specs"| DEVA
+    DEVA --&gt;|"code scan"| AA
+    DEVA --&gt;|"code artifacts"| QA
+    QA --&gt;|"test results,\nbug reports"| DEVA
+    AWSA --&gt;|"provisioned infra"| PDA
+    DSA --&gt;|"security review"| DEVA
+    DSA --&gt;|"security tests"| QA
+    PDA --&gt;|"deployed services"| OA
+    CA --&gt;|"compliance constraints"| AA
+    DLA --&gt;|"delivery plan"| DEVA
+    OA ==&gt;|"feedback loop:\noperational insights"| PA
+
+    style ORCH fill:#2a2440,stroke:#b895ff
+    style PA fill:#1d332b,stroke:#57d9a9
+    style OA fill:#3a1f27,stroke:#ff8f8f
+    style DEVA fill:#38291a,stroke:#f2b35c
+    style AA fill:#1b2c47,stroke:#6db3ff
+</pre>
+<hr>
+<h2 id="the-11-domain-agents">11 のドメインエージェント</h2>
+<blockquote>
+<p><strong>同梱エージェントの知識をカスタマイズしたい？</strong> <code>.claude/agents/*.md</code> にある 14 の同梱エージェントファイルを編集しないこと — フレームワークのファイルであり、アップグレードで上書きされる。会社の標準は代わりに space レベルの <code>aidlc/knowledge/&lt;agent-name&gt;/</code> に追加する。完全なワークフローは <a href="08-knowledge.html">ナレッジ</a> を参照。<em>新しい</em>エージェントが欲しいチームは、必須の frontmatter を持つファイルを <code>.claude/agents/&lt;slug&gt;.md</code> に置ける — そのファイルはユーザー所有である。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md#adding-an-agent">コントリビューション: エージェントの追加</a> を参照。</p>
+</blockquote>
+<p>以下の各エージェントには<strong>深掘りページ</strong>がある — 完全な責務、リード / 支援する stage、読み込む知識。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/README.md">エージェント深掘り索引</a> が 11 体すべてを一覧し、エージェント別リンクは各見出しの下にインラインで置いてある。</p>
+<h3 id="aidlc-product-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/product-agent.md">aidlc-product-agent</a></h3>
+<p><strong>ドメイン:</strong> 要件、ユーザーストーリー、scope、市場調査</p>
+<p>aidlc-product-agent はプロダクトマネージャー兼ビジネスアナリストとして振る舞う。intent を捕捉し、市場調査を行い、scope を定義し、要件を引き出し、ユーザーストーリーを作る。Ideation と Inception の phase で最も活発なエージェントである。</p>
+<ul>
+<li><strong>リード:</strong> intent-capture、market-research、scope-definition、requirements-analysis、user-stories</li>
+<li><strong>支援:</strong> rough-mockups、approval-handoff、refined-mockups</li>
+<li><strong>特別なツール:</strong> WebSearch（市場調査用）</li>
+</ul>
+<h3 id="aidlc-design-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/design-agent.md">aidlc-design-agent</a></h3>
+<p><strong>ドメイン:</strong> UX/UI デザイン、ワイヤーフレーム、インタラクションデザイン、アクセシビリティ</p>
+<p>aidlc-design-agent はワイヤーフレーム・モックアップ・インタラクション仕様を作る。ユーザー向け機能では aidlc-product-agent と、デザインが実装可能であることの担保では aidlc-developer-agent と密に連携する。</p>
+<ul>
+<li><strong>リード:</strong> rough-mockups、refined-mockups</li>
+<li><strong>支援:</strong> user-stories、application-design</li>
+<li><strong>特別なツール:</strong> WebSearch（デザインリサーチ用）</li>
+</ul>
+<h3 id="aidlc-delivery-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/delivery-agent.md">aidlc-delivery-agent</a></h3>
+<p><strong>ドメイン:</strong> チーム編成、キャパシティ計画、デリバリーの順序付け</p>
+<p>aidlc-delivery-agent はエンジニアリングマネージャーとして振る舞う。チームのキャパシティを評価し、mob の編成を組み、デリバリーの順序を計画し、phase の引き継ぎを管理する。</p>
+<ul>
+<li><strong>リード:</strong> team-formation、approval-handoff、delivery-planning</li>
+<li><strong>支援:</strong> scope-definition、units-generation</li>
+<li><strong>特別なツール:</strong> 共有セット以外なし</li>
+</ul>
+<h3 id="aidlc-architect-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/architect-agent.md">aidlc-architect-agent</a></h3>
+<p><strong>ドメイン:</strong> アプリケーション設計、ドメインモデリング、NFR、コンポーネント分解</p>
+<p>aidlc-architect-agent は設計の中心的権威である。stage への関与が最も広く（3 phase にわたる 9 stage）、<code>judgment</code> tier を持つ — 他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と同様である。judgment のエージェントはセッション自身のモデルと effort を継承するため、あなたが選んだものより下げられることはない。delivery・pipeline-deploy・operations の 3 体だけが <code>templated</code> tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro では全 tier がセッションのモデルと effort を継承）を持つ。その出力が定型的な計画・CI/CD の YAML・runbook の雛形に支配されているためである。</p>
+<ul>
+<li><strong>リード:</strong> feasibility、application-design、units-generation、functional-design、nfr-requirements、nfr-design</li>
+<li><strong>支援:</strong> intent-capture、reverse-engineering（統合）、delivery-planning</li>
+</ul>
+<h3 id="aidlc-aws-platform-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/aws-platform-agent.md">aidlc-aws-platform-agent</a></h3>
+<p><strong>ドメイン:</strong> AWS インフラ、CDK/CloudFormation、コスト最適化</p>
+<p>aidlc-aws-platform-agent はインフラを設計し、環境をプロビジョニングし、コストを最適化する。AWS CLI と CDK のコマンドを実行するための Bash アクセスを持つ。</p>
+<ul>
+<li><strong>リード:</strong> infrastructure-design、environment-provisioning</li>
+<li><strong>支援:</strong> feasibility、application-design、nfr-design、feedback-optimization</li>
+<li><strong>特別なツール:</strong> Bash（<code>aws</code>・<code>cdk</code> コマンド用）</li>
+</ul>
+<h3 id="aidlc-compliance-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/compliance-agent.md">aidlc-compliance-agent</a></h3>
+<p><strong>ドメイン:</strong> 規制スキャン、データ分類、リスク評価</p>
+<p>aidlc-compliance-agent は純粋に助言の立場で動く — リードする stage を持たない。他のエージェント、特に aidlc-architect-agent と aidlc-devsecops-agent がリードする stage に規制上の制約を供給する。</p>
+<ul>
+<li><strong>リード:</strong> なし（支援のみ）</li>
+<li><strong>支援:</strong> feasibility、nfr-requirements、infrastructure-design、environment-provisioning</li>
+<li><strong>特別なツール:</strong> WebSearch（規制リサーチ用）</li>
+</ul>
+<h3 id="aidlc-devsecops-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/devsecops-agent.md">aidlc-devsecops-agent</a></h3>
+<p><strong>ドメイン:</strong> 脅威モデリング、セキュリティスキャン、DevSecOps パイプライン</p>
+<p>aidlc-devsecops-agent は設計をセキュリティ観点でレビューし、セキュリティ要件を定義し、CI/CD パイプラインにセキュリティを統合する。aidlc-compliance-agent と同様、支援ロールで動く。</p>
+<ul>
+<li><strong>リード:</strong> なし（支援のみ）</li>
+<li><strong>支援:</strong> practices-discovery、nfr-requirements、infrastructure-design、build-and-test、environment-provisioning</li>
+<li><strong>特別なツール:</strong> Bash（セキュリティスキャン用）</li>
+</ul>
+<h3 id="aidlc-developer-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/developer-agent.md">aidlc-developer-agent</a></h3>
+<p><strong>ドメイン:</strong> コード実装、コード分析、データモデリング</p>
+<p>aidlc-developer-agent は 3 つの phase にまたがる — Inception のリバースエンジニアリングから Operation のデプロイ支援まで。既存コードベースのコードスキャンを実行し、実装コードを生成する。</p>
+<ul>
+<li><strong>リード:</strong> reverse-engineering（コードスキャン）、code-generation</li>
+<li><strong>支援:</strong> practices-discovery、user-stories、functional-design、deployment-execution</li>
+</ul>
+<p>ワークスペース検出（workspace-detection）はかつて aidlc-developer-agent の subagent だったが、いまはルールベースのファイル・マニフェスト検出を使って <code>aidlc-utility intent-birth</code> の中で決定論的に実行される。</p>
+<ul>
+<li><strong>特別なツール:</strong> Bash（ビルド・実行コマンド用）</li>
+</ul>
+<h3 id="aidlc-quality-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/quality-agent.md">aidlc-quality-agent</a></h3>
+<p><strong>ドメイン:</strong> テスト戦略、テスト生成、性能検証</p>
+<p>aidlc-quality-agent はテスト戦略を定義し、テストスイートを生成し、品質 gate を検証し、性能テストを実行する。</p>
+<ul>
+<li><strong>リード:</strong> build-and-test、performance-validation</li>
+<li><strong>支援:</strong> practices-discovery、user-stories、nfr-requirements</li>
+<li><strong>特別なツール:</strong> Bash（テスト実行用）</li>
+</ul>
+<h3 id="aidlc-pipeline-deploy-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/pipeline-deploy-agent.md">aidlc-pipeline-deploy-agent</a></h3>
+<p><strong>ドメイン:</strong> CI/CD パイプライン、デプロイ戦略、リリース実行</p>
+<p>aidlc-pipeline-deploy-agent は CI/CD パイプラインを設定し、デプロイ戦略を計画し、ロールバック能力を備えたリリースを実行する。</p>
+<ul>
+<li><strong>リード:</strong> practices-discovery、ci-pipeline、deployment-pipeline、deployment-execution</li>
+<li><strong>支援:</strong> なし</li>
+<li><strong>特別なツール:</strong> Bash（パイプライン・デプロイコマンド用）</li>
+</ul>
+<h3 id="aidlc-operations-agent"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/operations-agent.md">aidlc-operations-agent</a></h3>
+<p><strong>ドメイン:</strong> 可観測性、インシデント対応、SLO 追跡、フィードバックループ</p>
+<p>aidlc-operations-agent は監視を構築し、インシデント対応手順を定義し、運用の洞察を次のイテレーションのために aidlc-product-agent へ還流してライフサイクルのループを閉じる。</p>
+<ul>
+<li><strong>リード:</strong> observability-setup、incident-response、feedback-optimization</li>
+<li><strong>支援:</strong> performance-validation</li>
+<li><strong>特別なツール:</strong> Bash（可観測性・監視コマンド用）</li>
+</ul>
+<hr>
+<h2 id="phase-participation">Phase への参加</h2>
+<p>この表は、どのエージェントがどの phase で活動し、リード（L）か支援（S）かを示す。</p>
+<table>
+<thead>
+<tr>
+<th>エージェント</th>
+<th>Phase 0</th>
+<th>Phase 1</th>
+<th>Phase 2</th>
+<th>Phase 3</th>
+<th>Phase 4</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>aidlc-product-agent</td>
+<td>—</td>
+<td>L (intent-capture, market-research, scope-definition), S (rough-mockups, approval-handoff)</td>
+<td>L (requirements-analysis, user-stories), S (refined-mockups)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>aidlc-design-agent</td>
+<td>—</td>
+<td>L (rough-mockups)</td>
+<td>L (refined-mockups), S (user-stories, application-design)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>aidlc-delivery-agent</td>
+<td>—</td>
+<td>L (team-formation, approval-handoff), S (scope-definition)</td>
+<td>L (delivery-planning), S (units-generation)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>aidlc-architect-agent</td>
+<td>—</td>
+<td>L (feasibility), S (intent-capture)</td>
+<td>L (application-design, units-generation), S (reverse-engineering, delivery-planning)</td>
+<td>L (functional-design, nfr-requirements, nfr-design)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>aidlc-aws-platform-agent</td>
+<td>—</td>
+<td>S (feasibility)</td>
+<td>S (application-design)</td>
+<td>L (infrastructure-design), S (nfr-design)</td>
+<td>L (environment-provisioning), S (feedback-optimization)</td>
+</tr>
+<tr>
+<td>aidlc-compliance-agent</td>
+<td>—</td>
+<td>S (feasibility)</td>
+<td>—</td>
+<td>S (nfr-requirements, infrastructure-design)</td>
+<td>S (environment-provisioning)</td>
+</tr>
+<tr>
+<td>aidlc-devsecops-agent</td>
+<td>—</td>
+<td>—</td>
+<td>S (practices-discovery)</td>
+<td>S (nfr-requirements, infrastructure-design, build-and-test)</td>
+<td>S (environment-provisioning)</td>
+</tr>
+<tr>
+<td>aidlc-developer-agent</td>
+<td>—</td>
+<td>—</td>
+<td>L (reverse-engineering), S (practices-discovery, user-stories)</td>
+<td>L (code-generation), S (functional-design)</td>
+<td>S (deployment-execution)</td>
+</tr>
+<tr>
+<td>aidlc-quality-agent</td>
+<td>—</td>
+<td>—</td>
+<td>S (practices-discovery, user-stories)</td>
+<td>L (build-and-test), S (nfr-requirements)</td>
+<td>L (performance-validation)</td>
+</tr>
+<tr>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>—</td>
+<td>—</td>
+<td>L (practices-discovery)</td>
+<td>L (ci-pipeline)</td>
+<td>L (deployment-pipeline, deployment-execution)</td>
+</tr>
+<tr>
+<td>aidlc-operations-agent</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>L (observability-setup, incident-response, feedback-optimization)</td>
+</tr>
+</tbody></table>
+<h3 id="observations">観察</h3>
+<ul>
+<li><strong>aidlc-architect-agent</strong> の関与が最も広い（3 phase にわたる 9 stage）。他の 7 つの高判断エージェントと同じく <code>judgment</code> tier（セッションのモデルと effort を継承）を持ち、<code>templated</code> tier を持つのは <strong>aidlc-delivery-agent</strong>・<strong>aidlc-pipeline-deploy-agent</strong>・<strong>aidlc-operations-agent</strong> だけである</li>
+<li><strong>aidlc-developer-agent</strong> は 3 phase にまたがる: Inception・Construction・Operation</li>
+<li><strong>aidlc-compliance-agent</strong> と <strong>aidlc-devsecops-agent</strong> は純粋な支援ロールで、他のエージェントがリードする stage に参加する</li>
+<li><strong>aidlc-operations-agent</strong> は洞察を aidlc-product-agent へ還流してライフサイクルのループを閉じる</li>
+</ul>
+<hr>
+<h2 id="agent-tool-access">エージェントのツールアクセス</h2>
+<p>すべてのエージェントは<strong>セッションの完全なツールセット</strong> — Claude Code の組み込みツール全部と、セッションにプロビジョニングされた MCP ツール — を継承する。同梱の唯一の制限は <code>disallowedTools: Task</code>（subagent を生成するのは conductor だけ）で、14 エージェントのどれも <code>tools:</code> 許可リストを宣言していない。したがって下の表はエージェント別の許可の集合ではなく、各ペルソナが作業で行使すると<em>期待</em>されるツールの記録である。</p>
+<table>
+<thead>
+<tr>
+<th>ツール</th>
+<th>行使が期待されるエージェント</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Read、Edit、Write、Glob、Grep、AskUserQuestion</td>
+<td>全 14 エージェント</td>
+</tr>
+<tr>
+<td>Bash</td>
+<td>aidlc-aws-platform-agent、aidlc-devsecops-agent、aidlc-developer-agent、aidlc-quality-agent、aidlc-pipeline-deploy-agent、aidlc-operations-agent</td>
+</tr>
+<tr>
+<td>WebSearch</td>
+<td>aidlc-product-agent、aidlc-design-agent、aidlc-compliance-agent</td>
+</tr>
+<tr>
+<td>Task</td>
+<td>なし（<code>disallowedTools: Task</code> により全エージェントでブロック）</td>
+</tr>
+</tbody></table>
+<p>ペルソナを本当に絞るには、frontmatter に任意の <code>tools:</code> 許可リストを足す — ただし完全修飾の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id も併記しない限り、継承していた MCP アクセスが落ちる。この実装は今日、そのような制限を同梱していない。</p>
+<h3 id="mcp-servers-are-shared-not-per-agent">MCP サーバーは共有であり、エージェント別ではない</h3>
+<p>上の表は各ペルソナが使うと期待される組み込みツールを示すが、実際にはすべてのエージェントが全部を継承する。MCP サーバーも同じ全継承モデルに従う: この実装はプロジェクトルート（<code>.claude/</code> の隣）の <code>.mcp.json</code> で一度だけ宣言し、Claude Code がセッションにプロビジョニングし、すべてのエージェントがその全部を継承する — エージェント別の許可は存在しない。14 エージェントのそれぞれが、追加設定なしに宣言済みの全サーバー（<code>context7</code> と 4 つの AWS サーバー）へ到達でき、認証情報の無いサーバーはブロッカーではなく単に利用不可になる。特定のエージェントからサーバーへの到達を止めるには、そのエージェントの <code>tools:</code> 許可リストを、保持すべき完全修飾の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id（例えば <code>mcp__context7__&lt;tool&gt;</code>）に絞る。この実装は今日、そのような制限を同梱していない。</p>
+<p>サーバーの一覧と認証情報は <a href="01-getting-started.html">はじめかた</a>、MCP が Claude Code のネイティブなツールモデルにどう写像されるかは <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/14-claude-features.md#mcp-servers">Harness プリミティブの対応</a> を参照。</p>
+<hr>
+<h2 id="reviewer-agents">レビュアーエージェント</h2>
+<p>11 のドメインエキスパートに加えて、AI-DLC は <strong>2 つの品質 gate レビュアー
+エージェント</strong>を同梱する。成果物は作らない — ビルダーが作ったものをレビューして
+挑み、gate で顧客（あるいはレビューボード）を代表する。</p>
+<table>
+<thead>
+<tr>
+<th>レビュアー</th>
+<th>レビュー対象</th>
+<th>Tier</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>aidlc-product-lead-agent</code></td>
+<td>要件・ユーザーストーリー・UX/モックアップ成果物 — 完全性、ビジネス整合、テスト可能性</td>
+<td>balanced</td>
+</tr>
+<tr>
+<td><code>aidlc-architecture-reviewer-agent</code></td>
+<td>技術設計成果物 — 健全性、実装可能性、壊れた相互参照、達成不能な NFR 目標</td>
+<td>balanced</td>
+</tr>
+</tbody></table>
+<h2 id="the-composer-agent">composer エージェント</h2>
+<p>両グループの外にもう 1 体いる: 適応ワークフローの composer である <code>aidlc-composer-agent</code>。conductor は compose の要望（<code>/aidlc compose</code>、コールドスタートでの compose 提案、<code>--report</code>、<code>--new-scope</code>）で dispatch する。タスクの実装エントロピー（5 成分: intent の曖昧さ・構造的不確実性・検証エントロピー・リスク・未解決の仮定 — 設定済みなら CodeKB MCP 分析に、そうでなければワークスペーススキャンに接地）を推定し、スコアの内訳と stage 別の根拠を添えて最小実行可能な EXECUTE/SKIP グリッドを提案し、gate であなたが承認した後にだけ、合成 scope を書く（フロント / レポート経由）か、決定論的な <code>recompose</code> 動詞が適用する保留 stage のフリップを提案する（実行中）。そのペルソナは存在と不在の両方をエントロピープロファイルに照らして正当化する: すべての EXECUTE は削減する成分を名指しし、すべての SKIP はそれを既にカバーするものを名指しし、背骨（core・検証・荷重を受けるディスカバリー stage）を切ることは危険な失敗として扱われる。<a href="05-scopes-and-depth.html#the-adaptive-composer">Scope と Depth - 適応コンポーザー</a> を参照。</p>
+<p>レビュアーは stage が <code>reviewer:</code> フィールドを宣言しているときにだけ発火する。今日、product
+lead は <code>rough-mockups</code>・<code>refined-mockups</code>・<code>requirements-analysis</code>・
+<code>user-stories</code> を、architecture reviewer は <code>application-design</code>・
+<code>units-generation</code>・<code>functional-design</code>・<code>nfr-requirements</code>・<code>nfr-design</code>・
+<code>infrastructure-design</code>・<code>code-generation</code> をレビューする。</p>
+<p><strong>レビュアーのステップ。</strong> stage 本体が成果物を作った後、learnings の儀式と承認 gate の前に、
+conductor は名指しされたレビュアーを<strong>独立した sub-agent</strong> として起動する。レビュアーは
+stage 定義・Q&amp;A・成果物を読み（ビルダーの <code>memory.md</code> や計画は決して読まない —
+独立の判断を形成する）、<strong>READY</strong> または <strong>NOT-READY</strong> の判定を付けた <code>## Review</code>
+セクションを追記する。NOT-READY ならビルダーが指摘に対処するため再実行し、レビュアーが
+再確認する。このループは <code>reviewer_max_iterations</code> 回（既定 2）まで。上限後も指摘が残る場合、
+未解決の指摘を注記した上でワークフローは承認 gate へ進む — レビュアーは決してブロックせず、
+最終決定権は常に人間にある。</p>
+<p>（重要: エージェント名は示したとおりバッククォートの素の名前で使うこと — markdown リンクにしないこと。レビュアーのエージェント別ドキュメントページはまだ存在しない。）</p>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="04-phases-and-stages.html">Phase と Stage</a> — stage フロー全体の文脈でエージェントを見る</li>
+<li><a href="08-knowledge.html">ナレッジ</a> — エージェントが方法論とチームの知識を読み込む仕組み</li>
+<li><a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> — エージェントの振る舞いを制約する行動ルール</li>
+<li><a href="glossary.html">用語集</a> — 用語リファレンス</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/06-agents.md"><code>docs/guide/06-agents.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

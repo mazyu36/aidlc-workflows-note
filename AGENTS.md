@@ -29,6 +29,17 @@ git -C "$(ghq root)/github.com/awslabs/aidlc-workflows" worktree add --detach /t
 | `docs/aidlc-workflows/architecture.html` | つくり: core → harness → dist の三層、パッケージングパイプライン、プレーンアーキテクチャ |
 | `docs/aidlc-workflows/runtime.html` | 仕組み: セッションの流れ、conductor、ステージプロトコル、状態機械、フック |
 | `docs/aidlc-workflows/quality.html` | エージェントと品質: 14 エージェント、knowledge、センサー、swarm、学習ループ |
+| `docs/mirror/**` | 公式 docs 全 91 ファイルの逐語日本語版（生成物。手で編集しない） |
+
+## docs ミラー（逐語日本語版）の規約
+
+- 訳文の正は `mirror-src/`（原文と同じ相対パスの .md）。翻訳ルールは `mirror-src/TRANSLATION.md`
+- `docs/mirror/**.html` は `node scripts/mirror-build/build-mirror.mjs` の生成物。手で編集せず、直すときは mirror-src か build スクリプトを直して再生成する
+- ビルド前提: `/tmp/aidlc-v2` に基点コミットの worktree があること（原文パリティ検証・アンカー計算に使う）、`scripts/mirror-build/` で `npm install` 済みであること
+- 忠実性: 構造（見出し・フェンス・表）は原文と 1:1。ビルドが見出し・フェンスのパリティを検証し、不一致はビルド失敗。見出しアンカー id は原文英語から GitHub 互換 slug を計算して位置対応で付与
+- 唯一の内容改変は Mermaid のセミコロン 5 行の修正（upstream PR #651 相当。build-mirror.mjs の MERMAID_FIXES が正）
+- Atlas 本文の文章規約（bold 禁止・ウィーゼルワード禁止）は逐語ミラーには適用しない — 原文の構造・強調を忠実に写す方が優先
+- update_mode では: 新基点で `git diff 旧..新 -- docs` を取り、変更のあった原文だけ mirror-src を再翻訳 → 全体を再ビルド → validate-refs.sh
 
 - ページ単体で「動き」と「実装の大枠」が掴めることをゴールにする。主要フローには図（draw.io / Mermaid シーケンス図）を付け、本文で主張した仕組みには実コード抜粋（`figure.excerpt`）で実体を見せる。目安: 各ページに抜粋 2〜4 個
 - コンテンツはページ内に完結させる。リポジトリ内 .md への外部リンクで内容を代替しない（引用・出典表示としてのみ可）

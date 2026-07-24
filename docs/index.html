@@ -25,7 +25,6 @@
   <a href="#tldr">TL;DR</a>
   <a href="#map">リポジトリの三層構造</a>
   <a href="#pages">ページ索引</a>
-  <a href="#basis">分析基点</a>
   <a href="#sources">一次資料</a>
 </nav>
 
@@ -62,6 +61,10 @@
 
 <h2 id="pages">ページ索引</h2>
 <div class="cards">
+  <a class="card" href="aidlc-workflows/spec.html">
+    <div class="card-head"><span class="card-name">方法論仕様（Spec）</span><span class="chip ok">公開</span></div>
+    <p><span class="card-role">同梱の Specification PDF を図で読む。</span>9 原則、三区画モデルと自己修正ループ、orchestrator の 5 機能、仕様 → v2 実装の対応表。</p>
+  </a>
   <a class="card" href="aidlc-workflows/concepts.html">
     <div class="card-head"><span class="card-name">概念</span><span class="chip ok">公開</span></div>
     <p><span class="card-role">AI-DLC という方法論。</span>5 フェーズ・32 ステージのライフサイクル全体図、Bolt と walking skeleton、用語モデル、9 スコープと深度、対話モードと承認ゲート。</p>
@@ -78,18 +81,11 @@
     <div class="card-head"><span class="card-name">エージェントと品質</span><span class="chip ok">公開</span></div>
     <p><span class="card-role">小さなモブと 4 層の防衛線。</span>14 エージェント、ナレッジシステム、敵対的レビュアー、センサー、Construction swarm、学習ループ。</p>
   </a>
+  <a class="card" href="mirror/index.html">
+    <div class="card-head"><span class="card-name">公式 docs 日本語版</span><span class="chip ok">公開</span></div>
+    <p><span class="card-role">docs/ 全 91 ファイルの逐語日本語訳。</span>User Guide・Harness Engineering・Developer Reference を構造 1:1 で HTML 化。図は Mermaid をそのまま描画。</p>
+  </a>
 </div>
-
-<h2 id="basis">分析基点</h2>
-<table>
-  <thead><tr><th>項目</th><th>値</th></tr></thead>
-  <tbody>
-    <tr><td>対象リポジトリ</td><td><a href="https://github.com/awslabs/aidlc-workflows">github.com/awslabs/aidlc-workflows</a>（public）</td></tr>
-    <tr><td>基点</td><td><code>origin/v2</code> @ <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46"><code>ccf284b5</code></a>（2026-07-23 時点の HEAD）</td></tr>
-    <tr><td>基点の選定理由</td><td>v2 が v2.x タグのリリースライン・活発な開発ブランチ。main は v1 系ツリー（<code>.claude/</code> / <code>aidlc-rules/</code> 構成）で v2 と別物</td></tr>
-    <tr><td>リンク方針</td><td>全コード参照を基点コミットに固定（ブランチ名リンク禁止）。<code>scripts/validate-refs.sh</code> で全数検証</td></tr>
-  </tbody>
-</table>
 
 <h2 id="sources">一次資料</h2>
 <ul>
@@ -99,7 +95,7 @@
 </ul>
 
 <footer class="meta">
-  分析基点: awslabs/aidlc-workflows <code>v2</code> @ <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46">ccf284b</a>（2026-07-23 時点の origin/v2）· ページ生成: 2026-07-23 · リンクは基点コミット固定
+  分析基点: awslabs/aidlc-workflows <code>v2</code> @ <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46">ccf284b</a>（2026-07-23 時点の origin/v2 HEAD。main は v1 系のため基点にしない）· ページ生成: 2026-07-23 · 全コード参照は基点コミット固定・<code>scripts/validate-refs.sh</code> で全数検証（詳細: <code>docs/aidlc-workflows/meta.json</code>）
 </footer>
 </main>
 </div>

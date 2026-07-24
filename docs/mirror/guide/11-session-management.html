@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>セッション管理 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/11-session-management</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html" class="here">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#resume-flow">再開のフロー</a>
+  <a href="#recovery-breadcrumb">復旧ブレッドクラム</a>
+  <a href="#context-compaction">コンテキストコンパクション</a>
+  <a href="#stage-jumps">stage ジャンプ</a>
+  <a href="#session-skills">セッションスキル</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="session-management">セッション管理</h1>
+<p>1 つのワークフローは複数の harness セッションにまたがりうる。AI-DLC はすべての進捗をディスクに永続化するため、いつでも再開・やり直し・ジャンプ・新規開始ができる。</p>
+<blockquote>
+<p><strong>Harness に関する注記。</strong> セッション再開はどの harness でも動く（状態は harness ではなく
+intent の record dir にある）。セッションの<em>ライフサイクルイベント</em>は異なる: Claude Code は
+<code>SESSION_STARTED/RESUMED/ENDED</code> と <code>SESSION_COMPACTED</code> を発行し、Kiro は
+<code>SESSION_STARTED</code> のみ、Codex は <code>SESSION_ENDED</code> を推定し、コンパクション後の
+ミッション再注入を足す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md">他の harness で動かす</a> を参照。</p>
+</blockquote>
+<hr>
+<h2 id="resume-flow">再開のフロー</h2>
+<p><code>/aidlc</code> を実行し、アクティブ intent の <code>aidlc-state.md</code>（record dir 配下）が前のセッションから存在するとき、AI-DLC は状態サマリを提示し、4 つの再開オプションを提案する。</p>
+<pre class="mermaid">
+flowchart TD
+    START(["/aidlc invoked"])
+    STATE_EXISTS{"aidlc-state.md\nexists?"}
+    RECOVERY_CHECK{".aidlc-recovery.md\nexists?"}
+    CORRUPTION{"State matches\nrecovery file?"}
+    WARN["Warn about possible\nstate corruption"]
+    RESUME_MENU["Resume Options"]
+
+    OPT_RESUME["Resume from\nlast checkpoint"]
+    OPT_REDO["Redo\ncurrent stage"]
+    OPT_JUMP["Jump to\nspecific stage"]
+    OPT_FRESH["Start fresh\n(new intent alongside)"]
+
+    SCOPE_DETECT["Detect scope,\nstart new workflow"]
+
+    START --&gt; STATE_EXISTS
+    STATE_EXISTS --&gt;|Yes| RECOVERY_CHECK
+    STATE_EXISTS --&gt;|No| SCOPE_DETECT
+
+    RECOVERY_CHECK --&gt;|Yes| CORRUPTION
+    RECOVERY_CHECK --&gt;|No| RESUME_MENU
+    CORRUPTION --&gt;|Mismatch| WARN --&gt; RESUME_MENU
+    CORRUPTION --&gt;|Match| RESUME_MENU
+
+    RESUME_MENU --&gt; OPT_RESUME
+    RESUME_MENU --&gt; OPT_REDO
+    RESUME_MENU --&gt; OPT_JUMP
+    RESUME_MENU --&gt; OPT_FRESH
+
+    style START fill:#2a2440,stroke:#b895ff
+    style RESUME_MENU fill:#1b2c47,stroke:#6db3ff
+    style WARN fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<h3 id="four-resume-options">4 つの再開オプション</h3>
+<table>
+<thead>
+<tr>
+<th>オプション</th>
+<th>起きること</th>
+<th>保たれるもの</th>
+<th>失われるもの</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Resume from last checkpoint</strong></td>
+<td>進行中または次の保留 stage から続行。タスクサイドバーは状態ファイルから再構築される。</td>
+<td>すべての成果物・状態・audit トレイル</td>
+<td>前セッションのメモリ内会話コンテキスト</td>
+</tr>
+<tr>
+<td><strong>Redo current stage</strong></td>
+<td>現在 stage のチェックボックスをリセットし（<code>aidlc-jump.ts execute --direction redo</code> 経由）、最初から再実行。</td>
+<td>他のすべての成果物と状態</td>
+<td>現在 stage の完了状態と途中の作業</td>
+</tr>
+<tr>
+<td><strong>Jump to stage</strong></td>
+<td>特定の stage へスキップ（<code>next --stage &lt;slug&gt;</code> 経由）。スキップされる stage と、下流成果物が無効になりうることを警告する。</td>
+<td>既存のすべての成果物</td>
+<td>現在と対象の間の stage に <code>[S]</code>（スキップ）が付く</td>
+</tr>
+<tr>
+<td><strong>Start fresh</strong></td>
+<td>既存のものと並走する新しい intent を開始（scope と記述の確認後、<code>next --new-intent</code> 経由）。</td>
+<td>既存ワークフローの成果物・状態・audit トレイル（その場に残る）</td>
+<td>何も失われない - 以前の intent は再開可能なまま</td>
+</tr>
+</tbody></table>
+<p>dispatch されたアンサンブルの作業は、ディスク上の証拠から再開する。Practices
+Discovery では、conductor はリードの草稿と既存のすべての contribution ファイルを保全し、
+欠けている quality / developer / devsecops のスポークだけを dispatch し、
+その後に人間へのインタビューとリードの統合へ続く。完了済みのスポークを繰り返すことはない。</p>
+<hr>
+<h2 id="recovery-breadcrumb">復旧ブレッドクラム</h2>
+<p>Claude Code が会話コンテキストをコンパクションする前に、<code>validate-state.ts</code> hook がアクティブ intent の record dir に隠しの復旧ファイル <code>.aidlc-recovery.md</code> を書く。このファイルは次を含む:</p>
+<ul>
+<li>最後の検証のタイムスタンプ</li>
+<li>現在の stage 名（<code>aidlc-state.md</code> から抽出）</li>
+<li>状態ファイルの妥当性の状態</li>
+</ul>
+<p>次の <code>/aidlc</code> 呼び出しで、AI-DLC は <code>.aidlc-recovery.md</code> を <code>aidlc-state.md</code> と比較する。「Current stage」フィールドが食い違う場合、コンテキストコンパクションによる状態破損の可能性を警告する。</p>
+<hr>
+<h2 id="context-compaction">コンテキストコンパクション</h2>
+<p>Claude Code はコンテキストウィンドウが埋まると、以前の会話コンテキストを自動的に要約する。これを<strong>コンパクション</strong>と呼ぶ。この実装は、コンパクションイベントを跨いでワークフローの状態を保つセーフガードを持つ。</p>
+<h3 id="what-is-preserved-vs-lost">何が保たれ、何が失われるか</h3>
+<table>
+<thead>
+<tr>
+<th>保たれるもの</th>
+<th>失われるもの</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>record dir のすべての成果物（ディスク上のファイル）</td>
+<td>メモリ内の会話コンテキスト（それまでの議論）</td>
+</tr>
+<tr>
+<td><code>aidlc-state.md</code>（stage 進捗・scope・プロジェクト情報）</td>
+<td>まだファイルに書かれていない途中の作業</td>
+</tr>
+<tr>
+<td><code>audit/</code> シャード（決定と行動の完全な履歴）</td>
+<td>タスク ID（再開時に状態ファイルから再構築）</td>
+</tr>
+<tr>
+<td><code>.aidlc-recovery.md</code>（stage チェックポイント）</td>
+<td>エージェントペルソナのコンテキスト（エージェントファイルから再読込）</td>
+</tr>
+</tbody></table>
+<h3 id="how-to-recover-after-compaction">コンパクション後の復旧方法</h3>
+<ol>
+<li><code>/aidlc</code> を実行する — AI-DLC が状態ファイルを読み、再開オプションを提案する</li>
+<li>復旧ブレッドクラムが不一致を警告したら、<strong>Redo current stage</strong> を選んでコンパクション中に進行していた stage を再実行する</li>
+<li>警告が出なければ、<strong>Resume from last checkpoint</strong> を選んで通常どおり続行する</li>
+</ol>
+<p>コンパクションは長いセッションの通常の一部である。状態ファイルとディスク上の成果物により、完了済みの作業は失われない。</p>
+<hr>
+<h2 id="stage-jumps">stage ジャンプ</h2>
+<p>ユーティリティコマンドでワークフローを前後にジャンプできる。</p>
+<h3 id="jump-to-a-specific-stage">特定の stage へのジャンプ</h3>
+<pre class="term"><code>/aidlc --stage code-generation
+/aidlc --stage 3.5</code></pre>
+<p>前方へジャンプするとき、現在位置と対象の間の stage には <code>[S]</code>（スキップ）が付く。orchestrator は次を警告する:</p>
+<ul>
+<li>スキップされる stage</li>
+<li>下流 stage が期待するのに見つからなくなる成果物</li>
+<li>トレーサビリティへの潜在的影響</li>
+</ul>
+<p>後方へジャンプするとき、対象 stage は <code>[ ]</code>（未着手）にリセットされ再実行される。完了済みだった下流 stage は <code>[x]</code> のまま残るが、その成果物は古くなりうる。</p>
+<h3 id="jump-to-the-start-of-a-phase">phase の先頭へのジャンプ</h3>
+<pre class="term"><code>/aidlc --phase construction
+/aidlc --phase 3</code></pre>
+<p>指定した phase の最初の stage へジャンプする。スキップされる stage と成果物の無効化に関する同じ警告が適用される。</p>
+<h3 id="combining-jumps-with-scope">ジャンプと scope の組み合わせ</h3>
+<p>状態ファイルの無いプロジェクトでは、<code>--stage</code> や <code>--phase</code> を <code>--scope</code> と組み合わせられる:</p>
+<pre class="term"><code>/aidlc --stage code-generation --scope bugfix</code></pre>
+<p>指定した scope で新しいワークフローを作り、対象 stage へ直接ジャンプする。</p>
+<hr>
+<h2 id="session-skills">セッションスキル</h2>
+<p>3 つの読み取り専用スキルが、現在のワークフローを変更せずに報告する。いずれもコマンドのように打て、<code>/</code> のスキルピッカーに現れる:</p>
+<table>
+<thead>
+<tr>
+<th>スキル</th>
+<th>すること</th>
+<th>出力</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/aidlc-session-cost</code></td>
+<td>決定論的なコストビューを表示 — 所要時間、stage の結果、memory エントリ、sensor 発火、捕捉した学び</td>
+<td>ターミナルのみ</td>
+</tr>
+<tr>
+<td><code>/aidlc-replay</code></td>
+<td>その場にいなかったステークホルダー向けに読みやすいセッションの物語を描画 — 何が、なぜ決まったか</td>
+<td>ターミナルのみ</td>
+</tr>
+<tr>
+<td><code>/aidlc-outcomes-pack</code></td>
+<td>チームがワークフローを再実行せずにシステムを所有・継続できるよう、引き継ぎ文書を生成</td>
+<td><code>OUTCOMES.md</code> を書く</td>
+</tr>
+</tbody></table>
+<p><strong>読み取り専用である。</strong> どれもワークフローの stage ポインタを進めず、audit イベントも発行しないため、stage の途中を含めいつ実行しても安全である。<code>/aidlc-session-cost</code> と <code>/aidlc-replay</code> はターミナルに表示するだけで何も書かず、ファイルを書くのは <code>/aidlc-outcomes-pack</code>（ワークスペースルートの <code>OUTCOMES.md</code>）だけである。</p>
+<p><strong>報告される数値はすべてデータプレーンから直接来る。</strong> 各スキルは数値を <code>bun .claude/tools/aidlc-runtime.ts summary --json</code> — <code>runtime-graph.json</code> 上の実体化されたビュー — から読む。スキルは決して推定も数え直しもしない。数値の周りの散文（物語・決定の根拠）だけが audit トレイルと成果物から合成される。トークンの見積もりは意図的に存在しない — 旧来のファイルサイズからトークンを推す発想は当て推量であり、取り除かれた。</p>
+<pre class="term"><code>/aidlc-session-cost<span class="t-comment">      # quick "where are we" snapshot, any time</span>
+/aidlc-replay<span class="t-comment">            # narrate the session for async review</span>
+/aidlc-outcomes-pack<span class="t-comment">     # at workflow close — write the handover doc</span></code></pre>
+<p>各スキルは読み取るためにコンパイル済みの <code>runtime-graph.json</code> を必要とする。ワークフローが最初の stage を始める前に実行すると、短い「no session data yet」の注記を表示して止まる。</p>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="10-state-and-audit.html">状態の追跡と audit トレイル</a> — 状態ファイルの構造とチェックポイント記法</li>
+<li><a href="17-skills.html">Skill とランナーコマンド</a> — 読み取り専用のセッションビュー（<code>/aidlc-session-cost</code>・<code>/aidlc-replay</code>・<code>/aidlc-outcomes-pack</code>）とランナー群</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> — <code>--stage</code>・<code>--phase</code> ほかフラグの完全リファレンス</li>
+<li><a href="15-troubleshooting.html">トラブルシューティング</a> — コンパクションからの復旧と状態破損</li>
+<li><a href="glossary.html">用語集</a> — コンパクション・復旧ブレッドクラム・セッションの定義</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/11-session-management.md"><code>docs/guide/11-session-management.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

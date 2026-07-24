@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>用語集 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/glossary</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html" class="here">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="glossary">用語集</h1>
+<p>AI-DLC 用語の正準定義。ユーザーガイドと開発者リファレンスのすべてのドキュメントは、これらの用語を一貫して使う。</p>
+<hr>
+<table>
+<thead>
+<tr>
+<th>用語</th>
+<th>定義</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Agent</strong></td>
+<td>同梱される 14 のペルソナのひとつ: 11 のドメインエキスパート、レビュー専任の 2 エージェント、適応ワークフローの composer。conductor が、それぞれの専門の stage・レビュー・構成の役割のために有効化する。</td>
+</tr>
+<tr>
+<td><strong>Approval gate</strong></td>
+<td>各 stage の末尾にある対話的チェックポイント。作業の承認、変更の要求、（3 回の修正後は）accept as-is を選ぶ。Initialization の stage は承認 gate をスキップする。</td>
+</tr>
+<tr>
+<td><strong>Autonomy mode</strong></td>
+<td>walking-skeleton の ladder prompt の後に <code>aidlc-state.md</code> に記録される設定（<code>Construction Autonomy Mode</code>）。<code>autonomous</code>（以後の Bolt は gate なしで走る）か <code>gated</code>（Bolt ごとに承認を求める）のいずれか。プロンプト前の既定は <code>unset</code>。</td>
+</tr>
+<tr>
+<td><strong>Bolt</strong></td>
+<td>Construction の実行単位: 1 つの Unit（または依存で結ばれた小さな Unit 群）に対する stage 3.1–3.5 の 1 パス。stage 3.6（Build and Test）と 3.7（CI Pipeline）は Bolt ごとではなく、全 Bolt 完了後に 1 回走る。Construction の最初の Bolt が walking skeleton である。参照: [parallel batch]、[walking skeleton]、[ladder prompt]。</td>
+</tr>
+<tr>
+<td><strong>Artifact</strong></td>
+<td>stage が生成し、intent の record dir（<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>）に保存されるバージョン管理された markdown 文書。例: <code>requirements.md</code>、<code>code-summary.md</code>、<code>initiative-brief.md</code>。</td>
+</tr>
+<tr>
+<td><strong>Audit trail</strong></td>
+<td>intent の record dir の <code>audit/</code> にある追記専用イベントログ。クローン別シャード（<code>&lt;host&gt;-&lt;clone&gt;.md</code>）として書かれ、読む側が glob してタイムスタンプでマージする。intent から本番までの完全なトレーサビリティのため、74 のイベント種別を ISO タイムスタンプ付きで記録する。</td>
+</tr>
+<tr>
+<td><strong>CLI tool</strong></td>
+<td>この実装が必要とする外部のコマンドラインユーティリティ（実行時の前提は <code>bun</code> のみ）。Claude Code のツールと混同しないこと。</td>
+</tr>
+<tr>
+<td><strong>Claude Code tool</strong></td>
+<td>Read・Write・Edit・Bash・Glob・Grep・Task・AskUserQuestion のような Claude Code の組み込み能力。エージェントは既定でセッションの完全なツールセットを継承する。任意の <code>tools:</code> 許可リストで絞れ、同梱される唯一の制限は <code>disallowedTools: Task</code> である。</td>
+</tr>
+<tr>
+<td><strong>Codex</strong></td>
+<td>OpenAI Codex CLI の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/codex/</code> から <code>dist/codex/</code> へ生成される。<code>$aidlc</code> で呼び出す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/codex-cli.md">Codex CLI 上の AI-DLC</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Command</strong></td>
+<td>AI-DLC のユーザー向け呼び出し。<code>/aidlc</code> に scope・フラグ・自由記述を続けて打つ。内部的には <code>/aidlc</code> は Claude Code の skill に対応する。</td>
+</tr>
+<tr>
+<td><strong>Compaction</strong></td>
+<td>コンテキストウィンドウが埋まったとき、以前の会話コンテキストを要約する Claude Code の自動処理。この実装は <code>aidlc-state.md</code> と <code>.aidlc-recovery.md</code> によりコンパクションを跨いで状態を保つ。</td>
+</tr>
+<tr>
+<td><strong>Conductor</strong></td>
+<td><code>/aidlc</code> セッションそのもの（<code>SKILL.md</code>）。薄い forwarding loop を回す: <strong>Engine</strong> に次の一手を尋ね、それを実行し（stage の実行、質問、swarm のファンアウト）、結果を報告し、繰り返す。所有するのは実行品質であってルーティングではない。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine と Skill システム</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Control loop</strong></td>
+<td>stage を操舵し検証する、<strong>Rule</strong>（作業前に適用される常設の決定 = feedforward）と <strong>Sensor</strong>（出力に発火する決定論チェック = feedback）の対。（CLI ディストリビューションの意味の <strong>Harness</strong> とは別物。かつては両方が「harness」と呼ばれていた。）</td>
+</tr>
+<tr>
+<td><strong>Core</strong></td>
+<td><code>core/</code> にある、手書きで harness 非依存な単一の正 — エンジン・stage・エージェント・rule・scope・sensor・knowledge・hook・セッションスキル。すべての harness ディストリビューションはここから生成される。編集するのはここであり、<code>dist/</code> では決してない。</td>
+</tr>
+<tr>
+<td><strong>Depth</strong></td>
+<td>各 stage がどれだけ詳細に作るかを制御する 3 つの詳細レベル（Minimal・Standard・Comprehensive）のひとつ。scope は既定の depth を持ち、任意の承認 gate で上書きできる。<a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Directive</strong></td>
+<td><strong>Engine</strong> が <code>next</code> のたびに発行する型付きの指示（例: <code>run-stage</code>、<code>ask</code>、<code>print</code>、<code>done</code>、<code>invoke-swarm</code>）。<strong>Conductor</strong> に次に何をするかを正確に伝える。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine と Skill システム</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Distribution</strong></td>
+<td>1 つの harness のために生成され、コミットされ、ドリフト検知される <code>dist/&lt;harness&gt;/</code> ツリー（<code>dist/claude/</code>、<code>dist/kiro/</code>、<code>dist/kiro-ide/</code>、<code>dist/codex/</code>、<code>dist/opencode/</code>）。ユーザーはこれをプロジェクトへコピーする。メンテナが手で編集することはない。<strong>Core</strong> から <strong>Packager</strong> が生成する。</td>
+</tr>
+<tr>
+<td><strong>Engine</strong></td>
+<td>stage 間のルーティングすべて — scope の解決、stage の順序付け、ジャンプ、再開、gate の状態 — を所有し、<strong>Conductor</strong> が実行する型付き <strong>Directive</strong> を発行する決定論的オーケストレーションツール（<code>aidlc-orchestrate.ts</code>。サブコマンドはちょうど 3 つ: <code>next</code>・<code>report</code>・<code>park</code>）。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine と Skill システム</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>External tool</strong></td>
+<td>stage が使うサードパーティのツールやサービス（例: AWS CLI、Maven、npm）。Claude Code のツールと区別される。</td>
+</tr>
+<tr>
+<td><strong>Guardrail</strong></td>
+<td>Rule ファイル内の本文セクション（<code>## Forbidden</code>・<code>## Mandated</code>・phase rule の guardrail 見出し）で、規範的な行動制約を表すもの。容れ物が Rule で、その中の規範的な内容を「guardrail」と呼ぶ。<strong>Rule</strong> を参照。</td>
+</tr>
+<tr>
+<td><strong>Harness</strong></td>
+<td>AI-DLC の core の CLI ディストリビューション — harness 非依存の <strong>Core</strong> を描画する先の、対応力のあるコマンドラインエージェント 1 つ。集合はオープンで成長する（今日: Claude Code・Kiro CLI・Kiro IDE・Codex CLI・opencode）。<em>注 — 「harness」はこのリポジトリで文脈により 4 つの意味を持つ:</em> (1) <strong>この正準の CLI ディストリビューションの意味</strong>、(2) rule+sensor の<strong>制御ループ</strong>（古い用法。改名済み — <strong>Control loop</strong> を参照）、(3) <code>harness/&lt;name&gt;/</code> のソースサーフェスディレクトリ、(4) <code>tests/harness/</code> のテストヘルパーディレクトリ。ユーザードキュメントで「a harness」は意味 1 だけである。</td>
+</tr>
+<tr>
+<td><strong>Hook</strong></td>
+<td>イベントに応じて Claude Code が自動実行する TypeScript スクリプト。この実装は 13 の hook を使い、すべて <code>settings.json</code> にプロジェクト全体で登録される: ワークフローの背骨（audit ログ、sensor ディスパッチ、runtime グラフのコンパイル、statusline 同期、コンパクション時の状態検証、subagent 追跡、ターン終端のループ強制）に加え、セッションライフサイクル、human-turn の記録、状態遷移と reviewer スコープのガード、statusline コマンド。それぞれ自己判定し、ワークフローが無ければ no-op になる。</td>
+</tr>
+<tr>
+<td><strong>Inline execution</strong></td>
+<td>orchestrator がエージェントペルソナを読み込み、会話の中で stage を直接実行する既定の実行モード。リアルタイムのユーザー対話に対応する。</td>
+</tr>
+<tr>
+<td><strong>Intent</strong></td>
+<td>space の <code>intents.json</code> レジストリの 1 行（<code>{uuid, slug, dirName, scope, repos, status}</code>）として追跡される作業単位。<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> に自分の [Record dir] を持つ。<code>&lt;YYMMDD&gt;</code> はコンパクトな UTC 日付プレフィクス（例: <code>260624</code> = 2026-06-24）で記録が時系列に並び、<code>&lt;label&gt;</code> は要望の本質を表す短いケバブケースである。同日同ラベルの衝突は数値カウンタ（<code>-2</code>、<code>-3</code>、…）で解決する。正準で衝突しない id はレジストリ行に保存される時刻順の UUIDv7 であり、ディレクトリ名の接尾辞ではない。エンジンは最初の <code>/aidlc</code> で最初の intent を自動 birth し、<code>active-intent</code> ポインタが現在のものを選ぶ。<strong>Space</strong>・<strong>Record dir</strong> を参照。</td>
+</tr>
+<tr>
+<td><strong>Kiro</strong></td>
+<td>Kiro の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> から <code>dist/kiro/</code>（CLI）と <code>dist/kiro-ide/</code>（IDE）へ生成され、AIDLC のメソッドは Kiro のエージェント resources glob 経由で <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> から読まれる。<code>/aidlc</code> で呼び出す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-ide.md">Kiro IDE で AI-DLC を動かす</a> と <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-cli.md">Kiro CLI で AI-DLC を動かす</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Knowledge</strong></td>
+<td>stage 開始時にエージェントが読み込むリファレンス資料。2 層ある: 方法論ナレッジ（フレームワーク同梱・<code>.claude/knowledge/</code>）と、チームナレッジ（ユーザー管理・space レベルのドメイン知識・<code>aidlc/spaces/&lt;space&gt;/knowledge/</code> — 自由形式、ブートストラップ時は空、space 内の全 intent で共有）。</td>
+</tr>
+<tr>
+<td><strong>Ladder prompt</strong></td>
+<td>walking-skeleton の Bolt の最後に一度だけ表示されるプロンプト。「continue autonomously」か「gate every Bolt」を選ばせる。選択は autonomy mode として記録され、残りすべての Bolt を統べる。</td>
+</tr>
+<tr>
+<td><strong>Learning loop</strong></td>
+<td>stage 内の修正を永続的な practices と Sensor に変える v0.5.0 の機構。stage 中に orchestrator が観察を <code>memory.md</code> に記録し、承認 gate でそれを提示し、あなたが残すものを確認すると、確認された各学びが practice として <code>aidlc/spaces/&lt;active-space&gt;/memory/project.md</code> に書かれる（ワンクリックで <code>team.md</code> へ昇格）— または新しい Sensor が雛形生成される — 次のワークフローから適用される。<a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Lifecycle</strong></td>
+<td>AI-DLC の方法論の全体: AI-Driven Development Life Cycle。方法論の 1 回の実行が workflow である。</td>
+</tr>
+<tr>
+<td><strong>Manifest</strong></td>
+<td>harness の <code>harness/&lt;name&gt;/manifest.ts</code> — <strong>Core</strong> をその harness の <strong>Distribution</strong> へどう投影するかを <strong>Packager</strong> に伝える宣言的契約（ディレクトリ対応、rules のリネーム、authored ファイル、任意の <code>emit</code> プラグイン）。harness の追加は、ほぼ manifest を 1 枚書くことである。</td>
+</tr>
+<tr>
+<td><strong>MCP server</strong></td>
+<td>プロジェクトルート（<code>.claude/</code> の隣）の <code>.mcp.json</code> で宣言され、Claude Code のセッションにプロビジョニングされる外部ツールサーバー。この実装は 5 つ同梱する: <code>context7</code> と 4 つの AWS サーバー（<code>aws-mcp</code>・<code>aws-pricing</code>・<code>aws-iac</code>・<code>aws-serverless</code>）。すべてのエージェントがセッションの全 MCP サーバーを継承する — エージェント別の許可は無く、あるエージェントに使わせ<em>ない</em>には <code>tools:</code> 許可リストを特定の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id に絞る。認証情報の無いサーバーは単に利用不可となり、ワークフローを決してブロックしない。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/14-claude-features.md#mcp-servers">Harness プリミティブの対応 — MCP サーバー</a> と <a href="01-getting-started.html#mcp-servers-optional">はじめかた</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>memory.md</strong></td>
+<td><code>&lt;record&gt;/&lt;phase&gt;/&lt;stage&gt;/memory.md</code>（intent の record dir 配下）にある stage ごとの観察日誌。stage 開始時に自動作成され、orchestrator が維持する（手で編集しない）。Interpretations・Deviations・Tradeoffs・Open questions を記録し、承認 gate で学習ループが読む入力である。</td>
+</tr>
+<tr>
+<td><strong>Mob execution</strong></td>
+<td>有界のラウンドで動く dispatch されたメッシュ（<code>mode: mob</code>）。リードが草稿を書き、相互に盲目な協力者が並列に contribution ファイルを書き、リードが統合し、未解決の判断は人間に渡ることがある。User Stories（2.4）が出荷されている mob である。</td>
+</tr>
+<tr>
+<td><strong>Multi-repo intent</strong></td>
+<td>作業が複数の兄弟コードリポジトリにまたがる intent。リポジトリの集合は誕生時に捕捉され — <code>--repos a,b</code> で明示するか、兄弟の自動発見（ワークスペースルート直下で <code>.git</code> を持つ子すべて）— intent の <code>intents.json</code> 行に <code>repos</code> として保存される。Construction は各 git 操作を <code>--repo &lt;name&gt;</code> で特定のリポジトリにアンカーする。repos の記録が無い intent は従来の単一リポジトリのケース（git はプロジェクトディレクトリで走る）。<a href="14-artifacts-reference.html">成果物リファレンス</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>opencode</strong></td>
+<td>opencode の harness（opencode.ai）— 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/opencode/</code> から <code>dist/opencode/</code> へ生成される。エンジンツリーは <code>.aidlc/</code> に出荷される（opencode は <code>.opencode/tools/*.ts</code> をカスタムツールとして自動インポートするため、エンジンをそこに置けない）。<code>.opencode/</code> はネイティブシェル（subagent・<code>/aidlc</code> コマンド・hook アダプタのプラグイン）だけを運び、AIDLC のメソッドはプロジェクトルートの <code>opencode.json</code> の <code>instructions</code> glob 経由で読まれる。<code>/aidlc</code> で呼び出す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/opencode.md">opencode 上の AI-DLC</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Orchestrator</strong></td>
+<td>ワークフローがどう駆動されるかの総称: 次に何が起きるかを決める決定論的な <strong>Engine</strong> と、それを実行する <strong>Conductor</strong>（<code>SKILL.md</code>）。<code>/aidlc</code> で呼び出す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine と Skill システム</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Packager</strong></td>
+<td><code>scripts/package.ts</code> — <strong>Core</strong> と各 <strong>Manifest</strong> からすべての <code>dist/&lt;harness&gt;/</code> <strong>Distribution</strong> を再生成するビルド。<code>bun scripts/package.ts</code> で全ビルド、<code>--check</code> は CI で走るバイト一致のドリフトガード。</td>
+</tr>
+<tr>
+<td><strong>Parallel batch</strong></td>
+<td>依存が満たされ、互いに依存しない Bolt のグループ。orchestrator が並行実行する。バッチ末尾の 1 つの承認 gate が中のすべての Bolt をカバーする。</td>
+</tr>
+<tr>
+<td><strong>Pipeline execution</strong></td>
+<td>宣言された順にリンクが走る dispatch された連鎖（<code>mode: pipeline</code>）。各リンクは上流の仕事をすべて見え、最後のリンクが成果物を完成させる。Reverse Engineering（2.1）が出荷されている pipeline である。</td>
+</tr>
+<tr>
+<td><strong>Phase</strong></td>
+<td>ライフサイクルの 5 大区分のひとつ: Initialization（0）・Ideation（1）・Inception（2）・Construction（3）・Operation（4）。各 phase は 3〜8 の stage を含む（Initialization 3・Ideation 7・Inception 8・Construction 7・Operation 7）。</td>
+</tr>
+<tr>
+<td><strong>Phase boundary verification</strong></td>
+<td>phase の遷移で走る自動のトレーサビリティ検査。下流 stage が積み上げる前に、欠けたリンク・孤立した成果物・不整合を捕まえる。</td>
+</tr>
+<tr>
+<td><strong>Plane</strong></td>
+<td>フレームワークが分離する 3 つの関心事のひとつ。ネットワーキングのアーキテクチャから借用: <strong>制御プレーン</strong>（stage 定義・Rule・Sensor — 何が走るべきかのスキーマ。コンパイル時に解決）、<strong>データプレーン</strong>（実際の stage 実行・Bolt・audit の遠隔測定）、<strong>管理プレーン</strong>（<code>/aidlc --doctor</code>・audit の照会・<code>CLAUDE.md</code>）。ユーザー向けの導入は <a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a>、完全なモデルは <code>docs/reference/02-plane-architecture.md</code> を参照。</td>
+</tr>
+<tr>
+<td><strong>Record dir</strong></td>
+<td>1 つの intent の成果物・stage ごとの <code>memory.md</code> 日誌・<code>aidlc-state.md</code>・<code>audit/</code> シャードを保持する intent 別ディレクトリ: <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（<code>&lt;record&gt;/</code> と表記）。intent ごとに 1 つ持ち、アクティブなものは <code>active-intent</code> ポインタが選ぶ。<strong>Space</strong>・<strong>Intent</strong> を参照。</td>
+</tr>
+<tr>
+<td><strong>Recovery breadcrumb</strong></td>
+<td>PreCompact hook が書く隠しファイル <code>.aidlc-recovery.md</code>。コンパクション後の状態破損を検出するため、最後に検証された stage とタイムスタンプを含む。</td>
+</tr>
+<tr>
+<td><strong>Reviewer</strong></td>
+<td>品質 gate のエージェント — <code>aidlc-product-lead-agent</code>（要件・ストーリー・モックアップ）または <code>aidlc-architecture-reviewer-agent</code>（技術設計）。stage が <code>reviewer:</code> フィールドを宣言しているとき、stage 本体が成果物を作った後に独立した sub-agent として起動される。主要成果物に <code>## Review</code> の判定（READY / NOT-READY）を追記し、NOT-READY ならビルダーが再実行して <code>reviewer_max_iterations</code>（既定 2）までループし、その後は未解決の指摘を人間の承認 gate に提示する。決してブロックしない — 決めるのは常に人間である。<a href="06-agents.html">エージェント</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Rule</strong></td>
+<td>ワークスペースルートのアクティブ space の memory 層（<code>aidlc/spaces/&lt;active-space&gt;/memory/</code>）に一度だけ書かれ、各 harness のネイティブな取り込み（Claude の <code>@</code>-import スタブ、Kiro の resources glob、Codex の <code>AIDLC_RULES_DIR</code>）でコンテキストへ引き込まれ、カバーするすべての stage に適用される永続的な行動ルール。rule は厳密加算の 5 層連鎖 — org → team → project → phase → stage — で解決され、適用されるすべての rule がコンテキストに現れる。広い層は決して上書きされず、足されるだけである。rule は<strong>制御ループ</strong>の feedforward 側であり、決定論検証のために Sensor と対になりうる。<a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Runtime graph</strong></td>
+<td>intent の record dir にあるワークフロー単位の <code>runtime-graph.json</code> 成果物: 構造的な stage グラフのデータプレーン側の鏡で、承認 gate のたびに audit ログから実体化される。どの stage が走ったか、どの Bolt がフォークしたか、どの Sensor が発火したか、<code>memory.md</code> のエントリ数を記録する — doctor と学習ループが読む、照会可能な実行ビューである。</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>どの stage をどの depth で実行するかを決める 9 つの名前付き構成（enterprise・feature・mvp・poc・bugfix・refactor・infra・security-patch・workshop）のひとつ。自由記述の intent からの自動検出もできる。</td>
+</tr>
+<tr>
+<td><strong>Sensor</strong></td>
+<td><code>.claude/sensors/</code> のマニフェスト（例: <code>aidlc-linter.md</code>、<code>aidlc-type-check.md</code>）で定義される決定論的検証チェック。sensor は PostToolUse hook 経由で stage の出力への Write/Edit に発火し、advisory な <code>SENSOR_*</code> audit 行を記録する — ワークフローを決してブロックしない。どの Sensor が発火するかは stage が <code>sensors:</code> frontmatter リストで宣言する。Sensor は<strong>制御ループ</strong>の feedback 側、Rule は feedforward 側である。<a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Test strategy</strong></td>
+<td>いくつのテストを生成しどのテスト種別を含めるかを制御する、3 つのテスト量レベル（Minimal・Standard・Comprehensive）のひとつ。depth からは独立 — scope が独自の既定を宣言しない限り depth のレベルに従う（例: workshop の既定は Minimal）。<a href="05-scopes-and-depth.html#the-3-test-strategy-levels">Scope・Depth・テスト戦略</a> を参照。</td>
+</tr>
+<tr>
+<td><strong>Session</strong></td>
+<td><code>/aidlc</code> を実行する 1 つの Claude Code の会話。ワークフローは再開機構により複数セッションにまたがりうる。</td>
+</tr>
+<tr>
+<td><strong>Skill</strong></td>
+<td>Claude Code のプリミティブ: スラッシュコマンドを登録する、YAML frontmatter 付きの markdown ファイル。AI-DLC の orchestrator は <code>/aidlc</code> skill として実装されている。ユーザー向けドキュメントでは「skill」より「command」を好む。</td>
+</tr>
+<tr>
+<td><strong>Space</strong></td>
+<td><code>aidlc/spaces/&lt;space&gt;/</code> にあるチーム単位のワークスペース。自分の <code>memory/</code>・<code>knowledge/</code>・intent 記録（<code>intents/</code>）を持つ。アクティブな space は gitignore 済みの <code>aidlc/active-space</code> ポインタで解決され、既定は <code>default</code>。単一チームのユーザーは <code>spaces/default/</code> しか見ない。<strong>Intent</strong>・<strong>Knowledge</strong> を参照。</td>
+</tr>
+<tr>
+<td><strong>Stage</strong></td>
+<td>ライフサイクルの 32 の離散ステップのひとつ。各 stage はリードエージェントと定義された入出力を持ち、stage プロトコルに従う。stage は phase ごとに番号付けされる（例: 1.1、2.4、3.5）。</td>
+</tr>
+<tr>
+<td><strong>State file</strong></td>
+<td><code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/aidlc-state.md</code>（intent の record dir 配下）にある intent 単位の永続的ワークフロー状態。6 状態チェックボックス（<code>[ ]</code> / <code>[-]</code> / <code>[?]</code> / <code>[R]</code> / <code>[x]</code> / <code>[S]</code>）で stage 進捗・scope・ワークスペース文脈・セッション再開情報を追跡する。</td>
+</tr>
+<tr>
+<td><strong>Subagent execution</strong></td>
+<td>conductor が harness の dispatch ツールを通じて別のエージェントコンテキストを起動する、dispatch されたハブ（<code>mode: subagent</code>）。Code Generation（3.5）は集中実行の 1 エージェント。Practices Discovery（2.2）は hub-and-spoke: リードの草稿、相互に盲目な 3 つの支援 contribution、人間へのインタビュー、リードの統合。</td>
+</tr>
+<tr>
+<td><strong>Unit of work</strong></td>
+<td>stage 2.7（Units Generation）で分解される、独立実装可能なソリューションの断片。1 つ以上の Unit が Construction のために Bolt に束ねられる。</td>
+</tr>
+<tr>
+<td><strong>Walking skeleton</strong></td>
+<td>Construction の最初の Bolt — すべての統合点を通す最薄の end-to-end スライス。残りの Construction が走る前に全体の形を確認できるよう、常に gate 付き・対話的である。承認の直後に ladder prompt が発火する。</td>
+</tr>
+<tr>
+<td><strong>Utility command</strong></td>
+<td><code>/aidlc</code> に渡す非ワークフローのフラグ。<code>--status</code>・<code>--doctor</code>・<code>--version</code>・<code>--stage</code>・<code>--phase</code>・<code>--scope</code> のような、完全なワークフローを走らせずに特定の操作を行うもの。</td>
+</tr>
+<tr>
+<td><strong>Workflow</strong></td>
+<td><code>/aidlc</code> の呼び出しから stage の完了までの、AI-DLC ライフサイクルの end-to-end の 1 回の実行。特定のタスク（feature・bugfix 等の scope）に限定される。</td>
+</tr>
+</tbody></table>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/glossary.md"><code>docs/guide/glossary.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

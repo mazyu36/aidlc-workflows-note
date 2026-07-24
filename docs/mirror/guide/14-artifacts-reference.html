@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>成果物リファレンス — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="wrap">
+
+<header class="masthead">
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / guide/14-artifacts-reference</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../guide/00-introduction.html">はじめに</a>
+  <a href="../guide/01-getting-started.html">はじめかた</a>
+  <a href="../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../guide/06-agents.html">エージェント</a>
+  <a href="../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../guide/11-session-management.html">セッション管理</a>
+  <a href="../guide/13-customization.html">カスタマイズ</a>
+  <a href="../guide/14-artifacts-reference.html" class="here">成果物リファレンス</a>
+  <a href="../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../guide/16-worked-examples.html">実例集</a>
+  <a href="../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../guide/glossary.html">用語集</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#directory-tree">ディレクトリツリー</a>
+  <a href="#artifact-lifecycle">成果物のライフサイクル</a>
+  <a href="#artifacts-by-phase">Phase 別の成果物</a>
+  <a href="#question-files">質問ファイル</a>
+  <a href="#what-to-commit-vs-gitignore">コミットするもの・gitignore するもの</a>
+  <a href="#inputs-and-dependencies">入力と依存関係</a>
+  <a href="#phase-boundary-verification">Phase 境界の検証</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="artifacts-reference">成果物リファレンス</h1>
+<p>すべての AI-DLC ワークフローは、その <strong>intent record dir</strong> —
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（<code>&lt;space&gt;</code> は非既定の space を使わない限り
+<code>default</code>、<code>&lt;YYMMDD&gt;-&lt;label&gt;</code> は intent のディレクトリ。以下 <code>&lt;record&gt;/</code> と表記）—
+の下に成果物を生み出す。本章はディレクトリ構造・成果物ごとの説明・ライフサイクル・
+git ポリシーの完全なリファレンスである。</p>
+<hr>
+<h2 id="directory-tree">ディレクトリツリー</h2>
+<pre class="term"><code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/<span class="t-comment">   # one record dir per intent</span>
+  aidlc-state.md<span class="t-comment">                    # Workflow state (commit)</span>
+  audit/<span class="t-comment">                            # Audit trail — per-clone shards (commit)</span>
+    &lt;host&gt;-&lt;clone&gt;.md<span class="t-comment">               # this clone's shard; readers glob + merge by timestamp</span>
+  .aidlc-recovery.md<span class="t-comment">                # Recovery breadcrumb (gitignore)</span>
+  runtime-graph.json<span class="t-comment">                # Execution telemetry view (gitignore)</span>
+
+  verification/<span class="t-comment">                     # Phase boundary checks (commit)</span>
+    phase-check-initialization.md
+    phase-check-ideation.md
+    phase-check-inception.md
+    phase-check-construction.md
+    phase-check-operation.md
+
+  initialization/<span class="t-comment">                   # Phase 0 artifacts</span>
+    workspace-scaffold/scaffold-report.md
+    workspace-detection/workspace-findings.md
+    state-init/state-init-summary.md
+
+  ideation/<span class="t-comment">                         # Phase 1 artifacts</span>
+    intent-capture/
+    market-research/<span class="t-comment">                (conditional)</span>
+    feasibility/<span class="t-comment">                    (conditional)</span>
+    scope-definition/
+    team-formation/<span class="t-comment">                 (conditional)</span>
+    rough-mockups/<span class="t-comment">                  (conditional)</span>
+    approval-handoff/
+
+  inception/<span class="t-comment">                        # Phase 2 artifacts</span>
+    reverse-engineering/<span class="t-comment">            (conditional: brownfield)</span>
+    practices-discovery/<span class="t-comment">            (conditional)</span>
+    requirements-analysis/
+    user-stories/<span class="t-comment">                   (conditional)</span>
+    refined-mockups/<span class="t-comment">                (conditional)</span>
+    application-design/<span class="t-comment">             (conditional)</span>
+    units-generation/
+    delivery-planning/
+
+  construction/<span class="t-comment">                     # Phase 3 artifacts</span>
+    {unit-name}/<span class="t-comment">                    (per unit of work, repeated)</span>
+      functional-design/<span class="t-comment">            (conditional)</span>
+      nfr-requirements/<span class="t-comment">             (conditional)</span>
+      nfr-design/<span class="t-comment">                   (conditional)</span>
+      infrastructure-design/<span class="t-comment">        (conditional)</span>
+      code-generation/
+    build-and-test/
+    ci-pipeline/<span class="t-comment">                    (conditional)</span>
+
+  operation/<span class="t-comment">                        # Phase 4 artifacts</span>
+    deployment-pipeline/<span class="t-comment">            (conditional)</span>
+    environment-provisioning/<span class="t-comment">       (conditional)</span>
+    deployment-execution/<span class="t-comment">           (conditional)</span>
+    observability-setup/<span class="t-comment">            (conditional)</span>
+    incident-response/<span class="t-comment">              (conditional)</span>
+    performance-validation/<span class="t-comment">         (conditional)</span>
+    feedback-optimization/<span class="t-comment">          (conditional)</span>
+
+  archive/<span class="t-comment">                          (created on-demand)</span>
+    {ISO-date}-{stage-name}/</code></pre>
+<p><strong>チームナレッジは record dir に無い。</strong> 1 階層上、space レベル —
+<code>aidlc/spaces/&lt;space&gt;/knowledge/</code>（<code>intents/</code> の兄弟）— に住み、1 つの intent の記録に
+閉じ込められるのではなく、space 内のすべての intent を横断して蓄積される。
+エンジンは空で作成し、チームが任意の <code>aidlc-shared/</code> とエージェント別サブディレクトリの
+下に自由形式のファイルを足す。<a href="08-knowledge.html">ナレッジ</a> を参照。</p>
+<p><strong>stage ごとの memory 日誌。</strong> 実行された各 stage は、成果物の隣にコミット対象の
+<code>memory.md</code> も保持する（例:
+<code>&lt;record&gt;/inception/requirements-analysis/memory.md</code>）。stage の観察日誌であり —
+stage 開始時にテンプレートから自動作成され、stage 中は orchestrator が維持し、
+承認 gate では §13 の Learnings Ritual が読む。手で編集することは決してない。
+日誌が学習ループへどう流れるかは
+<a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</p>
+<p><strong>コードは record dir ではなく兄弟リポジトリに住む。</strong> <code>aidlc/</code> ツリーが持つのは
+メソッド・状態・audit・成果物だけであり、アプリケーションコードは決して持たない。生成された
+コードはワークスペースの<strong>コードリポジトリ</strong>に落ちる: よくある単一リポジトリの場合は
+プロジェクトディレクトリ自体、複数リポジトリのワークスペースではワークスペースルート直下の
+兄弟リポジトリディレクトリ（それぞれ自分の <code>.git</code> を持つ）である。intent は触れるリポジトリを
+誕生時に記録する — 自動発見か、<code>--repos a,b</code> での指定 — <code>intents.json</code> の行
+（<code>repos: [...]</code>）に。Construction は各 git 操作をその中の 1 つにアンカーする。<code>repos</code> の
+記録が無い intent は単一リポジトリの既定である。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">CLI コマンド</a> を参照。</p>
+<hr>
+<h2 id="artifact-lifecycle">成果物のライフサイクル</h2>
+<p>成果物は、作成から下流 stage による消費まで、予測可能なライフサイクルを流れる:</p>
+<pre class="mermaid">
+flowchart LR
+    CREATE["Stage creates\nartifact"]
+    REVIEW["Reviewed at\napproval gate"]
+    COMMIT["Committed to\nversion control"]
+    CONSUME["Consumed by\ndownstream stages"]
+    VERIFY["Verified at\nphase boundary"]
+
+    CREATE --&gt; REVIEW --&gt; COMMIT --&gt; CONSUME --&gt; VERIFY
+
+    style CREATE fill:#1b2c47,stroke:#6db3ff
+    style REVIEW fill:#38291a,stroke:#f2b35c
+    style VERIFY fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<ol>
+<li><strong>作成</strong> — リードエージェントが stage 実行中に成果物を作り、intent の record dir の適切なサブディレクトリへ書く</li>
+<li><strong>レビュー</strong> — 承認 gate で成果物をレビューし、承認するか変更を要求する</li>
+<li><strong>コミット</strong> — 承認後、成果物はバージョン管理の準備が整う（下の git ポリシーを参照）</li>
+<li><strong>消費</strong> — 下流の stage が成果物を入力として読む（下の入力の表を参照）</li>
+<li><strong>検証</strong> — phase 境界の検証チェックが、その phase の全成果物にわたるトレーサビリティを確認する</li>
+</ol>
+<hr>
+<h2 id="artifacts-by-phase">Phase 別の成果物</h2>
+<h3 id="initialization-stages-01-03">Initialization（stage 0.1-0.3）</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>成果物</th>
+<th>注記</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.1 Workspace Scaffold</td>
+<td><code>scaffold-report.md</code></td>
+<td>決定論的（<code>aidlc-utility intent-birth</code> の中で実行）</td>
+</tr>
+<tr>
+<td>0.2 Workspace Detection</td>
+<td><code>workspace-findings.md</code>、<code>aidlc-state.md</code> を更新</td>
+<td>決定論的なルールベーススキャナ</td>
+</tr>
+<tr>
+<td>0.3 State Init</td>
+<td><code>state-init-summary.md</code></td>
+<td>決定論的</td>
+</tr>
+</tbody></table>
+<p>ウェルカムメッセージはセッション開始時に <code>settings.json</code> の <code>companyAnnouncements</code> 経由で描画される — stage ではなく、成果物も作らない。</p>
+<h3 id="ideation-stages-11-17">Ideation（stage 1.1-1.7）</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>主要成果物</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.1 Intent Capture</td>
+<td><code>intent-statement.md</code>、<code>stakeholder-map.md</code></td>
+<td>常に</td>
+</tr>
+<tr>
+<td>1.2 Market Research</td>
+<td><code>competitive-analysis.md</code>、<code>build-vs-buy.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>1.3 Feasibility</td>
+<td><code>feasibility-assessment.md</code>、<code>constraint-register.md</code>、<code>raid-log.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>1.4 Scope Definition</td>
+<td><code>scope-document.md</code>、<code>intent-backlog.md</code></td>
+<td>常に</td>
+</tr>
+<tr>
+<td>1.5 Team Formation</td>
+<td><code>team-assessment.md</code>、<code>mob-composition.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>1.6 Rough Mockups</td>
+<td><code>wireframes.md</code>、<code>user-flow.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>1.7 Approval &amp; Handoff</td>
+<td><code>initiative-brief.md</code>、<code>decision-log.md</code></td>
+<td>常に</td>
+</tr>
+</tbody></table>
+<h3 id="inception-stages-21-28">Inception（stage 2.1-2.8）</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>主要成果物</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2.1 Reverse Engineering</td>
+<td><code>architecture.md</code>・<code>code-structure.md</code>・<code>technology-stack.md</code> を含む 9 ファイル</td>
+<td>brownfield のみ</td>
+</tr>
+<tr>
+<td>2.2 Practices Discovery</td>
+<td><code>team-practices.md</code>、<code>discovered-rules.md</code>、<code>evidence.md</code>、<code>practices-discovery-timestamp.md</code>、加えて quality / developer / devsecops の contribution ファイル（承認後に <code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> と <code>project.md</code> へ昇格）</td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>2.3 Requirements Analysis</td>
+<td><code>requirements.md</code></td>
+<td>常に</td>
+</tr>
+<tr>
+<td>2.4 User Stories</td>
+<td><code>stories.md</code>、<code>personas.md</code></td>
+<td>ユーザー向け機能</td>
+</tr>
+<tr>
+<td>2.5 Refined Mockups</td>
+<td><code>mockups.md</code>、<code>interaction-spec.md</code>、<code>accessibility-checklist.md</code></td>
+<td>UI プロジェクト</td>
+</tr>
+<tr>
+<td>2.6 Application Design</td>
+<td><code>components.md</code>、<code>services.md</code>、<code>decisions.md</code></td>
+<td>新しいコンポーネントが必要なとき</td>
+</tr>
+<tr>
+<td>2.7 Units Generation</td>
+<td><code>unit-of-work.md</code>、<code>unit-of-work-dependency.md</code>、<code>unit-of-work-story-map.md</code></td>
+<td>常に</td>
+</tr>
+<tr>
+<td>2.8 Delivery Planning</td>
+<td><code>bolt-plan.md</code>、<code>team-allocation.md</code>、<code>risk-and-sequencing-rationale.md</code>、<code>external-dependency-map.md</code></td>
+<td>常に</td>
+</tr>
+</tbody></table>
+<h3 id="construction-stages-31-37">Construction（stage 3.1-3.7）</h3>
+<p>stage 3.1-3.5 は unit of work ごとに繰り返す。成果物は <code>construction/{unit-name}/{stage-name}/</code> に入る。stage 3.6-3.7 は全 unit の後に 1 回だけ走る。</p>
+<p>4 つの設計 stage（3.1-3.4）は、成果物を各 unit の <strong>kind</strong>（2.7 のエッジブロックで付くタグ: <code>service</code>・<code>spec</code>・<code>ui</code>・<code>packaging</code>・<code>library</code>）に合わせて剪定する。<code>spec</code> の unit はスケーラビリティ文書を負わず、<code>packaging</code> の unit はビジネスロジックモデルを負わない。タグの無い unit は下の完全なマトリクスを受け取る。どの成果物がどの kind に当てはまるかは stage frontmatter のデータである（<code>produces_kinds</code>。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/15-stage-definition.md">Stage 定義</a> を参照）。ある stage のどの成果物も当てはまらない unit は、その stage をファイル 0 個で完了とする。</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>主要成果物</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3.1 Functional Design</td>
+<td><code>business-logic-model.md</code>、<code>business-rules.md</code></td>
+<td>計画により、unit ごと（kind による）</td>
+</tr>
+<tr>
+<td>3.2 NFR Requirements</td>
+<td><code>security-requirements.md</code>、<code>performance-requirements.md</code></td>
+<td>計画により、unit ごと（kind による）</td>
+</tr>
+<tr>
+<td>3.3 NFR Design</td>
+<td><code>security-design.md</code>、<code>performance-design.md</code></td>
+<td>計画により、unit ごと（kind による）</td>
+</tr>
+<tr>
+<td>3.4 Infrastructure Design</td>
+<td><code>deployment-architecture.md</code>、<code>infrastructure-services.md</code></td>
+<td>計画により、unit ごと（kind による）</td>
+</tr>
+<tr>
+<td>3.5 Code Generation</td>
+<td><code>code-generation-plan.md</code>、<code>code-generation-questions.md</code>、<code>code-summary.md</code>（コードはワークスペースルートへ）</td>
+<td>常に、unit ごと</td>
+</tr>
+<tr>
+<td>3.6 Build and Test</td>
+<td><code>build-instructions.md</code>、<code>test-results.md</code></td>
+<td>常に、全 unit の後</td>
+</tr>
+<tr>
+<td>3.7 CI Pipeline</td>
+<td><code>ci-config.md</code>、<code>quality-gates.md</code></td>
+<td>条件付き、全 unit の後</td>
+</tr>
+</tbody></table>
+<h3 id="operation-stages-41-47">Operation（stage 4.1-4.7）</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>主要成果物</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4.1 Deployment Pipeline</td>
+<td><code>cd-config.md</code>、<code>deployment-strategy.md</code>、<code>rollback-runbook.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>4.2 Environment Provisioning</td>
+<td><code>environment-inventory.md</code>、<code>validation-report.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>4.3 Deployment Execution</td>
+<td><code>deployment-log.md</code>、<code>smoke-test-results.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>4.4 Observability Setup</td>
+<td><code>dashboards.md</code>、<code>alarms.md</code>、<code>slo-config.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>4.5 Incident Response</td>
+<td><code>runbooks.md</code>、<code>incident-plan.md</code>、<code>escalation-matrix.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>4.6 Performance Validation</td>
+<td><code>load-test-plan.md</code>、<code>nfr-validation-matrix.md</code></td>
+<td>条件付き</td>
+</tr>
+<tr>
+<td>4.7 Feedback &amp; Optimization</td>
+<td><code>slo-report.md</code>、<code>cost-analysis.md</code>、<code>feedback-loop.md</code></td>
+<td>条件付き</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="question-files">質問ファイル</h2>
+<p>ユーザー入力を集めるすべての stage は、<code>{stage-name}-questions.md</code> という名前の併置された質問ファイルを作る。質問はレター付きの選択肢（A-E）と必須の <code>X. Other (please specify)</code> を使い、回答の記録には <code>[Answer]:</code> タグを使う。</p>
+<p>各 stage でどう答えるかを選べる:</p>
+<table>
+<thead>
+<tr>
+<th>モード</th>
+<th>動き方</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Guide Me</strong></td>
+<td>対話的なウォークスルー。最大 4 問ずつのバッチ</td>
+</tr>
+<tr>
+<td><strong>I&#39;ll Edit the File</strong></td>
+<td>質問ファイルを直接編集し、終わったら「done」を伝える</td>
+</tr>
+<tr>
+<td><strong>Chat</strong></td>
+<td>自由な会話。決定事項が抽出されてファイルへ書かれる</td>
+</tr>
+</tbody></table>
+<p>stage 途中でモードを切り替えられる。質問ファイルが常に正である。</p>
+<hr>
+<h2 id="what-to-commit-vs-gitignore">コミットするもの・gitignore するもの</h2>
+<p>同梱の <code>.gitignore</code> がこの分割をエンコードしている（vision §5.1）: 共有する仕事 —
+メソッド・レジストリ・状態・audit・成果物 — はコミットし、ユーザーごとのセッション
+カーソルとマシンローカルの導出状態は無視する。</p>
+<table>
+<thead>
+<tr>
+<th>コミット</th>
+<th>gitignore</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>aidlc-state.md</code></td>
+<td><code>aidlc/active-space</code>、<code>intents/active-intent</code>（ユーザーごとのカーソル）</td>
+</tr>
+<tr>
+<td><code>audit/*.md</code>（クローン別シャード）</td>
+<td><code>.aidlc-recovery.md</code> ほか <code>intents/*/.aidlc-*</code>（一時的なブレッドクラム）</td>
+</tr>
+<tr>
+<td>すべての stage 成果物</td>
+<td><code>runtime-graph.json</code>（audit シャードから再導出可能）</td>
+</tr>
+<tr>
+<td><code>verification/</code> の phase チェック結果</td>
+<td><code>aidlc/.aidlc-clone-id</code>（このクローンのシャード名。マシンローカルに保つ）</td>
+</tr>
+<tr>
+<td>space レベル <code>aidlc/knowledge/</code> のチームナレッジファイル</td>
+<td><code>aidlc/.aidlc-sessions/</code>（会話ごとのセッション→intent 対応）</td>
+</tr>
+<tr>
+<td>stage ごとの <code>memory.md</code> 日誌、space の <code>memory/</code> 層</td>
+<td><code>.aidlc-hooks-health/</code>、<code>.aidlc-sensors/</code>（ハートビート、advisory の指摘）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="inputs-and-dependencies">入力と依存関係</h2>
+<p>各 stage は先行 stage の成果物を入力として読む。主要な依存の連鎖:</p>
+<ul>
+<li><strong>Intent Capture</strong> の成果物は Market Research・Feasibility・Scope Definition・Rough Mockups へ流れる</li>
+<li><strong>Requirements Analysis</strong> の成果物は User Stories・Application Design・すべての Construction stage へ流れる</li>
+<li><strong>Application Design</strong> と <strong>Units Generation</strong> の成果物は unit ごとのすべての Construction stage へ流れる</li>
+<li><strong>すべての Construction 成果物</strong>は Build and Test と CI Pipeline へ流れる</li>
+<li><strong>Infrastructure Design</strong> の成果物は Operation の stage へ流れる</li>
+</ul>
+<p>完全な stage 別入力表は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">オーケストレーションリファレンス</a> を参照。</p>
+<hr>
+<h2 id="phase-boundary-verification">Phase 境界の検証</h2>
+<p>各 phase の遷移で、トレーサビリティを確認する検証チェックが走る:</p>
+<table>
+<thead>
+<tr>
+<th>チェックファイル</th>
+<th>遷移</th>
+<th>検証内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>phase-check-initialization.md</code></td>
+<td>Initialization から Ideation</td>
+<td>ワークスペースのスキャフォールド、scope 計画、エージェントの利用可能性</td>
+</tr>
+<tr>
+<td><code>phase-check-ideation.md</code></td>
+<td>Ideation から Inception</td>
+<td>intent → scope → intent バックログの一貫性</td>
+</tr>
+<tr>
+<td><code>phase-check-inception.md</code></td>
+<td>Inception から Construction</td>
+<td>要件 → ストーリー → アーキテクチャの整合</td>
+</tr>
+<tr>
+<td><code>phase-check-construction.md</code></td>
+<td>Construction から Operation</td>
+<td>全 unit のビルドとテスト完了、CI の構成</td>
+</tr>
+<tr>
+<td><code>phase-check-operation.md</code></td>
+<td>Operation からワークフロー完了</td>
+<td>デプロイ・可観測性・フィードバックループの検証</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><a href="10-state-and-audit.html">状態の追跡と audit トレイル</a> — 状態ファイルと audit トレイルの詳細</li>
+<li><a href="04-phases-and-stages.html">stage はどう走るか</a> — stage の実行と成果物の生成</li>
+<li><a href="glossary.html">用語集</a> — 成果物・phase 境界検証・質問ファイルの定義</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/14-artifacts-reference.md"><code>docs/guide/14-artifacts-reference.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>
