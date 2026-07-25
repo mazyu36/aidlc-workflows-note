@@ -31,11 +31,11 @@
 
 <main>
 <p class="eyebrow">AI-DLC WORKFLOWS ATLAS</p>
-<h1>AI-DLC Workflows v2 — コードベースアトラス</h1>
-<p class="lede">awslabs/aidlc-workflows の v2 ブランチを「1 クリックで実コードに届く」形で解説するノート。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論で、このリポジトリはその公式実装 — 単一の core/ から Claude Code / Kiro CLI / Kiro IDE / Codex CLI / opencode の 5 配布物を生成する。</p>
+<h1>AI-DLC Workflows v2　コードベースアトラス</h1>
+<p class="lede">awslabs/aidlc-workflows の v2 ブランチを「1 クリックで実コードに届く」形で解説するノート。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論で、このリポジトリはその公式実装であり、単一の core/ から Claude Code / Kiro CLI / Kiro IDE / Codex CLI / opencode の 5 配布物を生成する。</p>
 
 <h2 id="tldr">TL;DR</h2>
-<p>設計の要は 3 つの分離。第一に方法論と実装の分離 — 5 フェーズ・32 ステージの方法論は Markdown で記述され、routing は決定論エンジン（TypeScript / bun）が、実行品質は LLM（conductor）が担う。第二にソースと配布の分離 — 手書きの正は core/ の 1 箇所で、5 ハーネス向け dist/ はすべて生成物としてコミットされる。第三に判断と記録の分離 — 承認できるのは人間だけ、状態を書けるのは専用ツールだけで、この壁はフックが機械的に強制する。</p>
+<p>設計の要は 3 つの分離。第一に方法論と実装の分離。5 フェーズ・32 ステージの方法論は Markdown で記述され、routing は決定論エンジン（TypeScript / bun）が、実行品質は LLM（conductor）が担う。第二にソースと配布の分離。手書きの正は core/ の 1 箇所で、5 ハーネス向け dist/ はすべて生成物としてコミットされる。第三に判断と記録の分離。承認できるのは人間だけ、状態を書けるのは専用ツールだけで、この壁はフックが機械的に強制する。</p>
 <div class="stat-grid">
   <div class="stat"><div class="stat-label">ライフサイクル</div><div class="stat-value">5 / 32</div><div class="stat-detail">フェーズ / ステージ</div></div>
   <div class="stat"><div class="stat-label">エージェント</div><div class="stat-value">14</div><div class="stat-detail">専門家 11 + レビュアー 2 + composer 1</div></div>
@@ -90,9 +90,9 @@
 
 <h2 id="sources">一次資料</h2>
 <ul>
-  <li>AWS ブログ: <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AI-Driven Development Life Cycle</a>（方法論の原典）</li>
-  <li>仕様書: リポジトリ同梱の <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/assets/AI-DLC-Workflows-2.0-Specification.pdf">AI-DLC Workflows 2.0 Specification（PDF）</a></li>
-  <li>公式ドキュメント: <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs">docs/</a>（guide = 利用者向け / harness-engineering = 拡張者向け / reference = 開発者向け）</li>
+  <li>方法論の原典である AWS ブログ記事 <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AI-Driven Development Life Cycle</a></li>
+  <li>リポジトリ同梱の仕様書 <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/assets/AI-DLC-Workflows-2.0-Specification.pdf">AI-DLC Workflows 2.0 Specification（PDF）</a></li>
+  <li>公式ドキュメント <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs">docs/</a>（guide = 利用者向け / harness-engineering = 拡張者向け / reference = 開発者向け）</li>
 </ul>
 
 </main>
