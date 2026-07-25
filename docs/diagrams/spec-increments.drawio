@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="spec-increments" name="spec-increments">
+    <mxGraphModel dx="1300" dy="700" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="420" math="0" shadow="0" background="#161d29">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="z1" value="1. 手持ちから始める" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="380" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="g1" value="AI の自律範囲" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="h1" value="人間へのエスカレーション&#10;（それ以外のすべて）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;dashed=1;fontColor=#aab6cc;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="340" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" value="区画 2 の事後条件ライブラリ&#10;コード標準・命名規約など既知の分だけ" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="290" width="180" height="66" as="geometry" />
+        </mxCell>
+
+        <mxCell id="z2" value="2. 漸進的に hydration する" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="430" y="20" width="380" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="g2" value="AI の自律範囲" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="450" y="70" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="h2" value="人間へのエスカレーション" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;dashed=1;fontColor=#aab6cc;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="450" y="200" width="340" height="66" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="区画 2 の事後条件ライブラリ&#10;guardrail・コンプライアンス・ドメイン規則を蒸留" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="450" y="290" width="260" height="66" as="geometry" />
+        </mxCell>
+
+        <mxCell id="z3" value="3. 安全な増分が拡大する" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="840" y="20" width="380" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="g3" value="AI の自律範囲&#10;複数 stage を跨いで自律進行" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="860" y="70" width="340" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="h3" value="人間へのエスカレーション（残余のみ）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;dashed=1;fontColor=#aab6cc;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="860" y="248" width="340" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="区画 2 の事後条件ライブラリ（成熟）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=11;align=left;spacing=8;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="860" y="298" width="340" height="58" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" value="事後条件を追加" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="z1" target="z2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" value="さらに蒸留" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="z2" target="z3"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

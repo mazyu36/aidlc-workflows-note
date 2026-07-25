@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="spec-principles" name="spec-principles">
+    <mxGraphModel dx="1300" dy="700" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="470" math="0" shadow="0" background="#161d29">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="za" value="なぜ自律に近づけるか（P1 から P3）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="380" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" value="P1 判断は蒸留できる&#10;判断・検証・操舵の労力を&#10;機械実行可能な形へ移す" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="64" width="340" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" value="P2 intent は曖昧に始まる&#10;仮定せず明確化質問で解消してから解く" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="166" width="340" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="P3 自己修正ソルバー&#10;事後条件と照合して反復。停止条件で&#10;暴走を防ぎ、超えたら人間へ" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="40" y="268" width="340" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="zb" value="判断を収める器（P4 から P6）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="430" y="20" width="380" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="P4 三区画モデル&#10;What / 事後条件 / 学びの 3 区画で&#10;stage を宣言する" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="450" y="64" width="340" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" value="P5 あらゆる SDLC ステージが収まる&#10;要件・設計・デプロイ・監視も同じ器で書ける" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="450" y="166" width="340" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="p6" value="P6 段階分解&#10;一撃圧縮は爆発する。Skills を合成単位に、&#10;stage / phase は柔らかい編成概念に" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="450" y="268" width="340" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="zc" value="自律を広げる運用（P7 から P9）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="840" y="20" width="380" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="p7" value="P7 安全な増分での自律化&#10;手持ちの規約から始め、hydration で&#10;自律の境界を段階的に広げる" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="860" y="64" width="340" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="p8" value="P8 拡張可能性は基礎制約&#10;追加・置換・合成をベンダー基準と&#10;同じ構文・同じ保証で開く" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="860" y="166" width="340" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="p9" value="P9 実践からの学習&#10;修正・再実行・受諾を候補ルール化し、&#10;承認を経て有効ルールへ昇格する" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=12;align=left;spacing=10;verticalAlign=middle" vertex="1" parent="1">
+          <mxGeometry x="860" y="268" width="340" height="88" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" value="判断を形式へ" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="za" target="zb"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" value="運用して育てる" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#9aa7bf;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="zb" target="zc"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" value="学びが区画 2 の事後条件を太らせる（hydration）" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#57d9a9;dashed=1;fontColor=#aab6cc;fontSize=11;labelBackgroundColor=#10141d;endArrow=block;rounded=1;exitX=0.5;exitY=1;entryX=0.5;entryY=1" edge="1" parent="1" source="p9" target="zb">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1030" y="434" /><mxPoint x="620" y="434" /></Array></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
