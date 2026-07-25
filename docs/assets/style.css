@@ -76,6 +76,9 @@ pre code { background: none; padding: 0; }
 .masthead .site { font-size: 0.82rem; letter-spacing: 0.16em; color: var(--muted); text-decoration: none; }
 .masthead .site:hover { color: var(--hue); }
 .masthead .here { font-size: 0.82rem; color: var(--hue); }
+.masthead .gh-link { margin-left: auto; align-self: center; display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.76rem; color: var(--muted); text-decoration: none; }
+.masthead .gh-link:hover { color: var(--hue); }
+.masthead .gh-mark { width: 15px; height: 15px; display: block; }
 
 .eyebrow {
   font-family: var(--sans); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.18em;
