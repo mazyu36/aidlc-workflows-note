@@ -1,143 +1,201 @@
 <mxfile host="app.diagrams.net">
   <diagram id="spec-decomposition" name="spec-decomposition">
-    <mxGraphModel dx="1300" dy="700" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="520" math="0" shadow="0" background="#161d29">
+    <mxGraphModel dx="1300" dy="700" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="560" math="0" shadow="0" background="#161d29">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <mxCell id="zl" value="" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1" vertex="1" parent="1">
-          <mxGeometry x="20" y="30" width="580" height="460" as="geometry" />
-        </mxCell>
-        <mxCell id="zlt" value="一撃圧縮" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=14;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="40" y="42" width="160" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="zlx" value="×" style="text;html=0;align=center;fontColor=#f2b35c;fontSize=42;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="530" y="36" width="56" height="56" as="geometry" />
+        <mxCell id="mid" value="" style="html=0;strokeColor=#2c3850;strokeWidth=1;dashed=1;endArrow=none" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="620" y="40" as="sourcePoint" /><mxPoint x="620" y="520" as="targetPoint" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="l-man" value="" style="shape=actor;html=0;fillColor=#1e2736;strokeColor=#8492ac" vertex="1" parent="1">
-          <mxGeometry x="58" y="120" width="56" height="76" as="geometry" />
+        <mxCell id="l-x" value="" style="shape=mxgraph.basic.x;html=0;fillColor=#f2b35c;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="536" y="44" width="34" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="l-say" value="このアプリを&#10;作って" style="shape=callout;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12;position=0.18;position2=0.42;base=16;size=16" vertex="1" parent="1">
-          <mxGeometry x="128" y="86" width="150" height="76" as="geometry" />
+        <mxCell id="lt" value="一撃圧縮" style="text;html=0;align=left;fontColor=#f2b35c;fontSize=15;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="200" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="l-arrow" value="1 発" style="shape=singleArrow;html=0;arrowWidth=0.55;arrowSize=0.3;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#f2b35c;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="180" y="220" width="150" height="56" as="geometry" />
-        </mxCell>
-
-        <mxCell id="l-b1" value="" style="rhombus;html=0;fillColor=#2b2416;strokeColor=#f2b35c;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="378" y="170" width="156" height="156" as="geometry" />
-        </mxCell>
-        <mxCell id="l-b2" value="" style="rhombus;html=0;rotation=45;fillColor=#2b2416;strokeColor=#f2b35c;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="378" y="170" width="156" height="156" as="geometry" />
-        </mxCell>
-        <mxCell id="l-bt" value="爆発" style="text;html=0;align=center;fontColor=#f2b35c;fontSize=18;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="418" y="232" width="76" height="30" as="geometry" />
+        <mxCell id="lts" value="1 つの器にすべての事後条件を入れる" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="40" y="66" width="330" height="20" as="geometry" />
         </mxCell>
 
-        <mxCell id="l-w1" value="!" style="triangle;direction=north;html=0;fillColor=#2b2416;strokeColor=#f2b35c;fontColor=#f2b35c;fontSize=15;fontStyle=1;verticalAlign=middle;spacingTop=10" vertex="1" parent="1">
-          <mxGeometry x="70" y="360" width="46" height="42" as="geometry" />
+        <mxCell id="l-int" value="" style="shape=cloud;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="44" y="112" width="150" height="86" as="geometry" />
         </mxCell>
-        <mxCell id="l-w1t" value="事後条件の爆発&#10;すべての検証が一箇所で相互依存" style="text;html=0;align=left;fontColor=#e8ecf4;fontSize=12" vertex="1" parent="1">
-          <mxGeometry x="128" y="358" width="260" height="44" as="geometry" />
-        </mxCell>
-        <mxCell id="l-w2" value="!" style="triangle;direction=north;html=0;fillColor=#2b2416;strokeColor=#f2b35c;fontColor=#f2b35c;fontSize=15;fontStyle=1;verticalAlign=middle;spacingTop=10" vertex="1" parent="1">
-          <mxGeometry x="70" y="420" width="46" height="42" as="geometry" />
-        </mxCell>
-        <mxCell id="l-w2t" value="組合せ探索の爆発&#10;解空間が巨大化し非停止ループへ" style="text;html=0;align=left;fontColor=#e8ecf4;fontSize=12" vertex="1" parent="1">
-          <mxGeometry x="128" y="418" width="260" height="44" as="geometry" />
+        <mxCell id="l-intt" value="曖昧な intent" style="text;html=0;align=center;fontColor=#e8ecf4;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="44" y="146" width="150" height="18" as="geometry" />
         </mxCell>
 
-        <mxCell id="zr" value="" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1" vertex="1" parent="1">
-          <mxGeometry x="630" y="30" width="590" height="460" as="geometry" />
+        <mxCell id="l-users" value="" style="shape=mxgraph.gmdl.users;html=0;fillColor=#8492ac;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="86" y="212" width="66" height="54" as="geometry" />
         </mxCell>
-        <mxCell id="zrt" value="段階分解" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=14;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="650" y="42" width="160" height="26" as="geometry" />
+        <mxCell id="l-userst" value="人が全部を託す" style="text;html=0;align=center;fontColor=#8492ac;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="60" y="270" width="120" height="16" as="geometry" />
         </mxCell>
-        <mxCell id="zrc" value="✓" style="text;html=0;align=center;fontColor=#57d9a9;fontSize=40;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="1150" y="36" width="56" height="56" as="geometry" />
-        </mxCell>
-
-        <mxCell id="r-man" value="" style="shape=actor;html=0;fillColor=#1e2736;strokeColor=#8492ac" vertex="1" parent="1">
-          <mxGeometry x="660" y="140" width="48" height="66" as="geometry" />
+        <mxCell id="l-vesselw" value="" style="shape=trapezoid;flipV=1;html=0;fillColor=#2b2416;strokeColor=#f2b35c;strokeWidth=2;size=0.12;perimeter=none" vertex="1" parent="1">
+          <mxGeometry x="252" y="140" width="300" height="230" as="geometry" />
         </mxCell>
 
-        <mxCell id="r-s1" value="" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="760" y="110" width="120" height="128" as="geometry" />
+        <mxCell id="l-p1" value="機能" style="ellipse;html=0;fillColor=#3a2a12;strokeColor=#f2b35c;fontColor=#f7d9a3;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="292" y="182" width="74" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="r-s1t" value="Skill" style="text;html=0;align=center;fontColor=#6db3ff;fontSize=12;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="760" y="114" width="120" height="16" as="geometry" />
+        <mxCell id="l-p2" value="品質" style="ellipse;html=0;fillColor=#3a2a12;strokeColor=#f2b35c;fontColor=#f7d9a3;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="372" y="170" width="74" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="r-s1a" value="What" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="770" y="136" width="100" height="26" as="geometry" />
+        <mxCell id="l-p3" value="安全" style="ellipse;html=0;fillColor=#3a2a12;strokeColor=#f2b35c;fontColor=#f7d9a3;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="452" y="186" width="74" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="r-s1b" value="検証" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="770" y="168" width="100" height="26" as="geometry" />
+        <mxCell id="l-p4" value="性能" style="ellipse;html=0;fillColor=#4a3415;strokeColor=#f2b35c;fontColor=#f7d9a3;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="316" y="244" width="74" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="r-s1c" value="学び" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="770" y="200" width="100" height="26" as="geometry" />
+        <mxCell id="l-p5" value="規制" style="ellipse;html=0;fillColor=#4a3415;strokeColor=#f2b35c;fontColor=#f7d9a3;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="400" y="252" width="74" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="r-k1" value="✓" style="text;html=0;align=center;fontColor=#57d9a9;fontSize=20;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="806" y="244" width="28" height="26" as="geometry" />
-        </mxCell>
-
-        <mxCell id="r-s2" value="" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="930" y="110" width="120" height="128" as="geometry" />
-        </mxCell>
-        <mxCell id="r-s2t" value="Skill" style="text;html=0;align=center;fontColor=#6db3ff;fontSize=12;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="930" y="114" width="120" height="16" as="geometry" />
-        </mxCell>
-        <mxCell id="r-s2a" value="What" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="940" y="136" width="100" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="r-s2b" value="検証" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="940" y="168" width="100" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="r-s2c" value="学び" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="940" y="200" width="100" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="r-k2" value="✓" style="text;html=0;align=center;fontColor=#57d9a9;fontSize=20;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="976" y="244" width="28" height="26" as="geometry" />
+        <mxCell id="l-p6" value="UX" style="ellipse;html=0;fillColor=#4a3415;strokeColor=#f2b35c;fontColor=#f7d9a3;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="358" y="306" width="74" height="52" as="geometry" />
         </mxCell>
 
-        <mxCell id="r-s3" value="" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#6db3ff;strokeWidth=2" vertex="1" parent="1">
-          <mxGeometry x="1100" y="110" width="120" height="128" as="geometry" />
+        <mxCell id="l-x1" value="" style="html=0;strokeColor=#f2b35c;strokeWidth=1;dashed=1;endArrow=none;opacity=70" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="329" y="234" as="sourcePoint" /><mxPoint x="437" y="252" as="targetPoint" /></mxGeometry>
         </mxCell>
-        <mxCell id="r-s3t" value="Skill" style="text;html=0;align=center;fontColor=#6db3ff;fontSize=12;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="1100" y="114" width="120" height="16" as="geometry" />
+        <mxCell id="l-x2" value="" style="html=0;strokeColor=#f2b35c;strokeWidth=1;dashed=1;endArrow=none;opacity=70" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="409" y="222" as="sourcePoint" /><mxPoint x="353" y="296" as="targetPoint" /></mxGeometry>
         </mxCell>
-        <mxCell id="r-s3a" value="What" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#6db3ff;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="1110" y="136" width="100" height="26" as="geometry" />
+        <mxCell id="l-x3" value="" style="html=0;strokeColor=#f2b35c;strokeWidth=1;dashed=1;endArrow=none;opacity=70" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="489" y="238" as="sourcePoint" /><mxPoint x="395" y="306" as="targetPoint" /></mxGeometry>
         </mxCell>
-        <mxCell id="r-s3b" value="検証" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="1110" y="168" width="100" height="26" as="geometry" />
+        <mxCell id="l-x4" value="" style="html=0;strokeColor=#f2b35c;strokeWidth=1;dashed=1;endArrow=none;opacity=70" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="353" y="244" as="sourcePoint" /><mxPoint x="466" y="200" as="targetPoint" /></mxGeometry>
         </mxCell>
-        <mxCell id="r-s3c" value="学び" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#57d9a9;fontColor=#e8ecf4;fontSize=10" vertex="1" parent="1">
-          <mxGeometry x="1110" y="200" width="100" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="r-k3" value="✓" style="text;html=0;align=center;fontColor=#57d9a9;fontSize=20;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="1108" y="244" width="28" height="26" as="geometry" />
+        <mxCell id="l-x5" value="" style="html=0;strokeColor=#f2b35c;strokeWidth=1;dashed=1;endArrow=none;opacity=70" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="437" y="304" as="sourcePoint" /><mxPoint x="329" y="196" as="targetPoint" /></mxGeometry>
         </mxCell>
 
-        <mxCell id="r-a1" value="" style="html=0;strokeColor=#9aa7bf;strokeWidth=2;endArrow=block" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry"><mxPoint x="712" y="174" as="sourcePoint" /><mxPoint x="756" y="174" as="targetPoint" /></mxGeometry>
+        <mxCell id="l-burst" value="" style="shape=mxgraph.basic.8_point_star;html=0;fillColor=#f2b35c;strokeColor=none;opacity=90" vertex="1" parent="1">
+          <mxGeometry x="352" y="86" width="58" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="r-a2" value="" style="html=0;strokeColor=#9aa7bf;strokeWidth=2;endArrow=block" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry"><mxPoint x="884" y="174" as="sourcePoint" /><mxPoint x="926" y="174" as="targetPoint" /></mxGeometry>
+        <mxCell id="l-flash1" value="" style="shape=mxgraph.basic.flash;html=0;fillColor=#f2b35c;strokeColor=none;opacity=70" vertex="1" parent="1">
+          <mxGeometry x="300" y="98" width="24" height="42" as="geometry" />
         </mxCell>
-        <mxCell id="r-a3" value="" style="html=0;strokeColor=#9aa7bf;strokeWidth=2;endArrow=block" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry"><mxPoint x="1054" y="174" as="sourcePoint" /><mxPoint x="1096" y="174" as="targetPoint" /></mxGeometry>
-        </mxCell>
-
-        <mxCell id="r-goal" value="検証済みの成果物" style="rounded=1;html=0;fillColor=#0f2b22;strokeColor=#57d9a9;strokeWidth=2;fontColor=#c8f0e0;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="960" y="320" width="220" height="52" as="geometry" />
-        </mxCell>
-        <mxCell id="r-a4" value="" style="html=0;strokeColor=#57d9a9;strokeWidth=2;endArrow=block" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry"><mxPoint x="1160" y="242" as="sourcePoint" /><mxPoint x="1120" y="316" as="targetPoint" /></mxGeometry>
+        <mxCell id="l-flash2" value="" style="shape=mxgraph.basic.flash;html=0;fillColor=#f2b35c;strokeColor=none;opacity=45" vertex="1" parent="1">
+          <mxGeometry x="440" y="104" width="20" height="36" as="geometry" />
         </mxCell>
 
-        <mxCell id="r-note" value="各 Skill が検証を自分の境界で閉じるので、爆発が伝播しない。&#10;stage / phase は Skills を束ねる柔らかい編成概念にとどまる" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=12" vertex="1" parent="1">
-          <mxGeometry x="660" y="408" width="520" height="50" as="geometry" />
+        <mxCell id="l-in" value="" style="html=0;strokeColor=#8492ac;strokeWidth=2;endArrow=block" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="198" y="155" as="sourcePoint" /><mxPoint x="248" y="155" as="targetPoint" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="l-lead1" value="" style="html=0;strokeColor=#8492ac;strokeWidth=1;endArrow=none" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="490" y="120" as="sourcePoint" /><mxPoint x="536" y="104" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="l-lead1t" value="検証が同時に沸き立ち&#10;止まらない" style="text;html=0;align=left;fontColor=#f7d9a3;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="540" y="86" width="180" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="l-lead2" value="" style="html=0;strokeColor=#8492ac;strokeWidth=1;endArrow=none" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="528" y="264" as="sourcePoint" /><mxPoint x="560" y="264" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="l-lead2t" value="事後条件どうしが&#10;絡み合う" style="text;html=0;align=left;fontColor=#f7d9a3;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="540" y="278" width="170" height="36" as="geometry" />
+        </mxCell>
+
+        <mxCell id="l-out" value="" style="html=0;strokeColor=#f2b35c;strokeWidth=2;dashed=1;endArrow=block;startArrow=block" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="300" y="392" as="sourcePoint" /><mxPoint x="506" y="392" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="l-outt" value="解空間が広がり、収束しない" style="text;html=0;align=center;fontColor=#f2b35c;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="288" y="400" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="l-note" value="1 つの stage で全部を検証しようとすると、事後条件の爆発と&#10;組合せ探索の爆発が同時に起きる" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="44" y="446" width="500" height="44" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r-ok" value="" style="shape=mxgraph.basic.tick;html=0;fillColor=#57d9a9;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="1188" y="44" width="34" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="rt" value="段階分解" style="text;html=0;align=left;fontColor=#57d9a9;fontSize=15;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="668" y="40" width="200" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="rts" value="Skill ごとに検証を閉じてから次へ渡す" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="668" y="66" width="360" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r-int" value="" style="shape=cloud;html=0;fillColor=#1e2736;strokeColor=#8492ac" vertex="1" parent="1">
+          <mxGeometry x="660" y="150" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="r-intt" value="intent" style="text;html=0;align=center;fontColor=#e8ecf4;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="660" y="176" width="120" height="18" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r-v1" value="" style="shape=trapezoid;flipV=1;html=0;fillColor=#152b3f;strokeColor=#6db3ff;strokeWidth=2;size=0.14;perimeter=none" vertex="1" parent="1">
+          <mxGeometry x="812" y="146" width="118" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v1p" value="" style="ellipse;html=0;fillColor=#1c3d5a;strokeColor=#6db3ff;fontColor=#cfe6ff;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="848" y="186" width="46" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v1l" value="Skill 1" style="text;html=0;align=center;fontColor=#6db3ff;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="812" y="150" width="118" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v1c" value="" style="shape=mxgraph.basic.tick;html=0;fillColor=#57d9a9;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="858" y="274" width="26" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r-v2" value="" style="shape=trapezoid;flipV=1;html=0;fillColor=#152b3f;strokeColor=#6db3ff;strokeWidth=2;size=0.14;perimeter=none" vertex="1" parent="1">
+          <mxGeometry x="962" y="146" width="118" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v2p" value="" style="ellipse;html=0;fillColor=#1c3d5a;strokeColor=#6db3ff" vertex="1" parent="1">
+          <mxGeometry x="998" y="186" width="46" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v2l" value="Skill 2" style="text;html=0;align=center;fontColor=#6db3ff;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="962" y="150" width="118" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v2c" value="" style="shape=mxgraph.basic.tick;html=0;fillColor=#57d9a9;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="1008" y="274" width="26" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r-v3" value="" style="shape=trapezoid;flipV=1;html=0;fillColor=#152b3f;strokeColor=#6db3ff;strokeWidth=2;size=0.14;perimeter=none" vertex="1" parent="1">
+          <mxGeometry x="1112" y="146" width="118" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v3p" value="" style="ellipse;html=0;fillColor=#1c3d5a;strokeColor=#6db3ff" vertex="1" parent="1">
+          <mxGeometry x="1148" y="186" width="46" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v3l" value="Skill 3" style="text;html=0;align=center;fontColor=#6db3ff;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1112" y="150" width="118" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="r-v3c" value="" style="shape=mxgraph.basic.tick;html=0;fillColor=#57d9a9;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="1158" y="274" width="26" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r-a0" value="" style="html=0;strokeColor=#8492ac;strokeWidth=2;endArrow=block" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="784" y="186" as="sourcePoint" /><mxPoint x="808" y="186" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="r-a1" value="" style="html=0;strokeColor=#57d9a9;strokeWidth=2;endArrow=block" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="934" y="186" as="sourcePoint" /><mxPoint x="958" y="186" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="r-a2" value="" style="html=0;strokeColor=#57d9a9;strokeWidth=2;endArrow=block" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1084" y="186" as="sourcePoint" /><mxPoint x="1108" y="186" as="targetPoint" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="r-lead1" value="" style="html=0;strokeColor=#8492ac;strokeWidth=1;endArrow=none" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="871" y="142" as="sourcePoint" /><mxPoint x="871" y="112" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="r-lead1t" value="この Skill が持つ事後条件だけを検証する" style="text;html=0;align=left;fontColor=#cfe6ff;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="800" y="92" width="320" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="r-lead2" value="" style="html=0;strokeColor=#8492ac;strokeWidth=1;endArrow=none" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="871" y="300" as="sourcePoint" /><mxPoint x="871" y="322" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="r-lead2t" value="合格して閉じたものだけが次へ流れる" style="text;html=0;align=left;fontColor=#c8f0e0;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="790" y="326" width="320" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r-goal" value="検証済みの成果物" style="rounded=1;html=0;arcSize=30;fillColor=#0f2b22;strokeColor=#57d9a9;strokeWidth=2;fontColor=#c8f0e0;fontSize=13;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1052" y="372" width="178" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="r-a3" value="" style="edgeStyle=orthogonalEdgeStyle;html=0;strokeColor=#57d9a9;strokeWidth=2;endArrow=block;rounded=1" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1171" y="304" as="sourcePoint" /><mxPoint x="1141" y="366" as="targetPoint" /><Array as="points"><mxPoint x="1171" y="340" /><mxPoint x="1141" y="340" /></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="r-note" value="爆発は Skill の境界で断ち切られる。&#10;stage / phase は Skills を束ねる柔らかい編成概念にとどまる" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="668" y="446" width="470" height="44" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
