@@ -24,7 +24,8 @@ git -C "$(ghq root)/github.com/awslabs/aidlc-workflows" worktree add --detach /t
 
 | ページ | 内容 |
 |---|---|
-| `docs/index.html` | Atlas トップ。TL;DR・リポジトリ全体図・ページ索引・分析基点テーブル |
+| `docs/index.html` | Atlas トップ。TL;DR・リポジトリ全体図・ページ索引・一次資料 |
+| `docs/aidlc-workflows/spec.html` | 方法論仕様: 同梱 Specification PDF の 9 原則・三区画モデル・orchestrator 5 機能・仕様 → v2 実装の対応表 |
 | `docs/aidlc-workflows/concepts.html` | 概念: AI-DLC 方法論、フェーズ / ステージ / スコープ / ユニット / ボルトの概念モデル |
 | `docs/aidlc-workflows/architecture.html` | つくり: core → harness → dist の三層、パッケージングパイプライン、プレーンアーキテクチャ |
 | `docs/aidlc-workflows/runtime.html` | 仕組み: セッションの流れ、conductor、ステージプロトコル、状態機械、フック |
@@ -43,7 +44,7 @@ git -C "$(ghq root)/github.com/awslabs/aidlc-workflows" worktree add --detach /t
 
 - ページ単体で「動き」と「実装の大枠」が掴めることをゴールにする。主要フローには図（draw.io / Mermaid シーケンス図）を付け、本文で主張した仕組みには実コード抜粋（`figure.excerpt`）で実体を見せる。目安: 各ページに抜粋 2〜4 個
 - コンテンツはページ内に完結させる。リポジトリ内 .md への外部リンクで内容を代替しない（引用・出典表示としてのみ可）
-- 全ページ末尾に `footer.meta`（基点 SHA / 生成日）を置く
+- 基点の提示は masthead 右端の GitHub バッジ（`a.gh-link`: GitHub アイコン + 短縮ハッシュ、href は基点 tree URL、title に分析基点の説明）。Atlas ページは `footer.meta` を置かない。例外は spec.html の原典（PDF）footer と、生成物であるミラーの footer（原文リンク + 生成日）
 - 生成後に `bash scripts/validate-refs.sh` を実行し、missing: 0 を確認してから完了とする
 
 ## コード参照の規約
@@ -91,4 +92,4 @@ git -C "$(ghq root)/github.com/awslabs/aidlc-workflows" worktree add --detach /t
 4. `git log --stat <旧基点>..<新基点>` で変更領域を把握し、影響のあるセクションだけ書き換える
 5. ページ内の全参照 URL の SHA を新基点に張り替え、`scripts/validate-refs.sh` で検証する
 6. コード抜粋は行番号固定なので全数再検証: 新基点 worktree で `nl -ba <path> | sed -n '<開始>,<終了>p'` を再実行し、(a) 同一なら据え置き、(b) 行ズレなら href アンカー・表示・data-copy の行番号を更新、(c) コード変更なら抜粋本文と note を書き直す
-7. `meta.json`・`docs/index.html` の分析基点テーブル・各ページ footer.meta を更新する
+7. `meta.json` の `analyzedCommit`、Atlas 全ページの masthead `gh-link`（href の 40 桁 SHA・表示の短縮ハッシュ・title）、`build-mirror.mjs` の基点定数（`GH` / `GH_TREE`）を更新し、ミラーを再ビルドする
