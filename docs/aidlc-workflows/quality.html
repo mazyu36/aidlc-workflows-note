@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>エージェントと品質 — AI-DLC Workflows Atlas</title>
+<title>エージェントと検証 — AI-DLC Workflows Atlas</title>
 <link rel="stylesheet" href="../assets/style.css">
 <script defer src="../assets/mermaid.min.js"></script>
 <script defer src="../assets/highlight.min.js"></script>
@@ -26,10 +26,10 @@
   <div class="group">aidlc-workflows</div>
   <a href="../index.html">概要（Atlas）</a>
   <a href="spec.html">方法論仕様（Spec）</a>
-  <a href="concepts.html">概念</a>
-  <a href="architecture.html">つくり（構造）</a>
-  <a href="runtime.html">実行の仕組み</a>
-  <a href="quality.html" class="here">エージェントと品質</a>
+  <a href="concepts.html">方法論モデル</a>
+  <a href="architecture.html">リポジトリ構成</a>
+  <a href="runtime.html">実行モデル</a>
+  <a href="quality.html" class="here">エージェントと検証</a>
   <div class="group">docs 日本語版</div>
   <a href="../mirror/index.html">総合索引</a>
 </nav>
@@ -46,11 +46,11 @@
 
 <main>
 <p class="eyebrow">AIDLC-WORKFLOWS / QUALITY</p>
-<h1>エージェントと品質　小さなモブと 4 層の防衛線</h1>
+<h1>エージェントと検証　小さなモブと 4 層の防衛線</h1>
 <p class="lede">エージェントは 14 体 = 11 の広域ドメイン専門家 + 2 の敵対的レビュアー + 1 のコンポーザー。「30 の狭い専門家ではなく、3〜5 人のモブを模した広いエージェント」が設計原則。品質は人間の承認ゲート 1 枚に頼らず、レビュアー（LLM・敵対的）・センサー（決定論・助言）・学習ループ（修正の永続化）が層を成す。</p>
 
 <h2 id="roster">14 エージェント　Small Mob, Broad Agents</h2>
-<p>全員が共通の frontmatter 規律を持つ: Task ツール禁止（サブエージェントの再帰生成を封じる）、そして model 名ではなく tier:（judgment / balanced / templated）の宣言。tier のパック時投影は<a href="architecture.html#tiers">つくり</a>参照。</p>
+<p>全員が共通の frontmatter 規律を持つ: Task ツール禁止（サブエージェントの再帰生成を封じる）、そして model 名ではなく tier:（judgment / balanced / templated）の宣言。tier のパック時投影は<a href="architecture.html#tiers">リポジトリ構成</a>参照。</p>
 <table>
   <thead><tr><th>エージェント</th><th>役割</th><th>tier</th></tr></thead>
   <tbody>

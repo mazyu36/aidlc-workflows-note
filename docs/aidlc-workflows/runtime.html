@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>実行の仕組み — AI-DLC Workflows Atlas</title>
+<title>実行モデル — AI-DLC Workflows Atlas</title>
 <link rel="stylesheet" href="../assets/style.css">
 <script defer src="../assets/mermaid.min.js"></script>
 <script defer src="../assets/highlight.min.js"></script>
@@ -26,10 +26,10 @@
   <div class="group">aidlc-workflows</div>
   <a href="../index.html">概要（Atlas）</a>
   <a href="spec.html">方法論仕様（Spec）</a>
-  <a href="concepts.html">概念</a>
-  <a href="architecture.html">つくり（構造）</a>
-  <a href="runtime.html" class="here">実行の仕組み</a>
-  <a href="quality.html">エージェントと品質</a>
+  <a href="concepts.html">方法論モデル</a>
+  <a href="architecture.html">リポジトリ構成</a>
+  <a href="runtime.html" class="here">実行モデル</a>
+  <a href="quality.html">エージェントと検証</a>
   <div class="group">docs 日本語版</div>
   <a href="../mirror/index.html">総合索引</a>
 </nav>
@@ -47,7 +47,7 @@
 
 <main>
 <p class="eyebrow">AIDLC-WORKFLOWS / RUNTIME</p>
-<h1>実行の仕組み　決定論エンジンと forwarding loop</h1>
+<h1>実行モデル　決定論エンジンと forwarding loop</h1>
 <p class="lede">セッションは 1 つの単純なループで動く。決定論エンジン（aidlc-orchestrate.ts）が「次の一手」を JSON directive で返し、conductor（LLM）がその一手だけを実行して report で結果を返す。routing はエンジン、実行品質は conductor、状態を書けるのは aidlc-state.ts だけ、承認できるのは人間だけ。この役割の壁をツールとフックが強制する。</p>
 
 <h2 id="loop">forwarding loop　1 ステージが流れる様子</h2>

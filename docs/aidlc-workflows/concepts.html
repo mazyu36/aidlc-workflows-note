@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>概念 — AI-DLC Workflows Atlas</title>
+<title>方法論モデル — AI-DLC Workflows Atlas</title>
 <link rel="stylesheet" href="../assets/style.css">
 <script defer src="../assets/mermaid.min.js"></script>
 <script defer src="../assets/highlight.min.js"></script>
@@ -26,10 +26,10 @@
   <div class="group">aidlc-workflows</div>
   <a href="../index.html">概要（Atlas）</a>
   <a href="spec.html">方法論仕様（Spec）</a>
-  <a href="concepts.html" class="here">概念</a>
-  <a href="architecture.html">つくり（構造）</a>
-  <a href="runtime.html">実行の仕組み</a>
-  <a href="quality.html">エージェントと品質</a>
+  <a href="concepts.html" class="here">方法論モデル</a>
+  <a href="architecture.html">リポジトリ構成</a>
+  <a href="runtime.html">実行モデル</a>
+  <a href="quality.html">エージェントと検証</a>
   <div class="group">docs 日本語版</div>
   <a href="../mirror/index.html">総合索引</a>
 </nav>
@@ -46,7 +46,7 @@
 
 <main>
 <p class="eyebrow">AIDLC-WORKFLOWS / CONCEPTS</p>
-<h1>概念　AI-DLC という方法論</h1>
+<h1>方法論モデル　AI-DLC が定める 5 フェーズ 32 ステージ</h1>
 <p class="lede">AI-DLC（AI-Driven Development Life Cycle）は、AI 支援開発を承認ゲート付きの 5 フェーズ・32 ステージへ構造化する AWS 発の方法論。このリポジトリはその公式マルチハーネス実装で、方法論が「何を」、各ハーネス配布が「どう」を担う。このページは方法論側の概念モデルを、v2 の実装語彙（space / intent / scope / unit / bolt）とともに整理する。</p>
 
 <h2 id="why">なぜ構造化するか　アドホック AI コーディングの 3 つの破綻</h2>
@@ -71,7 +71,7 @@
 </figure>
 <div class="callout">
   <span class="callout-title">パスの注意</span>
-  原則 3 の <code>aidlc-docs/</code> は v1 由来の旧表記。v2 の実行時パスは <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（record dir）で、詳細は<a href="runtime.html#state">実行の仕組み</a>で扱う。
+  原則 3 の <code>aidlc-docs/</code> は v1 由来の旧表記。v2 の実行時パスは <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（record dir）で、詳細は<a href="runtime.html#state">実行モデル</a>で扱う。
 </div>
 
 <h2 id="lifecycle">ライフサイクル　5 フェーズ・32 ステージ</h2>
@@ -170,7 +170,7 @@ The shape gives you an early confidence checkpoint and a deliberate autonomy cho
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/07-interaction-modes.md">docs/guide/07-interaction-modes.md</a><button class="copy" type="button" data-copy="docs/guide/07-interaction-modes.md" aria-label="パスをコピー">⧉</button></span>
 </div>
-<p>ゲートの強制力はプロトコル文書とフックの両方で担保される。仕組みの詳細は<a href="runtime.html">実行の仕組み</a>、レビュアー・センサー・学習ループとの重なりは<a href="quality.html">エージェントと品質</a>を参照。</p>
+<p>ゲートの強制力はプロトコル文書とフックの両方で担保される。仕組みの詳細は<a href="runtime.html">実行モデル</a>、レビュアー・センサー・学習ループとの重なりは<a href="quality.html">エージェントと検証</a>を参照。</p>
 
 </main>
 </div>

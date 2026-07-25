@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>つくり（構造） — AI-DLC Workflows Atlas</title>
+<title>リポジトリ構成 — AI-DLC Workflows Atlas</title>
 <link rel="stylesheet" href="../assets/style.css">
 <script defer src="../assets/mermaid.min.js"></script>
 <script defer src="../assets/highlight.min.js"></script>
@@ -26,10 +26,10 @@
   <div class="group">aidlc-workflows</div>
   <a href="../index.html">概要（Atlas）</a>
   <a href="spec.html">方法論仕様（Spec）</a>
-  <a href="concepts.html">概念</a>
-  <a href="architecture.html" class="here">つくり（構造）</a>
-  <a href="runtime.html">実行の仕組み</a>
-  <a href="quality.html">エージェントと品質</a>
+  <a href="concepts.html">方法論モデル</a>
+  <a href="architecture.html" class="here">リポジトリ構成</a>
+  <a href="runtime.html">実行モデル</a>
+  <a href="quality.html">エージェントと検証</a>
   <div class="group">docs 日本語版</div>
   <a href="../mirror/index.html">総合索引</a>
 </nav>
@@ -46,7 +46,7 @@
 
 <main>
 <p class="eyebrow">AIDLC-WORKFLOWS / ARCHITECTURE</p>
-<h1>つくり　1 つの core を 5 つのハーネスへ投影する</h1>
+<h1>リポジトリ構成　1 つの core を 5 つのハーネスへ投影する</h1>
 <p class="lede">設計の柱は「手書きの正は 1 箇所、配布物はすべて生成」。core/ にあるステージ・エージェント・フック・ツールを、harness/&lt;name&gt;/manifest.ts の宣言に従って scripts/package.ts が dist/&lt;name&gt;/ へ投影する。生成物は git にコミットされ、--check がバイト単位の差分でドリフトを封じる。エンジンの TypeScript は 5 ハーネスでバイト同一。</p>
 
 <h2 id="layout">リポジトリマップ</h2>
@@ -183,7 +183,7 @@
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/README.md">README.md（ハーネス別 Quick Start）</a><button class="copy" type="button" data-copy="README.md" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/scripts/onboarding.ts">scripts/onboarding.ts（onboarding 文書の描画器）</a><button class="copy" type="button" data-copy="scripts/onboarding.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
-<p>非 Claude ハーネスでのフック接続（adapter がネイティブイベントを Claude 形式に正規化してバイト同一の core hooks に流す仕組み）は<a href="runtime.html#hooks">実行の仕組み</a>で扱う。</p>
+<p>非 Claude ハーネスでのフック接続（adapter がネイティブイベントを Claude 形式に正規化してバイト同一の core hooks に流す仕組み）は<a href="runtime.html#hooks">実行モデル</a>で扱う。</p>
 
 </main>
 </div>
