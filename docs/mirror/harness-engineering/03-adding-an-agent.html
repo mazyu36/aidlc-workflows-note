@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent を足す — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / harness-engineering/03-adding-an-agent</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">HARNESS ENGINEERING</div>
+  <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a>
+  <a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>
+  <a href="../harness-engineering/02-adding-a-stage.html">Stage を足す</a>
+  <a href="../harness-engineering/03-adding-an-agent.html" class="here">Agent を足す</a>
+  <a href="../harness-engineering/04-scopes.html">Scope</a>
+  <a href="../harness-engineering/05-rules-and-the-loop.html">Rule と学習ループ</a>
+  <a href="../harness-engineering/06-sensors.html">Sensor</a>
+  <a href="../harness-engineering/07-team-knowledge.html">チーム Knowledge</a>
+  <a href="../harness-engineering/08-construction-and-swarm.html">Construction と swarm</a>
+  <a href="../harness-engineering/09-porting-to-a-new-harness.html">AI-DLC を新しい harness へ移植する</a>
+  <a href="../harness-engineering/10-authoring-a-plugin.html">Plugin を著述する</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#what-a-persona-file-is-and-where-it-lives">ペルソナファイルとは何か、そしてどこに住むか</a>
+  <a href="#the-frontmatter-contract-and-the-calls-you-make">frontmatter の契約と、あなたが行う判断</a>
+  <a href="#visible-is-not-active-the-two-step-truth">visible は active ではない: 2 段階の真実</a>
+  <a href="#the-steps">ステップ</a>
+  <a href="#next">次へ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / HARNESS-ENGINEERING</p>
+<h1 id="adding-an-agent">Agent を足す</h1>
+<p>agent はフレームワークの <em>who</em> である — ドメイン、ツールの allowlist、tier を持つ
+ペルソナ。同梱される 14 の agent は、product・design・delivery・architecture・
+AWS platform・compliance・DevSecOps・development・quality・pipeline-deploy・
+operations を扱う 11 のドメインエキスパート、2 つの review 専用 agent、そして
+adaptive-workflows composer から成る。フレームワークが扱わないドメイン（例えば
+data-governance の reviewer やモバイルのスペシャリスト）をチームが要するとき、
+<code>core/agents/</code> に 1 つの Markdown ファイルを落とすことでペルソナを足す。TypeScript は無い。</p>
+<p>この章はワークフローを歩く: ペルソナファイルとは何か、その frontmatter における判断の
+ポイント、そして <em>visible</em> な agent はまだ <em>active</em> ではない、という 2 段階の真実。
+フィールドごとの契約について、この章は開発者リファレンスへリンクで降りる。これらの agent が
+ユーザーの席から誰なのかは、<a href="../guide/06-agents.html">ユーザーガイド — Agent</a> を参照。</p>
+<hr>
+<h2 id="what-a-persona-file-is-and-where-it-lives">ペルソナファイルとは何か、そしてどこに住むか</h2>
+<p>すべての agent は <code>core/agents/&lt;slug&gt;-agent.md</code> にある 1 つのフラットなファイルである:
+上に YAML frontmatter、下に Markdown 本体。同梱されるファイルはすべて <code>aidlc-</code>
+プレフィックスを運ぶ（<code>aidlc-architect-agent.md</code>、<code>aidlc-developer-agent.md</code>）; あなたが
+足すファイルはあなたのものであり、そのプレフィックスを使う必要は無い。同梱される 14 個は
+フレームワークファイルとして扱う — アップグレードで上書きされるので、<em>既存の agent が
+何を知るか</em>はファイルを編集するのではなくチーム knowledge を通してカスタマイズする
+（<a href="07-team-knowledge.html">チーム Knowledge</a> を参照）。真に新しいペルソナは別の一手である:
+あなたが所有し、アップグレードを生き延びる新しいファイル。</p>
+<p>frontmatter はフレームワークがパースする部分である。本体は、agent が起動するとき自身に
+ついて読む散文である — その責務、所有する stage、knowledge をどうロードするか、その働きの
+原則。frontmatter だけが機械可読である; 本体は agent 自身のフレーミングのためであり、同梱
+ファイルの構造に合わせて書く。</p>
+<p>本物の agent の frontmatter を示す。<code>core/agents/aidlc-architect-agent.md</code> に
+著述されたもの:</p>
+<pre><code class="language-yaml">---
+name: aidlc-architect-agent
+display_name: Architect Agent
+examples:
+  - tech-stack.md
+  - infrastructure-preferences.md
+description: &gt;
+  Solutions architect responsible for application design, domain modelling,
+  NFR patterns, and component decomposition.
+disallowedTools: Task
+tier: judgment
+---
+</code></pre>
+<hr>
+<h2 id="the-frontmatter-contract-and-the-calls-you-make">frontmatter の契約と、あなたが行う判断</h2>
+<p>完全なフィールドごとのスキーマはリファレンスに住む; ここにあるのは、実際に著述するときに
+あなたが行う判断のポイントである。</p>
+<p><strong><code>name</code> はファイル名の語幹と一致せねばならない。</strong> <code>aidlc-data-governance-agent.md</code> に
+あるファイルは <code>name: aidlc-data-governance-agent</code> を宣言する。パーサーはこれをキーに
+するので、不一致は決して解決しない agent を著述する最も簡単な方法である。ローダーは
+ファイル間で重複した agent の <code>name</code> 値を拒否し、エラーで両方のファイルを名指す。</p>
+<p><strong>agent は既定でセッションのツールセット全体を継承する。</strong> 同梱される 14 の agent の
+どれも <code>tools:</code> allowlist を宣言しないので、各々はセッションが提供するすべてのツールに
+手が届く — <code>Read</code>、<code>Edit</code>、<code>Write</code>、<code>Glob</code>、<code>Grep</code>、<code>AskUserQuestion</code>、<code>Bash</code>、
+<code>WebSearch</code>、そして継承した MCP ツールも同様に。ペルソナを絞るには、使ってよいツールだけを
+名指す任意の <code>tools:</code> allowlist を足す。<code>tools:</code> を挙げるとペルソナはそれが名指すツール
+ちょうどに絞られ、完全修飾の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id も名指さない限り継承した MCP
+ツールを落とす（下の MCP 継承の注記を参照）。ドメインが本当により小さな面を要するときだけ
+それに手を伸ばす; ほとんどのペルソナはすべてを継承させるのが最善である。</p>
+<p><strong>MCP サーバーは継承されるものであり、agent ごとに付与されるものではない。</strong> プロジェクトルートの <code>.mcp.json</code> で宣言された 5 つの MCP サーバーはセッションにプロビジョンされ、すべての agent が自動的にそれらすべてを継承する — 著述すべき agent ごとの付与は無い。ペルソナをあるサーバーから<em>遠ざけて</em>おくには、その <code>tools:</code> allowlist を、そのサーバーを省いた完全修飾の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> リストに絞る（裸の <code>mcp__&lt;server&gt;</code> トークンは no-op であり、サーバーレベルの付与ではない）。継承と制限のモデルは <code>t110</code> registry-integrity テストで行使される（<a href="../reference/09-testing.html">テスト</a> を参照）。</p>
+<p><strong><code>disallowedTools</code> は <code>Task</code> を含まねばならない。</strong> これは任意ではない。agent は委譲された
+ワーカーとして走る; conductor（ライブの <code>/aidlc</code> セッション）が、エンジンの <code>run-stage</code>
+ディレクティブが <code>mode: subagent</code> を運ぶときに <code>Task</code> 呼び出しを行う。<code>Task</code> を許すと
+agent が自身の subagent を産み、フレームワークが防ぐために作られた委譲の連鎖をカスケード
+させてしまう。すべての同梱 agent は <code>Task</code> を disallow し、あなたのものもそうせねばならない。</p>
+<p><strong><code>tier</code> は仕事の種類を名指す; パッケージャがそれを harness 別の model/effort キーに
+射影する。</strong> core の agent frontmatter に生の <code>model:</code> や <code>effort:</code> を著述することは
+決してない — それらは <code>dist/&lt;harness&gt;/</code> における射影の OUTPUT であり、
+<code>core/tools/aidlc-tiers.ts</code> の tier テーブルから導かれる。下流にカスケードする多制約の
+推論が仕事であるペルソナには <code>judgment</code> を選ぶ — 曖昧な intent を解釈する、濃いコンテキスト
+下でアーキテクチャのトレードオフを量る; judgment agent はセッションの model と effort の
+両方を継承するので、静かに格下げされることは決してない。明示的な基準に対して新規の入力を
+判定する reviewer 型のペルソナには <code>balanced</code> を選ぶ。出力が支配的にパターン追従で、方法論が
+既に agent の knowledge ファイルに符号化されているとき — delivery plan、CI/CD YAML、
+runbook のスキャフォールディングのように — だけ <code>templated</code> を選ぶ; templated は effort を
+段階的に下げる唯一の tier である（Claude Code、Codex、opencode で; Kiro ではすべての
+tier がセッションの model と effort を継承するので、tier はそこでは何も変えない）。迷ったら
+<code>judgment</code> を使う: 射影テーブル（とプロジェクトの <code>tier_cap</code>）は後でいつでもコストを
+段階的に下げられるが、低く著述しすぎたペルソナは静かに推論不足になる。完全な射影テーブルと
+cap の上書きは <a href="../reference/05-agent-system.html">Agent System</a> を参照。</p>
+<p>さらに 2 つのフィールドは、振る舞いではなく提示を駆動する。<code>display_name</code> は statusline が
+描画する人間可読なラベルである（architect は &quot;Architect Agent&quot; と表示される）。<code>examples</code>
+は agent→examples テーブルに文書化された、示唆される knowledge のファイル名を挙げる —
+それらは<em>ユーザーに提示される示唆</em>である; ランタイムはそれらを決してロードせず、エンジンは
+それらをディスクに決して書かない。</p>
+<p>正確な必須／任意のテーブルと共有設定のマトリクスは、
+<a href="../reference/05-agent-system.html#frontmatter-contract">Agent System: frontmatter の契約</a> を参照。</p>
+<hr>
+<h2 id="visible-is-not-active-the-two-step-truth">visible は active ではない: 2 段階の真実</h2>
+<p>これは内面化すべき 1 つのことである。ファイルを落とすと agent は <em>visible</em> になる; stage に
+配線すると <em>active</em> になる。両方のステップが要る、さもなくば存在するが決して走らない agent を
+得る。</p>
+<ul>
+<li><strong>発見がそれを visible にする。</strong> <code>.claude/tools/aidlc-lib.ts</code> の <code>loadAgents()</code> が、
+次の呼び出しで <code>.claude/agents/</code> のすべての <code>.md</code> ファイルを読み、メタデータマップを導く。
+コード編集は無く、登録ステップも無い — ファイルの存在が登録である。この時点から
+statusline はその display name を描画でき、チームはその space レベルの
+<code>aidlc/knowledge/&lt;slug&gt;-agent/</code> ディレクトリの下に標準を足せる。</li>
+<li><strong>stage への束縛がそれを active にする。</strong> stage は、その frontmatter の <code>lead_agent</code> /
+<code>support_agents</code> フィールドで、率いる agent と支える agent を slug で名指す
+（<code>.claude/tools/data/stage-graph.json</code> にコンパイルされる）。どこかの stage があなたの
+slug を参照するまで、どの <code>run-stage</code> ディレクティブもそれを名指さないので、conductor は
+そのペルソナに決して委譲しない。</li>
+</ul>
+<p>これはフレームワークの中核の非対称性を映す — stage はその agent を名指す; agent は自分の
+stage を決して名指さない。だから agent ファイル単体は設計上、不活性である。新しいペルソナを
+働かせるには、それを使うべき stage を編集する; 束縛の仕組みは
+<a href="02-adding-a-stage.html">Stage を足す</a> に住む。</p>
+<p>各 agent はまた、あなたが <code>core/knowledge/aidlc-&lt;slug&gt;-agent/</code>（フレームワークの方法論）に
+著述する knowledge ディレクトリと、space レベルの任意のチームオーバーレイ
+<code>aidlc/knowledge/&lt;slug&gt;-agent/</code>（あなたの標準）とペアになる。space レベルの
+<code>aidlc/knowledge/</code> ディレクトリは自由形式で、ブートストラップ時は空である; チームは内容が
+できたときに agent ごとのサブディレクトリを作る — エンジンはそれをスキャフォールドしない。
+2 層の knowledge ワークフローは <a href="07-team-knowledge.html">チーム Knowledge</a> で扱う。</p>
+<hr>
+<h2 id="the-steps">ステップ</h2>
+<p>リファレンスのレシピを映して、ここにワークフローを end to end で示す。</p>
+<ol>
+<li><strong>agent ファイルを作る</strong> — <code>core/agents/&lt;slug&gt;-agent.md</code> を必須の frontmatter と
+ともに: <code>name</code>、<code>display_name</code>、<code>examples</code>、<code>description</code>、<code>disallowedTools</code>
+（<code>Task</code> を含む）、<code>tier</code>。任意の <code>tools:</code> allowlist はペルソナを絞る; セッションの
+ツールセット全体を継承するにはそれを省く。本体は同梱ファイルの構造（Core
+Responsibilities、Stages Owned、Collaboration、Knowledge Loading、Key
+Principles）に合わせて書く。</li>
+<li><strong>knowledge ファイルを足す</strong> — ペルソナが起動時にロードすべき方法論のために
+<code>core/knowledge/aidlc-&lt;slug&gt;-agent/</code> の下に。</li>
+<li><strong>stage に配線する</strong> — それが率いるか支える各 stage ファイル
+（<code>core/aidlc-common/stages/&lt;phase&gt;/&lt;slug&gt;.md</code>）の <code>lead_agent</code> /
+<code>support_agents</code> frontmatter に slug を足し、続けて再コンパイル
+（<code>bun .claude/tools/aidlc-graph.ts compile</code>）して <code>stage-graph.json</code> を再生成
+させる。<code>stage-graph.json</code> を決して手編集しない — それはビルド成果物であり、次の
+compile が手作業の変更を上書きする（<a href="02-adding-a-stage.html#4-regenerate-the-harnesses-so-stage-graphjson-recompiles">Stage を足す</a> を参照）。
+これがそれを active にするステップである。</li>
+<li><strong>チーム knowledge ディレクトリを文書化する</strong> — チームがその標準を space レベルの
+<code>aidlc/knowledge/&lt;slug&gt;-agent/</code> の下に足すことを注記する。エンジンはこのディレクトリを
+作らない; チームが内容のあるときに作る（space の <code>aidlc/knowledge/</code> は自由形式で、
+ブートストラップ時は空）。</li>
+<li><strong>手で保守される docs のテーブルを更新する</strong> — Phase Participation マトリクスと
+agent→examples テーブルは自動再生成されない（下の「何が自動で検証されないか」を参照）。</li>
+</ol>
+<p>完全なレシピ — 発見、intent-birth、statusline 検証のコマンドとともに — は
+<a href="../reference/11-contributing.html#adding-an-agent">Contributing: Agent を足す</a> にある。
+足すのではなく既存の agent のツール、tier、stage 割り当てを変えるには、
+<a href="../reference/05-agent-system.html#how-to-modify-an-agent">Agent System: agent を変更する方法</a> を参照。</p>
+<h3 id="what-validates-automatically">何が自動で検証されるか</h3>
+<ul>
+<li><code>loadAgents()</code> は次の呼び出しで <code>.claude/agents/</code> の任意の新しい <code>.md</code> ファイルを
+発見する — コード編集は無く、登録も無い。</li>
+<li><code>name</code> または <code>display_name</code> が欠けていればパーサーは投げ、ファイルと欠けたフィールドを
+名指す。</li>
+<li>agent は slug でアルファベット順にソートされて返されるので、発見順はすべての
+プラットフォームで同一である。</li>
+<li>intent birth は空の space レベルの <code>aidlc/knowledge/</code> ディレクトリを作る; agent ごとの
+サブディレクトリや README は種付けしない。</li>
+<li>statusline は導かれたメタデータから display name を描画する。</li>
+</ul>
+<h3 id="what-does-not-validate-automatically">何が自動で検証されないか</h3>
+<ul>
+<li><strong>stage-graph への参加。</strong> <code>stage-graph.json</code> は agent を slug で参照する; そこに配線
+せずに agent を足すと、存在するが決して走らない。発見と活性化は別々のステップである。</li>
+<li><strong>knowledge ファイルの存在。</strong> <code>examples</code> は agent→examples テーブルに文書化された、
+示唆されるファイル名である — 何もそれらを作らず確認もしない。本物の内容は
+<code>aidlc/knowledge/&lt;slug&gt;-agent/</code>（space レベルの knowledge dir）の下に置く。</li>
+<li><strong>手で保守される docs のテーブル。</strong> <a href="../reference/05-agent-system.html#phase-participation">Agent System</a> の
+Phase Participation マトリクスと、knowledge README テンプレートの agent→examples
+テーブルは手で編集される。agent を足すのと同じ変更でそれらを更新する。</li>
+<li><strong>agent ファイルの本体。</strong> frontmatter だけがパースされる; 本体の散文は agent が起動する
+とき自身が読むので、同梱の 14 個に合わせて慎重に書く。</li>
+</ul>
+<hr>
+<h2 id="next">次へ</h2>
+<p><a href="04-scopes.html">Scope</a> — ある種の仕事に対してどの stage（したがってどの agent）が走るかを
+決める。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/03-adding-an-agent.md"><code>docs/harness-engineering/03-adding-an-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

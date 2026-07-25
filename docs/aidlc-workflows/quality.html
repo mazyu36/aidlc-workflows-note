@@ -11,15 +11,17 @@
 <script type="module" src="../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">aidlc-workflows / quality</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">aidlc-workflows</div>
   <a href="../index.html">概要（Atlas）</a>
   <a href="spec.html">方法論仕様（Spec）</a>

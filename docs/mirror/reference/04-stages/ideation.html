@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideation phase — stage リファレンス (1.1-1.7) — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/04-stages/ideation</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../reference/01-architecture.html">Architecture</a>
+  <a href="../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../reference/09-testing.html">テスト</a>
+  <a href="../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../reference/04-stages/ideation.html" class="here">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#phase-overview">phase の概要</a>
+  <a href="#stage-summary-table">stage サマリテーブル</a>
+  <a href="#stage-11-intent-capture-framing">Stage 1.1: Intent Capture &amp; Framing</a>
+  <a href="#stage-12-market-research-competitive-analysis">Stage 1.2: Market Research &amp; Competitive Analysis</a>
+  <a href="#stage-13-feasibility-constraint-analysis">Stage 1.3: Feasibility &amp; Constraint Analysis</a>
+  <a href="#stage-14-scope-definition-prioritization">Stage 1.4: Scope Definition &amp; Prioritization</a>
+  <a href="#stage-15-team-formation-mob-planning">Stage 1.5: Team Formation &amp; Mob Planning</a>
+  <a href="#stage-16-rough-mockups-concept-visualization">Stage 1.6: Rough Mockups &amp; Concept Visualization</a>
+  <a href="#stage-17-initiative-approval-handoff">Stage 1.7: Initiative Approval &amp; Handoff</a>
+  <a href="#phase-summary">phase のサマリ</a>
+  <a href="#cross-references">関連</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="ideation-phase-stage-reference-11-17">Ideation phase — stage リファレンス (1.1-1.7)</h1>
+<h2 id="phase-overview">phase の概要</h2>
+<p>Ideation phase は AI-DLC ライフサイクルの 5 つの phase のうち 2 番目である。intent を捕捉し、
+実現性を検証し、scope を定義し、いかなる技術的作業に着手する前にも承認を確保することで、
+イニシアチブ全体の土台を確立する。この phase は stage 1.1 から 1.7 までを実行し、Inception
+phase への移行を制御する go/no-go gate で締めくくる。</p>
+<p>7 つの stage はすべて inline で実行され（subagent への委譲は無い）、承認 gate・質問フォーマット・
+完了メッセージについて標準の stage-protocol.md に従う。orchestrator はそれらを順にルーティング
+し、現在の scope に当てはまらない CONDITIONAL の stage をスキップする。</p>
+<p><strong>Ideation phase の主な特徴:</strong></p>
+<ul>
+<li>どの stage も inline 実行モードを用いる（ユーザーとの直接の対話）。</li>
+<li>stage は intent の record dir 配下 <code>&lt;record&gt;/ideation/&lt;stage-name&gt;/</code> に成果物を生成する。ここで <code>&lt;record&gt;</code> は <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> である（<code>audit/</code> シャードディレクトリ、stage ごとの <code>memory.md</code>、verification レポートも同じ record dir 配下に置かれる）。</li>
+<li>Stage 1.1 を除くすべての stage は、先行する stage の出力に依存する。</li>
+<li>Stage 1.7 は Inception へ引き継ぐ前に phase 境界の検証チェックを実行する。</li>
+<li>この phase は 2 つの ALWAYS stage（1.1 Intent Capture と 1.7 Approval &amp; Handoff）で挟まれる;
+中間の 5 つの stage は CONDITIONAL で、scope に応じてスキップされうる。</li>
+</ul>
+<p><strong>Scope 駆動の stage 選択:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>含まれる stage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enterprise</td>
+<td>1.1-1.7 すべて</td>
+</tr>
+<tr>
+<td>feature</td>
+<td>1.1-1.7 すべて</td>
+</tr>
+<tr>
+<td>mvp</td>
+<td>1.1, 1.3（light）, 1.4, 1.6</td>
+</tr>
+<tr>
+<td>poc</td>
+<td>1.1（最小限）</td>
+</tr>
+<tr>
+<td>bugfix</td>
+<td>なし（Ideation を完全にスキップ）</td>
+</tr>
+<tr>
+<td>refactor</td>
+<td>なし（Ideation を完全にスキップ）</td>
+</tr>
+<tr>
+<td>infra</td>
+<td>なし（Ideation を完全にスキップ）</td>
+</tr>
+<tr>
+<td>security-patch</td>
+<td>なし（Ideation を完全にスキップ）</td>
+</tr>
+<tr>
+<td>workshop</td>
+<td>なし（Ideation を完全にスキップ）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-summary-table">stage サマリテーブル</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>名称</th>
+<th>条件</th>
+<th>リード agent</th>
+<th>サポート agent</th>
+<th>モード</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.1</td>
+<td>Intent Capture &amp; Framing</td>
+<td>ALWAYS</td>
+<td>aidlc-product-agent</td>
+<td>aidlc-architect-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>Market Research</td>
+<td>CONDITIONAL</td>
+<td>aidlc-product-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>Feasibility &amp; Constraints</td>
+<td>CONDITIONAL</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-aws-platform-agent, aidlc-compliance-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>Scope Definition</td>
+<td>ALWAYS</td>
+<td>aidlc-product-agent</td>
+<td>aidlc-delivery-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>Team Formation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-delivery-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.6</td>
+<td>Rough Mockups</td>
+<td>CONDITIONAL</td>
+<td>aidlc-design-agent</td>
+<td>aidlc-product-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.7</td>
+<td>Approval &amp; Handoff</td>
+<td>ALWAYS</td>
+<td>aidlc-delivery-agent</td>
+<td>aidlc-product-agent</td>
+<td>inline</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-11-intent-capture-framing">Stage 1.1: Intent Capture &amp; Framing</h2>
+<h3 id="metadata">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Ideation</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>1.1</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>ALWAYS — 全ワークフローの最初の stage; イニシアチブの土台を確立する</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>サポート agent</td>
+<td>aidlc-architect-agent（技術的コンテキスト）</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:bulb:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose">目的</h3>
+<p>Intent Capture はあらゆる AI-DLC ワークフローの入口である。ビジネス上の問題を捕捉し、
+ステークホルダーを特定し、成功指標を確立し、プロジェクトタイプ（greenfield・brownfield・
+migration）を分類する。生成される intent statement と stakeholder map は、下流のすべての
+stage が積み上げる土台となる。</p>
+<p>ユーザーが <code>$ARGUMENTS</code> 経由で自由記述の intent テキストを与えた場合、そのテキストは seed
+コンテキストとして渡され、stage は「何を作りたいか？」と再度問わない。</p>
+<h3 id="inputs">入力</h3>
+<ul>
+<li><code>$ARGUMENTS</code> またはその intent の <code>audit/</code> シャードから得るユーザーのプロジェクト記述</li>
+<li>過去のセッションからの既存の <code>&lt;record&gt;/</code> 成果物（あれば）</li>
+<li><code>aidlc/spaces/&lt;active-space&gt;/memory/</code> からの guardrails</li>
+</ul>
+<h3 id="steps">Steps</h3>
+<ol>
+<li><strong>agent persona のロード</strong> — aidlc-product-agent の persona と knowledge をロードする。技術的コンテキストの視点のため aidlc-architect-agent の persona をロードする。</li>
+<li><strong>先行コンテキストのロード</strong> — ユーザーのプロジェクト記述を読む。既存の成果物を確認する。guardrails をロードする。</li>
+<li><strong>明確化のための質問の生成</strong> — ビジネス上の問題・顧客・成功指標・イニシアチブの契機・プロジェクトタイプを網羅する質問とともに <code>&lt;record&gt;/ideation/intent-capture/intent-capture-questions.md</code> を作成する。A-E の選択肢に X（Other）を加えた <code>[Answer]:</code> タグ形式を用いる。tri-mode の質問フローを提供する。</li>
+<li><strong>回答の収集と分析</strong> — すべてのタグが埋まっていることを確認する。曖昧さ・矛盾の分析を実行する。</li>
+<li><strong>成果物の生成</strong> — intent statement と stakeholder map を生成する。</li>
+<li><strong>完了の準備</strong> — 両方の成果物を検証する。state を編集しない; gate の結果を
+<code>aidlc-orchestrate.ts</code> 経由で報告する。</li>
+<li><strong>完了の提示と承認の要求</strong> — 標準の 2 択 gate。</li>
+</ol>
+<h3 id="outputs">出力</h3>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>intent-statement.md</code></td>
+<td>問題の記述、対象顧客、成功指標、イニシアチブの契機、プロジェクトタイプ、初期の scope シグナル</td>
+</tr>
+<tr>
+<td><code>stakeholder-map.md</code></td>
+<td>主要なステークホルダーと関心事、意思決定者 対 影響者、コミュニケーション要件</td>
+</tr>
+<tr>
+<td><code>intent-capture-questions.md</code></td>
+<td><code>[Answer]:</code> タグ付きの明確化質問（入力成果物）</td>
+</tr>
+</tbody></table>
+<h3 id="notes">補足</h3>
+<ul>
+<li>全ワークフローの最初の stage。ユーザー入力以外に先行成果物は無い。</li>
+<li><code>$ARGUMENTS</code> 内の自由記述の intent は seed コンテキストとして用いられる。</li>
+<li>intent statement は後続のすべての Ideation stage に供給され、Inception へと引き継がれる。</li>
+</ul>
+<hr>
+<h2 id="stage-12-market-research-competitive-analysis">Stage 1.2: Market Research &amp; Competitive Analysis</h2>
+<h3 id="metadata-1">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Ideation</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>1.2</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL — 内部ツール・バグ修正・リファクタリングではスキップ</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>サポート agent</td>
+<td>(なし)</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:bar_chart:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-1">目的</h3>
+<p>外部の競合状況に照らしてイニシアチブを検証する。competitive analysis・market trends・build-vs-buy 評価・差別化戦略を生成する。</p>
+<h3 id="inputs-1">入力</h3>
+<ul>
+<li>Stage 1.1 からの intent statement</li>
+</ul>
+<h3 id="outputs-1">出力</h3>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>competitive-analysis.md</code></td>
+<td>競合状況、競合プロファイル、強み/弱み</td>
+</tr>
+<tr>
+<td><code>market-trends.md</code></td>
+<td>業界トレンド、規制の変化、市場規模</td>
+</tr>
+<tr>
+<td><code>build-vs-buy.md</code></td>
+<td>build-vs-buy-vs-partner の評価</td>
+</tr>
+<tr>
+<td><code>market-research-questions.md</code></td>
+<td><code>[Answer]:</code> タグ付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="notes-1">補足</h3>
+<ul>
+<li>スキップ条件: 内部ツール、バグ修正、リファクタリング、インフラのみ、セキュリティパッチ、poc scope。</li>
+<li>Stage 1.3 Feasibility（実行された場合）と Stage 1.4 Scope Definition に供給される。</li>
+</ul>
+<hr>
+<h2 id="stage-13-feasibility-constraint-analysis">Stage 1.3: Feasibility &amp; Constraint Analysis</h2>
+<h3 id="metadata-2">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Ideation</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>1.3</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL — 些細な変更ではスキップ; 技術的リスクやコンプライアンス上の必要がある場合は実行</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-architect-agent（技術的実現性）</td>
+</tr>
+<tr>
+<td>サポート agent</td>
+<td>aidlc-aws-platform-agent（AWS の全体像）、aidlc-compliance-agent（規制スキャン）</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:test_tube:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-2">目的</h3>
+<p>技術的な成立性を評価し、制約を特定し、RAID log（Risks, Assumptions, Issues, Dependencies）を確立する。マルチエージェント stage: architect が主導し、続いて aws-platform と compliance が入力を与える。</p>
+<h3 id="inputs-2">入力</h3>
+<ul>
+<li>Stage 1.1 からの intent statement</li>
+<li>Stage 1.2 からの market research（実行された場合）</li>
+</ul>
+<h3 id="outputs-2">出力</h3>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>feasibility-assessment.md</code></td>
+<td>技術的成立性、リスク分析</td>
+</tr>
+<tr>
+<td><code>constraint-register.md</code></td>
+<td>技術的・組織的・規制上の制約</td>
+</tr>
+<tr>
+<td><code>raid-log.md</code></td>
+<td>Risks, Assumptions, Issues, Dependencies</td>
+</tr>
+<tr>
+<td><code>feasibility-questions.md</code></td>
+<td><code>[Answer]:</code> タグ付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="notes-2">補足</h3>
+<ul>
+<li>mvp scope では &quot;light&quot; の depth で実行する。</li>
+<li>マルチエージェントのパターン: orchestrator はまず lead agent を走らせ、続いて lead の出力をコンテキストとして support agent を走らせる。</li>
+</ul>
+<hr>
+<h2 id="stage-14-scope-definition-prioritization">Stage 1.4: Scope Definition &amp; Prioritization</h2>
+<h3 id="metadata-3">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Ideation</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>1.4</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>ALWAYS — depth は scope に適応する</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>サポート agent</td>
+<td>aidlc-delivery-agent（キャパシティの実態チェック）</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:dart:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-3">目的</h3>
+<p>scope の境界を確立する。MoSCoW・WSJF・RICE のいずれかの優先順位付けと value stream map を用いて、優先順位付けされた intent backlog（proto-unit of work）を生成する。</p>
+<h3 id="inputs-3">入力</h3>
+<ul>
+<li>Stage 1.1 からの intent statement</li>
+<li>Stage 1.3 からの feasibility assessment（存在する場合）</li>
+</ul>
+<h3 id="outputs-3">出力</h3>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>scope-document.md</code></td>
+<td>in/out の scope 境界の定義</td>
+</tr>
+<tr>
+<td><code>intent-backlog.md</code></td>
+<td>proto-unit の優先順位付けされた backlog（MoSCoW/WSJF/RICE）</td>
+</tr>
+<tr>
+<td><code>scope-definition-questions.md</code></td>
+<td><code>[Answer]:</code> タグ付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="notes-3">補足</h3>
+<ul>
+<li>常に実行され、depth は scope に適応する。</li>
+<li>scope document はプロジェクト全体の権威ある境界となる。</li>
+</ul>
+<hr>
+<h2 id="stage-15-team-formation-mob-planning">Stage 1.5: Team Formation &amp; Mob Planning</h2>
+<h3 id="metadata-4">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Ideation</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>1.5</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL — 単独開発者や小規模チームのプロジェクトではスキップ</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-delivery-agent</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:people_holding_hands:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-4">目的</h3>
+<p>チームの空き状況を評価し、スキルをマッピングし、ギャップを特定し、mob 構成の計画を生成する。</p>
+<h3 id="inputs-4">入力</h3>
+<ul>
+<li>Stage 1.4 からの scope definition</li>
+<li>Stage 1.3 からの feasibility assessment（存在する場合）</li>
+</ul>
+<h3 id="outputs-4">出力</h3>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>team-assessment.md</code></td>
+<td>チームの空き状況、RACI マトリクス、キャパシティの割り当て</td>
+</tr>
+<tr>
+<td><code>skill-matrix.md</code></td>
+<td>必要なスキル 対 利用可能なスキル、ギャップ分析</td>
+</tr>
+<tr>
+<td><code>mob-composition.md</code></td>
+<td>mob 構成の計画、チームトポロジー</td>
+</tr>
+<tr>
+<td><code>team-formation-questions.md</code></td>
+<td><code>[Answer]:</code> タグ付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="notes-4">補足</h3>
+<ul>
+<li>スキップ条件: 単独開発者のプロジェクト、小規模チーム、poc・bugfix・refactor scope。</li>
+<li>Stage 2.8 Delivery Planning に供給される。</li>
+</ul>
+<hr>
+<h2 id="stage-16-rough-mockups-concept-visualization">Stage 1.6: Rough Mockups &amp; Concept Visualization</h2>
+<h3 id="metadata-5">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Ideation</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>1.6</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL — non-UI・API のみ・インフラのみではスキップ</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-design-agent</td>
+</tr>
+<tr>
+<td>サポート agent</td>
+<td>aidlc-product-agent（intent に照らして検証）</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:pencil2:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-5">目的</h3>
+<p>初期のコンセプトビジュアライゼーションを生成する。UI の場合: 低忠実度のワイヤーフレームとユーザーフロー図。non-UI の場合: システムコンテキスト図とインタラクションフローのスケッチ。すべての図は stage-protocol.md の ASCII 標準に従う。</p>
+<h3 id="inputs-5">入力</h3>
+<ul>
+<li>Stage 1.1 からの intent statement</li>
+<li>Stage 1.4 からの scope definition</li>
+</ul>
+<h3 id="outputs-5">出力</h3>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>wireframes.md</code></td>
+<td>低忠実度のワイヤーフレーム（UI）またはシステムコンテキスト図（non-UI）</td>
+</tr>
+<tr>
+<td><code>user-flow.md</code></td>
+<td>中心的なユーザーフロー図（UI）またはインタラクションフローのスケッチ（non-UI）</td>
+</tr>
+<tr>
+<td><code>rough-mockups-questions.md</code></td>
+<td><code>[Answer]:</code> タグ付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="notes-5">補足</h3>
+<ul>
+<li>スキップ条件: non-UI・API のみ・インフラのみのイニシアチブ。</li>
+<li>Inception の Stage 2.5 Refined Mockups に供給される（その stage も実行される場合）。</li>
+</ul>
+<hr>
+<h2 id="stage-17-initiative-approval-handoff">Stage 1.7: Initiative Approval &amp; Handoff</h2>
+<h3 id="metadata-6">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Ideation</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>1.7</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>ALWAYS — Inception の前の最後の Ideation gate</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-delivery-agent</td>
+</tr>
+<tr>
+<td>サポート agent</td>
+<td>aidlc-product-agent（完全性を検証）</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:white_check_mark:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-6">目的</h3>
+<p>すべての Ideation 成果物を単一の initiative brief にまとめ、すべての決定を記録し、phase 境界の検証を実行し、go/no-go gate を提示する。</p>
+<h3 id="inputs-6">入力</h3>
+<p>stage 1.1-1.6 からのすべての Ideation phase 成果物。</p>
+<h3 id="steps-1">Steps</h3>
+<ol>
+<li>aidlc-delivery-agent の persona と knowledge をロードする。</li>
+<li>すべての Ideation phase 成果物を読む。</li>
+<li>承認質問を生成する。</li>
+<li>initiative brief（全出力をまとめた one-pager）をまとめる。</li>
+<li>phase 境界の検証（Intent -&gt; Scope -&gt; Intent Backlog の一貫性）。</li>
+<li>handoff と phase 境界の成果物を検証する; ライフサイクルの state を直接編集しない。</li>
+<li>3 択の承認 gate を提示する。承認されたら結果を報告し、engine が stage を完了して Inception
+へアトミックに遷移するようにする。</li>
+</ol>
+<h3 id="outputs-6">出力</h3>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>initiative-brief.md</code></td>
+<td>全 Ideation 出力をまとめた 1 ページの要約</td>
+</tr>
+<tr>
+<td><code>decision-log.md</code></td>
+<td>Ideation 中に下されたすべての決定の記録</td>
+</tr>
+<tr>
+<td><code>approval-handoff-questions.md</code></td>
+<td><code>[Answer]:</code> タグ付きの承認質問</td>
+</tr>
+</tbody></table>
+<p>phase 境界の検証:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&lt;record&gt;/verification/phase-check-ideation.md</code></td>
+<td>Ideation から Inception へのトレーサビリティ検査</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate">承認 gate</h3>
+<p>特殊な 3 択 gate:</p>
+<ul>
+<li><strong>Approve</strong> — Inception phase へ進む</li>
+<li><strong>Request Changes</strong> — 修正のフィードバックを与える</li>
+<li><strong>Reject Initiative</strong> — ワークフローを完全に終了する</li>
+</ul>
+<h3 id="notes-6">補足</h3>
+<ul>
+<li>phase 境界の stage — stage-protocol のガバナンスに従って verification を実行する。</li>
+<li>initiative brief は Ideation phase 全体のエグゼクティブサマリとして機能する。</li>
+</ul>
+<hr>
+<h2 id="phase-summary">phase のサマリ</h2>
+<h3 id="key-outputs">主要な出力</h3>
+<ol>
+<li><strong>Intent Statement</strong>（1.1）— 問題の記述、対象顧客、成功指標、プロジェクトの分類。</li>
+<li><strong>Stakeholder Map</strong>（1.1）— 主要なステークホルダー、意思決定者、コミュニケーション要件。</li>
+<li><strong>Competitive Analysis</strong>（1.2）— 市場でのポジショニング、build-vs-buy（該当する場合）。</li>
+<li><strong>Feasibility Assessment and RAID Log</strong>（1.3）— 技術的成立性、リスク登録簿、制約（該当する場合）。</li>
+<li><strong>Scope Document and Intent Backlog</strong>（1.4）— 権威ある scope 境界、優先順位付けされた proto-unit のリスト。</li>
+<li><strong>Team Plan</strong>（1.5）— skill matrix、mob 構成、キャパシティの割り当て（該当する場合）。</li>
+<li><strong>Concept Mockups</strong>（1.6）— ワイヤーフレーム/ユーザーフロー、またはシステムコンテキスト図（該当する場合）。</li>
+<li><strong>Initiative Brief</strong>（1.7）— 全 Ideation 出力を統合したエグゼクティブ one-pager。</li>
+<li><strong>Phase Boundary Verification</strong>（1.7）— トレーサビリティ検査の結果。</li>
+</ol>
+<h3 id="handoff-to-inception">Inception への引き継ぎ</h3>
+<p>Stage 1.7 での承認をもって、フレームワークは Inception phase へ遷移する。Inception は
+Stage 2.1 Reverse Engineering（brownfield プロジェクトの場合）または Stage 2.3 Requirements
+Analysis（greenfield プロジェクトの場合）で始まる。</p>
+<h2 id="cross-references">関連</h2>
+<ul>
+<li><a href="../03-orchestrator.html">Orchestrator</a> — ルーティングのロジック、scope から stage へのマッピング</li>
+<li><a href="../04-stage-protocol.html">Stage Protocol</a> — 承認 gate、質問フォーマット、phase 境界の検証</li>
+<li><a href="inception.html">Inception Stages</a> — 次の phase</li>
+<li><a href="initialization.html">Initialization Stages</a> — 前の phase</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/ideation.md"><code>docs/reference/04-stages/ideation.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

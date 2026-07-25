@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plane アーキテクチャ — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/02-plane-architecture</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html" class="here">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#1-the-problem">1. 問題</a>
+  <a href="#2-the-networking-analog">2. ネットワーキングの類似</a>
+  <a href="#3-mapping-to-ai-dlc">3. AI-DLC へのマッピング</a>
+  <a href="#4-the-compile-boundary">4. compile 境界</a>
+  <a href="#5-recovery-as-an-emergent-property">5. 創発的性質としての回復</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="plane-architecture">Plane アーキテクチャ</h1>
+<blockquote>
+<p>対象読者: Tier 2/3（team adopter、framework contributor）。</p>
+</blockquote>
+<p>この章は AI-DLC の three-plane アーキテクチャ — control・data・management の関心の分離 — と、それらを繋ぐ compile 境界を説明する。<a href="07-sensor-system.html">Sensor システム</a>（control-plane の sensor manifest）、<a href="08-rule-system.html">Rule システム</a>（control-plane の rule ファイル）、<a href="12-state-machine.html">状態機械</a>（data-plane のライフサイクル）へ相互リンクする。これは設計の基盤である; sensor と rule の manifest は、その基盤が操作するソースファイルである。</p>
+<hr>
+<h2 id="1-the-problem">1. 問題</h2>
+<p>v0.5.0 は rule・sensor と、ワークフロー実行中に観察を捕らえて次回に自動で発火する場所へ書き込む learning loop を導入する。その基礎モデルには本物の複雑さがある: 複数種の stage ごとのインポート、ファイル名で付く universal-default rule、sensor manifest、hook チェーン。顧客は framework を使うのにそのすべてを学ばねばならないべきではないし、framework はホットパスでルックアップのコストを払うべきではない。</p>
+<p>正しい枠づけは「設計をより単純にする」ことでは <em>ない</em>。<em>「この種のシステムのために既に存在する規律を借りる」</em> ことである。現代のネットワーキングの three-plane アーキテクチャが最も近い類似であり、教訓はほぼ直接転移する。</p>
+<hr>
+<h2 id="2-the-networking-analog">2. ネットワーキングの類似</h2>
+<p>現代のルーター（あるいは SDN コントローラ）は、その仕事を 3 つの plane に分割する:</p>
+<ul>
+<li><strong>Management plane</strong> — SNMP、syslog、ダッシュボード、NETCONF、gRPC、CLI。設定を入れ、可観測性を出す。人間のケイデンス（一度設定し、時折クエリする）。</li>
+<li><strong>Control plane</strong> — BGP、OSPF、IS-IS、経路計算。トポロジーが与えられたら、各パケットがどのパスを取るべきかを決める。トポロジーのケイデンス（秒〜分）。</li>
+<li><strong>Data plane</strong> — フローテーブル、ACL、ASIC 転送。このパケットを今、ナノ秒で、テーブルルックアップにより転送する。ラインレート。</li>
+</ul>
+<p>盗む価値のある 5 つの教訓:</p>
+<h3 id="filter-evaluation-never-happens-at-packet-rate">フィルタ評価はパケットレートでは決して起きない</h3>
+<p>OSPF はトポロジーが変わるとき一度だけ最短経路を計算する。結果は data plane のフローテーブルにインストールされる。以降のすべてのパケットはテーブルルックアップである — ナノ秒、決定論的、フィルタロジック無し。賢い仕事は <em>トポロジー変更時</em> に起き、<em>パケット時</em> にではない。</p>
+<h3 id="plane-interfaces-are-explicit">plane 間のインターフェースは明示的である</h3>
+<p>OpenFlow、P4、NETCONF、gRPC。control plane は data plane のメモリに手を伸ばさない; 「このフローをインストールせよ」と言う構造化されたメッセージを送る。data plane が確認する。これは失敗モードを診断可能にする — 拒否されたインストールは明確なシグナルであり、静かな取りこぼしではない。</p>
+<h3 id="failures-isolate-cleanly">失敗はきれいに隔離される</h3>
+<p>control plane がクラッシュしても、data plane は最後にインストールされた rule を使って転送を続ける。data plane が故障すれば、control plane はハートビートで気づき、その故障を迂回して再ルーティングする。どちらの plane も相手を道連れにしないことは、荷重を担う性質である。</p>
+<h3 id="telemetry-closes-the-loop">テレメトリがループを閉じる</h3>
+<p>data plane はフロー統計・ドロップ・レイテンシを報告する。control plane はテレメトリを消費して決める: 輻輳を迂回して再ルーティングする、サービスをスケールする、ピアを down とマークする。<em>control plane がより賢くなるのは、data plane が報告し返すからである。</em></p>
+<h3 id="three-planes-three-cadences">3 つの plane、3 つのケイデンス</h3>
+<p>management plane は人間のケイデンスで走る。control plane はトポロジーのケイデンスで走る。data plane はラインレートで走る。各 plane は、その仕事が許すなら遅くてもよい。</p>
+<hr>
+<h2 id="3-mapping-to-ai-dlc">3. AI-DLC へのマッピング</h2>
+<p>マッピングは聞こえるより近い。（以下の <code>&lt;record&gt;/</code> = アクティブな intent の record dir、<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>; audit trail は <code>&lt;record&gt;/audit/</code> 下の per-clone シャードのディレクトリである。）</p>
+<table>
+<thead>
+<tr>
+<th>ネットワーキング</th>
+<th>AI-DLC の類似</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Control plane（BGP、OSPF、経路計算）</td>
+<td>Stage 定義、rule、sensor — 何が走るべきかのスキーマ</td>
+</tr>
+<tr>
+<td>Data plane（パケット転送、フローテーブル）</td>
+<td>Stage の実行、Bolt、agent の呼び出し — 実際の実行</td>
+</tr>
+<tr>
+<td>Management plane（SNMP、ダッシュボード、CLI）</td>
+<td><code>/aidlc --doctor</code>、designer（将来）、audit クエリ、<code>CLAUDE.md</code></td>
+</tr>
+<tr>
+<td>Routing protocol（BGP / OSPF）</td>
+<td>Compile: <code>aidlc-graph.ts compile</code> が stage frontmatter + rule + sensor を読み、各 stage の pull インポートをソースレジストリに対して解決し、グラフを発する</td>
+</tr>
+<tr>
+<td>ASIC にロードされる FIB（forwarding information base）</td>
+<td>compile 時に解決された stage ごとの <code>rules_in_context</code> + <code>sensors_applicable</code> を持つ <code>stage-graph.json</code></td>
+</tr>
+<tr>
+<td>OpenFlow / NETCONF（インターフェース）</td>
+<td><code>stage-graph.json</code> — compile と orchestrator の間の明示的なインターフェース</td>
+</tr>
+<tr>
+<td>Telemetry（NetFlow、sFlow）</td>
+<td>Audit ログ、sensor の発火、memory.md エントリ → intent の <code>runtime-graph.json</code></td>
+</tr>
+<tr>
+<td>Reactive flow install（PACKET_IN）</td>
+<td>Learning loop: data plane が観察を報告 → ユーザーが確認 → rule/sensor へのファイル書き込み、加えて新しい sensor 束縛が捕らえられたときの発生元 stage の frontmatter 編集</td>
+</tr>
+<tr>
+<td>Proactive route install（BGP advertisement）</td>
+<td>Framework PR: どのワークフローが走るより前に新しい stage/rule/sensor を出す</td>
+</tr>
+<tr>
+<td>Topology change → 経路を再計算</td>
+<td>ワークフロー開始 → compile が現在のソースファイルを読む; 以降の再計算は次のワークフローで駆動される</td>
+</tr>
+<tr>
+<td>プリインストールされた FIB がパケット飛行を跨いで安定</td>
+<td>ワークフロー中の learning-loop の書き込みは進行中のコンパイル済みビューに影響しない; それらは次のワークフロー開始時に適用される（§5 を参照）</td>
+</tr>
+<tr>
+<td>テーブルルックアップによるラインレート転送</td>
+<td>Orchestrator + dispatcher はグラフノードから事前解決されたフィールドを読む; ランタイムに解決の走査は無い</td>
+</tr>
+</tbody></table>
+<p><code>stage-graph.json</code> の plane ラベルと、ランタイムの読み取りパターンは、FIB / route-table / CLI の分離を映す。設定は management plane で入る; control plane がそれを compile し、data plane がルックアップで実行する。</p>
+<hr>
+<h2 id="4-the-compile-boundary">4. compile 境界</h2>
+<p>荷重を担う洞察: ネットワーキングがフィルタ評価や継承の走査をパケットレートに置かないのは、その仕事がそこでは高すぎるからである。control plane は一度計算して FIB にインストールし、data plane はルックアップで転送する。AI-DLC は同じパターンに従う: ワークフロー開始時に一度 compile し、ワークフローを通じて解決済みビューを読み、次のワークフロー開始時に再 compile する。</p>
+<h3 id="what-compiles-what-stays-on-disk">何が compile され、何がディスクに留まるか</h3>
+<table>
+<thead>
+<tr>
+<th>状態</th>
+<th>ライフサイクル</th>
+<th>ディスク上のソース</th>
+<th>compile 先</th>
+<th>読み手</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage DAG、scope ルーティング、成果物の生産</td>
+<td>Framework でバージョン管理（framework PR で変わる）</td>
+<td>Stage frontmatter（<code>.claude/aidlc-common/stages/*.md</code>）</td>
+<td><code>stage-graph.json</code></td>
+<td>Orchestrator、doctor、designer</td>
+</tr>
+<tr>
+<td><strong>Rule</strong>（散文、規範的）</td>
+<td>可変; framework PR か learning-loop の書き込み</td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/memory/&lt;scope&gt;.md</code>（ファイル名由来; org/team/project は全 stage に付く）</td>
+<td><code>stage-graph.json</code> のノードごとの <code>rules_in_context</code></td>
+<td>Orchestrator（解決済みビュー）; Claude Code の auto-load は in-context 散文のためソースを読む</td>
+</tr>
+<tr>
+<td><strong>Sensor</strong>（manifest、検証チェック）</td>
+<td>可変; framework PR か learning-loop の書き込み（manifest は一度著述、stage は id でインポート）</td>
+<td><code>.claude/sensors/aidlc-&lt;id&gt;.md</code></td>
+<td><code>stage-graph.json</code> のノードごとの <code>sensors_applicable</code></td>
+<td>Dispatcher は stage 入口で解決済みリストを読む; PostToolUse がそこから発火する</td>
+</tr>
+<tr>
+<td>ワークフロー実行のテレメトリ</td>
+<td>ワークフローごと、累積</td>
+<td><code>audit/</code> シャード · <code>memory.md</code> · Bolt fork</td>
+<td><code>&lt;record&gt;/runtime-graph.json</code></td>
+<td>Doctor、gate ritual、将来のワークフロー横断オブザーバー</td>
+</tr>
+<tr>
+<td>Stage ごとの観察ログ</td>
+<td>Stage 実行ごと</td>
+<td><code>&lt;record&gt;/&lt;phase&gt;/&lt;stage&gt;/memory.md</code></td>
+<td>（compile 無し — 直接読む）</td>
+<td>この stage の gate での gate ritual</td>
+</tr>
+</tbody></table>
+<p>2 つのコンパイル済み成果物、いずれもワークフローごと。<code>stage-graph.json</code> は解決済みの control-plane ビューを運ぶ: stage DAG、scope ルーティング、成果物の生産、加えて継承が事前解決された stage ごとの rule・sensor のリスト。<code>runtime-graph.json</code> は再コンパイルされる — audit ログの完全なイベントソース走査 — 遷移クラスの audit イベントごとに。ディスク上のソースファイルは著述サーフェスである; コンパイル済みグラフはランタイムが読むものである。</p>
+<h3 id="one-compile-at-workflow-start">ワークフロー開始時の 1 回の compile</h3>
+<p>compile は stage frontmatter を読み、<code>aidlc/spaces/&lt;active-space&gt;/memory/</code> と <code>.claude/sensors/</code> を歩き、universal-default rule をファイル名で付け（<code>org.md</code>、<code>team.md</code>、<code>project.md</code> は全 stage に適用される）、それから各 stage の pull インポートをソースレジストリに対してルックアップする:</p>
+<ul>
+<li>stage の <code>phase: &lt;name&gt;</code> フィールドは、合致する <code>phases/&lt;name&gt;.md</code> rule を付ける（stage ごとに 1 つの rule）。<a href="08-rule-system.html">Rule システム</a> を参照。</li>
+<li>stage の <code>sensors: [&lt;id&gt;, ...]</code> リストは各 id を <code>.claude/sensors/</code> に対して解決する。未知の id は compile を大きな音で失敗させる — stage は、それがインポートするものの発火に静かに失敗できない。<a href="07-sensor-system.html">Sensor システム</a> を参照。</li>
+</ul>
+<p>compile は答えを各 stage ノードに焼き込んだ <code>stage-graph.json</code> を発する。ワークフローを通じて、orchestrator と dispatcher はそれらの事前解決されたフィールドを読む。ワークフロー中の learning-loop の書き込みはソースファイルを更新するが、進行中のコンパイル済みビューには影響しない — ユーザーは既に stage 内で orchestrator を訂正済みである; rule は次回のためのものである。次のワークフローの compile がそれらを拾う。BGP がパケット飛行の途中で経路を再計算しないのと同じ形である。</p>
+<h3 id="locked-and-atomic">ロックされ、アトミック</h3>
+<p>compile が初日から対処せねばならない 2 つの失敗モード。この実装の Bolt ごとの worktree は、たいていの場合並列 agent のために状態を隔離するが、<code>data/stage-graph.json</code> は repo 共有であって worktree にスコープされない — そしてユーザーは同じチェックアウトに対して 2 つのターミナルで <code>/aidlc</code> を起動できる — ので、いずれにせよ compile には防御が必要である。</p>
+<ul>
+<li><strong>並行 compile</strong> は <code>data/stage-graph.json</code> への書き込みを競合させるだろう。compile は v0.4.0 以来 <code>withAuditLock</code> の下で走る（<code>lib.ts</code> を参照）ので、並行呼び出しは直列化される — 2 番目は 1 番目が終わるのを待ち、それから新鮮なソース状態に対して走る。</li>
+<li><strong>書き込み途中のクラッシュ。</strong> 書き込み途中で中断された compile は、consumer に無効な JSON を読ませてはならない。compile は temp ファイルに書き、出力を検証し、それから POSIX <code>rename(2)</code> でアトミックにリネームする。読み手は前の compile の出力か新しいものかのどちらかを見る — 半分書かれたファイルは決して見ない。</li>
+</ul>
+<p>どちらのパターンも state-and-audit の作業のため既にコードベースに住む; compile はそれらを継承する。</p>
+<h3 id="two-graphs-two-lifecycles">2 つのグラフ、2 つのライフサイクル</h3>
+<p>2 つのコンパイル済み成果物は、異なる consumer と異なる更新ケイデンスを持つ:</p>
+<ul>
+<li><strong><code>stage-graph.json</code></strong> — control plane。ワークフロー開始時に compile される。ワークフローの全寿命を通じて安定。orchestrator（DAG トポロジー、scope ルーティング）、dispatcher（stage ごとの <code>sensors_applicable</code>）が読む; Claude Code の auto-load は散文のコンテキストのため、ソースの rule ファイルを並行して消費する。</li>
+<li><strong><code>runtime-graph.json</code></strong> — data plane。<code>&lt;record&gt;/runtime-graph.json</code> にあるワークフローごとの成果物。遷移クラスの audit イベントごとに再コンパイルされる（audit ログの完全なイベントソース走査）。実行のテレメトリを集約する: どの stage が走ったか、どの Bolt が fork したか、どの sensor が発火したか、どの memory.md ファイルが存在するか。gate ritual（candidate を表面化するため）、doctor（実行の健全性のため）、将来のワークフロー横断オブザーバーが読む。スキーマ・compile ライフサイクル・回復モデルは <a href="13-runtime-graph.html">Runtime グラフ</a> を参照。</li>
+</ul>
+<p>それらを混ぜることは cacheability の境界を侵す。<code>stage-graph.json</code> はワークフローの寿命の間キャッシュされたい; <code>runtime-graph.json</code> はイベントごとに変異する。同じ成果物にすることは、data plane が sensor の発火を報告するたびに control plane 全体を再発行することを意味するだろう。</p>
+<h3 id="why-rules-and-sensors-flow-through-the-same-compile">なぜ rule と sensor が同じ compile を流れるか</h3>
+<p>compile はすべての control-plane 入力に対して対称である。Stage frontmatter、rule ファイル、sensor ファイルはすべて、ワークフロー開始時に <code>aidlc-graph.ts</code> が読む; すべてが解決済みの stage ごとのビューに寄与する。ネットワーキングはこれを行う — BGP と OSPF は同じ FIB を養う; ACL とポリシーは同じフローテーブルを養う。1 つのコンパイル済みビュー、複数のソース。</p>
+<p>具体的には、各 stage ノードは 2 つのフィールドを得る:</p>
+<pre><code class="language-json">{
+  &quot;slug&quot;: &quot;requirements-analysis&quot;,
+  &quot;phase&quot;: &quot;inception&quot;,
+  &quot;sensors&quot;: [&quot;required-sections&quot;, &quot;upstream-coverage&quot;],
+  &quot;rules_in_context&quot;: [
+    {&quot;path&quot;: &quot;aidlc/spaces/default/memory/org.md&quot;, &quot;scope&quot;: &quot;org&quot;},
+    {&quot;path&quot;: &quot;aidlc/spaces/default/memory/team.md&quot;, &quot;scope&quot;: &quot;team&quot;},
+    {&quot;path&quot;: &quot;aidlc/spaces/default/memory/project.md&quot;, &quot;scope&quot;: &quot;project&quot;},
+    {&quot;path&quot;: &quot;aidlc/spaces/default/memory/phases/inception.md&quot;, &quot;scope&quot;: &quot;phase&quot;}
+  ],
+  &quot;sensors_applicable&quot;: [
+    {&quot;id&quot;: &quot;required-sections&quot;, &quot;path&quot;: &quot;.claude/sensors/aidlc-required-sections.md&quot;},
+    {&quot;id&quot;: &quot;upstream-coverage&quot;, &quot;path&quot;: &quot;.claude/sensors/aidlc-upstream-coverage.md&quot;}
+  ]
+}
+</code></pre>
+<p><code>matches</code>（解決済みの sensor エントリに存在するとき）は sensor 側の capability filter — <em>「この sensor はこの glob に合致するファイルを分析する」</em> — であり、compile が manifest から逐語で stage の解決済みエントリにスナップショットする。PostToolUse hook は manifest を開き直すことなく発火時にそれを読む。</p>
+<p>2 つの帰結:</p>
+<ul>
+<li><strong>dispatcher はランタイムに解決の走査をしない。</strong> stage 入口は <code>sensors_applicable</code> をノードから読む — 既にルックアップされ、既に付いている。PostToolUse はこの事前解決されたリストから発火する。</li>
+<li><strong>doctor と designer は 1 つの解決済みビューを問い合わせる。</strong> 「この stage にどの rule が適用されるか？」「このファイルを編集するとどの sensor が発火するか？」どちらも <code>stage-graph.json</code> から直接答える、ファイルシステムの走査は無い。</li>
+</ul>
+<h3 id="the-networking-lesson-applied">適用されたネットワーキングの教訓</h3>
+<p>control plane（compile）が遅くて賢い仕事を一度行う; その後 data plane（orchestrator + dispatcher の読み取り）が解決済みビューの上で速く走る。ワークフロー開始時の compile はすべての stage ごとのインポートを解決する — すべての <code>sensors:</code> id がルックアップされ、すべての <code>phase:</code> が付き、universal-default rule がファイル名で拾われる。ワークフローを通じて、ランタイムはグラフノードから事前解決されたフィールドを読む。BGP はパケット飛行の途中で経路を再計算しない; AI-DLC はワークフローの途中で再コンパイルしない。ワークフロー中の learning-loop の書き込みはソースファイルを更新する; それらは次のワークフロー開始時にコンパイル済みビューに入る。</p>
+<hr>
+<h2 id="5-recovery-as-an-emergent-property">5. 創発的性質としての回復</h2>
+<p>今しがた記述した data plane — <code>runtime-graph.json</code>、audit ログ、state ドキュメント、<code>memory.md</code>、成果物ツリー — は、対価を払わずに得た性質を持つ。compaction 後やクリーンな再起動後に始まった新鮮な harness セッションは、これら 5 つのソースを一緒に読み、前のセッションが中断したところから引き継ぐのに十分なワークフローの状態を再構築できる。回復は v0.5.0 に足された機能ではない; 設計のデータ規律の創発的性質である。</p>
+<h3 id="five-sources-one-picture">5 つのソース、1 つの絵</h3>
+<table>
+<thead>
+<tr>
+<th>ソース</th>
+<th>何を記録するか</th>
+<th>読む順</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>成果物ツリー（<code>&lt;record&gt;/&lt;phase&gt;/&lt;stage&gt;/*.md</code>）</td>
+<td>決定そのもの、完成形で</td>
+<td>1 番目</td>
+</tr>
+<tr>
+<td>stage ごとの <code>memory.md</code></td>
+<td>意思決定中に気づかれたこと</td>
+<td>2 番目</td>
+</tr>
+<tr>
+<td>Audit ログ（<code>&lt;record&gt;/audit/</code> シャード）</td>
+<td>各決定がいつ起きたか、誰が承認したか</td>
+<td>3 番目</td>
+</tr>
+<tr>
+<td>State ドキュメント（<code>&lt;record&gt;/aidlc-state.md</code>、stage ごとの state）</td>
+<td>ワークフローの今どこにいるか</td>
+<td>4 番目</td>
+</tr>
+<tr>
+<td><code>runtime-graph.json</code></td>
+<td>stage 横断のサマリ（所要時間、sensor の発火、learnings の数）</td>
+<td>5 番目</td>
+</tr>
+</tbody></table>
+<p>成果物が最初に来るのは、それが実際に合意されたことの永続的な記録だからである。他の 4 つのソースは道のりについてである — 何が検討されたか、いつ起きたか、何が保留か、stage を跨いでパターンがどう見えるか。他人の半分終わった作業を引き継ぐ人間も同じように読む: 出力が最初、ノートが 2 番目、タイムラインが 3 番目、現在のカーソルが 4 番目、サマリビューが最後。</p>
+<h3 id="what-recovery-reconstructs-cleanly">回復がきれいに再構築するもの</h3>
+<p>決定、出力、stage 内のコンテキスト、タイムライン、現在位置、そしてどの Bolt がどんな結果で fork したか。5 つのソースを読む新鮮なセッションは、ワークフローが何を生産したか、ユーザーがどんな訂正をしたか、どの gate が承認されたか、何がまだ保留か、そして前の実行がおおよそどう進んでいたかを知る。</p>
+<h3 id="what-recovery-cant-reconstruct">回復が再構築できないもの</h3>
+<p>前のセッションの会話のリズム — ユーザーの stage 途中の Q&amp;A パターン、<code>memory.md</code> にコミットされる前の LLM の作業仮説、途中で中断された部分的なツール呼び出し。会話バッファはセッションとともに消える。これは LLM セッションの根本的な性質であり、修正可能な設計上の性質ではない。回復の仕事は、新しいセッションに再定位して続行するのに十分なものを与えることであり、前のセッションの正確な精神状態を再現することではない。</p>
+<h3 id="the-consistency-constraint">一貫性の制約</h3>
+<p>異なるコードパスによって書かれる 5 つのソースは、回復が機能するためにすべて合理的に一貫を保たねばならない。audit ログは正準である（追記専用、「何が起きたか」の真実の源）; 他の 4 つは、それらの書き込みが v0.4.0 以来の同じ <code>withAuditLock</code> プリミティブでゲートされるので、それと一貫する。5 つのいずれかを audit ログに対して読む新鮮なセッションは、ドリフトを検出して調停できる。</p>
+<h3 id="what-this-means-for-the-framework">これが framework にとって意味すること</h3>
+<p>framework は既にこれの小さな版を実践している: 今日の <code>aidlc-state.md</code> は intent の誕生時に書かれセッション再開時に読まれる <code>Scope</code> フィールドを運ぶので、ワークフローの scope は orchestrator がそれを再導出せずともコンテキストの compaction を生き延びる。一般化は、data plane のうち何か永続的なものを記録するすべての部分が、state ファイルだけでなく回復サーフェスの一部になる、ということである。より深い原則は、<em>data plane が回復のために構造化されている</em> ということである: すべての永続的な記録が回復サーフェスの一部であるがゆえに、再開の経路は bolt-on ではなく、既に存在する基盤の上の小さな追加である。</p>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<p>この章はレンズである; 開発者リファレンスの残りは、それを通して見た仕組みである。</p>
+<ul>
+<li><strong>稼働中の control plane</strong> — orchestrator がどうコンパイル済みの stage グラフを駆動するか。<a href="03-orchestrator.html">Orchestrator</a> を参照。</li>
+<li><strong>control-plane の入力</strong> — compile が各 stage ノードへ解決するソースファイル: <a href="07-sensor-system.html">Sensor システム</a>（manifest）と <a href="08-rule-system.html">Rule システム</a>（rule ファイル）。</li>
+<li><strong>data-plane の成果物</strong> — <code>runtime-graph.json</code> のスキーマ・compile ライフサイクル・回復モデル。<a href="13-runtime-graph.html">Runtime グラフ</a> を参照。</li>
+<li><strong>ユーザー向けのビュー</strong> — framework を構築する人ではなく、ワークフローを走らせる人向けに枠づけられた control/data/management。<a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/02-plane-architecture.md"><code>docs/reference/02-plane-architecture.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

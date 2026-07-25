@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Codex Manifest の形: Codex はどう Add-in を管理するか — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/research/Codex Manifest Shape Report</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../reference/01-architecture.html">Architecture</a>
+  <a href="../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../reference/09-testing.html">テスト</a>
+  <a href="../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../reference/research/Codex%20Manifest%20Shape%20Report.html" class="here">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#executive-summary">エグゼクティブサマリ</a>
+  <a href="#1-manifest-file-pluginjson">1. Manifest ファイル: plugin.json</a>
+  <a href="#2-field-reference">2. フィールドリファレンス</a>
+  <a href="#3-validation-rules-sdk-enforced">3. 検証ルール（SDK が強制）</a>
+  <a href="#4-directory-layout">4. ディレクトリレイアウト</a>
+  <a href="#5-component-wiring-how-add-ins-are-referenced">5. コンポーネントの結線: Add-in はどう参照されるか</a>
+  <a href="#6-distribution-the-marketplace-system">6. 配布: Marketplace システム</a>
+  <a href="#7-runtime-resolution-flow">7. ランタイム解決フロー</a>
+  <a href="#8-ecosystem-comparison">8. エコシステム比較</a>
+  <a href="#9-minimal-published-progression">9. 最小 → 公開への段階</a>
+  <a href="#10-key-takeaways">10. 主要な要点</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="codex-manifest-shape-how-codex-manages-add-ins">Codex Manifest の形: Codex はどう Add-in を管理するか</h1>
+<blockquote>
+<p><strong>Deep Research レポート</strong> | June 26, 2026<br><strong>出典</strong>: OpenAI 公式ドキュメント, Codex SDK v0.16.1 (HexDocs), HuggingFace Context Course, community guides, GitHub issues<br><strong>確信度</strong>: High — 一次ソースのドキュメント + SDK 型仕様 + 実務者による検証</p>
+</blockquote>
+<hr>
+<h2 id="executive-summary">エグゼクティブサマリ</h2>
+<p>OpenAI Codex は <strong>manifest-first plugin system</strong> を用いる。ここではすべての plugin が、必須の単一ファイル <code>.codex-plugin/plugin.json</code> によって識別される。この manifest は plugin の identity を宣言し、同梱されるコンポーネント（skills、MCP servers、app connectors、lifecycle hooks）を指し示し、marketplace 表示のための install-surface メタデータを提供する。</p>
+<p><strong>主要な事実:</strong></p>
+<ul>
+<li>manifest で厳密に必須なのは <code>name</code>（kebab-case）だけである</li>
+<li>plugin は最大 4 つのコンポーネント型を同梱する: Skills（脳）、Apps（手）、MCP Servers（神経系）、Hooks（ライフサイクル）</li>
+<li>配布は Git ネイティブな marketplace を用いる — repo スコープ・personal・official のいずれかになり得る JSON カタログである</li>
+<li>plugin は <code>~/.codex/plugins/cache/$MARKETPLACE/$PLUGIN/$VERSION/</code> にインストールされる</li>
+<li>このシステムは前方互換である: 未知のキーは <code>extra</code> map を介してラウンドトリップのシリアライズを生き延びる</li>
+</ul>
+<hr>
+<h2 id="1-manifest-file-pluginjson">1. Manifest ファイル: <code>plugin.json</code></h2>
+<h3 id="location-role">位置と役割</h3>
+<p>manifest は <code>.codex-plugin/plugin.json</code> に住む — <code>.codex-plugin/</code> ディレクトリ内で許される唯一のファイルである。他のすべてのコンポーネント（<code>skills/</code>、<code>hooks/</code>、<code>assets/</code>、<code>.mcp.json</code>、<code>.app.json</code>）は plugin root に住む。</p>
+<p>manifest は 3 つの仕事を持つ:</p>
+<ol>
+<li>plugin を <strong>識別する</strong>（name、version、author）</li>
+<li><strong>同梱コンポーネントを指し示す</strong>（skills、MCP servers、apps、hooks）</li>
+<li><strong>marketplace メタデータを提供する</strong>（説明、アイコン、法的リンク、スターター prompt）</li>
+</ol>
+<h3 id="complete-manifest-example">完全な Manifest の例</h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;my-plugin&quot;,
+  &quot;version&quot;: &quot;0.1.0&quot;,
+  &quot;description&quot;: &quot;Bundle reusable skills and app integrations.&quot;,
+  &quot;author&quot;: {
+    &quot;name&quot;: &quot;Your team&quot;,
+    &quot;email&quot;: &quot;team@example.com&quot;,
+    &quot;url&quot;: &quot;https://example.com&quot;
+  },
+  &quot;homepage&quot;: &quot;https://example.com/plugins/my-plugin&quot;,
+  &quot;repository&quot;: &quot;https://github.com/example/my-plugin&quot;,
+  &quot;license&quot;: &quot;MIT&quot;,
+  &quot;keywords&quot;: [&quot;research&quot;, &quot;crm&quot;],
+  &quot;skills&quot;: &quot;./skills/&quot;,
+  &quot;mcpServers&quot;: &quot;./.mcp.json&quot;,
+  &quot;apps&quot;: &quot;./.app.json&quot;,
+  &quot;hooks&quot;: &quot;./hooks/hooks.json&quot;,
+  &quot;interface&quot;: {
+    &quot;displayName&quot;: &quot;My Plugin&quot;,
+    &quot;shortDescription&quot;: &quot;Reusable skills and apps&quot;,
+    &quot;longDescription&quot;: &quot;Distribute skills and app integrations together.&quot;,
+    &quot;developerName&quot;: &quot;Your team&quot;,
+    &quot;category&quot;: &quot;Productivity&quot;,
+    &quot;capabilities&quot;: [&quot;Read&quot;, &quot;Write&quot;],
+    &quot;websiteURL&quot;: &quot;https://example.com&quot;,
+    &quot;privacyPolicyURL&quot;: &quot;https://example.com/privacy&quot;,
+    &quot;termsOfServiceURL&quot;: &quot;https://example.com/terms&quot;,
+    &quot;defaultPrompt&quot;: [
+      &quot;Use My Plugin to summarize new CRM notes.&quot;,
+      &quot;Use My Plugin to triage new customer follow-ups.&quot;
+    ],
+    &quot;brandColor&quot;: &quot;#10A37F&quot;,
+    &quot;composerIcon&quot;: &quot;./assets/icon.png&quot;,
+    &quot;logo&quot;: &quot;./assets/logo.png&quot;,
+    &quot;screenshots&quot;: [&quot;./assets/screenshot-1.png&quot;]
+  }
+}
+</code></pre>
+<blockquote>
+<p>出典: <a href="https://developers.openai.com/codex/plugins/build">developers.openai.com/codex/plugins/build</a></p>
+</blockquote>
+<hr>
+<h2 id="2-field-reference">2. フィールドリファレンス</h2>
+<h3 id="top-level-required-fields">トップレベルの必須フィールド</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>型</th>
+<th>検証</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>string</td>
+<td><strong>空でない kebab-case</strong> でなければならない（小文字・数字・ハイフンのみ）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>厳密に必須なのは <code>name</code> だけである。それ以外はすべて任意である。</p>
+</blockquote>
+<h3 id="top-level-optional-fields">トップレベルの任意フィールド</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>型</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>version</code></td>
+<td>string</td>
+<td>Semver 文字列（例: <code>&quot;1.0.0&quot;</code>）— cache パスを決定する</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>string</td>
+<td>人間が読めるサマリ</td>
+</tr>
+<tr>
+<td><code>author</code></td>
+<td>object</td>
+<td><code>{name, email?, url?}</code></td>
+</tr>
+<tr>
+<td><code>homepage</code></td>
+<td>string</td>
+<td>ランディングページの URL</td>
+</tr>
+<tr>
+<td><code>repository</code></td>
+<td>string</td>
+<td>ソースコード repo の URL</td>
+</tr>
+<tr>
+<td><code>license</code></td>
+<td>string</td>
+<td>SPDX 識別子（例: <code>&quot;MIT&quot;</code>）</td>
+</tr>
+<tr>
+<td><code>keywords</code></td>
+<td>string[]</td>
+<td>発見用タグ</td>
+</tr>
+<tr>
+<td><code>skills</code></td>
+<td>string</td>
+<td>skills ディレクトリへのパス（<code>./</code> で始めねばならない）</td>
+</tr>
+<tr>
+<td><code>mcpServers</code></td>
+<td>string</td>
+<td><code>.mcp.json</code> ファイルへのパス</td>
+</tr>
+<tr>
+<td><code>apps</code></td>
+<td>string</td>
+<td><code>.app.json</code> ファイルへのパス</td>
+</tr>
+<tr>
+<td><code>hooks</code></td>
+<td>string/array/object</td>
+<td>パス（複数可）またはインラインの hook 定義</td>
+</tr>
+<tr>
+<td><code>interface</code></td>
+<td>object</td>
+<td>install-surface メタデータ（§3 を参照）</td>
+</tr>
+</tbody></table>
+<h3 id="the-interface-object">The <code>interface</code> Object</h3>
+<table>
+<thead>
+<tr>
+<th>JSON キー</th>
+<th>目的</th>
+<th>制約</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>displayName</code></td>
+<td>marketplace 上の plugin タイトル</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>shortDescription</code></td>
+<td>plugin カード上の 1 行説明</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>longDescription</code></td>
+<td>詳細ページの説明</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>developerName</code></td>
+<td>パブリッシャ名</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>marketplace カテゴリ</td>
+<td>例: <code>&quot;Productivity&quot;</code></td>
+</tr>
+<tr>
+<td><code>capabilities</code></td>
+<td>capability バッジ</td>
+<td>例: <code>[&quot;Read&quot;, &quot;Write&quot;]</code></td>
+</tr>
+<tr>
+<td><code>websiteURL</code></td>
+<td>外部リンク</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>privacyPolicyURL</code></td>
+<td>プライバシーポリシー</td>
+<td>公開 plugin には必須</td>
+</tr>
+<tr>
+<td><code>termsOfServiceURL</code></td>
+<td>利用規約</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>defaultPrompt</code></td>
+<td>composer 内のスターター prompt</td>
+<td><strong>最大 3 件、各 ≤128 文字</strong></td>
+</tr>
+<tr>
+<td><code>brandColor</code></td>
+<td>Hex カラー</td>
+<td>例: <code>&quot;#10A37F&quot;</code></td>
+</tr>
+<tr>
+<td><code>composerIcon</code></td>
+<td>アイコンパス</td>
+<td><code>./assets/icon.png</code></td>
+</tr>
+<tr>
+<td><code>logo</code></td>
+<td>ロゴパス</td>
+<td><code>./assets/logo.png</code></td>
+</tr>
+<tr>
+<td><code>screenshots</code></td>
+<td>スクリーンショットパス</td>
+<td><code>./assets/*</code> パスの配列</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="3-validation-rules-sdk-enforced">3. 検証ルール（SDK が強制）</h2>
+<p>Codex SDK（Elixir, <code>Codex.Plugins.Manifest.parse!/1</code>）はこれらの安定したルールを強制する:</p>
+<table>
+<thead>
+<tr>
+<th>ルール</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>kebab-case 名</td>
+<td>空でなく、小文字 + 数字 + ハイフンのみ</td>
+</tr>
+<tr>
+<td><code>./</code> プレフィックス必須</td>
+<td>すべてのコンポーネントパスと asset パスは <code>./</code> で始めねばならない</td>
+</tr>
+<tr>
+<td><code>..</code> エスケープ禁止</td>
+<td>パスは plugin root より上をたどれない</td>
+</tr>
+<tr>
+<td>defaultPrompt の上限</td>
+<td>最大 <strong>3</strong> 件</td>
+</tr>
+<tr>
+<td>prompt 長の上限</td>
+<td>空白正規化後、各 ≤<strong>128 文字</strong></td>
+</tr>
+<tr>
+<td>決定論的 JSON</td>
+<td>書き込みは末尾改行付きの安定した JSON を生む</td>
+</tr>
+<tr>
+<td>前方互換キー</td>
+<td>未知のキーは <code>extra</code> map に保持され、ラウンドトリップを生き延びる</td>
+</tr>
+</tbody></table>
+<pre><code class="language-elixir"># Validation API
+{:ok, manifest} = Codex.Plugins.Manifest.parse(data)
+Codex.Plugins.Manifest.parse!(data)  # raises on error
+</code></pre>
+<hr>
+<h2 id="4-directory-layout">4. ディレクトリレイアウト</h2>
+<pre class="term"><code>my-plugin/                          ← plugin root
+├── .codex-plugin/
+│   └── plugin.json                 ← REQUIRED (only file in this dir)
+├── skills/                         ← "skills": "./skills/"
+│   ├── code-review/
+│   │   └── SKILL.md
+│   └── deploy/
+│       └── SKILL.md
+├── hooks/
+│   └── hooks.json                  ← "hooks": "./hooks/hooks.json"
+├── .app.json                       ← "apps": "./.app.json"
+├── .mcp.json                       ← "mcpServers": "./.mcp.json"
+└── assets/
+    ├── icon.png
+    ├── logo.png
+    └── screenshot-1.png</code></pre>
+<hr>
+<h2 id="5-component-wiring-how-add-ins-are-referenced">5. コンポーネントの結線: Add-in はどう参照されるか</h2>
+<h3 id="51-skills-the-brain-layer">5.1 Skills（「脳」レイヤー）</h3>
+<p><strong>Manifest ポインタ</strong>: <code>&quot;skills&quot;: &quot;./skills/&quot;</code></p>
+<p>Codex はディレクトリを走査し、<code>SKILL.md</code> ファイルを含むサブディレクトリを探す。各 skill は YAML frontmatter を持つ:</p>
+<pre><code class="language-markdown">---
+name: deploy-kubernetes
+description: Deploy containerized apps to Kubernetes clusters.
+---
+
+## Workflow
+1. Verify kubectl context...
+2. Generate manifests...
+</code></pre>
+<p><strong>アクティベーションモード:</strong></p>
+<ul>
+<li><strong>Implicit</strong>（既定）: user のタスクが <code>description</code> に意味的に合致するとき自動ロードされる</li>
+<li><strong>Explicit</strong>: <code>$skill-name</code> 構文で起動される</li>
+</ul>
+<p><strong>設定の上書き</strong>（<code>config.toml</code>）:</p>
+<pre><code class="language-toml">[skills.deploy-kubernetes]
+enabled = true
+invocation = &quot;explicit&quot;    # or &quot;implicit&quot;
+priority = 10              # higher wins on conflicts
+</code></pre>
+<p><strong>解決の優先順位</strong>: REPO &gt; USER &gt; ADMIN &gt; SYSTEM &gt; DEFAULTS</p>
+<hr>
+<h3 id="52-mcp-servers-the-nervous-system-layer">5.2 MCP Servers（「神経系」レイヤー）</h3>
+<p><strong>Manifest ポインタ</strong>: <code>&quot;mcpServers&quot;: &quot;./.mcp.json&quot;</code></p>
+<p>等価な 2 つの形式:</p>
+<pre><code class="language-json">// Direct server map
+{
+  &quot;docs&quot;: {
+    &quot;command&quot;: &quot;docs-mcp&quot;,
+    &quot;args&quot;: [&quot;--stdio&quot;]
+  }
+}
+
+// Wrapped (alternative)
+{
+  &quot;mcp_servers&quot;: {
+    &quot;docs&quot;: {
+      &quot;command&quot;: &quot;docs-mcp&quot;,
+      &quot;args&quot;: [&quot;--stdio&quot;]
+    }
+  }
+}
+</code></pre>
+<p>各サーバエントリ: <code>command</code>（必須）、<code>args</code>（必須）、<code>env</code>（任意）。</p>
+<p><strong>サーバごとの policy 上書き</strong>（<code>config.toml</code>）:</p>
+<pre><code class="language-toml">[plugins.&quot;my-plugin&quot;.mcp_servers.docs]
+enabled = true
+default_tools_approval_mode = &quot;prompt&quot;
+enabled_tools = [&quot;search&quot;]
+
+[plugins.&quot;my-plugin&quot;.mcp_servers.docs.tools.search]
+approval_mode = &quot;approve&quot;
+</code></pre>
+<p><strong>承認モード</strong>: <code>&quot;approve&quot;</code>（自動実行）、<code>&quot;prompt&quot;</code>（user に尋ねる）、<code>&quot;deny&quot;</code>（ブロック）</p>
+<hr>
+<h3 id="53-appsconnectors-the-hands-layer">5.3 Apps/Connectors（「手」レイヤー）</h3>
+<p><strong>Manifest ポインタ</strong>: <code>&quot;apps&quot;: &quot;./.app.json&quot;</code></p>
+<p>認証付きのサードパーティサービス connector を定義する:</p>
+<pre><code class="language-json">{
+  &quot;apps&quot;: [{
+    &quot;name&quot;: &quot;github-connector&quot;,
+    &quot;auth&quot;: {
+      &quot;type&quot;: &quot;oauth2&quot;,
+      &quot;client_id&quot;: &quot;${GITHUB_CLIENT_ID}&quot;,
+      &quot;authorization_url&quot;: &quot;https://github.com/login/oauth/authorize&quot;,
+      &quot;token_url&quot;: &quot;https://github.com/login/oauth/access_token&quot;,
+      &quot;scopes&quot;: [&quot;repo&quot;, &quot;read:org&quot;]
+    }
+  }]
+}
+</code></pre>
+<p><strong>認証タイプ</strong>: OAuth 2.0, API key<br><strong>認証のタイミング</strong>: marketplace policy によって制御される — <code>ON_INSTALL</code> または <code>ON_FIRST_USE</code></p>
+<hr>
+<h3 id="54-lifecycle-hooks">5.4 ライフサイクル Hooks</h3>
+<p><strong>Manifest ポインタ</strong>: <code>&quot;hooks&quot;: &quot;./hooks/hooks.json&quot;</code>（指定しなければ自動発見される）</p>
+<p><code>hooks</code> フィールドは <strong>4 つの形式</strong> を受理する:</p>
+<ol>
+<li>単一パス: <code>&quot;./hooks/hooks.json&quot;</code></li>
+<li>パスの配列: <code>[&quot;./hooks/session.json&quot;, &quot;./hooks/tools.json&quot;]</code></li>
+<li>インラインオブジェクト</li>
+<li>インラインオブジェクトの配列</li>
+</ol>
+<p><strong>Hook イベントスキーマ</strong>:</p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;SessionStart&quot;: [{
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;python3 ${PLUGIN_ROOT}/hooks/session_start.py&quot;,
+        &quot;statusMessage&quot;: &quot;Loading plugin context&quot;
+      }]
+    }]
+  }
+}
+</code></pre>
+<p><strong>サポートされるイベント</strong>: <code>SessionStart</code>, <code>TurnStarted</code>, <code>TurnCompleted</code>, <code>ToolCallRequested</code>, <code>ToolCallCompleted</code></p>
+<p>hook コマンドで利用可能な <strong>環境変数</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>変数</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PLUGIN_ROOT</code></td>
+<td>インストール済み plugin の root パス</td>
+</tr>
+<tr>
+<td><code>PLUGIN_DATA</code></td>
+<td>plugin の書き込み可能なデータディレクトリ</td>
+</tr>
+<tr>
+<td><code>CLAUDE_PLUGIN_ROOT</code></td>
+<td>互換エイリアス</td>
+</tr>
+<tr>
+<td><code>CLAUDE_PLUGIN_DATA</code></td>
+<td>互換エイリアス</td>
+</tr>
+</tbody></table>
+<p><strong>⚠️ 信頼モデル</strong>: plugin の hook は <strong>non-managed</strong> である — user が hook 定義を明示的にレビューして信頼するまで、Codex はそれらをスキップする。plugin をインストールしても、その hook が自動的に信頼されることは無い。</p>
+<hr>
+<h2 id="6-distribution-the-marketplace-system">6. 配布: Marketplace システム</h2>
+<h3 id="marketplace-json-structure">Marketplace JSON 構造</h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;repo-marketplace&quot;,
+  &quot;interface&quot;: { &quot;displayName&quot;: &quot;Team Plugins&quot; },
+  &quot;plugins&quot;: [
+    {
+      &quot;name&quot;: &quot;demo-plugin&quot;,
+      &quot;source&quot;: {
+        &quot;source&quot;: &quot;local&quot;,
+        &quot;path&quot;: &quot;./plugins/demo-plugin&quot;
+      },
+      &quot;policy&quot;: {
+        &quot;installation&quot;: &quot;AVAILABLE&quot;,
+        &quot;authentication&quot;: &quot;ON_INSTALL&quot;,
+        &quot;products&quot;: [&quot;codex-app&quot;, &quot;codex-cli&quot;]
+      },
+      &quot;category&quot;: &quot;Productivity&quot;
+    }
+  ]
+}
+</code></pre>
+<h3 id="marketplace-scopes">Marketplace スコープ</h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>場所</th>
+<th>可視性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Official</td>
+<td>OpenAI ホスト</td>
+<td>全員</td>
+</tr>
+<tr>
+<td>Repository</td>
+<td><code>$REPO_ROOT/.agents/plugins/marketplace.json</code></td>
+<td>repo の協力者</td>
+</tr>
+<tr>
+<td>Personal</td>
+<td><code>~/.agents/plugins/marketplace.json</code></td>
+<td>現在の user</td>
+</tr>
+<tr>
+<td>Legacy</td>
+<td><code>$REPO_ROOT/.claude-plugin/marketplace.json</code></td>
+<td>クロスツール互換</td>
+</tr>
+</tbody></table>
+<h3 id="source-types">ソースタイプ</h3>
+<table>
+<thead>
+<tr>
+<th>タイプ</th>
+<th>形式</th>
+<th>ユースケース</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>local</code></td>
+<td><code>&quot;./relative/path&quot;</code></td>
+<td>同一 repo の plugin</td>
+</tr>
+<tr>
+<td><code>url</code></td>
+<td>完全な HTTPS/SSH URL</td>
+<td>単独の plugin repo</td>
+</tr>
+<tr>
+<td><code>git-subdir</code></td>
+<td>URL + サブディレクトリパス</td>
+<td>Monorepo の plugin</td>
+</tr>
+<tr>
+<td>GitHub shorthand</td>
+<td><code>owner/repo[@ref]</code></td>
+<td>手早い参照</td>
+</tr>
+</tbody></table>
+<p><strong>Git 由来の marketplace エントリの例:</strong></p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;remote-helper&quot;,
+  &quot;source&quot;: {
+    &quot;source&quot;: &quot;git-subdir&quot;,
+    &quot;url&quot;: &quot;https://github.com/example/codex-plugins.git&quot;,
+    &quot;path&quot;: &quot;./plugins/remote-helper&quot;,
+    &quot;ref&quot;: &quot;main&quot;
+  },
+  &quot;policy&quot;: {
+    &quot;installation&quot;: &quot;AVAILABLE&quot;,
+    &quot;authentication&quot;: &quot;ON_INSTALL&quot;
+  },
+  &quot;category&quot;: &quot;Productivity&quot;
+}
+</code></pre>
+<h3 id="policy-controls">Policy 制御</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+<th>効果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>policy.installation</code></td>
+<td><code>AVAILABLE</code>, <code>PREINSTALLED</code>, <code>HIDDEN</code></td>
+<td>発見/自動インストールの挙動</td>
+</tr>
+<tr>
+<td><code>policy.authentication</code></td>
+<td><code>ON_INSTALL</code>, <code>ON_FIRST_USE</code>, <code>NONE</code></td>
+<td>認証のタイミング</td>
+</tr>
+<tr>
+<td><code>policy.products</code></td>
+<td>string[]</td>
+<td>特定の Codex サーフェスに制限する</td>
+</tr>
+</tbody></table>
+<h3 id="cli-commands">CLI コマンド</h3>
+<pre><code class="language-bash"># Marketplace management
+codex plugin marketplace add owner/repo
+codex plugin marketplace add ./local-path
+codex plugin marketplace list
+codex plugin marketplace upgrade
+codex plugin marketplace remove &lt;name&gt;
+
+# Plugin lifecycle
+codex plugin install &lt;plugin-name&gt;
+codex plugin enable &lt;plugin-id&gt;
+codex plugin disable &lt;plugin-id&gt;
+codex plugin remove &lt;plugin-id&gt;
+codex plugin upgrade &lt;plugin-id&gt;
+</code></pre>
+<h3 id="install-cache">インストール Cache</h3>
+<p>plugin は次にインストールされる:</p>
+<pre class="term"><code>~/.codex/plugins/cache/$MARKETPLACE_NAME/$PLUGIN_NAME/$VERSION/</code></pre>
+<ul>
+<li>ローカル plugin: <code>$VERSION = &quot;local&quot;</code></li>
+<li>Codex は source ではなく <strong>cache</strong> からロードする（オフライン利用を可能にする）</li>
+<li>cache はアンインストール後も残る（再有効化をサポートする）</li>
+<li>バージョン検証のために <code>gitCommitSha</code> を追跡する</li>
+</ul>
+<h3 id="plugin-state">Plugin の状態</h3>
+<p>設定ファイルで制御される:</p>
+<ul>
+<li>User: <code>~/.codex/settings.json</code></li>
+<li>Project: <code>./.codex/settings.json</code>（git 管理下）</li>
+<li>Local: <code>./.codex/settings.local.json</code>（gitignore 対象）</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;enabledPlugins&quot;: {
+    &quot;my-plugin@repo-marketplace&quot;: true,
+    &quot;experimental@personal&quot;: false
+  }
+}
+</code></pre>
+<hr>
+<h2 id="7-runtime-resolution-flow">7. ランタイム解決フロー</h2>
+<pre class="term"><code>                    ┌─────────────────────────────┐
+                    │    .codex-plugin/plugin.json │
+                    └──────────────┬──────────────┘
+           ┌───────────┬──────────┼──────────┬──────────────┐
+           ▼           ▼          ▼          ▼              ▼
+      "skills"    "mcpServers"  "apps"    "hooks"     "interface"
+      "./skills/" "./.mcp.json" ".app"   "./hooks/"<span class="t-comment">   (metadata)</span>
+           │           │          │          │
+           ▼           ▼          ▼          ▼
+    ┌──────────┐ ┌─────────┐ ┌────────┐ ┌─────────┐
+    │ Scan for │ │ Spawn   │ │Resolve │ │ Await   │
+    │ SKILL.md │ │ process │ │ creds  │ │ user    │
+    │ files    │ │ per     │ │(OAuth/ │ │ trust   │
+    │          │ │ entry   │ │ APIkey)│ │ review  │
+    └────┬─────┘ └────┬────┘ └───┬────┘ └────┬────┘
+         ▼            ▼          ▼           ▼
+    ┌──────────┐ ┌─────────┐ ┌────────┐ ┌─────────┐
+    │ Index by │ │Register │ │Register│ │ Execute │
+    │ name+desc│ │ tools   │ │ caps   │ │ command │
+    │ for auto │ │ in agent│ │ as     │ │ on      │
+    │ matching │ │         │ │ tools  │ │ event   │
+    └──────────┘ └─────────┘ └────────┘ └─────────┘</code></pre>
+<p><strong>インストール時</strong>: ファイルが cache にコピーされる → コンポーネントが登録される<br><strong>ランタイム時</strong>: 有効な plugin がロードされる → skills が索引される → MCP servers が spawn される → apps が有効化される → 信頼された hook がアームされる</p>
+<hr>
+<h2 id="8-ecosystem-comparison">8. エコシステム比較</h2>
+<table>
+<thead>
+<tr>
+<th>次元</th>
+<th>Codex</th>
+<th>Claude Code</th>
+<th>Cursor</th>
+<th>VS Code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>モデル</td>
+<td>Manifest-first</td>
+<td>Manifest-first</td>
+<td>IDE ネイティブ</td>
+<td>Extension API</td>
+</tr>
+<tr>
+<td>Manifest</td>
+<td><code>.codex-plugin/plugin.json</code></td>
+<td><code>.claude-plugin/plugin.json</code></td>
+<td>N/A</td>
+<td><code>package.json</code></td>
+</tr>
+<tr>
+<td>配布</td>
+<td>Git repo + cache</td>
+<td>Git repo + cache</td>
+<td>中央ストア</td>
+<td><code>.vsix</code> パッケージ</td>
+</tr>
+<tr>
+<td>コンポーネント</td>
+<td>Skills + MCP + Apps + Hooks</td>
+<td>Skills + MCP + Hooks + LSP</td>
+<td>Extension</td>
+<td>Extension</td>
+</tr>
+<tr>
+<td>オフライン</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>クロスツール MCP</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅（consumer）</td>
+<td>❌</td>
+</tr>
+</tbody></table>
+<p><strong>重要な洞察</strong>: MCP は普遍的な相互運用レイヤーである。よく作られた MCP server は Codex、Claude Code、Cursor をまたいで動く。ラッピングのレイヤー（marketplace メタデータ、skill 定義）はツール固有だが、機能的なインフラはポータブルである。</p>
+<hr>
+<h2 id="9-minimal-published-progression">9. 最小 → 公開への段階</h2>
+<h3 id="absolute-minimum-valid">絶対的な最小（有効）</h3>
+<pre><code class="language-json">{ &quot;name&quot;: &quot;my-plugin&quot; }
+</code></pre>
+<h3 id="minimal-functional">最小限の機能</h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;my-plugin&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;Reusable greeting workflow&quot;,
+  &quot;skills&quot;: &quot;./skills/&quot;
+}
+</code></pre>
+<h3 id="published-quality">公開品質</h3>
+<p>§1 の例のすべてのフィールド。特に次に注意する:</p>
+<ul>
+<li><code>interface.privacyPolicyURL</code> と <code>termsOfServiceURL</code>（official ディレクトリには必須）</li>
+<li><code>interface.defaultPrompt</code>（最大 3 × 128 文字のスターター prompt）</li>
+<li><code>interface.logo</code> と <code>screenshots</code>（marketplace でのプレゼンス）</li>
+<li>少なくとも <code>name</code> を持つ <code>author</code></li>
+<li>発見性のための <code>keywords</code></li>
+</ul>
+<hr>
+<h2 id="10-key-takeaways">10. 主要な要点</h2>
+<ol>
+<li><strong>Manifest-first は宣言的である</strong> — インストール時にコードは走らない; JSON は検査可能でポータブルである</li>
+<li><strong>必須なのは <code>name</code> だけ</strong> — 最小限で始め、必要に応じて複雑さを足す</li>
+<li><strong>3 層アーキテクチャ</strong> が関心を分離する: Skills（知識）、Apps（認証）、MCP（ツール）</li>
+<li><strong>信頼は明示的である</strong> — hook は自動実行されない; user はレビューして承認せねばならない</li>
+<li><strong>前方互換</strong> — 未知のキーは <code>extra</code> map を介して SDK のラウンドトリップを生き延びる</li>
+<li><strong>Git ネイティブな配布</strong> — plugin は repo に住む; コンパイル無し、ビルドステップ無し</li>
+<li><strong>MCP はポータビリティのレイヤーである</strong> — 同じ server が Codex、Claude Code、Cursor をまたいで動く</li>
+</ol>
+<hr>
+<p><em>3 つの並行リサーチトラックから編集した。個別の agent ファイルは <code>artifacts/research/codex-manifest-shape/</code> にある。</em><br><em>一次ソース: <a href="https://developers.openai.com/codex/plugins/build">OpenAI Codex Docs</a>, <a href="https://hexdocs.pm/codex_sdk/13-plugin-authoring.html">Codex SDK HexDocs</a>, <a href="https://huggingface.co/learn/context-course/unit3/anatomy.md">HuggingFace Context Course</a></em></p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/research/Codex%20Manifest%20Shape%20Report.md"><code>docs/reference/research/Codex Manifest Shape Report.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>チーム Knowledge — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / harness-engineering/07-team-knowledge</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">HARNESS ENGINEERING</div>
+  <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a>
+  <a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>
+  <a href="../harness-engineering/02-adding-a-stage.html">Stage を足す</a>
+  <a href="../harness-engineering/03-adding-an-agent.html">Agent を足す</a>
+  <a href="../harness-engineering/04-scopes.html">Scope</a>
+  <a href="../harness-engineering/05-rules-and-the-loop.html">Rule と学習ループ</a>
+  <a href="../harness-engineering/06-sensors.html">Sensor</a>
+  <a href="../harness-engineering/07-team-knowledge.html" class="here">チーム Knowledge</a>
+  <a href="../harness-engineering/08-construction-and-swarm.html">Construction と swarm</a>
+  <a href="../harness-engineering/09-porting-to-a-new-harness.html">AI-DLC を新しい harness へ移植する</a>
+  <a href="../harness-engineering/10-authoring-a-plugin.html">Plugin を著述する</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#two-tiers-framework-knowledge-and-yours">2 つの層: フレームワークの knowledge とあなたの</a>
+  <a href="#team-wide-versus-agent-specific-placement">チーム全体 対 agent 固有の配置</a>
+  <a href="#how-an-agent-loads-knowledge">agent が knowledge をどうロードするか</a>
+  <a href="#knowledge-or-a-rule">knowledge か rule か？</a>
+  <a href="#where-the-tier-2-tree-comes-from">Tier 2 ツリーはどこから来るか</a>
+  <a href="#spaces-knowledge-for-more-than-one-team">Space: 複数チームのための knowledge</a>
+  <a href="#next">次へ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / HARNESS-ENGINEERING</p>
+<h1 id="team-knowledge">チーム Knowledge</h1>
+<p>knowledge は、agent が働く前に読むドメインのコンテキストである: あなたのコーディング標準、
+アーキテクチャの好み、ドメインの用語集、チームが定めたパターン。それは、フレームワークが
+強制する制約ではなく、agent が読むファイルを足すことであなたが形作る harness の一部分である。
+この章は、agent にそのコンテキストを与えるためのワークフローを歩く — ファイルがどこへ行くか、
+どの agent がそれらを見るか、そして knowledge と rule のあいだの判断。</p>
+<p><a href="05-rules-and-the-loop.html">Rule と学習ループ</a> を読んだなら、その区別を通して念頭に置く
+こと: rule はフレームワークが強制する恒常的な決定である; knowledge は agent が働きながら量る
+参照材料である。両者は agent の振る舞いを形作るが、異なる plane に座り、異なる形でロードされる。</p>
+<hr>
+<h2 id="two-tiers-framework-knowledge-and-yours">2 つの層: フレームワークの knowledge とあなたの</h2>
+<p>AI-DLC の knowledge は 2 つの層に分かれ、そのうち 1 つだけがあなたが編集するものである。</p>
+<p><strong>Tier 1 — methodology knowledge</strong> は、この実装に <code>.claude/knowledge/</code> の下で同梱される。
+それは各 agent が stage を走らせるのに使う方法論の参照を保持する —
+<code>aidlc-architect-agent/architecture-guide.md</code>、
+<code>aidlc-developer-agent/code-generation-guide.md</code>、そして <code>aidlc-shared/</code> の agent 横断の
+材料。<strong>触れないこと。</strong> これらのファイルはフレームワークのアップグレードのたびに上書きされる。
+そこに足したものは、チームが次に新しいバージョンを pull するとき消える。</p>
+<p><strong>Tier 2 — team knowledge</strong> はあなたのものである。それは space レベルの
+<code>aidlc/knowledge/</code>（<code>aidlc/spaces/&lt;space&gt;/knowledge/</code> の略記）の下に住み、space の
+<code>memory/</code>・<code>codekb/</code>・<code>intents/</code> の兄弟である — なので、1 つの intent の record に閉じ込め
+られるのではなく、space 内のすべての intent にまたがって蓄積する。それはあなたの会社固有の
+標準、ポリシー、規約を保持する。フレームワークはそれを決して上書きしない; エンジンは最初の
+<code>/aidlc</code> で空の <code>aidlc/knowledge/</code> ディレクトリを作るだけで、中身はあなたに委ねる。これが
+あなたが populate するディレクトリである。（フレームワークが<em>強制</em>すべき恒常的なプラクティス
+— agent が量る参照材料ではなく — は、代わりに <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> の
+space の memory レイヤーに住む。）</p>
+<p>2 層の分割は、このガイドの残りが乗るのと同じデータ対コードの線を、knowledge に適用したもの
+である: フレームワークはその方法論を所有し、あなたはあなたのコンテキストを所有し、アップグレード
+は一方に触れず他方を置き換えられる。両層の完全なディレクトリ形状は
+<a href="../reference/10-knowledge-system.html#two-tier-architecture">Knowledge System → 2 層アーキテクチャ</a>
+にある。</p>
+<hr>
+<h2 id="team-wide-versus-agent-specific-placement">チーム全体 対 agent 固有の配置</h2>
+<p>Tier 2 は慣習として agent のレイアウトに従う: <code>aidlc-shared/</code> ディレクトリと、agent ごとの
+1 ディレクトリ、すべて space レベルの <code>aidlc/knowledge/</code> の下。ファイルをどこに落とすかが、
+どの agent がそれをロードするかを決める。</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>ロードする者</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>aidlc/knowledge/aidlc-shared/</code></td>
+<td><strong>すべての</strong> agent、すべての stage で</td>
+<td>横断的な標準 — 命名規約、commit フォーマット、プロジェクトのドメイン用語集</td>
+</tr>
+<tr>
+<td><code>aidlc/knowledge/&lt;agent&gt;-agent/</code></td>
+<td><strong>その agent のみ</strong>、それがアクティブな lead のときだけ</td>
+<td>1 つの役割のためのドメインコンテキスト — architect のアーキテクチャパターン、devsecops のセキュリティポリシー</td>
+</tr>
+</tbody></table>
+<p>ディレクトリ名は agent の slug と正確に一致せねばならない — <code>architect/</code> ではなく
+<code>aidlc-architect-agent/</code>。ディレクトリ名のタイプミスは、ファイルが静かに無視される最も一般的な
+理由である: フレームワークは agent 自身のディレクトリを名前で歩き、何も見つけず、エラー無しに
+進む。エンジンはこれらのサブディレクトリをあなたのために作らない — <code>aidlc/knowledge/</code> は
+ブートストラップ時は空である（下を参照）ので、各ディレクトリを正確な slug で自分で作る。</p>
+<p>標準が本当に 11 の agent すべてにまたがって適用されるときだけ <code>aidlc-shared/</code> に手を伸ばす。
+architect にとって重要で他の誰にとってもそうでないパターンは <code>aidlc-architect-agent/</code> に属し、
+そこで他のすべての agent のウィンドウを薄めずにアーキテクチャ stage にコンテキストを足す。
+ユーザーガイドの <a href="../guide/08-knowledge.html">会社標準を足す worked example</a> は完全な end-to-end
+のウォークスルーを運ぶ — ディレクトリを作り、書き、検証する — 最初のファイルを著述する前に
+一度読む価値がある。</p>
+<p>各ディレクトリが何のためかの agent ごとのテーブルは、
+<a href="../reference/10-knowledge-system.html#adding-team-knowledge">Knowledge System → チーム Knowledge を足す</a>
+を参照。</p>
+<hr>
+<h2 id="how-an-agent-loads-knowledge">agent が knowledge をどうロードするか</h2>
+<p>knowledge ファイルを登録したり、どこかに配線したりはしない。正しいディレクトリでのその存在が
+登録である。stage が始まるとき、conductor は固定の 6 ステップ順でコンテキストをロードし、
+あなたの Tier 2 ファイルはステップ 4 と 5 で入ってくる:</p>
+<ol>
+<li>Rule — 解決された <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> チェーン（最初にロード）</li>
+<li>Tier 1 の共有方法論 — <code>.claude/knowledge/aidlc-shared/</code></li>
+<li>Tier 1 の agent 方法論 — <code>.claude/knowledge/&lt;agent&gt;-agent/</code></li>
+<li><strong>Tier 2 の team 共有</strong> — <code>aidlc/knowledge/aidlc-shared/</code></li>
+<li><strong>Tier 2 の team agent 固有</strong> — <code>aidlc/knowledge/&lt;agent&gt;-agent/</code></li>
+<li>先行 stage の成果物 — 現在の stage が消費すると宣言する出力</li>
+</ol>
+<p>ステップ 4 と 5 は、ディレクトリが存在しファイルを含むときにだけ発火する。だから team
+knowledge の無いプロジェクトはそれらを単に飛ばす。ロードはすべての stage 開始時に起きるので、
+ファイルの編集はクリアすべきキャッシュも再起動も無しに、次の <code>/aidlc</code> 実行で効力を持つ。
+ファイルの削除も同じく直接的である — 削除すれば、以降の実行はそれを見なくなる。同期を保つべき
+レジストリは無い。</p>
+<p>内面化する価値のある 1 つの帰結: agent は knowledge ファイルを <strong>文字どおり、等しい重みで</strong>
+読む。古いまたは矛盾するファイルは agent を積極的に誤らせる — それは現行のものと同じ権威を運ぶ。
+Tier 2 ツリーを剪定を要するコードのように扱う; retro での短いレビューがそれを正直に保つ。</p>
+<p>完全なステップごとの契約、優先順位ルール、シーケンス図は
+<a href="../reference/10-knowledge-system.html#6-step-knowledge-loading-order">Knowledge System → 6 ステップ knowledge ロード順</a>
+にある。</p>
+<hr>
+<h2 id="knowledge-or-a-rule">knowledge か rule か？</h2>
+<p>最も一般的な harness engineer の誤りは、意図が rule であるときに knowledge に手を伸ばす、
+あるいはその逆である。両者は交換可能ではなく、上のロード順がなぜかを示す: rule はフレームワークが
+実行に先立ってコンパイルする strict-additive チェーンとして最初に解決する; knowledge は agent が
+stage 中に量る参照材料である。</p>
+<p>有用なテスト: <strong>指示が違反されたときに人間の reviewer が stage の出力を却下するなら、それは
+rule に属す。</strong> レビュー時に背景として使うものなら、それは knowledge である。</p>
+<table>
+<thead>
+<tr>
+<th>knowledge に手を伸ばすのは…</th>
+<th>rule に手を伸ばすのは…</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>agent が参照すべき参照材料を供給しているとき</td>
+<td>agent が従わねばならない振る舞いの決定を述べているとき</td>
+</tr>
+<tr>
+<td>「これらが我々の使うパターンである」</td>
+<td>「X を決してするな」/「常に Y をせよ」</td>
+</tr>
+<tr>
+<td>内容が情報的で文脈的</td>
+<td>内容が規範的で交渉の余地が無い</td>
+</tr>
+<tr>
+<td>長文の散文、テーブル、図でありうる</td>
+<td>短く、命令形で、各々 1 行であるべき</td>
+</tr>
+<tr>
+<td>例: API Gateway 標準、ドメイン用語集</td>
+<td>例: 「PII を決してログしない」、「すべてのデータアクセスは repository レイヤーを通る」</td>
+</tr>
+</tbody></table>
+<p>なので、あなたのチームが API をどう設計するかを記述する文書は knowledge である:
+<code>aidlc/knowledge/aidlc-architect-agent/</code> に落とす。「すべてのアーキテクチャ決定は少なくとも
+2 つの代替案を記録せねばならない」のような交渉の余地の無いものは rule である: それは space
+memory レイヤー（<code>aidlc/spaces/&lt;active-space&gt;/memory/</code>）に属し、そこでフレームワークが agent を
+それに従わせる。レイヤーチェーンにまたがる rule の著述と、学習ループが訂正をそれらへ昇格させる
+ことについては、<a href="05-rules-and-the-loop.html">Rule と学習ループ</a> を参照。ユーザーガイドの
+<a href="../guide/08-knowledge.html">Knowledge 対 Rule テーブル</a> は、同じ判断をより多くの例で扱う。</p>
+<hr>
+<h2 id="where-the-tier-2-tree-comes-from">Tier 2 ツリーはどこから来るか</h2>
+<p>チームがそれを作る。最初の <code>/aidlc</code> でエンジンは 1 つの空のディレクトリ —
+<code>aidlc/knowledge/</code> — を作り、そこで止まる。ツリーをスキャフォールドせず、agent ごとの
+サブディレクトリを作らず、README を種付けもしない。Tier 2 のレイアウト（<code>aidlc-shared/</code> と
+agent ごとの 1 ディレクトリ）は、エンジンが書く構造ではなく、ペルソナが探す慣習である;
+あなたは内容のあるディレクトリを作る。ローダーは各 agent 自身のディレクトリを名前で歩くので、
+ローダーが期待する正確な slug でそれらを作る（<code>architect/</code> ではなく
+<code>aidlc-architect-agent/</code>）— タイプミスした名前はエラー無しに静かにスキップされる。</p>
+<p>ディレクトリの中に命名規約は無い: 任意の <code>.md</code> ファイルがロードされる。記述的な、ファイル
+ごとに 1 トピックの名前（<code>architecture.md</code> ではなく <code>api-gateway-standards.md</code>）はローダーに
+要求されないが、四半期ごとの剪定をはるかに容易にする。ディレクトリの出発点となる README が
+欲しければ、Tier 1 は手でコピーして入れられる任意のテンプレートを同梱する —
+<a href="../reference/10-knowledge-system.html#template-system">Knowledge System → テンプレートシステム</a>。</p>
+<p>このガイドの残りとの境界についての注記: ここであなたが populate する agent ディレクトリは、
+agent がそのペルソナファイルで宣言するものと同じである。<a href="03-adding-an-agent.html">agent を足す</a>
+とき、その Tier 2 knowledge ディレクトリは <code>aidlc/knowledge/&lt;new-agent-slug&gt;/</code> である — チーム
+が作り、同じステップ 4 と 5 でロードされるディレクトリ。<a href="00-overview.html">overview</a> のメンタル
+モデルが成り立つ: stage が agent を名指し、agent が knowledge を読み、あなたはコードを書くのでは
+なくデータを編集することでそのすべてを形作る。</p>
+<hr>
+<h2 id="spaces-knowledge-for-more-than-one-team">Space: 複数チームのための knowledge</h2>
+<p>上のすべては 1 つのチームを前提とする。<strong>複数のチームが 1 つのプロジェクトを共有する</strong>とき、
+AI-DLC は各チームの method、knowledge、record を、それ自身の <strong>space</strong> — 同一形状の
+<code>aidlc/spaces/&lt;name&gt;/</code>（<code>memory/</code>、<code>knowledge/</code>、<code>codekb/</code>、<code>intents/</code>）— に保つ。この章を通して
+あなたが使ってきた <code>aidlc/knowledge/</code> の略記は、実は <code>aidlc/spaces/&lt;active-space&gt;/knowledge/</code>
+である; 単一チームでは、そのアクティブな space は常に <code>default</code> であり、区別は決して表面化しない。
+（<a href="../guide/03-spaces-and-intents.html">ユーザーガイドの Space・Intent の章</a> はエンドユーザー向けの
+オリエンテーションである; この節は harness-engineering の角度である。）</p>
+<p>これがあなたの著述する knowledge と rule に意味すること:</p>
+<ul>
+<li><strong>team knowledge は space ごとである。</strong> あなたが populate する
+<code>aidlc/knowledge/aidlc-&lt;agent&gt;-agent/</code> ファイルは 1 つの space の中に住む。2 つ目のチームは
+埋めるべき自分の空の <code>knowledge/</code> ツリーを得る — あなたのファイルは境界を越えて漏れず、
+彼らのものはあなたの agent のコンテキストを薄めない。</li>
+<li><strong>method レイヤーも space ごとである。</strong> <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> の rule
+（<code>org.md</code> → <code>team.md</code> → <code>project.md</code>）はアクティブな space の中で解決する。新しい space は
+フレームワークのベースラインから種付けされる — <code>org.md</code> がコピーされ、まっさらな空の
+<code>team.md</code> / <code>project.md</code> — なので新しいチームはフレームワークの既定から始まり、別のチームの
+ものを継承するのではなく自分のプラクティスを獲得する。</li>
+<li><strong>space を <code>core/</code> で著述しない。</strong> space はランタイムのチームデータであり、インストール済み
+のプロジェクトで <code>/aidlc space create &lt;name&gt;</code> で作られる — team knowledge をフレームワーク
+ソースから分けるのと同じデータ対コードの線。複数チームをサポートするために <code>core/</code> に足したり
+再生成したりするものは無い; その能力はエンジンに同梱される。</li>
+</ul>
+<p>この章のメンタルモデルは各 space の中で変わらず成り立つ: stage が agent を名指し、agent が
+knowledge を読み、あなたはデータを編集することでそのすべてを形作る。space は単に<em>誰の</em>データ
+かをスコープする — なので 2 つのチームが、コンテキスト・プラクティス・record を衝突させずに、
+1 つのプロジェクトで AI-DLC を走らせられる。</p>
+<h2 id="next">次へ</h2>
+<ul>
+<li>コード無しで変えられるものの完全なマップは
+<a href="00-overview.html">Harness Engineer ガイドの overview</a> へ戻る。</li>
+<li>コードレベルの変更 — orchestrator、hook、このデータを読む compile パイプライン — は
+<a href="../reference/00-overview.html">開発者リファレンス</a> へ。</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/07-team-knowledge.md"><code>docs/harness-engineering/07-team-knowledge.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

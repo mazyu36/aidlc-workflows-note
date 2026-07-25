@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness Engineer ガイド — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / harness-engineering/00-overview</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">HARNESS ENGINEERING</div>
+  <a href="../harness-engineering/00-overview.html" class="here">Harness Engineer ガイド</a>
+  <a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>
+  <a href="../harness-engineering/02-adding-a-stage.html">Stage を足す</a>
+  <a href="../harness-engineering/03-adding-an-agent.html">Agent を足す</a>
+  <a href="../harness-engineering/04-scopes.html">Scope</a>
+  <a href="../harness-engineering/05-rules-and-the-loop.html">Rule と学習ループ</a>
+  <a href="../harness-engineering/06-sensors.html">Sensor</a>
+  <a href="../harness-engineering/07-team-knowledge.html">チーム Knowledge</a>
+  <a href="../harness-engineering/08-construction-and-swarm.html">Construction と swarm</a>
+  <a href="../harness-engineering/09-porting-to-a-new-harness.html">AI-DLC を新しい harness へ移植する</a>
+  <a href="../harness-engineering/10-authoring-a-plugin.html">Plugin を著述する</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#three-readers-three-guides">3 種の読者、3 つのガイド</a>
+  <a href="#the-mental-model-stages-are-what-agents-are-who">メンタルモデル: stage は what、agent は who</a>
+  <a href="#what-you-can-change-without-code">コード無しで変えられるもの</a>
+  <a href="#naming-rules-and-where-they-are-enforced">命名規則とそれがどこで強制されるか</a>
+  <a href="#the-build-model-author-in-core-regenerate-the-harnesses">ビルドモデル: core/ で著述し、harness を再生成する</a>
+  <a href="#when-you-cross-into-the-developer-reference">いつ開発者リファレンスに踏み込むか</a>
+  <a href="#how-this-guide-is-organized">このガイドの構成</a>
+  <a href="#next">次へ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / HARNESS-ENGINEERING</p>
+<h1 id="harness-engineer-guide">Harness Engineer ガイド</h1>
+<blockquote>
+<p><a href="../README.html">AI-DLC ドキュメント</a> の一部 · <a href="../guide/00-introduction.html">ユーザーガイド</a> · <strong>Harness Engineer ガイド</strong> · <a href="../reference/00-overview.html">開発者リファレンス</a></p>
+</blockquote>
+<p>AI-DLC は方法論であり、この実装はそれを、あなたが使う harness — Claude Code、Kiro CLI、
+Kiro IDE、Codex CLI、opencode — の上で箱から出してすぐ動く形で同梱する: 14 のエージェント
+（11 のドメインエキスパート、2 の reviewer、composer）、32 の stage、9 の scope、
+rule と sensor の一式。このガイドは、その方法論を<strong>再形成</strong>したい人のためのものである —
+どの stage が走るかを変える、フレームワークが扱わないドメインのエージェントを足す、scope を
+締める、フレームワークに恒常的な rule を教える、決定論的チェックを stage に束ねる。</p>
+<p>そのすべてを、<strong>コードを書かずに</strong>行う。</p>
+<hr>
+<h2 id="three-readers-three-guides">3 種の読者、3 つのガイド</h2>
+<p>AI-DLC のドキュメントは、トピックではなく「あなたが何をしようとしているか」で分かれている:</p>
+<table>
+<thead>
+<tr>
+<th>ガイド</th>
+<th>あなたは…</th>
+<th>あなたが変えるもの…</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="../guide/00-introduction.html">ユーザーガイド</a></td>
+<td>AI-DLC <em>で</em>ソフトウェアを作る</td>
+<td><code>.claude/</code> の中は何も変えない — <code>/aidlc</code> を走らせ、gate で答え、成果物をレビューする</td>
+</tr>
+<tr>
+<td><strong>Harness Engineer ガイド</strong>（これ）</td>
+<td>AI-DLC がチームのためにどう振る舞うかを形作る</td>
+<td>フレームワークが読む<strong>データ</strong>: stage、agent、scope、rule、sensor、knowledge</td>
+</tr>
+<tr>
+<td><a href="../reference/00-overview.html">開発者リファレンス</a></td>
+<td>AI-DLC <em>そのもの</em>を変える</td>
+<td>そのデータを読む<strong>コード</strong>: orchestrator、hook、CLI ツール、compile パイプライン、テストスイート</td>
+</tr>
+</tbody></table>
+<p>このガイドと開発者リファレンスの境界は<strong>データ対コード</strong>である。
+harness engineer が触れるものはすべて、YAML frontmatter 付きの Markdown ファイルか
+JSON 設定 — フレームワークがランタイムに読み込む宣言的なデータである。stage の追加、
+agent の追加、scope の定義: フレームワーク自身の設計原則は、これらが <em>TypeScript 編集を
+要しない</em>ことである。変更が <code>.ts</code>（orchestrator、hook、ツール）の編集を意味した瞬間、
+あなたは開発者リファレンスの側に踏み込んでいる。</p>
+<hr>
+<h2 id="the-mental-model-stages-are-what-agents-are-who">メンタルモデル: stage は <em>what</em>、agent は <em>who</em></h2>
+<p>2 つのプリミティブがフレームワークの大半を担い、これらを取り違えないことが仕事のすべてである:</p>
+<ul>
+<li><strong>stage</strong> は仕事の単位 — <em>何が</em>起きるか。消費・生産する成果物、それを率いる agent、
+どう実行するかを宣言する。stage はワークフローグラフのノードである。</li>
+<li><strong>agent</strong> はペルソナ — <em>誰が</em>仕事をするか。ドメインの専門性、ツールの許可リスト、モデルを
+運ぶ。agent は stage の<em>中へ</em>ロードされる。</li>
+</ul>
+<p>stage は率いる agent を名指すが、agent は自分の stage を決して名指さない。この非対称性は
+意図的である: 仕事を再割り当て（stage を編集）しても働き手を書き直さずに済み、働き手を追加
+（agent ファイルを置く）しても、ある stage がそれを使うと選ぶまでワークフローを乱さない。</p>
+<p>これらの stage を通して仕事を動かす機構は 2 つあり、harness engineer としてあなたは両者が
+読む<strong>データ</strong>を形作る。決定論的な<strong>エンジン</strong>
+（<code>core/tools/aidlc-orchestrate.ts</code>。サブコマンドは厳密に 3 つ: <code>next</code>、
+<code>report</code>、<code>park</code>）は <code>aidlc-state.md</code> とコンパイル済みの <code>stage-graph.json</code> を読み、
+次に何が走るかを決め、型付きのディレクティブを 1 つ発する。<strong>conductor</strong>
+（<code>skills/aidlc/SKILL.md</code>）は各ディレクティブを運び出す薄い forwarding ループである。
+ルーティングはエンジンにある。あなたの stage ファイル、scope、rule はそれを操舵する入力である。</p>
+<p>harness engineer が設定するその他すべては、この 2 つにぶら下がる:</p>
+<ul>
+<li><strong>Scope</strong> は、ある種の仕事に対して<em>どの</em> stage が走るかを決める（bugfix は 32 のうち
+7 stage を走らせる。enterprise feature は全部を走らせる）。</li>
+<li><strong>Rule</strong> は、すべてのワークフローに旅する恒常的な決定である — チームの「いつもこうやる」。</li>
+<li><strong>Sensor</strong> は stage に束ねられた決定論的チェックである — ファイル書き込みのたびに発火する
+助言的なセカンドオピニオン。</li>
+<li><strong>Knowledge</strong> は、agent が仕事の前にロードするドメインのコンテキストである。</li>
+</ul>
+<hr>
+<h2 id="what-you-can-change-without-code">コード無しで変えられるもの</h2>
+<p>これらはすべて <code>core/</code>（手で著述する、harness 中立のソース）で著述し、続けて
+harness 別のツリーを再生成する（後述の <a href="#the-build-model-author-in-core-regenerate-the-harnesses">ビルドモデル</a> を参照）。</p>
+<table>
+<thead>
+<tr>
+<th>変更</th>
+<th>どこで著述するか</th>
+<th>章</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>stage の振る舞いを編集</td>
+<td><code>core/aidlc-common/stages/&lt;phase&gt;/&lt;slug&gt;.md</code></td>
+<td><a href="01-anatomy-of-a-stage.html">Stage の解剖</a></td>
+</tr>
+<tr>
+<td>新しい stage を追加</td>
+<td>正しい phase ディレクトリの新ファイル + グラフ配線</td>
+<td><a href="02-adding-a-stage.html">Stage を足す</a></td>
+</tr>
+<tr>
+<td>agent を追加または変更</td>
+<td><code>core/agents/&lt;name&gt;-agent.md</code></td>
+<td><a href="03-adding-an-agent.html">Agent を足す</a></td>
+</tr>
+<tr>
+<td>scope を定義</td>
+<td><code>core/scopes/aidlc-&lt;name&gt;.md</code> + stage 別の <code>scopes:</code> タグ</td>
+<td><a href="04-scopes.html">Scope</a></td>
+</tr>
+<tr>
+<td>恒常的な rule を教える</td>
+<td><code>core/memory/{team,project}.md</code></td>
+<td><a href="05-rules-and-the-loop.html">Rule と学習ループ</a></td>
+</tr>
+<tr>
+<td>決定論的チェックを配線</td>
+<td><code>core/sensors/</code> 下の sensor manifest + stage の <code>sensors:</code> import</td>
+<td><a href="06-sensors.html">Sensor</a></td>
+</tr>
+<tr>
+<td>チームのドメイン knowledge を追加</td>
+<td><code>aidlc/knowledge/&lt;agent&gt;-agent/</code>（space レベルの knowledge dir、ランタイム）</td>
+<td><a href="07-team-knowledge.html">チーム Knowledge</a></td>
+</tr>
+<tr>
+<td>Construction と swarm の姿勢を形作る</td>
+<td><code>core/memory/</code> + <code>units-generation</code> stage</td>
+<td><a href="08-construction-and-swarm.html">Construction と swarm</a></td>
+</tr>
+</tbody></table>
+<p>各章は<em>どうやるか</em>を語り、網羅的なスキーマは
+<a href="../reference/00-overview.html">開発者リファレンス</a> へリンクで降りる —
+リファレンスは規範的な契約、このガイドは実務の語りである。</p>
+<p>1 行は例外である: <strong>チームのドメイン knowledge</strong> は、あなたが自分のプロジェクトの
+space レベル（<code>aidlc/knowledge/</code>。space の <code>memory/</code>・<code>codekb/</code>・<code>intents/</code> の兄弟）に、
+ランタイムに足すコンテキストである — <code>core/</code> の一部ではなく、フレームワークが決して上書き
+しない。上記のそれ以外はすべて、あなたが <code>core/</code> で著述するフレームワークのソースである。</p>
+<h2 id="naming-rules-and-where-they-are-enforced">命名規則とそれがどこで強制されるか</h2>
+<p>stage のファイル名の語幹は frontmatter の <code>slug</code> と等しくなければならない。<code>aidlc-graph compile</code>
+は語幹の不一致と重複した stage slug をハードエラーとして拒否する。sensor のファイル名／id の
+チェックはコンパイル時のハードエラーである。scope と agent の宣言名の重複はローダーエラーで、
+両方のファイルを名指す。scope／agent のファイル名と name のドリフトは
+<code>/aidlc --doctor</code> が助言として報告するので、著述者はファイルをリネームするか <code>name</code> を直せる。</p>
+<hr>
+<h2 id="the-build-model-author-in-core-regenerate-the-harnesses">ビルドモデル: <code>core/</code> で著述し、harness を再生成する</h2>
+<p>harness engineer が著述するものはすべて <strong><code>core/</code></strong> に住む — 手で著述する、harness 中立の
+ソースオブトゥルース（stage は <code>core/aidlc-common/stages/</code>、agent は <code>core/agents/</code>、
+scope、rule、sensor、knowledge、ツール、hook）。あなたが実際に走らせる harness 別の
+<code>dist/&lt;harness&gt;/</code> ツリー（<code>dist/claude/.claude/</code>、<code>dist/kiro/.kiro/</code>、<code>dist/kiro-ide/.kiro/</code>、
+<code>dist/codex/</code>、<code>dist/opencode/</code>）は <code>core/</code> に薄い <code>harness/&lt;name&gt;/</code> サーフェスを加えて
+<strong>生成</strong>され、<strong>ドリフトガード</strong>される — そこでの手編集は CI が拒否する。ループは常に:</p>
+<pre><code class="language-bash"># 1. edit the source in core/ (never dist/)
+$EDITOR core/aidlc-common/stages/inception/my-stage.md
+
+# 2. regenerate every harness tree from core/ + harness/
+bun scripts/package.ts
+
+# 3. confirm no drift (the CI guard; run before committing)
+bun scripts/package.ts --check
+</code></pre>
+<p><code>core/</code> の編集と再生成した <code>dist/</code> を一緒にコミットする。以下の章のレシピが
+<code>bun .claude/tools/aidlc-graph.ts compile</code>（や別のツール）を走らせよと言うとき、その
+コマンドは<em>インストール済み</em>のツリー — あなたのプロジェクトの <code>.claude/</code>（または <code>.kiro/</code> /
+<code>.codex/</code>）— に対して走り、ランタイムにグラフを再コンパイルする。そこは著述の場所ではない。
+<strong>あなたは <code>core/</code> で著述し、ツールは harness ディレクトリで走る。</strong> その分割 — 著述された
+ソース対生成されたランタイム — が、このガイドを通して取り違えないでほしい 1 点である。完全な
+ビルド契約は <a href="09-porting-to-a-new-harness.html">新しい harness への移植</a> と、開発者リファレンスの
+<a href="../reference/01-architecture.html#source-vs-distribution-one-core-many-harnesses">アーキテクチャ § ソース対ディストリビューション</a> を参照。</p>
+<hr>
+<h2 id="when-you-cross-into-the-developer-reference">いつ開発者リファレンスに踏み込むか</h2>
+<p>変更がフレームワークのデータではなくコードに対するものなら、
+<a href="../reference/00-overview.html">開発者リファレンス</a> に手を伸ばす:</p>
+<ul>
+<li>orchestrator のルーティングや状態機械
+（<a href="../reference/03-orchestrator.html">Orchestrator</a>、
+<a href="../reference/12-state-machine.html">状態機械</a>） — 規範的な
+engine/conductor/directive/runner/scope-shape/swarm の契約は
+<a href="../reference/17-skill-system.html">スキルシステム</a> を参照</li>
+<li>hook または CLI ツール（<a href="../reference/06-hooks-and-tools.html">Hook とツール</a>）</li>
+<li>stage-graph の compile パイプライン、または audit イベントの分類</li>
+<li>テストスイート（<a href="../reference/09-testing.html">テスト</a>）</li>
+</ul>
+<p>stage や agent の追加はワークフローグラフに<em>触れる</em>が、それを読むコードは変えない — だから
+ここに住む。グラフがどうコンパイルされるかを変える、または新しい audit イベントを足すのは
+コードの変更 — それはあちらに住む。</p>
+<hr>
+<h2 id="how-this-guide-is-organized">このガイドの構成</h2>
+<p>初回は順に読むこと:</p>
+<ol>
+<li><strong><a href="01-anatomy-of-a-stage.html">Stage の解剖</a></strong> — stage ファイルの形式:
+frontmatter の契約、3 区画の本体、グラフがどうコンパイルされるか。
+何かを変える前に理解すべき最も重要な 1 つ。</li>
+<li><strong><a href="02-adding-a-stage.html">Stage を足す</a></strong> — end-to-end: ファイルを著述し、
+依存エッジを配線し、コンパイルし、scope に現れるのを見る。</li>
+<li><strong><a href="03-adding-an-agent.html">Agent を足す</a></strong> — ペルソナを著述し、それが率いる／支える
+stage に束ねる。</li>
+<li><strong><a href="04-scopes.html">Scope</a></strong> — scope と stage のマッピングを定義し調律する。</li>
+<li><strong><a href="05-rules-and-the-loop.html">Rule と学習ループ</a></strong> — レイヤーチェーンにまたがって rule を
+著述し、ループが訂正を rule に昇格させるに任せる。</li>
+<li><strong><a href="06-sensors.html">Sensor</a></strong> — 決定論的チェックを著述し、stage に束ねる。</li>
+<li><strong><a href="07-team-knowledge.html">チーム Knowledge</a></strong> — agent にあなたのドメインの
+コンテキストを与える。</li>
+<li><strong><a href="08-construction-and-swarm.html">Construction と swarm</a></strong> — チームの Construction
+自律姿勢を rule レイヤーで設定し、Unit ごとの Bolt swarm が並列に走らせられるものを
+<code>units-generation</code> を通して形作る。</li>
+<li><strong><a href="09-porting-to-a-new-harness.html">新しい harness への移植</a></strong> — もう 1 つの CLI harness を、
+1 つの <code>harness/&lt;name&gt;/</code> ディレクトリと manifest の行で、<code>core/</code> 編集なしに足す:
+manifest の契約、hook アダプタ、<code>emit.ts</code>。</li>
+<li><strong><a href="10-authoring-a-plugin.html">プラグインの著述</a></strong> — 再利用可能な、任意の <strong>AIDLC プラグイン</strong>を
+<code>plugins/&lt;name&gt;/</code> にパッケージする: 新しい stage/agent/scope/
+sensor + 既存 core stage への加算的なコントリビューション。harness ごとに本物の
+ホストプラグインとして emit される。設計は開発者リファレンスの単一の章
+（<a href="../reference/18-plugin-mechanism.html">18 mechanism</a>）にある。</li>
+</ol>
+<h2 id="next">次へ</h2>
+<p><a href="01-anatomy-of-a-stage.html">Stage の解剖</a> から始める — 他のすべての変更が乗る形式である。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md"><code>docs/harness-engineering/00-overview.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Construction と swarm — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / harness-engineering/08-construction-and-swarm</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">HARNESS ENGINEERING</div>
+  <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a>
+  <a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>
+  <a href="../harness-engineering/02-adding-a-stage.html">Stage を足す</a>
+  <a href="../harness-engineering/03-adding-an-agent.html">Agent を足す</a>
+  <a href="../harness-engineering/04-scopes.html">Scope</a>
+  <a href="../harness-engineering/05-rules-and-the-loop.html">Rule と学習ループ</a>
+  <a href="../harness-engineering/06-sensors.html">Sensor</a>
+  <a href="../harness-engineering/07-team-knowledge.html">チーム Knowledge</a>
+  <a href="../harness-engineering/08-construction-and-swarm.html" class="here">Construction と swarm</a>
+  <a href="../harness-engineering/09-porting-to-a-new-harness.html">AI-DLC を新しい harness へ移植する</a>
+  <a href="../harness-engineering/10-authoring-a-plugin.html">Plugin を著述する</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#three-concerns-three-owners">3 つの関心、3 人のオーナー</a>
+  <a href="#the-autonomy-posture-your-real-lever-written-as-a-rule">autonomy の posture — rule として書かれる、あなたの本物のレバー</a>
+  <a href="#shaping-what-can-run-in-parallel-the-bolt-dag">並列に走れるものを形作る — Bolt-DAG</a>
+  <a href="#wiring-convergence-your-projects-own-check-is-the-trusted-signal">convergence を配線する — あなたのプロジェクト自身のチェックが信頼されるシグナル</a>
+  <a href="#the-driver-seam-aidlc_use_swarm">driver の継ぎ目 - AIDLC_USE_SWARM</a>
+  <a href="#where-it-becomes-a-code-change">どこでコードの変更になるか</a>
+  <a href="#next">次へ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / HARNESS-ENGINEERING</p>
+<h1 id="construction-and-the-swarm">Construction と swarm</h1>
+<p>Construction は AI-DLC が物を作るところである — Unit ごとの stage が走り、<strong>swarm</strong> が
+その仕事を一度に多くの Unit にまたがってファンアウトできるところ。それはまた、「私は何を、
+どう形作れるか？」への最も清潔な答えが、どのつまみが誰のものかについて正直であることを要する、
+harness の部分でもある。ここでのレバーのいくつかは、他のすべての章が教えるやり方でデータとして
+著述される、harness engineer としてのあなたのものである。他のつまみは、gate の人間と、実行を
+起動するオペレーターのもとにある。この章はそれらすべてを歩き、線を正確に印す。そうすればあなたは
+正しいサーフェスに手を伸ばし、押すのがあなたの役目でないものを押すのをやめられる。</p>
+<p>通底するのは、このガイドの残りが運ぶのと同じものである: あなたは <code>core/</code> 下の<strong>データ</strong>を
+編集することで Construction を作り直す — rule、stage、sensor のチェックコマンド — 決してコード
+を編集することによってではない。Construction を違って感じさせるのは、その最も目に見える振る舞い
+の 2 つ（autonomy の grant、swarm の driver）が、意図的にデータファイル<em>でない</em>関心によって
+統べられていることであり、それを認識することが、存在しない設定を著述することからあなたを守る。</p>
+<hr>
+<h2 id="three-concerns-three-owners">3 つの関心、3 人のオーナー</h2>
+<p>フレームワークの設計原則は、すべての決定を、それがどんな種類のものかで分ける: 決定論は
+ツールに属し、knowledge は agent に属し、判断は人間に属す。Construction の swarm はその分割を
+具体化したものであり、どの 1 つのつまみに触れる前にも、全体像を保つ価値がある。</p>
+<table>
+<thead>
+<tr>
+<th>Construction における関心</th>
+<th>オーナー</th>
+<th>どこに住むか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>チームの autonomy の <strong>posture</strong>（恒常的な既定）</td>
+<td>あなた、harness engineer</td>
+<td><code>core/memory/{team,project}.md</code> の rule（データ）</td>
+</tr>
+<tr>
+<td>Unit が並列化<strong>できる</strong>もの</td>
+<td>あなた、harness engineer</td>
+<td><code>units-generation</code> stage とその依存 DAG（データ）</td>
+</tr>
+<tr>
+<td>swarm が信頼する <strong>convergence check</strong></td>
+<td>あなた、harness engineer</td>
+<td>あなたのプロジェクト自身の build/test コマンド + 保護された spec（データ + プロジェクト設定）</td>
+</tr>
+<tr>
+<td>このプロジェクトの実際の autonomy <strong>grant</strong></td>
+<td>人間</td>
+<td>ランタイムの ladder prompt</td>
+</tr>
+<tr>
+<td>swarm の <strong>driver</strong> 選択</td>
+<td>オペレーター</td>
+<td><code>AIDLC_USE_SWARM</code> 環境変数</td>
+</tr>
+<tr>
+<td>convergence の <strong>verdict</strong>、merge-back、audit</td>
+<td>ツール</td>
+<td><code>aidlc-swarm.ts</code>（コード → 開発者リファレンス）</td>
+</tr>
+</tbody></table>
+<p>「あなた」と印された 3 行が、この章の本体である。他の 3 つは、あなたのデータが形作る
+ランタイムを理解する必要があるので扱うが、あなたはそれらのどれも著述しない。</p>
+<hr>
+<h2 id="the-autonomy-posture-your-real-lever-written-as-a-rule">autonomy の posture — rule として書かれる、あなたの本物のレバー</h2>
+<p>チームが制御したい最初のものは、Construction がどれだけの手取り足取りを要求するかである。
+同梱の既定は、あなたが <code>core/memory/org.md</code> の <code>## Walking Skeleton</code> 見出しの下に著述する org
+rule に住む（<code>org.md:28-42</code>）。それをフレームワークのスタンスとして読む:</p>
+<ul>
+<li>greenfield の scope — <code>mvp</code>、<code>enterprise</code>、<code>feature</code>、<code>poc</code>、<code>workshop</code>、<code>infra</code> — では
+<strong>walking-skeleton Bolt が最初に走る</strong>。Bolt 1 は単独でゲートされ、残りの Bolt が走る前に
+ユーザーがそれを承認する。</li>
+<li>incremental の scope — <code>bugfix</code>、<code>refactor</code>、<code>security-patch</code> — では <strong>skeleton の儀式は
+飛ばされる</strong>。既存のコードベースにブートストラップするものは無いので、最初の Bolt は他と
+同じように走る。</li>
+<li>Bolt 1 が出荷された後、<strong>ladder prompt</strong> が一度発火する:「残りの Bolt はどう走るべきか？」
+2 つの選択肢とともに、自律的に続けるか、すべての Bolt をゲートするか。選ばれた答えは、intent の
+<code>aidlc-state.md</code>（その record dir の下）に <code>Construction Autonomy Mode</code> として永続する。</li>
+</ul>
+<p>この posture を、あなたは任意の rule を形作るのと同じやり方で、
+<a href="05-rules-and-the-loop.html">Rule と学習ループ</a> の strict-additive レイヤーを通して形作る:
+チーム全体のスタンスには <code>team.md</code> を、1 つのプロジェクトの恒常的な逸脱には <code>project.md</code> を
+編集する。<code>org.md</code> には触れない — それはフレームワーク同梱で、継承される。</p>
+<p>あなたが設定するのは <strong>既定とガイダンス</strong> である。grant は ladder prompt の人間のもとに残り、
+その人がプロジェクトごとの判断を下す。あなたの rule の散文は agent がそのプロンプトに入るときに
+読むものであり、だから推奨を枠づける; <em>この</em>プロジェクトが hands-off で走るかどうかの判断は、
+gate の人のもとに残る。それが 1 つのプロンプトをまっすぐ貫いて引かれた、決定論-knowledge-判断の
+線である: あなたが恒常的なガイダンスを著述し（データ）、agent がそれを提示し（knowledge）、
+人間が決める（判断）。</p>
+<h3 id="worked-example-make-your-team-gate-every-bolt-by-default">Worked example — チームが既定ですべての Bolt をゲートするようにする</h3>
+<p>あなたのチームが自律的な Construction に不慣れで、保守的な posture を望むとしよう: 信頼が
+獲得されるまで、すべての Bolt をレビューし、hands-off の実行は無し。<code>core/memory/team.md</code> の
+<code>## Walking Skeleton</code> の下に箇条書きを足す:</p>
+<pre><code class="language-markdown">## Walking Skeleton
+
+Until our team has shipped three clean autonomous batches, the recommended
+answer at the ladder prompt is **gate every Bolt**. Reviewers see each Bolt&#39;s
+diff before the next one starts. Revisit this default once our convergence
+checks have proven reliable.
+</code></pre>
+<p>これは org の既定の上に積み重なる — skeleton-first / skip-ceremony の分割は変わらず、あなたの
+チームの散文は ladder prompt で agent のコンテキストに加わる。あるプロジェクトがそれに値するなら
+人間はなお「自律的に続ける」を選べる; あなたの rule は選択を開いたまま推奨を形作る。変更は次の
+ワークフローの compile 境界で効く。他のすべての rule 編集とちょうど同じである — ワークフローの
+途中の編集は、進行中の実行を遡って変えはしない。</p>
+<p>信頼された scope について hands-off の Construction に移行するチームは、鏡像の箇条書きを書く:
+「このコードベースの <code>feature</code> scope については、walking skeleton が green になったら推奨の
+ladder の答えは自律的に続けるである。」同じファイル、同じ見出し、反対の推奨。</p>
+<hr>
+<h2 id="shaping-what-can-run-in-parallel-the-bolt-dag">並列に走れるものを形作る — Bolt-DAG</h2>
+<p>swarm は仕事を Unit にまたがってファンアウトするので、「一度に何が走れるか？」という問いは、
+上流の inception で、<code>units-generation</code> stage によって決められる。その stage は
+<code>unit-of-work-dependency.md</code> を生産し（<code>core/aidlc-common/stages/inception/units-generation.md</code>
+が <code>produces: unit-of-work-dependency</code> を宣言する）、その成果物の中で、必須のフェンスされた
+<code>yaml</code> エッジブロックが、すべての Unit をその <code>depends_on</code> リストとともに挙げる。</p>
+<p>コンパイラはそのブロックを <code>runtime-graph.json</code> の <code>bolt_dag</code> ノードに読む。ノードが在るのは、
+エッジブロックが well-formed かつ非巡回である <strong>ときだけ</strong> である; 不在・不正・巡回のブロックは
+ノードを完全に省く（<a href="../reference/13-runtime-graph.html">Runtime Graph</a>、44 行目のスキーマ注記）。
+<code>bolt_dag</code> ノードはまた <code>batches</code> を運ぶ — すべての Unit の依存が先行するレベルによって満たされる
+トポロジのレベルであり、だから 1 つの batch の Unit はそれらの間にエッジを持たず、一緒に
+ファンアウトできる。</p>
+<p>並列サーフェス自身は、5 つの <strong>Unit ごと</strong> の Construction stage であり、各々がその
+frontmatter で <code>for_each: unit-of-work</code> を宣言する:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>走る</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>nfr-requirements</code></td>
+<td>Unit ごとに 1 回</td>
+</tr>
+<tr>
+<td><code>functional-design</code></td>
+<td>Unit ごとに 1 回</td>
+</tr>
+<tr>
+<td><code>nfr-design</code></td>
+<td>Unit ごとに 1 回</td>
+</tr>
+<tr>
+<td><code>infrastructure-design</code></td>
+<td>Unit ごとに 1 回</td>
+</tr>
+<tr>
+<td><code>code-generation</code></td>
+<td>Unit ごとに 1 回</td>
+</tr>
+</tbody></table>
+<p>4 つの design stage については、Unit ごとのカバレッジはさらに <strong>kind でフィルタ</strong> される:
+各 Unit の <code>kind</code>（2.7 のエッジブロックでタグされる）が、stage の <code>produces_kinds</code> マップを
+通して、その produces する成果物のうちどれをその Unit が実際に負うかを選ぶ。エンジンは run-stage
+ディレクティブの produces パスと、カバレッジチェックの両方をその集合に剪定するので、<code>spec</code> Unit
+はデプロイメント文書無しで infrastructure-design について完了し、<code>packaging</code> Unit はファイル
+ゼロで functional-design について完了する。タグの無い Unit は完全なマトリクスを保つ。</p>
+<p>（残りの 2 つの Construction stage、<code>build-and-test</code> と <code>ci-pipeline</code> は、最後にすべてに
+またがって 1 回走るので、Unit ごとのファンアウトの一部ではない。）</p>
+<p><strong>この並列サーフェスは、<code>units-generation</code> が走る scope — <code>enterprise</code>、<code>feature</code>、<code>mvp</code>、
+<code>workshop</code> — でだけ存在する。</strong> incremental の scope（<code>bugfix</code>、<code>refactor</code>、
+<code>security-patch</code>）と <code>poc</code>/<code>infra</code> は <code>units-generation</code> を決して走らせないので、エッジブロック
+を生産せず、<code>bolt_dag</code> を運ばず、swarm がファンアウトする対象が何も無いまま Construction を
+single-pass で走らせる。仕事が本当にマルチ Unit であるところで swarm を形作り、hands-off の
+Construction を、すべての scope ではなくマルチ Unit の greenfield scope の性質として扱う。</p>
+<p>ここでの harness レバーは間接的だが本物である: <strong>あなたは、<code>units-generation</code> が捉える依存
+構造を形作ることで、何が並列化するかを形作る。</strong> 交差依存の少ない粗い Unit を好むチーム
+ガイダンスを著述すれば、より多くの Unit が同じ batch に着地して並行して走る。密で深く連鎖した
+依存は、仕事を多くの小さな batch に直列化する。あなたはこれに、<code>units-generation</code> stage の散文と、
+architect agent が分解しながら読む rule を通して影響する — 分解自身は agent が人間とともに行う
+knowledge の判断であり、それが書くトポロジがコンパイラが batch に変えるものである。</p>
+<p>エッジブロックを <code>bolt_dag</code> に変える compile とパースはコードであり、あなたが著述するもの
+ではない。そのパーサーを形作ることはコードの変更である →
+<a href="../reference/13-runtime-graph.html">開発者リファレンス</a> を参照。</p>
+<hr>
+<h2 id="wiring-convergence-your-projects-own-check-is-the-trusted-signal">convergence を配線する — あなたのプロジェクト自身のチェックが信頼されるシグナル</h2>
+<p>swarm ワーカーは、その Unit が収束したと主張できる。フレームワークはその主張を決して鵜呑みに
+しない。権威あるシグナルは、referee が走らせる、あなたのプロジェクト<strong>自身のチェックコマンド</strong>で
+ある: exit <code>0</code> は真に収束を意味し、それ以外の exit はまだを意味する。これは harness engineer が
+自律的な Construction のために保証する唯一最も重要なことである — プロジェクトが実際に本物の
+チェックコマンドと保護された spec を<em>持つ</em>こと、そうすれば swarm には収束の対象となる信頼できる
+ものがある。</p>
+<p>2 つのサーフェスがシグナルを運ぶ:</p>
+<ul>
+<li><strong>チェックコマンド。</strong> あなたの Unit が完了したことを証明するもの何でも — <code>npm test</code>、
+<code>pytest</code>、build-and-lint スクリプト、あなたの CI のローカル相当物。referee はループ中に Unit
+ごとにそれを走らせ、finalize でも再び走らせる。green の exit だけが、Unit の仕事をマージ
+させる。</li>
+<li><strong>保護された spec ファイル。</strong> referee は指定された <code>--test-file</code> を、その fork された git の
+ベースラインに対して改竄防止で比較できるので、ワーカーは「完了」を定義するテストを、赤い
+チェックを green にするために静かに弱めることはできない。あなたは受け入れ基準を符号化する
+spec が存在し、それが指されるファイルであることを保証する。</li>
+</ul>
+<p>あなたの harness への貢献は、両方を本物で意味あるものにすることである。常に通るチェック、
+または空の spec は、swarm にゴム印を手渡す。<code>org.md:44-58</code> の <code>## Testing Posture</code> rule は
+既に scope ごとのテストの下限を設定する（例えば、<code>mvp</code>/<code>feature</code> は 80% カバレッジで
+tests-alongside-code を得る）; <code>team.md</code> でより厳格な posture を著述することが、チェックが
+強制するバーを上げる方法である。</p>
+<p>sensor は散文の側でチェックを補完する。<code>units-generation</code> が既にインポートする
+<code>required-sections</code> と <code>upstream-coverage</code> sensor は、成果物の形状とカバレッジを gate で検証する;
+あなたは <a href="06-sensors.html">Sensor</a> の筋力で、プロジェクト固有の convergence または
+required-sections sensor を著述し、それを、同じギャップを求めて出力を見続ける Construction
+stage に束ねられる。sensor は各書き込みで発火する助言的なテレメトリである; プロジェクトの
+チェックコマンドは硬い convergence gate である。それらは 2 つの半分を担う — sensor は agent が
+書くにつれ形状を見張り、チェックは Unit がマージしてよいかを決める。</p>
+<hr>
+<h2 id="the-driver-seam-aidlc_use_swarm">driver の継ぎ目 - <code>AIDLC_USE_SWARM</code></h2>
+<p>swarm が物理的にどうファンアウトするかは環境変数によって選ばれ、これが <strong>オペレーターの
+つまみ</strong> であることをはっきりさせる価値がある。それは <code>.claude/</code> のデータファイルではなく、
+<code>settings.json</code> にもない（ファンアウト時に conductor 側で読まれる）。あなたはそれを著述しない;
+あなたのデータが形作るランタイムを知るために、それを理解する。</p>
+<table>
+<thead>
+<tr>
+<th><code>AIDLC_USE_SWARM</code></th>
+<th>Driver</th>
+<th>振る舞い</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>unset または <code>&quot;1&quot;</code> でない</td>
+<td>subagent floor</td>
+<td>conductor は 1 つのメッセージで N 個の並列 <code>Task</code> 呼び出しを、Unit ごとに 1 つ発する。</td>
+</tr>
+<tr>
+<td><code>&quot;1&quot;</code></td>
+<td>inline Dynamic Workflow</td>
+<td>conductor は、その JS が Unit ごとのパイプラインと反復上限を所有する <code>Workflow</code> を著述する。</td>
+</tr>
+<tr>
+<td><code>&quot;1&quot;</code> だが Workflow ツールが利用不可</td>
+<td>floor へ loud-degrade</td>
+<td>conductor は floor にフォールバックし、<code>--degraded-from ultracode</code> を渡すので referee は <code>SWARM_DEGRADED</code> を発する。</td>
+</tr>
+</tbody></table>
+<p>どちらの driver も同じ 5 つの Unit ごとの stage を走らせ、同じプロジェクトのチェックに対して
+収束する。違いは純粋に、並列の仕事がどうディスパッチされるかである。暴走の歯止めは、swarm ツール
+自身の外、harness の <strong>Stop-hook の上限</strong>（<code>core/hooks/aidlc-stop.ts</code>、<code>blockCap()</code> /
+<code>defaultBlockCap()</code> のペア、<code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code> として露出）に住む。この
+autonomous-Construction の経路では既定の上限は <strong>8 ブロック</strong> である（インタラクティブの既定は
+2; 明示的な <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code> は両方を上書きする）。driver の継ぎ目の契約は
+<a href="../reference/17-skill-system.html#6-the-swarm-referee-the-driver-seam-and-the-bolt-dag">Skill System § 6</a>
+にある。</p>
+<p>1 つの判断は driver とともに決して動かない: 失敗は autonomy モードに関わらず、
+<code>aidlc-common/protocols/stage-protocol.md:125</code>（「失敗時は halt-and-ask」）に従い、<strong>常に
+halt して人間を再び関与させる</strong>。referee の <code>finalize</code> がその exit-2 のエンベロープを返すと、
+conductor はバトンを人間へ戻す。hands-off モードは happy-path の gate を除くが、失敗の halt は
+大きな音のまま保つ。</p>
+<hr>
+<h2 id="where-it-becomes-a-code-change">どこでコードの変更になるか</h2>
+<p>線は清潔である。上のすべて — autonomy posture rule、エッジブロックを生産する Unit の分解、
+プロジェクトのチェックコマンドと保護された spec、補完的な sensor — は、あなたが <code>core/</code> または
+あなたのプロジェクト設定の下に著述するデータである。あなたはコードに触れずに Construction を
+形作る。</p>
+<p>swarm の機構はコードであり、それを形作ることは開発者リファレンスの領域である:</p>
+<ul>
+<li><strong>referee</strong> <code>aidlc-swarm.ts</code> — worktree を fork し、verdict を走らせ、マージ前に主張された
+すべての Unit を再検証し（嘘つき conductor のガード）、merge-back を直列化し、6 つの <code>SWARM_*</code>
+audit イベントを発する、ステートレスな <code>prepare</code> / <code>check</code> / <code>finalize</code> サブコマンド。</li>
+<li><strong>engine</strong> <code>aidlc-orchestrate.ts</code> — 厳密に 3 つのサブコマンド <code>next</code>・<code>report</code>・<code>park</code> を
+持つ決定論的なルーター; それは Construction の batch がいつ swarm の適格になるかを決める。</li>
+<li><strong>Bolt-DAG パーサー</strong> — エッジブロックを <code>runtime-graph.json</code> に読む compile ステップ。</li>
+</ul>
+<p>3 つすべての規範的な契約は
+<a href="../reference/17-skill-system.html#6-the-swarm-referee-the-driver-seam-and-the-bolt-dag">Skill System § 6</a>
+であり、<code>bolt_dag</code> ノードのスキーマは <a href="../reference/13-runtime-graph.html">Runtime Graph</a> にある。
+conductor 自身の章は <a href="../reference/03-orchestrator.html">Orchestrator</a> である。</p>
+<p>あなたの posture rule が統べるもののユーザー向けの側 — walking-skeleton gate、ladder prompt、
+autonomy モード — は、ユーザーガイドの
+<a href="../guide/04-phases-and-stages.html">Phase と Stage § Construction</a> で歩かれ、ログで目にする
+6 つの <code>SWARM_*</code> audit イベントは <a href="../guide/10-state-and-audit.html">状態と Audit</a> にカタログ化
+されている。</p>
+<hr>
+<h2 id="next">次へ</h2>
+<ul>
+<li><strong><a href="09-porting-to-a-new-harness.html">新しい harness への移植</a></strong> — このガイドの集大成。
+あなたは <code>core/</code> のすべてのデータサーフェスを形作った; 最後のステップは、その core を<em>新しい</em>
+CLI に描画することである: 1 つの <code>harness/&lt;name&gt;/</code> ディレクトリ、manifest の行、hook アダプタ、
+そして byte-parity gate。</li>
+<li>あなたが形作るデータサーフェスの完全なマップは
+<a href="00-overview.html">Harness Engineer ガイドの overview</a> へ戻る。</li>
+<li>コードレベルの swarm、engine、Bolt-DAG の契約は
+<a href="../reference/17-skill-system.html">開発者リファレンス § Skill System</a> — Construction を形作る
+ことがデータ編集であることをやめ、コードの変更になる線。</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/08-construction-and-swarm.md"><code>docs/harness-engineering/08-construction-and-swarm.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

@@ -73,8 +73,14 @@ function segment(md) {
       cur.lines.push(line);
     }
   }
+  if (fence) {
+    // 閉じ相手のないフェンス（upstream 末尾の typo 等）: 開始 ``` 行を捨て、残りは通常テキスト
+    // として流す。空なら下の filter で消えるので、空の <pre> を出さない。mid-doc の孤立フェンスが
+    // 後続本文を丸ごとコードブロックに飲み込む潜在バグも、これで同時に塞ぐ。
+    warn(`unclosed fence (dropped stray opener)`);
+    cur = { type: "text", lines: cur.lines.slice(1) };
+  }
   segs.push(cur);
-  if (fence) warn(`unclosed fence`);
   return segs.filter((s) => s.lines.length > 0);
 }
 
@@ -245,15 +251,17 @@ function pageHtml({ rel, title, body, pagetoc, files, titles }) {
 <script type="module" src="${assets}/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="${up}index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / ${esc(rel.replace(/\.md$/, ""))}</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
 ${toc}</nav>
 
 <nav class="pagetoc" aria-label="このページの目次">

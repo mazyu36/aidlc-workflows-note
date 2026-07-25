@@ -1,0 +1,1434 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orchestrator — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/03-orchestrator</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html" class="here">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#table-of-contents">目次</a>
+  <a href="#entry-points">Entry Points</a>
+  <a href="#session-management">Session Management</a>
+  <a href="#scope-to-stage-mapping">Scope-to-Stage Mapping</a>
+  <a href="#stage-execution-engine">Stage Execution Engine</a>
+  <a href="#stage-advancement-protocol">Stage Advancement Protocol</a>
+  <a href="#task-tracking">Task Tracking</a>
+  <a href="#deliberate-deviations">Deliberate Deviations</a>
+  <a href="#error-handling">Error Handling</a>
+  <a href="#appendix-a-stage-graph-reference">Appendix A: Stage Graph Reference</a>
+  <a href="#appendix-b-hook-reference">Appendix B: Hook Reference</a>
+  <a href="#appendix-c-approval-gate-patterns">Appendix C: Approval Gate Patterns</a>
+  <a href="#cross-references">Cross-References</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="orchestrator">Orchestrator</h1>
+<p>オーケストレーションは 2 つの部品に分かれている。決定論的な <strong>engine</strong>（<code>aidlc-orchestrate.ts</code>。サブコマンドは <code>next</code>・<code>report</code>・<code>park</code> のちょうど 3 つ）が stage 間のあらゆる判断——scope 判定、stage ルーティング、ジャンプ解決、resume と init のガード、gate の状態、workflow の完了——を担い、<code>next</code> のたびに型付きの <strong>directive</strong> を発行する。<strong>conductor</strong>（<code>.claude/skills/aidlc/SKILL.md</code>。<code>/aidlc</code> から起動）は各 directive に従って動く薄い forwarding loop であり——指名された stage を実行し、人間に質問し、swarm を fan-out する——その結果を <code>report</code> で報告する。SKILL.md は control plane ではない。ルーティングの判断は engine とそれが読むコンパイル済みデータ（<code>tools/data/stage-graph.json</code>、<code>tools/data/scope-grid.json</code>）にあり、SKILL.md は engine が指名した手の内側で実行品質を担う。</p>
+<p>本章は conductor 側から見た workflow の挙動——エントリーポイント、セッション管理、scope から stage への対応、stage の実行・進行プロトコル、意図的な逸脱——を記述する。engine 内部（<code>next</code>/<code>report</code> の契約、型付き directive の union、conductor のペルソナ、複数形の skills、scope の形、swarm レフェリー）については <a href="17-skill-system.html">Engine and Skill System</a> を参照。ユーザー向けのコマンド利用法は <a href="../guide/12-cli-commands.html">User Guide -- CLI Commands</a> を参照。</p>
+<blockquote>
+<p><strong>所有権に関する注記。</strong> 本章で述べる挙動——引数解決、scope 検出、ジャンプ検証、resume の分岐——は、<code>next</code> のたびに <strong>engine</strong> が計算し、directive として conductor に渡す。古い記述で「orchestrator が X する」とあれば、「engine が X を決めて directive を発行し、conductor がそれを実行する」と読み替えること。判断ロジックは決定論的なツールコードであって、SKILL.md のプロースではない。</p>
+</blockquote>
+<blockquote>
+<p><strong>パス規約。</strong> 各 intent の状態、audit トレイル、intent スコープの
+成果物は、その <strong>record dir</strong> の下——
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>、以下 <code>&lt;record&gt;/</code> と表記——に置かれる。
+Reverse Engineering は例外で、その永続的なリポジトリ単位の出力は
+<code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> に置かれる。audit トレイルは
+<code>&lt;record&gt;/audit/</code> 下の clone 単位シャードのディレクトリであり、単一ファイルではない。</p>
+</blockquote>
+<hr>
+<h2 id="table-of-contents">目次</h2>
+<ul>
+<li><a href="#entry-points">エントリーポイント</a></li>
+<li><a href="#session-management">セッション管理</a></li>
+<li><a href="#scope-to-stage-mapping">Scope から Stage への対応</a></li>
+<li><a href="#stage-execution-engine">Stage 実行エンジン</a></li>
+<li><a href="#stage-advancement-protocol">Stage 進行プロトコル</a></li>
+<li><a href="#task-tracking">タスク追跡</a></li>
+<li><a href="#deliberate-deviations">意図的な逸脱</a></li>
+<li><a href="#error-handling">エラー処理</a></li>
+<li><a href="#appendix-a-stage-graph-reference">付録 A: Stage Graph リファレンス</a></li>
+<li><a href="#appendix-b-hook-reference">付録 B: Hook リファレンス</a></li>
+<li><a href="#appendix-c-approval-gate-patterns">付録 C: 承認ゲートのパターン</a></li>
+</ul>
+<hr>
+<h2 id="entry-points">Entry Points</h2>
+<p>conductor は <code>$ARGUMENTS</code> を engine の最初の <code>next</code> にそのまま渡す——事前パースは一切しない。engine がフラグと自由記述テキストをパースし、以下のどの起動パターンに該当するかを解決して、対応する directive を発行する。パターンは engine が解決する入力であって、conductor 側の分岐ではない。</p>
+<h3 id="aidlc-scope-explicit-scope"><code>/aidlc [scope]</code> -- 明示的な scope</h3>
+<p>引数が既知の 9 scope（<code>enterprise</code>、<code>feature</code>、<code>mvp</code>、<code>poc</code>、<code>bugfix</code>、<code>refactor</code>、<code>infra</code>、<code>security-patch</code>、<code>workshop</code>）のいずれかに一致した場合:</p>
+<p>新規ワークスペース（まだ intent が無い——<code>aidlc/spaces/*/intents/*/</code> の下に <code>aidlc-state.md</code> が存在しない）で明示的に scope を指名すると、<strong>最初の intent が誕生する</strong>。engine の <code>next</code> は <code>aidlc-utility.ts intent-birth --scope &lt;scope&gt;</code> を指名する run-then-continue の <code>print</code> directive を発行し（<code>--depth</code> / <code>--test-strategy</code> フラグは指名コマンドに引き継ぐ）、conductor がそれを実行して <code>next</code> を再実行し、最初の stage に着地する。裸の位置引数（<code>/aidlc bugfix</code>）と明示フラグ（<code>/aidlc --scope bugfix</code>）の両方の記法が、同一の birth print を発行する。作るものを記述する（<code>/aidlc &quot;build the auth service&quot;</code>）場合も誕生する。明示的に指名された scope も記述も無い裸の <code>/aidlc</code> は誕生しない（env またはデフォルトで解決された scope は birth シグナルではない）。この場合は no-state エラーを発行し、作るものを記述するか scope を指名するようユーザーに促す。</p>
+<ol>
+<li><code>aidlc/spaces/&lt;active-space&gt;/memory/</code> からガードレールを読む。</li>
+<li>ユーザーに「What would you like to build?」と尋ねる。</li>
+<li>Scope から Stage への対応に従って実行する stage を決める。</li>
+<li>Initialization phase（workspace-scaffold、workspace-detection、state-init）を単一の決定論的な <code>aidlc-utility intent-birth</code> 呼び出しとして実行する。ウェルカムメッセージはセッション開始時に <code>settings.json</code> の <code>companyAnnouncements</code> から描画される。</li>
+<li>scope 内の全 stage に対して stage レベルのタスクを作成する。最初の stage は <code>in_progress</code> に、残りは <code>pending</code> に設定する。scope 外の stage にはタスクを一切作らない。</li>
+<li>Initialization 後の最初の stage を開始する。</li>
+</ol>
+<h3 id="aidlc-freeform-ai-scope-detection"><code>/aidlc [freeform]</code> -- AI による scope 検出</h3>
+<p>引数が自由記述テキスト（既知の scope キーワードでない）の場合:</p>
+<ol>
+<li><code>aidlc/spaces/&lt;active-space&gt;/memory/</code> からガードレールを読む。</li>
+<li>intent をキーワードパターンに照らして解析する:<ul>
+<li>&quot;fix&quot; / &quot;bug&quot; / &quot;broken&quot; は <code>bugfix</code> に対応</li>
+<li>&quot;refactor&quot; / &quot;clean up&quot; / &quot;simplify&quot; は <code>refactor</code> に対応</li>
+<li>&quot;infrastructure&quot; / &quot;deploy&quot; / &quot;infra&quot; は <code>infra</code> に対応</li>
+<li>&quot;security&quot; / &quot;CVE&quot; / &quot;vulnerability&quot; / &quot;patch&quot; は <code>security-patch</code> に対応</li>
+<li>&quot;proof of concept&quot; / &quot;prototype&quot; / &quot;poc&quot; / &quot;spike&quot; は <code>poc</code> に対応</li>
+<li>&quot;mvp&quot; / &quot;minimum viable&quot; は <code>mvp</code> に対応</li>
+<li>それ以外はすべて <code>feature</code> にフォールバックする</li>
+</ul>
+</li>
+<li>曖昧性解消ルール: テキストが scope キーワードと、より長いプロジェクト記述（5 語超）の両方を含む場合、その一致は偶発的なものとして扱い、無言のデフォルトではなく COMPOSE OFFER を発火させる。</li>
+<li>明確なキーワード一致では、コンパイル済みグリッドからセレモニーを名付けてユーザーに確認する: <code>Starting a &quot;[scope]&quot; workflow for: &quot;[text]&quot; - [N] of [T] stages, [G] approval gates. Confirm to proceed, name a different scope, or say &quot;compose&quot; for a tailored plan.</code>（scope の Construction stage が Unit of Work ごとに fan-out する場合は、per-unit 節が末尾に付く。）</li>
+<li>一致なし / 豊かなプロースの場合は、適応型コンポーザを提示する。composer agent がタスクの実装エントロピーを見積もり、最小限の EXECUTE/SKIP グリッドを提案する（human-gated。下記の compose サーフェスを参照）。提示される例の scope リストにもカウントが付く（<code>bugfix = 7 of 32 stages, poc = 8, feature = all 32</code>）ので、選ぶ前に規模差が見える。</li>
+<li>確認されると、明示 scope の場合と同様に進む。元の自由記述テキストは <code>aidlc-state.md</code> に <code>Initial Intent</code> として保存される。</li>
+<li>ユーザーが検出された scope を上書きした場合は、ユーザーが選んだ scope を使う。</li>
+</ol>
+<h3 id="aidlc-compose-the-adaptive-composer"><code>/aidlc compose</code> -- 適応型コンポーザ</h3>
+<p>compose サーフェス（先頭の <code>compose</code> 動詞、<code>--new-scope</code>、<code>--report &lt;path&gt;</code>）は、engine に scope 確認ではなく composer-dispatch の <code>print</code> を発行させる。この動詞は意図的にワークスペース動詞ではない（ワークスペース動詞は Kiro シームがオフバンドで走らせる終端ユーティリティコマンド。compose は conductor がディスパッチする workflow の仕事である）。状態ファイルの有無で 2 モードに分かれる:</p>
+<ol>
+<li><strong>フロント / レポート（まだ workflow が無い）:</strong> conductor は <code>aidlc-composer-agent</code> をディスパッチする。このエージェントは読み取り専用の <code>detect --json</code> スキャンを走らせ、5 つの実装エントロピー成分を見積もり（設定済みなら CodeKB MCP の証拠、そうでなければワークスペーススキャン）、構造化された提案（<code>mode matched|custom</code>、成分スコアと証拠手法を持つ <code>ars</code> ブロック、<code>arsRationale</code>、グリッド、SKIP 単位の根拠、validator から逐語コピーした <code>summary</code>、加えて事前描画された 2 つの markdown 表——バンド付き ARS スコアと、根拠付きの stage 単位の判断）を返す。これは <code>aidlc-graph.ts validate-grid</code> で検証される（その JSON には今やグリッドの stage/gate/per-unit カウントを持つ <code>summary</code> フィールドが載る）。conductor は approve/edit/reject の gate を 3 ブロックで描画する: validator の summary 行（<code>N stages EXECUTE / M SKIP, G approval gates</code>）、次に composer の ARS スコア表を逐語、最後にその stage 判断表を逐語。approve すると、既製の match は直接誕生し、custom グリッドは scope データ（<code>scopes/aidlc-&lt;name&gt;.md</code> + <code>scope-grid.json</code> エントリ、既定で <code>keywords: []</code>）として著述され、同一ターン内で birth が続く。</li>
+<li><strong>実行中（workflow 稼働中）:</strong> composer は完了済み stage が実際に解決した内容からエントロピー成分を再見積もりし、カーソルより先の PENDING stage に対して SKIP/un-SKIP のフリップを提案する。各フリップの根拠は、スコアを動かした完了済み stage の証拠を名指しする。自身の検証パスは <code>--strict</code> で走るので、痩せたフリップは gate の前に捕捉される。conductor は gate の前に pending-proposal マーカー（<code>aidlc/.aidlc-compose-pending</code>）を書き（Stop hook はこれをターン停止シグナルとして尊重する）、解決時に削除する。approve すると <code>aidlc-utility.ts recompose --skip &lt;slugs&gt; --add &lt;slugs&gt;</code> を走らせ、これは audit ロックの下でプランのサフィックスをフリップし、新たな starvation に対して strict 検証し、派生フィールドを再構築し、<code>RECOMPOSED</code> を発行する。マーカーには時間境界がある: Stop hook はそれが新鮮な（mtime で 24h 未満）間だけ尊重し、より古い孤児（書き込みと解決の間でクラッシュしたセッション）は無視してベストエフォートで削除するので、取り残されたマーカーが forwarding-loop の強制を黙って無効化することはない。<code>--doctor</code> も、存在するマーカーをその年齢とともに報告する（新鮮 = advisory pass、stale = fail）。<code>recompose</code> は autonomous Construction の下では拒否する（gate に人間が必要）——先に gated へ切り替えるか、swarm を終わらせること。検出は chat-first である: conductor の pre-forward 判定ステップ（new-work を見つけるのと同じもの）が、平文チャットの reshape 要求（&quot;can we skip market research?&quot;）を分類し、逐語 forward せずに <code>next compose &quot;&lt;their words&gt;&quot;</code> としてルーティングする（逐語 forward だと Branch 10 に落ちて現在の stage を走らせてしまう）。要求が特定の stage を命令形で名指しする場合、conductor は composer dispatch を省いて自分で gate を提示し、approve 時に直接 <code>recompose</code> を走らせてよい——この動詞は誰が呼んでも starved/frozen/behind-cursor/skeleton-gate のフリップ（および autonomous-Construction からの呼び出し）を拒否するので健全である。人間の gate とマーカー規律は両経路で同一である。</li>
+</ol>
+<h3 id="aidlc-status-progress-check"><code>/aidlc --status</code> -- 進捗確認</h3>
+<p>workflow を進めずに現状を検査する読み取り専用コマンド:</p>
+<ol>
+<li>アクティブな intent の <code>aidlc-state.md</code>（<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> の下）を読む。</li>
+<li>表示する: 現在の phase、現在の stage、完了率、保留中の判断、アクティブなエージェント。</li>
+<li>検証が必要なら、stage-protocol-governance.md の section 13 に従って phase 境界チェックを走らせる。</li>
+<li>workflow を進めない——厳密に読み取り専用。</li>
+</ol>
+<h3 id="aidlc-stage-id-aidlc-phase-name-jump-to-stagephase"><code>/aidlc --stage &lt;id&gt;</code> / <code>/aidlc --phase &lt;name&gt;</code> -- Stage/Phase へジャンプ</h3>
+<p>特定の stage または phase へ直接ジャンプする。前方・後方いずれのジャンプもサポートする。engine がターゲットを解決し、scope メンバーシップを検証し、ジャンプ方向を計算する。engine は <code>aidlc-jump.ts execute</code> ツールを指名する run-then-continue の <code>print</code> directive を発行する。conductor はそのツールを走らせて <code>next</code> を再実行する——ジャンプの解決や検証は自分では行わない。以下の番号付きステップは、ジャンプ計算（engine + ツール）が実施する内容を記述する。</p>
+<p><strong>前方ジャンプ</strong>（ターゲットが現在位置より先）:</p>
+<ol>
+<li>ターゲット解決: <code>--stage</code> は slug（<code>code-generation</code>）または表示番号（<code>3.5</code>）を受け付ける。<code>--phase</code> は名前（<code>construction</code>）または番号（<code>3</code>）を受け付け、その phase の scope 内で最初の stage に解決する。</li>
+<li>既存の状態ファイルを確認する。無ければ自動初期化する（3 つの Initialization stage を走らせる）。</li>
+<li>ターゲットが現在の/指定の scope に含まれることを検証する。</li>
+<li>中間の scope 内 stage を <code>[S]</code>（ジャンプによる skip）としてマークする。既に完了した <code>[x]</code> stage は変更しない。</li>
+<li>欠けている上流成果物について警告し、確認を求める。</li>
+<li>stage レベルのタスクを作成し、ターゲット stage から実行を開始する。</li>
+</ol>
+<p><strong>後方ジャンプ</strong>（ターゲットが現在位置より後ろ）:</p>
+<ol>
+<li>前方ジャンプと同じ解決・検証。</li>
+<li>ターゲットより下流の全 stage を <code>[ ]</code>（未開始）にリセットする。ディスク上の成果物は保持し、削除しない。</li>
+<li>ターゲット stage と後続 stage が再実行されるとき、既存の成果物を検出して選択肢を提示する: Keep / Modify / Redo from scratch。</li>
+<li>stage レベルのタスクを作成し、ターゲット stage から実行を開始する。</li>
+</ol>
+<p><code>--scope</code>（scope の設定・上書き）、<code>--depth</code>（depth レベルの上書き）、<code>--test-strategy</code>（テスト量の上書き）と組み合わせ可能。</p>
+<h3 id="aidlc-scope-scope-setoverride-scope"><code>/aidlc --scope &lt;scope&gt;</code> -- Scope の設定・上書き</h3>
+<p>workflow の scope を設定する。単独（<code>/aidlc --scope bugfix</code>）で使うと <code>/aidlc bugfix</code> と同じ挙動になる。<code>--stage</code> や <code>--phase</code> と組み合わせると、ジャンプ操作の scope を与える。<code>--depth</code> や <code>--test-strategy</code> と組み合わせてデフォルトを上書きできる。</p>
+<h3 id="aidlc-depth-level-override-depth"><code>/aidlc --depth &lt;level&gt;</code> -- Depth の上書き</h3>
+<p>depth レベル（minimal、standard、comprehensive）を上書きする。単独で使うと、アクティブな workflow の depth を更新する。<code>--scope</code> と組み合わせると、新しい scope のデフォルトを上書きする。単独変更については <code>DEPTH_CHANGED</code> audit イベントを記録する。</p>
+<h3 id="aidlc-test-strategy-level-override-test-strategy"><code>/aidlc --test-strategy &lt;level&gt;</code> -- Test Strategy の上書き</h3>
+<p>depth とは独立に、テスト量の戦略（minimal、standard、comprehensive）を上書きする。指定されない場合は現在の depth をデフォルトとする。<code>--depth standard --test-strategy minimal</code>（完全な成果物・最小限のテスト）のような組み合わせを許す。単独変更については <code>TEST_STRATEGY_CHANGED</code> audit イベントを記録する。</p>
+<h3 id="intent-birth-the-initialization-phase">Intent の誕生 -- Initialization phase</h3>
+<p>別建てのスキャフォールドコマンドは無い（以前の <code>init</code> フラグは廃止された。ワークスペースのシェルは <code>dist/&lt;harness&gt;/</code> に構築済みで出荷される）。3 つの Initialization stage（workspace-scaffold、workspace-detection、state-init）は <code>aidlc-utility intent-birth</code> の内側で決定論的に走る——最初の <code>/aidlc</code>（または <code>/aidlc &lt;description&gt;</code>）で自動起動されるか、<code>/aidlc-init</code> パッケージングで明示的に起動される。誕生は intent の record dir を <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> に鋳造し、状態を初期化し、scope ルーティングを適用し、workflow を Initialization 後の最初の stage に位置づける:</p>
+<ol>
+<li>record dir ツリーを作成する（冪等——既存のディレクトリ/ファイルはスキップ）: <code>audit/</code> シャードディレクトリ、stage 成果物ディレクトリ（空）、検証ディレクトリ。</li>
+<li>空の space レベル <code>aidlc/knowledge/</code> ディレクトリ（space の <code>intents/</code> の兄弟）を作成する。固定のファイルセットを持たない自由形式で、誕生は per-agent サブディレクトリも README も種として置かない。チームが自分でファイルを足す。</li>
+<li>ワークスペースをスキャンし、intent の <code>aidlc-state.md</code> を、実際の phase（例: <code>--scope feature</code> なら <code>IDEATION</code>）、解決された scope、コンパイル済み scope グリッド（<code>scope-grid.json</code>。各 stage の <code>scopes:</code> frontmatter の転置）から導いた stage プランとともに書く。</li>
+<li>完全なイベント列を発行する: <code>WORKFLOW_STARTED</code>、<code>WORKSPACE_SCAFFOLDED</code>、<code>WORKSPACE_SCANNED</code>、<code>WORKSPACE_INITIALISED</code>、最初に実行される phase の <code>PHASE_STARTED</code>、各 Initialization stage の <code>STAGE_STARTED</code> + <code>STAGE_COMPLETED</code>、加えて scope がスキップする phase の <code>PHASE_SKIPPED</code> イベント。</li>
+<li>自動誕生は intent がゼロのワークスペースでのみ起きる。intent が既に存在しアクティブなカーソルが無い場合、engine は重複を誕生させずにユーザーへどれかを選ぶよう促す（<code>/aidlc intent &lt;slug&gt;</code>）。re-init フラグは無い。</li>
+<li>誕生が自動誕生 print 経由で到達した場合、conductor は <code>next</code> を再実行し Initialization 後の最初の stage へ進む。明示的な <code>/aidlc-init</code> パッケージングは Initialization 後に止まるので、ユーザーは再度 <code>/aidlc</code> を起動して対話的に開始する。</li>
+</ol>
+<h3 id="resume-state-file-exists">Resume（状態ファイルが存在する）</h3>
+<p>アクティブな intent の <code>aidlc-state.md</code> が存在する状態でユーザーが <code>/aidlc</code> を起動すると、engine の <code>next</code> が既存状態を検出し、resume/recovery ガードを走らせ、resume-options の質問を運ぶ <code>ask</code> directive を発行する。conductor はそれを <code>AskUserQuestion</code> で描画し、選択を <code>report --user-input</code> で返す。conductor は状態ファイルの有無で自分では分岐しない。以下のガードロジックは engine 内で走る:</p>
+<ol>
+<li>engine が状態ファイルを読み、ステータスサマリを準備する。</li>
+<li><code>.aidlc-recovery.md</code>（intent の record dir 内）を確認する。存在すれば、その &quot;Current stage&quot; フィールドを <code>aidlc-state.md</code> と比較し、compaction 起因の状態破損の可能性を検出する。</li>
+<li>resume options を持つ <code>ask</code> directive を発行する。conductor がそれを <code>AskUserQuestion</code> で描画する。</li>
+<li>回答を受けて、conductor は現在の workflow 状態に一致する stage レベルのタスクを再作成する。</li>
+</ol>
+<hr>
+<h2 id="session-management">Session Management</h2>
+<h3 id="session-resume-flow">Session Resume Flow</h3>
+<p>以下の分岐は <strong>engine</strong> の <code>next</code> の判断ロジックである——引数、init、状態ファイルのチェックはすべて <code>aidlc-orchestrate next</code> の内側で走り、1 つの directive（ステータス <code>print</code>、スキャフォールド <code>print</code>、resume メニューの <code>ask</code>、作業を開始する <code>run-stage</code>）を発行する。conductor 自身のフローは forwarding loop だけである: <code>next</code> を呼び、directive に従って動き、<code>report</code>、を繰り返す。</p>
+<pre class="mermaid">
+flowchart TD
+    START(["/aidlc invoked"])
+    ARG_CHECK{"Arguments\nprovided?"}
+    STATUS_CHECK{"Argument =\n--status?"}
+    STATE_EXISTS{"Active intent\nexists?"}
+    RECOVERY_CHECK{".aidlc-recovery.md\nexists?"}
+    CORRUPTION{"State matches\nrecovery file?"}
+    WARN["Warn user about\npossible corruption"]
+
+    RESUME_MENU["AskUserQuestion:\nResume Options"]
+    OPT_RESUME["Resume from\nlast checkpoint"]
+    OPT_REDO["Redo\ncurrent stage"]
+    OPT_JUMP["Jump to\nspecific stage"]
+    OPT_FRESH["Start fresh\n(archive existing)"]
+
+    STATUS_DISPLAY["Display read-only\nstatus summary"]
+    SCOPE_DETECT{"Known scope\nor freeform text?"}
+    KNOWN_SCOPE["Use explicit scope"]
+    FREEFORM["Auto-detect scope\nfrom keywords"]
+    CONFIRM_SCOPE["Confirm scope\nwith user"]
+    BIRTH["Birth the intent:\nmint record dir,\nstate + audit, begin\nfirst stage"]
+
+    START --&gt; ARG_CHECK
+    ARG_CHECK --&gt;|Yes| STATUS_CHECK
+    ARG_CHECK --&gt;|No| STATE_EXISTS
+
+    STATUS_CHECK --&gt;|Yes| STATUS_DISPLAY
+    STATUS_CHECK --&gt;|No| STATE_EXISTS
+
+    STATE_EXISTS --&gt;|Yes| RECOVERY_CHECK
+    STATE_EXISTS --&gt;|No| SCOPE_DETECT
+
+    RECOVERY_CHECK --&gt;|Yes| CORRUPTION
+    RECOVERY_CHECK --&gt;|No| RESUME_MENU
+    CORRUPTION --&gt;|Mismatch| WARN --&gt; RESUME_MENU
+    CORRUPTION --&gt;|Match| RESUME_MENU
+
+    RESUME_MENU --&gt; OPT_RESUME
+    RESUME_MENU --&gt; OPT_REDO
+    RESUME_MENU --&gt; OPT_JUMP
+    RESUME_MENU --&gt; OPT_FRESH
+
+    OPT_FRESH --&gt;|"archive + confirm"| BIRTH
+
+    SCOPE_DETECT --&gt;|"Known scope"| KNOWN_SCOPE --&gt; CONFIRM_SCOPE
+    SCOPE_DETECT --&gt;|"Freeform text"| FREEFORM --&gt; CONFIRM_SCOPE
+    CONFIRM_SCOPE --&gt; BIRTH
+
+    style START fill:#2a2440,stroke:#b895ff
+    style RESUME_MENU fill:#1b2c47,stroke:#6db3ff
+    style BIRTH fill:#1d332b,stroke:#57d9a9
+    style WARN fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<h3 id="state-file-schema">State File Schema</h3>
+<p><code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/aidlc-state.md</code>（intent の record dir）にある状態ファイルは、<code>.claude/knowledge/aidlc-shared/state-template.md</code> の契約に従って engine が生成する。stage の行はテンプレートからではなく、コンパイル済みの <code>tools/data/stage-graph.json</code> と <code>scope-grid.json</code> から来る。State Version 7 を使い、以下を含む:</p>
+<table>
+<thead>
+<tr>
+<th>セクション</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Project Information</td>
+<td>プロジェクト記述、種別（greenfield/brownfield）、scope、開始日、ライフサイクル phase、アクティブなエージェント、worktree パス、Bolt refs、practices affirmed タイムスタンプ</td>
+</tr>
+<tr>
+<td>Scope Configuration</td>
+<td>実行する stage、スキップする stage（理由付き）、depth レベル、test strategy</td>
+</tr>
+<tr>
+<td>Workspace State</td>
+<td>プロジェクトルート、検出言語、フレームワーク、ビルドシステム</td>
+</tr>
+<tr>
+<td>Execution Plan Summary</td>
+<td>合計 stage 数、完了数、in-progress の stage</td>
+</tr>
+<tr>
+<td>Runtime State</td>
+<td>現在の stage の revision カウント</td>
+</tr>
+<tr>
+<td>Phase Progress</td>
+<td>phase ごとのステータス</td>
+</tr>
+<tr>
+<td>Stage Progress</td>
+<td>コンパイル済みグラフから生成された stage ごとのチェックボックス。phase 別に整理（下記参照）</td>
+</tr>
+<tr>
+<td>Current Status</td>
+<td>ライフサイクル phase、現在/次の stage、ステータス、最終更新タイムスタンプ</td>
+</tr>
+<tr>
+<td>Session Resume Point</td>
+<td>最後に完了した stage、次のアクション、保留中の成果物</td>
+</tr>
+</tbody></table>
+<p><strong>Stage Progress</strong> は 6 状態のチェックボックスを使う:</p>
+<ul>
+<li><code>[ ]</code> 未開始</li>
+<li><code>[-]</code> 進行中</li>
+<li><code>[?]</code> 承認待ち（gate open）</li>
+<li><code>[R]</code> 修正中（gate を却下したので stage を修正している）</li>
+<li><code>[x]</code> 完了（ユーザーが承認）</li>
+<li><code>[S]</code> skip（init で scope 除外、<code>skip</code> でカット、または <code>--stage</code>/<code>--phase</code> ジャンプでバイパス）</li>
+</ul>
+<p>Construction phase のセクションは特別で、Bolt ごとに走る（下記 <a href="#construction-execution">Construction の実行</a> を参照）ので、チェックボックスは <code>bolt-plan.md</code> で定義された各 Bolt 内の Unit ごとに一度ずつ現れる。加えて <code>Construction Autonomy Mode: [unset|autonomous|gated]</code> が <strong>Current Status</strong> の下に記録される——ladder prompt が発火した後に書かれ、セッション resume で尊重される。</p>
+<h3 id="recovery-breadcrumb">Recovery Breadcrumb</h3>
+<p>recovery breadcrumb（intent の record dir 内の <code>.aidlc-recovery.md</code>）は <code>validate-state.ts</code> の PreCompact hook が書く。context compaction が起きる前の、workflow の最後の既知良好状態のスナップショットを記録する。</p>
+<p>セッション resume 時、orchestrator は breadcrumb の &quot;Current stage&quot; を状態ファイルの &quot;Current Stage&quot; と比較する。異なる場合、compaction が状態破損を引き起こした可能性をユーザーに警告する。これは PreCompact hook が情報提供専用で compaction をブロックできないため重要である。</p>
+<h3 id="resume-options">Resume Options</h3>
+<p>状態ファイルが検出されると、orchestrator は 4 つの選択肢を提示する。conductor は人間の回答を <code>report --result resumed --user-input &quot;&lt;answer&gt;&quot;</code> で報告する。engine が選択に一致させ、正確な手を名指しする選択ごとの directive を返す（認識できない回答は、受理可能な選択肢を添えてエラーになる）:</p>
+<p><strong>1. Resume from last checkpoint</strong> -- in-progress の stage から続ける: <code>next</code> を再実行し、<code>aidlc-state.md</code> を読んで完了/進行中/未開始の stage を判定する。</p>
+<p><strong>2. Redo current stage</strong> -- directive は <code>aidlc-jump.ts execute --target &lt;current&gt; --direction redo --scope &lt;scope&gt;</code> を名指しし、現在の stage のチェックボックスをリセットする。次の <code>next</code> がそれを最初から再実行する。</p>
+<p><strong>3. Jump to stage</strong> -- directive は conductor にターゲットを尋ね、<code>next --stage &lt;slug&gt;</code> 経由でルーティングするよう指示する（engine が方向を解決しターゲットを検証する）。</p>
+<p><strong>4. Start fresh</strong> -- directive は second-intent フロー経由でルーティングする: scope と記述を確認し、<code>next --new-intent --scope &lt;scope&gt; &quot;&lt;description&gt;&quot;</code>。既存の workflow は新しい intent と並んでそのまま残る。</p>
+<h3 id="session-resume-context-loading">Session Resume Context Loading</h3>
+<table>
+<thead>
+<tr>
+<th>Phase / Stage 種別</th>
+<th>ロードされるコンテキスト</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>INITIALIZATION (0.1-0.3)</td>
+<td>ガードレールのみ（ワークスペース未検出）</td>
+</tr>
+<tr>
+<td>IDEATION (1.1-1.7)</td>
+<td>ここまで完了した <code>&lt;record&gt;/ideation/</code> 成果物 + ガードレール</td>
+</tr>
+<tr>
+<td>INCEPTION -- RE stages</td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> + ideation 成果物</td>
+</tr>
+<tr>
+<td>INCEPTION -- Requirements stages</td>
+<td>リポジトリ単位の <code>codekb/</code> 成果物（実施済みなら）+ requirements 成果物</td>
+</tr>
+<tr>
+<td>INCEPTION -- Design stages</td>
+<td>requirements + user stories + application design 成果物</td>
+</tr>
+<tr>
+<td>INCEPTION -- Delivery Planning</td>
+<td>全 inception 成果物</td>
+</tr>
+<tr>
+<td>CONSTRUCTION -- Code Generation</td>
+<td>現在の unit の design 成果物 + story design + acceptance criteria + 先行コード</td>
+</tr>
+<tr>
+<td>CONSTRUCTION -- Build/Test</td>
+<td>現在の unit のコード出力 + test plan + build configuration</td>
+</tr>
+<tr>
+<td>CONSTRUCTION -- CI/Infra</td>
+<td>infrastructure design + code generation 出力</td>
+</tr>
+<tr>
+<td>OPERATION (4.1-4.7)</td>
+<td>Construction 出力 + operation 成果物。後段の stage（4.4+）は 4.1-4.3 のデプロイ出力もロードする</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="scope-to-stage-mapping">Scope-to-Stage Mapping</h2>
+<p>scope は 32 stage のうちどれをどの depth で実行するかを決める。scope 外の stage は完全にスキップされる——タスクは作られず、承認 gate も提示されない。すべての scope は Initialization phase（0.1-0.3）で始まる。</p>
+<h3 id="complete-mapping">Complete Mapping</h3>
+<p>正典データは <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイル群と各 stage の <code>scopes:</code> frontmatter にあり、<code>.claude/tools/data/scope-grid.json</code> にコンパイルされる。ライブのコンパイル済みカウントは <code>bun .claude/tools/aidlc-utility.ts scope-table</code> で取得する。</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>含まれる Stage</th>
+<th>EXECUTE / Total</th>
+<th>Depth</th>
+<th>Test Strategy</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>enterprise</code></td>
+<td>All: 0.1-0.3, 1.1-1.7, 2.1-2.8, 3.1-3.7, 4.1-4.7</td>
+<td>32 / 32</td>
+<td>Comprehensive</td>
+<td>Comprehensive</td>
+</tr>
+<tr>
+<td><code>feature</code></td>
+<td>All: 0.1-0.3, 1.1-1.7, 2.1-2.8, 3.1-3.7, 4.1-4.7</td>
+<td>32 / 32</td>
+<td>Standard</td>
+<td>Standard</td>
+</tr>
+<tr>
+<td><code>mvp</code></td>
+<td>0.1-0.3, 1.1, 1.3 (light), 1.4, 2.1 (if brownfield), 2.2, 2.3, 2.4, 2.5 (if UI), 2.6, 2.7, 2.8, 3.1-3.7</td>
+<td>22 / 32</td>
+<td>Standard</td>
+<td>Standard</td>
+</tr>
+<tr>
+<td><code>poc</code></td>
+<td>0.1-0.3, 1.1 (minimal), 2.1 (if brownfield), 2.3 (minimal), 3.5, 3.6</td>
+<td>8 / 32</td>
+<td>Minimal</td>
+<td>Minimal</td>
+</tr>
+<tr>
+<td><code>bugfix</code></td>
+<td>0.1-0.3, 2.1 (always), 2.3 (minimal), 3.5, 3.6</td>
+<td>7 / 32</td>
+<td>Minimal</td>
+<td>Minimal</td>
+</tr>
+<tr>
+<td><code>refactor</code></td>
+<td>0.1-0.3, 2.1 (always), 2.3 (minimal), 3.1 (refactoring plan), 3.5, 3.6</td>
+<td>8 / 32</td>
+<td>Minimal</td>
+<td>Minimal</td>
+</tr>
+<tr>
+<td><code>infra</code></td>
+<td>0.1-0.3, 2.2, 2.3 (infra requirements), 3.2, 3.3, 3.4, 3.7, 4.1, 4.2, 4.3, 4.4</td>
+<td>13 / 32</td>
+<td>Standard</td>
+<td>Standard</td>
+</tr>
+<tr>
+<td><code>security-patch</code></td>
+<td>0.1-0.3, 2.1 (find vulnerability context), 2.3 (minimal), 3.2, 3.5, 3.6, 4.1, 4.3</td>
+<td>10 / 32</td>
+<td>Minimal</td>
+<td>Minimal</td>
+</tr>
+<tr>
+<td><code>workshop</code></td>
+<td>0.1-0.3, 2.1-2.8, 3.1-3.7, 4.1-4.7 (skips all ideation 1.1-1.7)</td>
+<td>25 / 32</td>
+<td>Standard</td>
+<td><strong>Minimal</strong></td>
+</tr>
+</tbody></table>
+<h3 id="detailed-scope-breakdown">Detailed Scope Breakdown</h3>
+<ul>
+<li><strong>enterprise</strong> -- 全 32 stage を comprehensive depth で。各 stage は完全な成果物詳細、深い分析、全オプション stage 込みで実行する。完全なトレーサビリティを要する規制対象のエンタープライズ機能に適する。</li>
+<li><strong>feature</strong> -- 全 32 stage を standard depth で。stage セットは enterprise と同じだが、成果物詳細は中庸。新規機能の既定 scope。</li>
+<li><strong>mvp</strong> -- Ideation の大半をスキップ（Intent Capture、軽い Feasibility、Scope Definition のみ残す）。Inception と Construction は全て走らせる。Operation stage は任意。</li>
+<li><strong>poc</strong> -- 最小限の Ideation（Intent Capture のみ）。中核の Inception。Construction からは Code Generation と Build and Test のみ。Operation は無し。</li>
+<li><strong>bugfix</strong> -- Ideation 無し。Reverse Engineering は常に含む（バグを見つけるため）+ 最小限の Requirements Analysis。Code Generation と Build and Test のみ。</li>
+<li><strong>refactor</strong> -- Ideation 無し。Inception の入りは bugfix と同じ。Functional Design（リファクタリング計画として）を追加する。</li>
+<li><strong>infra</strong> -- Ideation 無し。Infra 中心の Requirements Analysis。Construction から NFR stage + Infrastructure Design + CI Pipeline。Operation から Deployment と Observability。</li>
+<li><strong>security-patch</strong> -- Ideation 無し。脆弱性コンテキストを見つける Reverse Engineering + 最小限の Requirements Analysis（脆弱性とその修復基準の監査可能な記述）。NFR Requirements、Code Generation、Build and Test。Operation から Deployment Pipeline と Deployment Execution。</li>
+<li><strong>workshop</strong> -- Ideation 無し（プロジェクトはファシリテータが事前に決めている）。Inception・Construction・Operation の全 stage を実行する。既定 depth: Standard（学習のための完全な成果物詳細）。既定 test strategy: Minimal（workshop のペースを速く保つ Nyquist testing）。参加者が mob として全ライフサイクルを通す複数日の AI-DLC workshop 向けに設計されている。</li>
+</ul>
+<h3 id="depth-levels">Depth Levels</h3>
+<table>
+<thead>
+<tr>
+<th>Depth</th>
+<th>Scopes</th>
+<th>特性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Minimal</td>
+<td>poc, bugfix, refactor, security-patch</td>
+<td>最小限の成果物、簡潔な分析、オプション stage はスキップ</td>
+</tr>
+<tr>
+<td>Standard</td>
+<td>feature, mvp, infra, workshop</td>
+<td>中庸な詳細度の完全な成果物</td>
+</tr>
+<tr>
+<td>Comprehensive</td>
+<td>enterprise</td>
+<td>深い分析つきの comprehensive な成果物、全 stage 実行</td>
+</tr>
+</tbody></table>
+<p><strong>注:</strong> Workshop は独立した depth と test strategy のデフォルトを持つ点で唯一の存在である。Standard depth（学習のための完全な成果物）を使うが、Minimal test strategy（ペースのための Nyquist testing）を使う。他の全 scope は test strategy を depth レベルに合わせるのが既定。<code>--test-strategy</code> で上書きする。</p>
+<hr>
+<h2 id="stage-execution-engine">Stage Execution Engine</h2>
+<p>すべての stage は 4 つのアクティブな実行パターン——inline、subagent、pipeline、mob——のいずれかに従う（出荷グラフでは 28 / 2 / 1 / 1）。コンパイル済み stage グラフ（<code>tools/data/stage-graph.json</code>）が各 stage のモードを持ち、engine がそれを読んで <code>run-stage</code> directive に <code>directive.mode</code> として届ける。SKILL.md の Stage Graph 表は人間可読のミラーであって、ディスパッチのソースではない。</p>
+<h3 id="full-stage-lifecycle">Full Stage Lifecycle</h3>
+<pre class="mermaid">
+sequenceDiagram
+    participant O as Orchestrator
+    participant SF as Stage File
+    participant A as Agent (.md)
+    participant K as Knowledge (6 steps)
+    participant U as User
+    participant S as aidlc-state.md
+    participant AU as audit/ shard
+
+    O-&gt;&gt;A: 1. Read every inline_context_paths entry
+    Note over A: Inline lead/support — mob lead-only persona + knowledge paths
+
+    O-&gt;&gt;SF: 2. Read stage file
+    Note over SF: directive.stage_file
+
+    O-&gt;&gt;K: 3. Read resolved inputs
+    Note over K: directive.consumes
+
+    O-&gt;&gt;S: 4. Engine activates stage as [-]
+    S-&gt;&gt;AU: Emit STAGE_STARTED
+
+    alt Inline Stage (28 of 32)
+        O-&gt;&gt;U: Execute stage work in conversation
+        U--&gt;&gt;O: Answer questions, provide feedback
+        O-&gt;&gt;U: Present 5-part completion message
+        O-&gt;&gt;U: AskUserQuestion: Approval Gate
+        U--&gt;&gt;O: Approve / Request Changes
+    else Fully Dispatched Stage (3 of 32: subagent or pipeline)
+        O-&gt;&gt;O: Bundle context into Task prompt
+        O-&gt;&gt;O: Call Task tool (subagent_type set to the named agent)
+        O--&gt;&gt;O: Receive structured summary
+        O-&gt;&gt;U: Present completion message from summary
+        O-&gt;&gt;U: AskUserQuestion: Approval Gate
+        U--&gt;&gt;O: Approve / Request Changes
+    else Mob Stage (1 of 32)
+        O-&gt;&gt;U: Execute lead draft inline
+        O-&gt;&gt;O: Dispatch blind support-agent contributions
+        O-&gt;&gt;U: Integrate as lead and present Approval Gate
+        U--&gt;&gt;O: Approve / Request Changes
+    end
+
+    O-&gt;&gt;S: 5. Report approved
+    S-&gt;&gt;AU: Atomically emit STAGE_COMPLETED
+    O-&gt;&gt;O: 6. Transition tasks, route to next stage
+</pre>
+<h3 id="inline-execution">Inline Execution</h3>
+<p>Inline stage は orchestrator の会話の中で直接走る。ユーザーはその stage とリアルタイムに対話できる。32 stage のうち 28 が inline で、残り 4 はディスパッチされる（practices-discovery と code-generation の subagent、reverse-engineering の pipeline、user-stories の mob）。</p>
+<p>6 ステップのプロセス:</p>
+<ol>
+<li><strong>すべての inline context path を読む。</strong> stage の作業前に、conductor は <code>directive.inline_context_paths</code> の全ファイルを読む。engine が正確な lead・support のペルソナと knowledge ファイルの一覧を供給する。エージェント名だけではコンテキストとしてロードされず、support-agent エントリを省いてはならない。</li>
+<li><strong>stage ファイルを読む。</strong> conductor は正確な <code>directive.stage_file</code> を読む。</li>
+<li><strong>解決済み入力を読む。</strong> conductor は <code>directive.consumes</code> の既存成果物を読み、期待どおり入力が欠けている場合は stage が文書化したフォールバックを適用する。</li>
+<li><strong>会話の中でステップを直接実行する。</strong> orchestrator は stage の作業を inline で行う: 質問し、回答を分析し、成果物を生成し、ユーザーと対話する。</li>
+<li><strong>承認 gate は stage-protocol.md に従う。</strong> すべての inline stage（3 つの Initialization stage を除く）は、5 部構成の完了メッセージと <code>AskUserQuestion</code> の承認 gate で終わる。</li>
+<li><strong>engine に制御を返す。</strong> 承認後、conductor は結果を報告する。engine が状態をアトミックに更新し、完了を記録し、次の stage へルーティングする。</li>
+</ol>
+<h3 id="dispatched-and-hybrid-execution">Dispatched and Hybrid Execution</h3>
+<p>3 つの stage は lead の作業を別のエージェントタスクに委譲する。mob は lead を
+inline に保ち、support agent だけをディスパッチする:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Mode</th>
+<th>Claude Code Subagent Type</th>
+<th>Agent</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2.1 Reverse Engineering</td>
+<td>pipeline</td>
+<td><code>aidlc-developer-agent</code> then <code>aidlc-architect-agent</code> (2-link chain)</td>
+<td>aidlc-developer-agent + aidlc-architect-agent</td>
+<td>深いコード分析は大きな中間出力を生む。最終リンクが成果物を書く</td>
+</tr>
+<tr>
+<td>2.2 Practices Discovery</td>
+<td>subagent</td>
+<td><code>aidlc-pipeline-deploy-agent</code>, then three parallel spokes, then the lead again</td>
+<td>pipeline-deploy + quality + developer + devsecops</td>
+<td>Hub-and-spoke の発見は、人間インタビューと lead 統合の前に証拠の視点を独立に保つ</td>
+</tr>
+<tr>
+<td>2.4 User Stories</td>
+<td>mob</td>
+<td>lead inline; <code>aidlc-design-agent</code> + <code>aidlc-developer-agent</code> + <code>aidlc-quality-agent</code> in parallel</td>
+<td>4 participants</td>
+<td>lead が下書きし、互いに blind な協力者が contribution ファイルを書き、lead が gate 前に統合する</td>
+</tr>
+<tr>
+<td>3.5 Code Generation</td>
+<td>subagent</td>
+<td><code>aidlc-developer-agent</code></td>
+<td>aidlc-developer-agent</td>
+<td>コード記述は unit 仕様に絞ったクリーンなコンテキストから利益を得る</td>
+</tr>
+</tbody></table>
+<p>Workspace detection（0.2）は以前は subagent だった。今は <code>aidlc-utility intent-birth</code> の内側の決定論的なルールベーススキャナである。ルールは <code>aidlc-common/stages/initialization/workspace-detection.md</code> に文書化されている。</p>
+<p>6 ステップのプロセス:</p>
+<ol>
+<li><strong>ルール・stage・入力を読む。</strong> 正確な directive パスを使う。</li>
+<li><strong>conductor 所有のコンテキストをロードする。</strong> mob directive は lead の完全な
+一覧を <code>inline_context_paths</code> に運ぶ。完全にディスパッチされる subagent/pipeline
+の directive は空の一覧を運ぶ。</li>
+<li><strong>paths-only のブリーフを準備する。</strong> 正確なルールと関連する成果物の
+パス + タスク指示を渡す。名指しされた harness エージェント設定がペルソナと
+knowledge をロードする。どちらもプロンプトにコピーしない。</li>
+<li><strong>トポロジーを適用する。</strong> subagent の support には blind spoke、pipeline には
+順序付きリンク、mob には blind な support contribution + 境界付きの objection
+ラウンドを使う。</li>
+<li><strong>永続出力を集める。</strong> lead が <code>produces[]</code> を所有する。ディスパッチされた
+subagent/mob の support はそれぞれ identity マーク付きの contribution ファイルを書く。</li>
+<li><strong>engine を通じて完了する。</strong> 成果物/証拠を検証し、承認 gate を提示する。</li>
+</ol>
+<h3 id="multi-agent-coordination">Multi-Agent Coordination</h3>
+<p>一部の stage には複数のエージェント——lead エージェントと 1 つ以上の support エージェント——が関わる。協調パターンは <code>directive.mode</code>（stage の通信トポロジー）に従い、常に orchestrator を介する:</p>
+<ol>
+<li>lead エージェントの作業をまず実行し、主要成果物を生成する。</li>
+<li>トポロジーに従って各 support エージェントを投入する。<code>inline</code> stage では orchestrator が <code>directive.inline_context_paths</code> の全 lead/support エントリを読み、ディスパッチせずにそれらの視点を採用する。<code>mob</code> では lead-only の一覧を読んで lead 作業を inline で行い、各 support は実際のディスパッチとする。<code>subagent</code>（hub-and-spoke）と <code>pipeline</code>（chain）では lead と support をディスパッチする: subagent では互いに blind な spoke、pipeline では順序付きの enrichment ホップ、mob では並列の blind contribution + 境界付き objection ラウンド（stage-protocol.md §5）。</li>
+<li>全エージェント出力を最終 stage 成果物に統合する——ディスパッチされた support エージェントは contribution ファイル（Contribution + Positions、stage-protocol §11）を書き、lead がそれを統合する。<code>produces[]</code> 成果物は lead だけが編集する（pipeline リンクはそれを直接前進させる）。未解決の mob 判断は stage の途中で人間に浮上し、維持された dissent は gate で逐語引用される。</li>
+<li>エージェント同士は互いを呼び出さない——orchestrator だけが委譲する。全エージェントファイルの <code>disallowedTools: Task</code> で強制される。</li>
+</ol>
+<p>Practices Discovery は gate 順序の例外である。その hub-and-spoke の作業は
+<strong>Approve</strong> / <strong>Request Changes</strong> gate で終わる。Approve 後、conductor が
+<code>practices-promote</code> を走らせる。このコマンドだけが affirmed タイムスタンプと
+<code>PRACTICES_AFFIRMED</code> の audit 受領を commit でき、engine が <code>approved</code> を受理する前に、
+その受領は現在の stage 試行に対して新鮮でなければならない。promotion の欠落・陳腐化・
+失敗は gate を開いたまま、stage を未完了のままにする。</p>
+<h3 id="two-link-reverse-engineering-pipeline">Two-Link Reverse Engineering Pipeline</h3>
+<p>Stage 2.1 は出荷される <code>mode: pipeline</code> の例——各リンクが作業物を直接
+前進させる 2 リンクのチェーン——である:</p>
+<ol>
+<li><strong>Developer（link 1、lead）:</strong> コードベースをスキャンし、コード構造を分析し、コンポーネントを識別し、依存を対応づけ、生の分析を返す。</li>
+<li><strong>Architect（link 2、最終リンク）:</strong> developer の生分析を受け取り、<code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> の下の 9 つの codekb 成果物に統合する——最終リンクは pipeline 契約どおり <code>produces[]</code> 成果物を完成させて残す。</li>
+</ol>
+<p>Reverse Engineering には <strong>always-rerun ポリシー</strong> がある: brownfield プロジェクトでは、先行成果物が存在しても常に再実行され、分析が現在のコードベース状態を反映することを保証する。</p>
+<h3 id="construction-execution">Construction Execution</h3>
+<p>Construction（stage 3.1–3.7）は、標準的な stage ごとの inline 実行モデルから逸脱する。代わりに orchestrator はそれを <strong>Bolt ごと</strong>に走らせる。駆動するのは <code>&lt;record&gt;/inception/delivery-planning/bolt-plan.md</code>（Bolt 列 + walking-skeleton マーカー）と <code>&lt;record&gt;/inception/units-generation/unit-of-work-dependency.md</code>（DAG）である。</p>
+<p>Bolt 単位の構造:</p>
+<ol>
+<li>Bolt の Unit 群を横断して、stage 3.1–3.4 の質問を QUESTION-ONLY モードで集める。単一の回答で gate する。</li>
+<li>stage 3.1–3.4 の design 成果物を ARTIFACT-ONLY モードで生成する。</li>
+<li>stage 3.5 Code Generation を Unit ごとに Task ツール（<code>subagent_type=&quot;aidlc-developer-agent&quot;</code>）でディスパッチする。<code>code-generation.md</code> 内の Unit 単位の承認 gate は orchestrator によって <strong>抑制される</strong>。</li>
+<li>単一の Bolt レベル（またはバッチレベル）の承認 gate を提示する。</li>
+</ol>
+<p><code>bolt-plan.md</code> の最初の Bolt は <strong>walking skeleton</strong> であり——その gate は autonomy モードに関わらず常に提示される。walking-skeleton gate が承認された直後、orchestrator は <strong>ladder prompt</strong> を workflow ごとにちょうど一度発火し、<code>aidlc-state.md</code> に <code>Construction Autonomy Mode: autonomous|gated</code> を記録し、<code>AUTONOMY_MODE_SET</code> を発行する。残りの Bolt はそのモードを尊重する。</p>
+<p>並列実行の資格を持つ Bolt（依存の前提が満たされ、相互依存が無い）は <strong>batch</strong> を成す。orchestrator は batch 内で質問/design を Bolt ごとに逐次実行し、その後 stage 3.5 Code Generation を <strong>単一の assistant メッセージ内の N 個の <code>Task</code> 呼び出し</strong>で並列にディスパッチする。フレームワークが N 個の subagent セッションを並行して spawn し、結果は orchestrator の次のターンで到着する。単一の batch レベル gate が batch 内の全 Bolt をカバーする。audit ログは <code>BOLT_STARTED</code>/<code>BOLT_COMPLETED</code> の <code>Batch</code> フィールドで並列 Bolt を結びつける。</p>
+<p>失敗処理は <strong>halt-and-ask</strong> であり、autonomy モードに関わらず走る:</p>
+<ul>
+<li>Solo Bolt の失敗: halt し、<code>BOLT_FAILED</code> を発行し、retry / skip / abort を提示する。</li>
+<li>並列 batch の部分失敗: 全並列 Task の返りを待ち、成功した Bolt の成果物をディスク上に保存し、<code>Succeeded=[names]</code> 付きで <code>BOLT_FAILED</code> を発行し、失敗した Bolt にスコープした同じ選択肢を提示する。Retry は失敗した Bolt だけを再実行する。batch の兄弟は <code>[x]</code> のまま残る。</li>
+</ul>
+<pre class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant O as Orchestrator
+    participant T as Task Framework
+    participant BA as Subagent (Bolt A)
+    participant BB as Subagent (Bolt B)
+    participant BC as Subagent (Bolt C)
+
+    O-&gt;&gt;O: Read bolt-plan.md + unit-of-work-dependency.md
+    O-&gt;&gt;U: Run Bolt A (walking skeleton) — questions, design, code-gen
+    U-&gt;&gt;O: Approve walking-skeleton gate
+    O-&gt;&gt;U: Ladder prompt (fires once)
+    U-&gt;&gt;O: "Continue autonomously"
+    O-&gt;&gt;O: Write Construction Autonomy Mode: autonomous — emit AUTONOMY_MODE_SET
+
+    Note over O,T: Bolts B + C eligible in parallel batch
+    O-&gt;&gt;T: Task(B code-gen) + Task(C code-gen) in ONE message
+    par Parallel execution
+        T-&gt;&gt;BB: spawn subagent for Bolt B
+        T-&gt;&gt;BC: spawn subagent for Bolt C
+    end
+    BB--&gt;&gt;O: Bolt B artifacts + summary
+    BC--&gt;&gt;O: Bolt C artifacts + summary
+    O-&gt;&gt;O: Emit BOLT_COMPLETED for B and C (shared Batch=N)
+    Note over O,U: No gate — autonomous mode. A failure would force halt-and-ask regardless.
+
+    O-&gt;&gt;O: All Bolts done → run 3.6 Build and Test, then 3.7 CI Pipeline
+</pre>
+<p>並列ディスパッチ下での状態と audit の安全性: <code>aidlc-audit.ts</code> は mkdir ベースのロックを使うので、並行 append は安全である。ライフサイクルの書き込みは、必要な全 Task 結果が返り conductor が 1 つの結果を報告した後にのみ起きる。engine は内部の状態遷移を直列化する。状態レースのリスクは無い。</p>
+<hr>
+<h2 id="stage-advancement-protocol">Stage Advancement Protocol</h2>
+<p>状態遷移は engine が所有する。conductor は <code>aidlc-orchestrate.ts</code> を通じて outcome を報告し、engine が内部の状態遷移を呼び出して state ファイルを更新し、ライフサイクルの audit 行を発行し、アトミックに routing する。標準の workflow / phase / stage 状態遷移図と audit イベント分類の全体は <a href="12-state-machine.html">State Machine</a> を参照。</p>
+<h3 id="stage-lifecycle">Stage Lifecycle</h3>
+<pre class="mermaid">
+stateDiagram-v2
+    [*] --&gt; Pending
+    state "[ ] Pending" as Pending
+    state "[-] Active" as Active
+    state "[?] AwaitingApproval" as Awaiting
+    state "[R] Revising" as Revising
+    state "[x] Completed" as Completed
+    state "[S] Skipped" as Skipped
+
+    Pending --&gt; Active : engine route / STAGE_STARTED
+    Active --&gt; Awaiting : report awaiting-approval / STAGE_AWAITING_APPROVAL
+    Awaiting --&gt; Completed : report approved / GATE_APPROVED + STAGE_COMPLETED
+    Awaiting --&gt; Revising : report rejected / GATE_REJECTED + STAGE_REVISING
+    Revising --&gt; Awaiting : report revised / STAGE_AWAITING_APPROVAL
+    Pending --&gt; Skipped : scope composition / STAGE_SKIPPED
+    Active --&gt; Skipped : report skipped / STAGE_SKIPPED
+    Revising --&gt; Skipped : report skipped / STAGE_SKIPPED
+    Completed --&gt; [*]
+    Skipped --&gt; [*]
+</pre>
+<p>上記のすべての遷移は orchestration engine が所有する。conductor は outcome を報告するのみで、checkbox の状態を書き込んだり、state のライフサイクル動詞を直接呼んだり、stage/gate/phase の audit イベントを散文で発行したりすることは決してない。</p>
+<h3 id="when-a-stage-completes-user-approves-via-the-gate">stage が完了したとき（gate で user が承認）</h3>
+<ol>
+<li><p><strong>completion verification を実行する</strong> - artifact がディスク上に存在し、guardrail が守られているか確認する。これは正しさの検査であって、状態遷移ではない。これは決定論的にも強制される: <code>approve</code> は、宣言された <code>produces</code> artifact が欠けている gated stage を拒否する（<code>AIDLC_SKIP_ARTIFACT_GUARD=1</code> の場合を除く）。したがって stage は出力なしに完了としてマークできない（#366）。unit ごとの Construction stage は代わりに swarm referee が検証する。</p>
+</li>
+<li><p><strong>gate に入る</strong>: <code>bun .claude/tools/aidlc-orchestrate.ts report --stage &lt;slug&gt; --result awaiting-approval</code>。engine は <code>[-]</code> → <code>[?]</code> にマークし、<code>STAGE_AWAITING_APPROVAL</code> を発行し、<code>/aidlc --status</code> に &quot;Awaiting your approval on &amp;lt;stage&gt;&quot; を表示させる。</p>
+</li>
+<li><p><strong>approval gate を提示する</strong>（AskUserQuestion）。</p>
+</li>
+<li><p><strong>user の応答を記録する</strong>:</p>
+<ul>
+<li><strong>Approve</strong> -&gt; <code>bun .claude/tools/aidlc-orchestrate.ts report --stage &lt;slug&gt; --result approved --user-input &quot;&lt;exact choice&gt;&quot;</code>。欠けている gate 行があれば発行し、続いて <code>GATE_APPROVED</code> + <code>STAGE_COMPLETED</code> を発行し、advance する。stage の <code>produces</code> 出力が存在しない場合は missing-produced-artifact エラーで拒否する。</li>
+<li><strong>Request Changes</strong> → <code>bun .claude/tools/aidlc-orchestrate.ts report --stage &lt;slug&gt; --result rejected --user-input &quot;&lt;text&gt;&quot;</code>。engine は <code>GATE_REJECTED</code> + <code>STAGE_REVISING</code> を発行し、<code>[?]</code> → <code>[R]</code> にマークし、Revision Count をインクリメントする。</li>
+<li><code>[R]</code> stage の作業を再実行した後、<code>bun .claude/tools/aidlc-orchestrate.ts report --stage &lt;slug&gt; --result revised</code> を呼んで gate に再入する（新たな <code>STAGE_AWAITING_APPROVAL</code> を発行し、<code>[R]</code> → <code>[?]</code> にマークする）。</li>
+</ul>
+</li>
+<li><p><strong>次の stage へ advance する</strong>: 手順 4 の承認 report が advance も行う。engine は、（<code>init</code> が設定した）state ファイルの EXECUTE/SKIP サフィックスとコンパイル済みの scope grid（<code>scope-grid.json</code>）から、次の in-scope stage を導出する。完了したものを <code>[x]</code>、次のものを <code>[-]</code> にマークし、Current Stage / Lifecycle Phase / Active Agent / Next Stage / Last Completed Stage / Last Updated / Completed 数を更新し、次の stage の <code>STAGE_STARTED</code> を発行する。phase 境界ではさらに <code>PHASE_COMPLETED</code> + <code>PHASE_VERIFIED</code> + <code>PHASE_STARTED</code> をアトミックに発行する。</p>
+<p>このツールは冪等である — <code>advance &lt;slug&gt;</code> を 2 度目に再生しても、イベントを再発行せずに <code>{replay: true}</code> を返す。</p>
+</li>
+<li><p><strong>これが最後の in-scope stage だった場合</strong>: 同じ <code>report --stage &lt;slug&gt; --result approved --user-input &quot;&lt;exact choice&gt;&quot;</code> 呼び出しが <code>[x]</code> にマークし、Status=Completed を設定し、<code>PHASE_COMPLETED</code> + <code>PHASE_VERIFIED</code> + <code>WORKFLOW_COMPLETED</code> を発行する。completion summary を提示する。</p>
+</li>
+<li><p><strong>task を遷移させる</strong>: 古い task を <code>completed</code> にマークし、新しい task を <code>activeForm: &quot;Running &lt;Next Stage&gt; [slug]&quot;</code> 付きで <code>in_progress</code> に設定する。<code>[slug]</code> サフィックスが、statusline フィールドを同期する PostToolUse hook をトリガーする。</p>
+</li>
+</ol>
+<h3 id="phase-boundary-verification">Phase Boundary Verification</h3>
+<p>phase 遷移時（init→ideation / inception / …、ideation→inception、inception→construction、construction→operation）、<code>advance</code> は PHASE_COMPLETED + PHASE_VERIFIED + PHASE_STARTED を発行する。orchestrator は、<code>advance</code> を呼ぶ前に <code>.claude/knowledge/aidlc-shared/verification.md</code> の traceability チェックを実行する責任を負う — 検証に失敗した場合は、問題を user に提示し、advance してはならない。</p>
+<hr>
+<h2 id="task-tracking">Task Tracking</h2>
+<p>orchestrator は Claude Code の TaskCreate/TaskUpdate/TaskList ツールを使い、workflow を通じて可視の進捗サイドバーを保つ。</p>
+<h3 id="stage-level-tasks">Stage-Level Tasks</h3>
+<p>task は stage レベルで作成される -- scope 内の stage 1 つにつき task 1 つ。task は Claude Code の task サイドバーにのみ存在する（state ファイルには保存されない）。context compaction 後に task ID が失われた場合は、subject ベースの検索で <code>TaskList</code> から復元される。</p>
+<h3 id="task-creation-timing">Task Creation Timing</h3>
+<p>task は phase バッチで作成される:</p>
+<ul>
+<li><strong>INITIALIZATION</strong>: すべての Initialization stage task（workspace-scaffold, workspace-detection, state-init）を <code>aidlc-utility intent-birth</code> の実行前に作成する。このツールは 1 回の呼び出しで 3 stage すべてを完了する。task はツールが返った後に completed へ切り替わる。</li>
+<li><strong>IDEATION</strong>: すべての Ideation stage task を stage 1.1 の開始前に作成する。</li>
+<li><strong>INCEPTION</strong>: すべての Inception stage task を stage 2.1 の開始前に作成する。</li>
+<li><strong>CONSTRUCTION</strong>: Delivery Planning からの execution plan に基づいて task を作成する。unit ごとの stage task を各 unit に作成し、加えて cross-cutting task を作成する。</li>
+<li><strong>OPERATION</strong>: すべての Operation stage task を stage 4.1 の開始前に作成する。</li>
+</ul>
+<h3 id="per-unit-task-naming-conventions">Per-Unit Task Naming Conventions</h3>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>パターン</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Initialization</td>
+<td><code>&quot;Initialization - [Stage Name]&quot;</code></td>
+<td><code>&quot;Initialization - Workspace Scaffold&quot;</code></td>
+</tr>
+<tr>
+<td>Ideation</td>
+<td><code>&quot;Ideation - [Stage Name]&quot;</code></td>
+<td><code>&quot;Ideation - Intent Capture&quot;</code></td>
+</tr>
+<tr>
+<td>Inception</td>
+<td><code>&quot;Inception - [Stage Name]&quot;</code></td>
+<td><code>&quot;Inception - Requirements Analysis&quot;</code></td>
+</tr>
+<tr>
+<td>Construction (per Bolt)</td>
+<td><code>&quot;Construction — Bolt: [bolt-name]&quot;</code>（最初の Bolt には <code>&quot; (walking skeleton)&quot;</code> を付す）</td>
+<td><code>&quot;Construction — Bolt: notification-core (walking skeleton)&quot;</code></td>
+</tr>
+<tr>
+<td>Construction (per-Unit code gen)</td>
+<td><code>&quot;Construction — Code Generation (Unit: [unit-name])&quot;</code></td>
+<td><code>&quot;Construction — Code Generation (Unit: notification-email)&quot;</code></td>
+</tr>
+<tr>
+<td>Construction (cross-Bolt)</td>
+<td><code>&quot;Construction — [Stage Name]&quot;</code></td>
+<td><code>&quot;Construction — Build and Test&quot;</code></td>
+</tr>
+<tr>
+<td>Operation</td>
+<td><code>&quot;Operation - [Stage Name]&quot;</code></td>
+<td><code>&quot;Operation - Observability Setup&quot;</code></td>
+</tr>
+</tbody></table>
+<h3 id="skipped-stage-handling">Skipped Stage Handling</h3>
+<p>execution plan で SKIP とマークされた stage について、orchestrator は task を作成するが、skip の説明を付けて直ちに completed にマークする。これにより、サイドバーは明確な skip 注記付きで stage セット全体を表示する。</p>
+<h3 id="mandatory-status-line-updates">MANDATORY Status Line Updates</h3>
+<p>いかなる stage を実行する前にも、orchestrator は必ず以下を行わなければならない:</p>
+<ol>
+<li>直前の stage task（あれば）を <code>completed</code> にマークする。</li>
+<li>現在の stage task を、<code>activeForm</code> を <code>&quot;Running [Stage Name]&quot;</code> に設定して <code>in_progress</code> にアクティブ化する。</li>
+</ol>
+<p><code>activeForm</code> のスピナーが表示されるには、task が <code>in_progress</code> でなければならない。この更新は stage ファイルを読む前に行わなければならない。</p>
+<hr>
+<h2 id="deliberate-deviations">Deliberate Deviations</h2>
+<p>upstream の <code>aidlc-workflows/</code> reference および v2 framework spec との以下の意図的な差異は、将来の「修正」の試みを防ぐために SKILL.md と stage-protocol.md に文書化されている。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Deviation</th>
+<th>Reference</th>
+<th>Implementation</th>
+<th>根拠</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>NFR artifact の粒度</td>
+<td>各 2 ファイル</td>
+<td>5 NFR Requirements + 5 NFR Design ファイル</td>
+<td>粒度を細かくすると traceability が向上する</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Plan/question ファイルの配置</td>
+<td>フラットな集中パターン</td>
+<td>stage artifact と同じ場所に配置</td>
+<td>発見しやすさが向上する</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Infrastructure Design の拡張</td>
+<td>2-3 ファイル</td>
+<td>5 ファイル（+monitoring-design.md, +cicd-pipeline.md）</td>
+<td>運用上の可視性</td>
+</tr>
+<tr>
+<td>4</td>
+<td>インラインの質問</td>
+<td>すべての質問をファイルで</td>
+<td>単純な 1-3 の選択肢には <code>AskUserQuestion</code></td>
+<td>Claude Code の構造化 UI</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Architecture Decision Records</td>
+<td>存在しない</td>
+<td>Application Design に <code>decisions.md</code></td>
+<td>アーキテクチャの traceability</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Welcome メッセージ</td>
+<td>より長い Unicode ベース</td>
+<td>より短く ASCII-safe。<code>settings.json</code> の <code>companyAnnouncements</code> で描画（stage ではない）</td>
+<td>reference 自身の ascii-diagram-standards 違反を修正</td>
+</tr>
+<tr>
+<td>7</td>
+<td>RE の always-rerun ポリシー</td>
+<td>キャッシュした artifact を使う</td>
+<td>brownfield では常に再実行</td>
+<td>現在の codebase 分析を保証</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Session resume</td>
+<td>ファイルベースの <code>[Answer]:</code> タグ</td>
+<td><code>AskUserQuestion</code> を使う</td>
+<td>Claude Code でより自然</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Clarification の質問</td>
+<td>別ファイル</td>
+<td>インラインで処理</td>
+<td>通常は 1-2 の的を絞った問い合わせ</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Audit ログ形式</td>
+<td>単一形式</td>
+<td>追加で 3 つ: Error, Recovery, Change Request</td>
+<td>事後分析</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Tri-mode の質問フロー</td>
+<td>ファイルベースのみ</td>
+<td>&quot;Guide me&quot; / &quot;I&#39;ll edit the file&quot; / &quot;Chat&quot;</td>
+<td>異なる好みに対応</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Delivery Planning</td>
+<td>Workflow Planning（stage selector）</td>
+<td>改名。work breakdown 分析を追加</td>
+<td>より実行可能な Construction 計画</td>
+</tr>
+<tr>
+<td>13</td>
+<td>State ファイル名</td>
+<td><code>state.md</code></td>
+<td><code>aidlc-state.md</code></td>
+<td>hook がパスをハードコードしており、変更するとスクリプトが壊れる</td>
+</tr>
+<tr>
+<td>14</td>
+<td>最小限の rule</td>
+<td>複数の rule ファイル</td>
+<td>guardrail のみ（~35 行）</td>
+<td>非 AI-DLC 会話での context 肥大化を回避</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Scope-to-stage マッピングの場所</td>
+<td>rule 内</td>
+<td>ファイルで記述: <code>.claude/scopes/aidlc-&lt;name&gt;.md</code>（identity）+ stage ごとの <code>scopes:</code> frontmatter（membership）。コンパイル時に <code>scope-grid.json</code>（engine が読む runtime ソース）へ転置</td>
+<td>scope はファイルで記述する primitive。<code>scope-mapping.json</code> も SKILL.md 常駐の routing もない</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Agent のツールアクセス</td>
+<td>scoped な制限</td>
+<td>バイナリ: 完全な Bash か皆無か</td>
+<td>Claude Code は scoped なツール制限をサポートしない</td>
+</tr>
+<tr>
+<td>17</td>
+<td>ネストした委譲なし</td>
+<td>Agent は委譲できる</td>
+<td>すべての Agent が <code>disallowedTools: Task</code> を持つ</td>
+<td>連鎖する subagent chain を防ぐ</td>
+</tr>
+<tr>
+<td>18</td>
+<td>フラットな Agent の配置</td>
+<td><code>.claude/agents/aidlc/*.md</code></td>
+<td><code>.claude/agents/*.md</code></td>
+<td>Claude Code 標準の discovery に合わせる</td>
+</tr>
+<tr>
+<td>19</td>
+<td>Agent memory</td>
+<td><code>memory: project</code> を定義</td>
+<td>省略</td>
+<td>サポートされない Claude Code frontmatter フィールド</td>
+</tr>
+<tr>
+<td>20</td>
+<td>Design-agent の support 追加</td>
+<td>1.6, 2.5 のみ</td>
+<td>2.4, 2.6 の support として追加</td>
+<td>UX を踏まえた開発</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="error-handling">Error Handling</h2>
+<h3 id="subagent-failure-retry">Subagent Failure Retry</h3>
+<p>Claude Code の Task ツール呼び出しが失敗したとき:</p>
+<ol>
+<li><strong>1 度リトライする</strong> — context を減らした prompt で（inception artifact を要約し、現在の unit の design artifact のみを渡す）。</li>
+<li><strong>リトライも失敗した場合</strong>、2 つの選択肢を提示する: &quot;Run inline&quot;（orchestrator の会話内で実行）または &quot;Skip and revisit&quot;（未完了とマークして続行）。</li>
+<li><strong>失敗を記録する</strong> — <code>audit/</code> shard に Error 形式で。</li>
+</ol>
+<h3 id="state-corruption-recovery">State Corruption Recovery</h3>
+<p><code>aidlc-state.md</code> が存在するがパースできない場合:</p>
+<ol>
+<li>バックアップを作成する（<code>aidlc-state.md.bak</code>）。</li>
+<li>intent の record ディレクトリを走査して artifact の痕跡を探し、実際にどの stage が完了したかを判定する。</li>
+<li>artifact の痕跡から state ファイルを再構築する。</li>
+<li>user に通知する: &quot;State file was corrupted. Rebuilt from artifacts. Please verify.&quot;</li>
+</ol>
+<p>resume 時に <code>.aidlc-recovery.md</code> が <code>aidlc-state.md</code> と食い違う場合、compaction 起因の破損の可能性を user に警告する。</p>
+<h3 id="missing-artifact-recovery">Missing Artifact Recovery</h3>
+<p>stage が存在しない先行 artifact を参照している場合:</p>
+<ol>
+<li>どの期待される artifact が欠けているか確認する。</li>
+<li>state と突き合わせる（生成元の stage が完了とマークされているか）。</li>
+<li>完了とマークされているのに artifact が欠けている場合、stage の再実行か artifact の手動提供を提示する。</li>
+<li>完了とマークされていない場合、stage を通常どおり実行する。</li>
+</ol>
+<h3 id="contradictory-inputs-recovery">Contradictory Inputs Recovery</h3>
+<p>異なる stage からの user 入力が互いに矛盾する場合:</p>
+<ol>
+<li>両方のソースからの引用を添えて、具体的な矛盾を指摘する。</li>
+<li>一方の解釈を選んで解決してはならない。</li>
+<li>どちらの入力を優先するか user に尋ねる。</li>
+<li>上書きされる artifact を更新し、解決内容を記録する。</li>
+</ol>
+<h3 id="error-severity-levels">Error Severity Levels</h3>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>アクション</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Critical</strong></td>
+<td>直ちに停止して user に尋ねる</td>
+<td>破損した state、欠けている重要な artifact、回復不能なパースエラー</td>
+</tr>
+<tr>
+<td><strong>High</strong></td>
+<td>直ちに停止して user に尋ねる</td>
+<td>矛盾する入力、不完全な回答、欠けている依存関係</td>
+</tr>
+<tr>
+<td><strong>Medium</strong></td>
+<td>解決を試みる。未解決なら user に尋ねる</td>
+<td>曖昧な応答、部分的な context、曖昧な要件</td>
+</tr>
+<tr>
+<td><strong>Low</strong></td>
+<td>黙って処理して記録する</td>
+<td>書式の不整合、軽微な命名の不一致</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="appendix-a-stage-graph-reference">Appendix A: Stage Graph Reference</h2>
+<p>実行メタデータ付きの全 32 stage の完全なリファレンス。welcome メッセージは session 開始時に <code>settings.json</code> の <code>companyAnnouncements</code> で描画される — stage ではない。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Stage</th>
+<th>Phase</th>
+<th>Execution</th>
+<th>Lead Agent</th>
+<th>Support Agents</th>
+<th>Mode</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.1</td>
+<td>Workspace Scaffold</td>
+<td>Initialization</td>
+<td>ALWAYS</td>
+<td>(orchestrator)</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>0.2</td>
+<td>Workspace Detection</td>
+<td>Initialization</td>
+<td>ALWAYS</td>
+<td>(orchestrator)</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>0.3</td>
+<td>State Initialization</td>
+<td>Initialization</td>
+<td>ALWAYS</td>
+<td>(orchestrator)</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>Intent Capture &amp; Framing</td>
+<td>Ideation</td>
+<td>ALWAYS</td>
+<td>aidlc-product-agent</td>
+<td>aidlc-architect-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>Market Research</td>
+<td>Ideation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-product-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>Feasibility &amp; Constraints</td>
+<td>Ideation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-aws-platform-agent, aidlc-compliance-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>Scope Definition</td>
+<td>Ideation</td>
+<td>ALWAYS</td>
+<td>aidlc-product-agent</td>
+<td>aidlc-delivery-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>Team Formation</td>
+<td>Ideation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-delivery-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.6</td>
+<td>Rough Mockups</td>
+<td>Ideation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-design-agent</td>
+<td>aidlc-product-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>1.7</td>
+<td>Approval &amp; Handoff</td>
+<td>Ideation</td>
+<td>ALWAYS</td>
+<td>aidlc-delivery-agent</td>
+<td>aidlc-product-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>Reverse Engineering</td>
+<td>Inception</td>
+<td>CONDITIONAL</td>
+<td>aidlc-developer-agent</td>
+<td>aidlc-architect-agent</td>
+<td>pipeline (aidlc-developer-agent → aidlc-architect-agent)</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>Practices Discovery</td>
+<td>Inception</td>
+<td>CONDITIONAL</td>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>aidlc-quality-agent, aidlc-developer-agent, aidlc-devsecops-agent</td>
+<td>subagent</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>Requirements Analysis</td>
+<td>Inception</td>
+<td>ALWAYS</td>
+<td>aidlc-product-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td>User Stories</td>
+<td>Inception</td>
+<td>CONDITIONAL</td>
+<td>aidlc-product-agent</td>
+<td>aidlc-design-agent, aidlc-developer-agent, aidlc-quality-agent</td>
+<td>mob</td>
+</tr>
+<tr>
+<td>2.5</td>
+<td>Refined Mockups</td>
+<td>Inception</td>
+<td>CONDITIONAL</td>
+<td>aidlc-design-agent</td>
+<td>aidlc-product-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.6</td>
+<td>Application Design</td>
+<td>Inception</td>
+<td>CONDITIONAL</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-aws-platform-agent, aidlc-design-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.7</td>
+<td>Units Generation</td>
+<td>Inception</td>
+<td>ALWAYS</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-delivery-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.8</td>
+<td>Delivery Planning</td>
+<td>Inception</td>
+<td>ALWAYS</td>
+<td>aidlc-delivery-agent</td>
+<td>aidlc-architect-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>Functional Design</td>
+<td>Construction</td>
+<td>CONDITIONAL</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-developer-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>NFR Requirements</td>
+<td>Construction</td>
+<td>CONDITIONAL</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-devsecops-agent, aidlc-compliance-agent, aidlc-quality-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td>NFR Design</td>
+<td>Construction</td>
+<td>CONDITIONAL</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-aws-platform-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td>Infrastructure Design</td>
+<td>Construction</td>
+<td>CONDITIONAL</td>
+<td>aidlc-aws-platform-agent</td>
+<td>aidlc-devsecops-agent, aidlc-compliance-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td>Code Generation</td>
+<td>Construction</td>
+<td>ALWAYS</td>
+<td>aidlc-developer-agent</td>
+<td>--</td>
+<td>subagent (aidlc-developer-agent)</td>
+</tr>
+<tr>
+<td>3.6</td>
+<td>Build and Test</td>
+<td>Construction</td>
+<td>ALWAYS</td>
+<td>aidlc-quality-agent</td>
+<td>aidlc-devsecops-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>3.7</td>
+<td>CI Pipeline</td>
+<td>Construction</td>
+<td>CONDITIONAL</td>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.1</td>
+<td>Deployment Pipeline</td>
+<td>Operation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>Environment Provisioning</td>
+<td>Operation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-aws-platform-agent</td>
+<td>aidlc-devsecops-agent, aidlc-compliance-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>Deployment Execution</td>
+<td>Operation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>aidlc-developer-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.4</td>
+<td>Observability Setup</td>
+<td>Operation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-operations-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.5</td>
+<td>Incident Response</td>
+<td>Operation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-operations-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.6</td>
+<td>Performance Validation</td>
+<td>Operation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-quality-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.7</td>
+<td>Feedback &amp; Optimization</td>
+<td>Operation</td>
+<td>CONDITIONAL</td>
+<td>aidlc-operations-agent</td>
+<td>aidlc-aws-platform-agent</td>
+<td>inline</td>
+</tr>
+</tbody></table>
+<p><strong>Execution key:</strong></p>
+<ul>
+<li>ALWAYS: この stage を含むすべての scope で実行する。</li>
+<li>CONDITIONAL: scope、プロジェクト種別、execution plan に応じて skip されうる。</li>
+</ul>
+<p><strong>Mode key:</strong></p>
+<ul>
+<li><code>inline</code>: orchestrator の会話内で実行する。user が対話できる。</li>
+<li><code>subagent (&lt;agent-name&gt;)</code>: Claude Code の Task ツールで、<code>subagent_type</code> を名前付き agent（例: <code>aidlc-developer-agent</code>）に設定して委譲する。subagent は、agent の frontmatter にある任意の <code>tools:</code> allowlist で絞られない限り、session のツールセット全体を継承する。<code>disallowedTools: Task</code> が唯一出荷されている制限である。</li>
+</ul>
+<hr>
+<h2 id="appendix-b-hook-reference">Appendix B: Hook Reference</h2>
+<p>framework の hook は <code>settings.json</code> にプロジェクト全体で登録されている（v0.6.0 の hooks-move。workflow がアクティブでないときは自己ゲートする）。以下ではそのうち 3 つを詳述する。<code>aidlc-sensor-fire.ts</code>, <code>aidlc-sync-statusline.ts</code>, <code>aidlc-runtime-compile.ts</code> を含む残りは <a href="06-hooks-and-tools.html">Hooks and Tools</a> が扱っており、そこに権威ある hook 一覧とすべての hook のソースレベルの完全なドキュメントがある。</p>
+<h3 id="posttooluse-audit-loggerts">PostToolUse: audit-logger.ts</h3>
+<ul>
+<li><strong>Matcher</strong>: <code>Write|Edit</code></li>
+<li><strong>Trigger</strong>: skill session 中のすべての Write または Edit の Claude Code ツール呼び出し。</li>
+<li><strong>Behavior</strong>: intent の record-dir パスのみにフィルタする。<code>audit/</code> shard 自体はスキップする（再帰を避ける）。<code>appendAuditEntry</code> 経由で、正規の <code>ARTIFACT_CREATED</code>（新規パスへの Write）または <code>ARTIFACT_UPDATED</code>（Edit、または既存を上書きする Write）イベントを発行する。<code>lib.ts</code> 経由で <code>mkdir</code> ベースの locking を使う。</li>
+<li><strong>Exits silently</strong> — アクティブな intent の <code>audit/</code> shard が存在しない場合。</li>
+</ul>
+<h3 id="precompact-validate-statets">PreCompact: validate-state.ts</h3>
+<ul>
+<li><strong>Matcher</strong>: （空 -- すべての compaction イベントに一致）</li>
+<li><strong>Trigger</strong>: Claude Code が context compaction を行う前。</li>
+<li><strong>Behavior</strong>: state ファイルが存在しなければ黙って終了する。<code>aidlc-state.md</code> が &quot;Stage Progress&quot; と &quot;Current Status&quot; セクションを含むか検証する。<code>.aidlc-recovery.md</code> の breadcrumb を書き込む。</li>
+</ul>
+<h3 id="subagentstop-log-subagentts">SubagentStop: log-subagent.ts</h3>
+<ul>
+<li><strong>Matcher</strong>: （空 -- すべての subagent 完了に一致）</li>
+<li><strong>Trigger</strong>: 任意の subagent が実行を終えたとき。</li>
+<li><strong>Behavior</strong>: <code>appendAuditEntry</code> 経由で正規の <code>SUBAGENT_COMPLETED</code> audit イベントを発行する（以前の自由形式の <code>## Subagent Completed</code> markdown 書き込みを置き換える）。フィールド: agent type、agent ID、切り詰めたメッセージ（先頭 200 文字）。<code>lib.ts</code> 経由で <code>mkdir</code> ベースの locking を使う。</li>
+</ul>
+<p>これらの hook は TypeScript であり、<code>bun</code> 経由で実行される。<code>jq</code> を必要としない。</p>
+<hr>
+<h2 id="appendix-c-approval-gate-patterns">Appendix C: Approval Gate Patterns</h2>
+<h3 id="standard-2-option-gate-construction-and-operation">Standard 2-Option Gate (Construction and Operation)</h3>
+<pre class="term"><code>AskUserQuestion({
+  questions: [{
+    question: "[Stage Name] complete. How would you like to proceed?",
+    header: "Approval",
+    multiSelect: false,
+    options: [
+      { label: "Approve", description: "Continue to [next stage]" },
+      { label: "Request Changes", description: "Provide revision feedback" }
+    ]
+  }]
+})</code></pre>
+<p><code>[next stage]</code> は run-stage directive の <code>next_stage</code> フィールドから逐語的に描画される（次の in-scope stage の表示名で、engine が発行時に計算する）。<code>next_stage</code> が null のときは <code>Complete workflow</code> になる。conductor が次の stage を推測することは決してない。</p>
+<h3 id="conditional-3-option-gate-ideation-and-inception-only">Conditional 3-Option Gate (Ideation and Inception only)</h3>
+<pre class="term"><code>AskUserQuestion({
+  questions: [{
+    question: "[Stage Name] complete. How to proceed?",
+    header: "Approval",
+    multiSelect: false,
+    options: [
+      { label: "Approve", description: "Continue to [next stage]" },
+      { label: "Request Changes", description: "Provide revision feedback" },
+      { label: "Add [Skipped Stage]", description: "Include [stage] which was skipped" }
+    ]
+  }]
+})</code></pre>
+<h3 id="revision-loop-escape-hatch">Revision Loop Escape Hatch</h3>
+<p>同じ stage で &quot;Request Changes&quot; が 3 サイクル続いた後、3 つ目の選択肢が現れる:</p>
+<pre class="term"><code>AskUserQuestion({
+  questions: [{
+    question: "[Stage Name] -- this is revision cycle [N]. How would you like to proceed?",
+    options: [
+      { label: "Approve" },
+      { label: "Request Changes" },
+      { label: "Accept as-is", description: "Archive current version and move on" }
+    ]
+  }]
+})</code></pre>
+<p>&quot;Accept as-is&quot; の選択肢は、決定を記録し、その stage を完了とマークし、その特定の stage について NO EMERGENT BEHAVIOR RULE を上書きする。</p>
+<p>2 回目の revision サイクルの後（escape hatch が有効化される前）、approval の質問には次の注記が含まれる: &quot;After one more revision, an &#39;Accept as-is&#39; option will become available.&quot;</p>
+<h3 id="final-stage-gate-47-feedback-optimization">Final Stage Gate (4.7 Feedback &amp; Optimization)</h3>
+<pre class="term"><code>Options:
+  - Approve (workflow complete)
+  - Request Changes
+  - Start New Ideation Cycle</code></pre>
+<h3 id="no-emergent-behavior-rule">NO EMERGENT BEHAVIOR RULE</h3>
+<p>Construction および Operation stage は、標準化された 2 択の完了メッセージを使わなければならない。orchestrator は、これらの phase について 3 択メニューやその他の emergent なナビゲーションパターンを作ってはならない。Ideation と Inception stage のみが、条件付きで 3 つ目の選択肢（以前 skip した stage を追加する）を含められる。唯一の例外は revision loop escape hatch（3 サイクル以上の revision）である。</p>
+<hr>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="01-architecture.html">Architecture</a> -- 5 層モデル、実行モデル</li>
+<li><a href="04-stage-protocol.html">Stage Protocol</a> -- すべての stage の behavioral contract</li>
+<li><a href="05-agent-system.html">Agent System</a> -- agent frontmatter、ツール制限</li>
+<li><a href="06-hooks-and-tools.html">Hooks and Tools</a> -- hook システム、audit イベント分類</li>
+<li><a href="10-knowledge-system.html">Knowledge System</a> -- 6 ステップの knowledge ロード順</li>
+<li><a href="diagrams.html">Diagrams</a> -- すべての Mermaid 図を集約</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/03-orchestrator.md"><code>docs/reference/03-orchestrator.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

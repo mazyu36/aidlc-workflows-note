@@ -1,0 +1,1311 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stage Protocol リファレンス — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/04-stage-protocol</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html" class="here">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#protocol-file-structure">プロトコルファイルの構造</a>
+  <a href="#overview">概要</a>
+  <a href="#approval-gates">承認 Gate</a>
+  <a href="#completion-messages">完了メッセージ</a>
+  <a href="#question-flow">質問フロー</a>
+  <a href="#state-tracking">状態追跡</a>
+  <a href="#agent-persona-loading">Agent Persona のロード</a>
+  <a href="#error-recovery">エラーリカバリ</a>
+  <a href="#change-handling">変更のハンドリング</a>
+  <a href="#depth-guidance">Depth ガイダンス</a>
+  <a href="#terminology-glossary">用語集</a>
+  <a href="#content-validation">コンテンツ検証</a>
+  <a href="#subagent-return-summary">Subagent の返却サマリ</a>
+  <a href="#reviewer-invocation">Reviewer の呼び出し</a>
+  <a href="#learnings-ritual">Learnings Ritual</a>
+  <a href="#phase-boundary-verification">Phase 境界の検証</a>
+  <a href="#cross-references">Cross-References</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="stage-protocol-reference">Stage Protocol リファレンス</h1>
+<p>機械向けの <code>dist/claude/.claude/aidlc-common/protocols/stage-protocol.md</code> を、人間が
+読める形に再構成したものである。すべての rule・条件・振る舞いを保ちつつ、開発者が消費
+できるよう再編している。節への参照（例: 「Protocol Section 1」）は元のファイルに対応する。</p>
+<blockquote>
+<p>stage ファイルの <em>フォーマット</em>（YAML frontmatter、本文の規約）については
+<a href="15-stage-definition.html">Stage Definition</a> を参照。この章はランタイムの実行時の
+振る舞いを扱う。</p>
+</blockquote>
+<blockquote>
+<p><strong>パス規約。</strong> intent スコープの成果物・状態・audit トレイルは、アクティブな
+intent の <strong>record dir</strong> の下に住む —
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>、以下では <code>&lt;record&gt;/</code> と書く。
+Reverse Engineering の出力は代わりに、space レベルのリポジトリごとのストア
+<code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> に住む。audit トレイルは単一ファイル
+ではなく、<code>&lt;record&gt;/audit/&lt;host&gt;-&lt;clone&gt;.md</code> にある clone ごとのシャードの
+ディレクトリである（読み手は glob してタイムスタンプでマージする）。</p>
+</blockquote>
+<hr>
+<h2 id="protocol-file-structure">プロトコルファイルの構造</h2>
+<p>stage protocol は 3 つのファイルに分割され、ワークフローのコンテキストに基づいて
+conductor が条件付きでロードする:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+<th>ロードされるとき</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>stage-protocol.md</code></td>
+<td>コアプロトコル: approval gate、完了メッセージ、質問フロー、状態追跡、agent persona のロード、depth ガイダンス、用語、コンテンツ検証、subagent の返却フォーマット、そして §13 Learnings Ritual</td>
+<td>すべての stage（必須）</td>
+</tr>
+<tr>
+<td><code>stage-protocol-recovery.md</code></td>
+<td>エラーリカバリ + 変更のハンドリング</td>
+<td>セッション再開時、または stage の途中で change イベントが検出されたとき</td>
+</tr>
+<tr>
+<td><code>stage-protocol-governance.md</code></td>
+<td>Phase 境界の検証（§13）</td>
+<td>phase 境界（1.7-&gt;2.1, 2.8-&gt;3.1, 3.7-&gt;4.1）で</td>
+</tr>
+</tbody></table>
+<h3 id="conditional-loading-logic-from-skillmd-routing">条件付きロードのロジック（SKILL.md の Routing より）</h3>
+<p>conductor の Routing セクションがロードのルールを定義する:</p>
+<ul>
+<li><strong><code>stage-protocol.md</code></strong>: すべての stage でロードする — コアの gate、質問フォーマット、
+状態追跡、完了メッセージ。</li>
+<li><strong><code>stage-protocol-recovery.md</code></strong>: セッション再開時、または stage の途中で change
+イベントが検出されたときにロードする。これにより、通常の前進する stage では
+エラーリカバリと変更のハンドリングをコンテキストの外に保つ。</li>
+<li><strong><code>stage-protocol-governance.md</code></strong>: phase 境界（1.7-&gt;2.1, 2.8-&gt;3.1, 3.7-&gt;4.1）で
+ロードし、Phase 境界の検証のトレーサビリティチェックを走らせる。これにより、
+governance のオーバーヘッドを必要な地点に限定する。</li>
+</ul>
+<p>この分割は、通常の stage 実行中のコンテキストサイズを減らしつつ、recovery と governance
+のルールが関連するときに利用可能であることを保証する。stage 中の訂正を永続的な Rule
+として捕らえることは、別個の governance フローではなく、<code>stage-protocol.md</code>（すべての
+stage でロードされる）の §13 Learnings Ritual が扱う。</p>
+<hr>
+<h2 id="overview">概要</h2>
+<p>stage protocol は、AI-DLC ワークフローのすべての stage がどう実行されるかを統べる必須の
+振る舞い契約である。5 つの phase（Initialization, Ideation, Inception, Construction,
+Operation）にまたがる 32 個すべての stage が、例外なくこのプロトコルに従う。conductor
+（<code>SKILL.md</code>）は stage の実行を agent persona に手渡す; プロトコルは phase と agent から
+独立を保ち、任意の stage のドメイン固有の作業を包む構造的なルールを定義する。</p>
+<p>プロトコルがカバーするもの: 承認 gate、完了メッセージ、質問フロー、状態追跡、agent
+persona のロード、エラーリカバリ、変更のハンドリング、depth ガイダンス、コンテンツ検証、
+subagent の返却フォーマット、§13 Learnings Ritual、そして phase 境界の検証。</p>
+<h3 id="critical-compliance-checklist">重要なコンプライアンスチェックリスト</h3>
+<p>すべての stage の前と最中に、よく見落とされる次のステップを検証する:</p>
+<p>状態遷移と audit の発行は、手書きの audit ブロックではなくツールが所有する。conductor は
+前進を <code>aidlc-orchestrate.ts report --stage &lt;slug&gt;</code> を通じて報告する; engine は state tool
+に委譲し、それが状態をアトミックに更新し、対になる audit イベントを新鮮なタイムスタンプで
+発行する。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>チェック</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>承認 gate で <code>bun .claude/tools/aidlc-orchestrate.ts report --stage &lt;slug&gt; --result awaiting-approval</code> を呼ぶ。engine は状態を <code>[-]</code> から <code>[?]</code> AwaitingApproval に反転させ、<code>STAGE_AWAITING_APPROVAL</code> をアトミックに発行するので、プロンプトが開いている間 status は保留中の gate を表示する。（<code>STAGE_STARTED</code> / <code>[-]</code> 遷移は stage がアクティブになったときに発行済み。）</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>AskUserQuestion</code> を呼ぶ前に、<code>bun .claude/tools/aidlc-log.ts decision</code> を通じて選択肢をログする（<code>audit/</code> シャードへの手書きではなく）</td>
+</tr>
+<tr>
+<td>3</td>
+<td>ユーザーが応答した後、<code>bun .claude/tools/aidlc-log.ts answer</code> を通じて正確な選択をログし、承認には <code>aidlc-orchestrate.ts report --stage &lt;slug&gt; --result approved --user-input &quot;&lt;exact choice&gt;&quot;</code> を、request-changes には <code>aidlc-orchestrate.ts report --stage &lt;slug&gt; --result rejected --user-input &quot;&lt;feedback&gt;&quot;</code> を使う。修正作業の後、gate を再提示する前に <code>--result revised</code> を報告する。</td>
+</tr>
+<tr>
+<td>4</td>
+<td>ユーザー入力を決して要約しない — 正確な選択肢ラベルを log tool に渡す; 自動化された stage には <code>N/A -- [reason]</code> を使う</td>
+</tr>
+<tr>
+<td>5</td>
+<td>1 インタラクションにつき 1 つの audit エントリ — log/state tool が単一イベントの発行を強制する; 複数のイベントを 1 回の呼び出しにマージしない</td>
+</tr>
+<tr>
+<td>6</td>
+<td>stage の終わりに、<code>aidlc-orchestrate.ts report --stage &lt;slug&gt; --result approved --user-input &quot;&lt;exact choice&gt;&quot;</code>（gate 付きの stage）または <code>report --stage &lt;slug&gt; --result completed</code>（Initialization）を呼ぶ。engine は <code>[?]</code>/<code>[-]</code> を <code>[x]</code> に反転させ、gate 付きなら <code>GATE_APPROVED</code> を発行し、state tool を通じて <code>STAGE_COMPLETED</code> をアトミックに発行する</td>
+</tr>
+<tr>
+<td>7</td>
+<td>作業が始まる前に、前の stage タスクを <code>completed</code>、現在の stage タスクを <code>activeForm</code> 付きで <code>in_progress</code> にマークする（<code>sync-statusline</code> hook が状態の同期を扱う）</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>knowledge/aidlc-shared/audit-format.md</code> のイベントタイプのみを使う — state と log tool がこれを強制する; <code>audit/</code> シャードに直接書き込まない</td>
+</tr>
+<tr>
+<td>9</td>
+<td>ライフサイクルイベントを手書きしたり、<code>aidlc-state.ts</code> でライフサイクルの動詞を呼び出したりしない。結果は <code>aidlc-orchestrate.ts</code> を通じて報告する; engine の内部の state 呼び出しがアトミックな audit 行を発行する</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="approval-gates">承認 Gate</h2>
+<p>3 つの Initialization stage を除くすべての stage は、進む前に明示的なユーザー承認を要する。
+承認は構造化された UI 選択肢を持つ <code>AskUserQuestion</code> を使う。</p>
+<p>この gate は <code>aidlc-state.md</code> の <code>[?]</code> AwaitingApproval チェックボックス状態に対応する;
+拒否は stage を <code>[R]</code> Revising に遷移させる。完全な stage 状態図と、正規の <code>GATE_APPROVED</code>
+/ <code>GATE_REJECTED</code> / <code>STAGE_AWAITING_APPROVAL</code> の emitter については
+<a href="12-state-machine.html">State Machine</a> を参照。</p>
+<p><em>(Protocol Section 1)</em></p>
+<h3 id="standard-2-option-gate">標準の 2 択 gate</h3>
+<p>既定の gate はちょうど 2 つの選択肢を提示する — <strong>Approve</strong>（完了とマークして進む）
+または <strong>Request Changes</strong>（ユーザーがフィードバックを与え、stage が再実行され、gate が
+再提示される）:</p>
+<pre class="term"><code>AskUserQuestion({
+  questions: [{
+    question: "[Stage Name] complete. How would you like to proceed?",
+    header: "Approval",
+    multiSelect: false,
+    options: [
+      { label: "Approve", description: "Continue to [next stage]" },
+      { label: "Request Changes", description: "Provide revision feedback" }
+    ]
+  }]
+})</code></pre>
+<p><code>[next stage]</code> は run-stage directive の <code>next_stage</code> フィールド（次の in-scope stage の
+表示名で、engine が発行時に計算する）から逐語的にレンダリングされるか、<code>next_stage</code> が
+null のとき <code>Complete workflow</code> になる。conductor は次の stage を決して推測しない。</p>
+<p><strong>No Emergent Behavior Rule:</strong> Construction と Operation の stage（phase 3-4）は、常に
+この 2 択フォーマットを使わねばならない。追加のナビゲーション選択肢を決して導入しては
+ならない。</p>
+<h3 id="conditional-3rd-option">条件付きの第 3 選択肢</h3>
+<p>Ideation と Inception の stage（phase 1-2）は、以前 skip された stage を追加し戻せるとき、
+条件付きで第 3 の選択肢を含めてよい:</p>
+<pre class="term"><code>{ label: "Add [Skipped Stage]", description: "Include [stage] which was skipped" }</code></pre>
+<p>これが phase 1-2 で第 3 選択肢が現れる唯一の状況である。ラベルは特定の skip された stage
+を参照せねばならない。</p>
+<h3 id="revision-escape-hatch">修正の escape hatch</h3>
+<p>同じ stage で 3 回の「Request Changes」サイクルの後、4 回目以降の承認 gate は第 3 の
+選択肢を追加する:</p>
+<pre class="term"><code>{ label: "Accept as-is", description: "Archive current version and move on" }</code></pre>
+<p>質問テキストはサイクル数を含むように変わる:
+<code>&quot;[Stage Name] -- this is revision cycle [N]. How would you like to proceed?&quot;</code></p>
+<p><strong>「Accept as-is」が選択されたとき:</strong> <code>audit/</code> シャードにログし（&quot;User accepted stage
+output as-is after [N] revision cycles&quot;）、完了とマークして進む。これは、閾値に達した
+ときに限り、Construction stage の No Emergent Behavior Rule を上書きする。</p>
+<p><strong>Pre-activation notice:</strong> 2 回目のサイクルの後、次を含める: &quot;After one more
+revision, an &#39;Accept as-is&#39; option will become available.&quot;</p>
+<h3 id="approval-gate-flow">承認 gate のフロー</h3>
+<pre class="mermaid">
+flowchart TD
+    COMPLETE["Stage work complete"]
+    REPORT_AWAITING["Report awaiting-approval:\nengine verifies evidence + opens gate"]
+    AUDIT_PRE["Append to this clone's audit shard:\nstage summary + options\n(fresh ISO timestamp)"]
+    ASK["AskUserQuestion:\nApproval Gate"]
+
+    APPROVE["Approve"]
+    CHANGES["Request Changes"]
+    ACCEPT["Accept as-is\n(escape hatch)"]
+    ADD_STAGE["Add Skipped Stage\n(Ideation/Inception only)"]
+
+    AUDIT_POST_A["Log: User approved\n(fresh timestamp)"]
+    AUDIT_POST_C["Log: User requested changes\n(fresh timestamp)"]
+    AUDIT_POST_ACC["Log: User accepted as-is\n(fresh timestamp)"]
+    AUDIT_POST_ADD["Log: User added stage\n(fresh timestamp)"]
+
+    REVISION_COUNT{"Revision\ncycle &gt;= 3?"}
+    NOTE_2ND["After 2nd revision:\nnote that escape hatch\nactivates next cycle"]
+
+    REPORT_APPROVED["Report approved:\nengine completes + routes"]
+    REPORT_REJECTED["Report rejected:\nengine records feedback + revising state"]
+    REPORT_REVISED["Report revised:\nengine verifies evidence + re-opens gate"]
+    PROGRESS["Display progress line:\nN/total overall"]
+    NEXT_STAGE["Proceed to next stage"]
+
+    REVISE["Apply user feedback\nto stage artifacts"]
+    RE_PRESENT["Re-present completion\nmessage"]
+
+    ADD_EXEC["Insert skipped stage\ninto workflow"]
+
+    COMPLETE --&gt; REPORT_AWAITING --&gt; AUDIT_PRE --&gt; ASK
+    ASK --&gt; APPROVE
+    ASK --&gt; CHANGES
+    ASK --&gt; ACCEPT
+    ASK --&gt; ADD_STAGE
+
+    APPROVE --&gt; AUDIT_POST_A --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
+    ACCEPT --&gt; AUDIT_POST_ACC --&gt; REPORT_APPROVED
+
+    CHANGES --&gt; AUDIT_POST_C --&gt; REPORT_REJECTED --&gt; REVISION_COUNT
+    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; REPORT_REVISED --&gt; RE_PRESENT --&gt; AUDIT_PRE
+    REVISION_COUNT --&gt;|"&gt;= 3"| REVISE
+
+    ADD_STAGE --&gt; AUDIT_POST_ADD --&gt; ADD_EXEC
+
+    style COMPLETE fill:#1d332b,stroke:#57d9a9
+    style REPORT_AWAITING fill:#1b2c47,stroke:#6db3ff
+    style ASK fill:#1b2c47,stroke:#6db3ff
+    style APPROVE fill:#1d332b,stroke:#57d9a9
+    style CHANGES fill:#35301b,stroke:#e5cf63
+    style REPORT_REJECTED fill:#38291a,stroke:#f2b35c
+    style REPORT_REVISED fill:#1b2c47,stroke:#6db3ff
+    style ACCEPT fill:#38291a,stroke:#f2b35c
+    style ADD_STAGE fill:#2a2440,stroke:#b895ff
+    style NEXT_STAGE fill:#1d332b,stroke:#57d9a9
+</pre>
+<hr>
+<h2 id="completion-messages">完了メッセージ</h2>
+<p>すべての stage は、この 5 部構成の構造で順に終わる。すべての部が必須である。</p>
+<p><em>(Protocol Section 2)</em></p>
+<h3 id="part-0-audit-logging">Part 0: Audit ロギング</h3>
+<p>完了メッセージを表示する前に:</p>
+<ol>
+<li><code>&lt;record&gt;/audit/</code>（clone ごとのシャード）に追記する: stage 名、作業サマリ、成果物</li>
+<li>承認の応答を受け取った後、ユーザーの選択を新鮮なタイムスタンプで追記する</li>
+</ol>
+<h3 id="part-1-announcement">Part 1: アナウンス</h3>
+<pre><code class="language-markdown"># [emoji] [Stage Name] Complete
+</code></pre>
+<p>emoji は各 stage ファイルが定義する。常に level-1 の見出しである。</p>
+<h3 id="part-2-summary">Part 2: サマリ</h3>
+<p>生成されたものの構造化された箇条書きサマリ:</p>
+<ul>
+<li>事実に基づき、コンテンツに焦点を当てる — ワークフローの指示（&quot;please review&quot;）は無し</li>
+<li>主要な成果物のインラインサマリテーブル（5-10 行）を含める:</li>
+</ul>
+<pre class="term"><code>  | Artifact | Contents |
+  |----------|----------|
+  | requirements.md | 6 FR groups (18 sub-requirements), 4 NFRs |
+  | requirements-analysis-questions.md | 5 questions, all answered |</code></pre>
+<ul>
+<li><strong>セッションで最初の完了</strong>は次を含めねばならない:
+<code>**Project depth**: [Minimal/Standard/Comprehensive] -- depth adapts artifact detail. You can request different depth at any approval gate.</code></li>
+</ul>
+<h3 id="part-3-review-approval">Part 3: レビュー + 承認</h3>
+<pre><code class="language-markdown">**Review:** `&lt;record&gt;/[path to artifacts]`
+</code></pre>
+<p>続けて <code>AskUserQuestion</code> の承認 gate（承認 Gate のセクションを参照）。</p>
+<h3 id="part-4-progress-update">Part 4: 進捗アップデート</h3>
+<p>ユーザーが承認した後、進む前に表示する:</p>
+<pre class="term"><code>Progress: [N]/[total] overall | [phase-N]/[phase-total] [Phase] stages complete. Next: [Next Stage Name]</code></pre>
+<p>現在の phase の stage だけを数える。分子には completed と skipped を含める。
+例: <code>Progress: 13/32 overall | 3/7 IDEATION stages complete. Next: Approval &amp; Handoff</code></p>
+<hr>
+<h2 id="question-flow">質問フロー</h2>
+<p>stage が質問を通じてユーザー入力を集めるとき、プロトコルは、バッチングのルール、必須の
+回答分析、曖昧さの検出を伴う tri-mode のインタラクションフローを定義する。</p>
+<p><em>(Protocol Section 3)</em></p>
+<h3 id="tri-mode-system">Tri-Mode システム</h3>
+<p><strong>Step 1: 質問ファイルを作成する</strong> — 選択肢 A-E を持つ <code>[Answer]:</code> タグ形式で、適切な
+<code>&lt;record&gt;/</code> ディレクトリに。すべての質問は <code>X. Other (please specify)</code> で終わらねばならない
+— 例外なし。すべての <code>[Answer]:</code> タグは空白で始まる。複数選択の質問は質問テキストに
+&quot;(select all that apply)&quot; を加える; 回答形式: <code>[Answer]: A, B, E</code>。</p>
+<p><strong>Step 2: モード選択を提示する:</strong></p>
+<pre class="term"><code>AskUserQuestion({
+  questions: [{
+    question: "I've created [N] questions at `[file path]`. How would you like to answer them?",
+    header: "Questions",
+    multiSelect: false,
+    options: [
+      { label: "Guide me", description: "Walk through each question interactively here" },
+      { label: "I'll edit the file", description: "I'll fill in the answers in the file directly" },
+      { label: "Chat", description: "Discuss freely -- I'll extract decisions from our conversation" }
+    ]
+  }]
+})</code></pre>
+<p>モード選択を <code>audit/</code> シャードにログする。ユーザーは stage の途中でモードを切り替えられる。</p>
+<h4 id="guide-me-interactive-mode">Guide Me（インタラクティブモード）</h4>
+<ul>
+<li><code>AskUserQuestion</code> を通じてバッチで提示する（呼び出しごとに最大 4 問、質問ごとに最大
+4 選択肢）</li>
+<li>5 つ以上の選択肢を持つ質問: 複数の呼び出しに分割する（各 4 選択肢）。ユーザーはすべての
+選択肢を見なければならない。ファイルは完全な選択肢セットを保持する。</li>
+<li>組み込みの &quot;Other&quot; が議論をトリガーする。最初のバッチの前にユーザーに伝える:
+&quot;Select &#39;Other&#39; on any question to discuss it before answering.&quot;</li>
+<li>各バッチの後、即座に回答を質問ファイルに書く</li>
+<li>各バッチを新鮮な ISO タイムスタンプでログする</li>
+<li>統合された回答サマリを提示し、続けて <strong>Looks correct</strong> と <strong>Request changes</strong> の選択肢
+を持つ構造化された確認を行う。確認を裸の散文として求めてはならない。提示する前に、両方の
+選択肢と空白の <code>[Answer]:</code> を持つ専用の <strong>Consolidated Summary Confirmation</strong> エントリ
+を stage の質問ファイルに追記またはリセットする; それは human の応答からのみ埋める。
+変更の要求は、再プロンプトの前にその確認を空白にリセットする。</li>
+</ul>
+<h4 id="edit-file-self-guided-mode">Edit File（セルフガイドモード）</h4>
+<ul>
+<li>ユーザーに伝える: &quot;Edit the file at <code>[file path]</code>. When done, send <strong>done</strong> or
+<strong>ready</strong> and I&#39;ll continue.&quot;</li>
+<li>完了シグナルを待つ。シグナルされるまでファイルを読んだり進んだりしない。</li>
+</ul>
+<h4 id="chat-freeform-mode">Chat（フリーフォームモード）</h4>
+<ul>
+<li>オープンエンドの会話; 決定が現れるにつれて抽出する</li>
+<li>終了シグナル: &quot;When ready to proceed, say <strong>done</strong> and I&#39;ll summarize.&quot;</li>
+<li>抽出した回答を、値・タイムスタンプ・<code>**Mode:** chat</code> とともにファイルに書く</li>
+<li>決定サマリを提示し、続けて進む前に同じ <strong>Looks correct / Request changes</strong> の構造化
+された確認を永続化して使う</li>
+<li>適する用途: 探索的な stage、ブレインストーミング、議論を要する質問</li>
+</ul>
+<p><strong>Step 4: 完全性を検証する。</strong> ファイルを読み、すべての <code>[Answer]:</code> タグが埋まっている
+ことを確認する。空白があれば、未回答を <code>AskUserQuestion</code> を通じて提示する。部分的な回答
+で進んではならない。ファイルが権威ある記録である。</p>
+<h3 id="batch-rules">バッチのルール</h3>
+<table>
+<thead>
+<tr>
+<th>制約</th>
+<th>上限</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AskUserQuestion</code> 呼び出しごとの質問数</td>
+<td>最大 4</td>
+</tr>
+<tr>
+<td>呼び出しごとの質問あたりの選択肢数</td>
+<td>最大 4</td>
+</tr>
+<tr>
+<td>5 つ以上の選択肢を持つ質問</td>
+<td>複数の呼び出しに分割</td>
+</tr>
+</tbody></table>
+<h3 id="answer-analysis">回答の分析</h3>
+<p>回答を集めた後、すべての応答を分析する（必須）:</p>
+<ul>
+<li><strong>曖昧な回答</strong>: &quot;mix of&quot;、&quot;not sure&quot;、&quot;depends&quot;、&quot;probably&quot;</li>
+<li>回答間の <strong>矛盾</strong></li>
+<li>次のステップに必要な <strong>欠けた詳細</strong></li>
+</ul>
+<p>少しでも曖昧さが見つかれば、フォローアップの質問を作り、進む前に解決する。
+<strong>疑わしいときは訊く。</strong></p>
+<h3 id="ambiguity-detection">曖昧さの検出</h3>
+<p><strong>無効/欠けた回答のハンドリング:</strong></p>
+<table>
+<thead>
+<tr>
+<th>条件</th>
+<th>アクション</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>空白またはアンダースコアのみの <code>[Answer]:</code></td>
+<td>未回答をリストし、ユーザーに完成を求める</td>
+</tr>
+<tr>
+<td>選択肢（A-E, X）に合致せず、明確な自由記述でもない回答</td>
+<td>ユーザーに明確化を求める</td>
+</tr>
+<tr>
+<td>曖昧（&quot;maybe B&quot;, &quot;either A or C&quot;）</td>
+<td>ユーザーに単一の選択への確定を求める</td>
+</tr>
+</tbody></table>
+<p><strong>矛盾の検出</strong> — 完全な回答セットを次についてクロスチェックする:</p>
+<table>
+<thead>
+<tr>
+<th>タイプ</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Scope の不一致</td>
+<td>&quot;Keep it simple&quot; + エンタープライズグレードの機能要求</td>
+</tr>
+<tr>
+<td>Risk の不一致</td>
+<td>&quot;Security not a concern&quot; + 機微なデータの取り扱い</td>
+</tr>
+<tr>
+<td>技術の衝突</td>
+<td>Offline-first + リアルタイムコラボレーション</td>
+</tr>
+<tr>
+<td>タイムライン対 scope</td>
+<td>MVP のタイムライン + フルフィーチャの scope</td>
+</tr>
+</tbody></table>
+<p>検出したとき: 矛盾する回答を並べて提示し、衝突を説明し、的を絞ったフォローアップを訊く。
+解決するまで進んではならない。</p>
+<p><strong>過信の防止:</strong></p>
+<ul>
+<li>仮定せず、訊くことを既定にする。曖昧さを抱えたまま決して進まない。</li>
+<li>フォローアップを要する危険信号: オープンエンドの質問への単語だけの回答;
+&quot;whatever you think&quot; / &quot;up to you&quot;; 矛盾するシグナル; 質問のはぐらかし</li>
+<li>ユーザーが AI に委ねるとき: &quot;I want to make sure the design reflects YOUR
+priorities. Could you tell me [specific aspect]?&quot;</li>
+</ul>
+<h3 id="plan-and-question-file-location">plan と質問ファイルの位置</h3>
+<p>ファイルは集中管理されず、stage の成果物と同じ場所に置かれる。例:
+<code>&lt;record&gt;/inception/user-stories/user-stories-questions.md</code>。stage のすべての入力・質問・
+出力は同じディレクトリに住む。</p>
+<hr>
+<h2 id="state-tracking">状態追跡</h2>
+<p>状態は複数のレベルで保守される: 状態ファイルの stage チェックボックス、サイドバーの
+タスクステータス、audit エントリの ISO タイムスタンプ、そして構造化された audit ログ
+エントリ。</p>
+<p><em>(Protocol Section 4)</em></p>
+<h3 id="checkbox-states">チェックボックスの状態</h3>
+<table>
+<thead>
+<tr>
+<th>チェックボックス</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[ ]</code></td>
+<td>未開始</td>
+</tr>
+<tr>
+<td><code>[-]</code></td>
+<td>進行中（実行中、まだ未承認）</td>
+</tr>
+<tr>
+<td><code>[?]</code></td>
+<td>human の承認待ち</td>
+</tr>
+<tr>
+<td><code>[R]</code></td>
+<td>拒否後に修正中</td>
+</tr>
+<tr>
+<td><code>[x]</code></td>
+<td>完了（ユーザーが承認済み）</td>
+</tr>
+<tr>
+<td><code>[S]</code></td>
+<td>正当化された現在 stage の report またはナビゲーションによって skip された</td>
+</tr>
+</tbody></table>
+<p><strong>Enforcement:</strong> engine がこれらの状態をマークする; stage の散文や conductor はしない。
+gate と終端の結果は <code>aidlc-orchestrate.ts</code> を通じて報告する。</p>
+<p><strong><code>[S]</code> の振る舞い:</strong></p>
+<ul>
+<li><code>report --stage &lt;current&gt; --result skipped --reason &quot;&lt;reason&gt;&quot;</code>、scope の合成、または Stage/Phase Jump によって設定される</li>
+<li>statusline の進捗カウントから除外される（total にも done にも数えられない）</li>
+<li>engine が先へルートする間も保たれる; <code>STAGE_COMPLETED</code> と対にされることは決してない</li>
+<li>再開時、タスク追跡上は completed として扱われる（タスクが作成され、即座に completed とマークされる）</li>
+<li>report された skip は明示的な現在 stage と空白でない reason を要する; 単一 stage の実行はそれを拒否する</li>
+</ul>
+<h3 id="task-status-transitions">タスクステータスの遷移</h3>
+<p>任意の stage を始める前に、サイドバーのタスクを遷移させる:</p>
+<ol>
+<li>前の stage タスク <code>in_progress</code> -&gt; <code>completed</code> にマークする</li>
+<li>現在の stage タスク -&gt; <code>activeForm: &quot;Running [Stage Name]&quot;</code> 付きで <code>in_progress</code> にマークする</li>
+</ol>
+<p>ルール: スピナーが表示されるにはタスクが <code>in_progress</code> でなければならない。stage ファイル
+を読む前に更新する。32 個すべての stage に適用される。タスク ID を失った場合（compaction）、
+<code>TaskList</code> を使って subject で見つける。skip された stage には:
+<code>TaskUpdate({ taskId: [ID], status: &quot;completed&quot;, description: &quot;[original] -- Skipped: [reason]&quot; })</code></p>
+<h3 id="plan-level-checkbox-enforcement">plan レベルのチェックボックスの強制</h3>
+<p>2 レベルの追跡は同期を保たねばならない:</p>
+<ul>
+<li><strong>Plan レベル</strong>: 個々の作業項目（各 user story、各 component）</li>
+<li><strong>State レベル</strong>: <code>aidlc-state.md</code> における stage の完了</li>
+</ul>
+<p>ステップが完了していれば、そのチェックボックスはチェックされる。チェックされていれば、
+ステップは完了していなければならない。各ステップを完了した直後に更新する。</p>
+<h3 id="timestamps">タイムスタンプ</h3>
+<p>形式: <code>date -u +&quot;%Y-%m-%dT%H:%M:%SZ&quot;</code> による ISO 8601 UTC。Bash 経由で実行する。日付の
+みは決して使わない。audit エントリごとに 1 回の Bash 呼び出し — タイムスタンプを決して
+再利用しない。</p>
+<h3 id="audit-log-formats">Audit ログのフォーマット</h3>
+<p><code>&lt;record&gt;/audit/</code>（clone ごとのシャード）のルール: 常に追記する（決して上書きしない）;
+&quot;User Input&quot; フィールドは完全かつ無修正でなければならない; プロンプトは表示する前にログ
+する; 応答は受け取った後にログする; 欠けていれば <code># AI-DLC Audit Log</code> ヘッダで作成する;
+破損していればバックアップする; Edit が失敗したら 1 回リトライする（hook が Read と Edit の
+間で修正することがある）。</p>
+<h4 id="standard-conversation-event">標準の会話イベント</h4>
+<pre><code class="language-markdown">## [Stage Name]
+**Timestamp**: [YYYY-MM-DDTHH:MM:SSZ]
+**User Input**: &quot;[Complete raw input -- never summarize]&quot;
+**AI Response**: &quot;[Action taken]&quot;
+**Context**: [Stage, decision made]
+---
+</code></pre>
+<h4 id="error-log">Error ログ</h4>
+<pre><code class="language-markdown">## Error: [Brief Description]
+**Timestamp**: [ISO timestamp]
+**Severity**: [Critical/High/Medium/Low]
+**Type**: [Parse error/Missing artifact/State corruption/Validation failure]
+**Description**: [What went wrong]
+**Cause**: [Root cause or best assessment]
+**Resolution**: [Action taken]
+**Impact**: [Artifacts affected, stages delayed, data lost]
+---
+</code></pre>
+<h4 id="recovery-log">Recovery ログ</h4>
+<pre><code class="language-markdown">## Recovery: [Brief Description]
+**Timestamp**: [ISO timestamp]
+**Issue**: [What triggered recovery]
+**Recovery Steps**: [Numbered list of actions]
+**Outcome**: [Successful/Partial/Failed -- current state after recovery]
+**Artifacts Affected**: [Files created, restored, or rebuilt]
+---
+</code></pre>
+<h4 id="change-request-log">Change Request ログ</h4>
+<pre><code class="language-markdown">## Change Request: [Brief Description]
+**Timestamp**: [ISO timestamp]
+**Request**: [User&#39;s exact change request -- complete raw input]
+**Current State**: [Which stage, what exists, what would change]
+**Impact Assessment**: [Stages affected, artifacts to regenerate, scope change]
+**User Confirmation**: [User&#39;s approval response]
+**Action Taken**: [What was done]
+**Artifacts Affected**: [Files changed]
+---
+</code></pre>
+<h4 id="question-interaction-log">質問インタラクションのログ</h4>
+<pre><code class="language-markdown">## Questions: [Stage Name] -- [Mode choice / Batch N of M]
+**Timestamp**: [ISO timestamp]
+**User Input**: &quot;[Exact user selection -- option labels as displayed]&quot;
+**AI Response**: &quot;[Wrote answer to file / Presented next batch / Proceeded to analysis]&quot;
+**Context**: [Stage name, file path, question numbers covered]
+---
+</code></pre>
+<h3 id="conversation-event-logging-checklist">会話イベントのロギングチェックリスト</h3>
+<p><code>PostToolUse</code> hook はファイル書き込みを自動ログする。会話イベントは手動でログせねば
+ならない（最もよく見落とされるステップ）。</p>
+<p><strong>各承認 gate で:</strong> (1) <code>AskUserQuestion</code> の前 — 選択肢を新鮮なタイムスタンプで追記
+する。(2) 応答の後 — ユーザーの選択を新鮮なタイムスタンプで追記する。</p>
+<p><strong>各質問インタラクションで:</strong> 回答を受け取った後 — Q&amp;A サマリを追記する。</p>
+<hr>
+<h2 id="agent-persona-loading">Agent Persona のロード</h2>
+<p>各 stage は lead と任意の support agent を指定する。persona は、広いコンテキストから stage
+固有の成果物へと積み上がる 6 ステップの knowledge 順を通じてロードされる。</p>
+<p><em>(Protocol Section 5)</em></p>
+<h3 id="6-step-knowledge-loading-order">6 ステップの Knowledge ロード順</h3>
+<p>完全なロード順は <a href="10-knowledge-system.html">Knowledge System</a> を参照。</p>
+<p>Step 1-3 は framework に同梱される。Step 4-5 は user が管理する。Step 6 はワークフロー
+位置ごとに動的である。</p>
+<h3 id="inline-stages-and-inline-mob-leads">Inline Stage と Inline Mob Lead</h3>
+<ol>
+<li>stage 作業を行う前に、<code>directive.inline_context_paths</code> の <strong>すべての</strong> ファイルを読む。
+engine は正確な persona と既存の knowledge ファイルのパスを展開する: <code>inline</code> には
+lead + supports、<code>mob</code> には lead のみ（mob の supports は dispatch されるため）。
+agent 名だけではロードされたコンテキストにならない。</li>
+<li>directive のパス順を保つ。これは 6 ステップの knowledge 順に従う。<code>inline</code> の
+support-agent エントリや <code>mob</code> の lead エントリを省略しない。</li>
+<li>実行中、ロードされたすべての観点を適用する。</li>
+</ol>
+<h3 id="subagent-stages">Subagent Stage</h3>
+<ol>
+<li>名指された harness agent を dispatch する; その config が persona と knowledge をロード
+する。</li>
+<li>コピーした persona や knowledge の散文ではなく、正確な rule パス、関連する先行成果物の
+パス、タスク指示を渡す。</li>
+<li>stage のメタデータが名指す agent を選ぶ。</li>
+</ol>
+<h3 id="multi-agent-stages-ensemble-topologies">Multi-Agent Stage（アンサンブルトポロジ）</h3>
+<p>conductor が support agent を <em>どう</em> 連れてくるかは <code>directive.mode</code> — stage の
+コミュニケーショントポロジ — に従う: <code>inline</code> stage では support agent は conductor が
+自身のコンテキストにロードする persona である（dispatch ではなく voice）; <code>subagent</code>
+（hub-and-spoke）、<code>pipeline</code>（chain）、<code>mob</code>（bounded round としての mesh）では、各
+support agent は実際に独立して dispatch される協力者である。全員が自分の作業を書く:
+subagent/mob では各協力者が contribution ファイル（Contribution + Positions, §11）を
+書き、それを lead が統合する — lead だけが <code>produces[]</code> 成果物を編集し、contribution
+ファイルが engine がチェックする完了の証拠になる; pipeline では chain のリンクが成果物を
+直接前進させ、最後のリンクがそれらを完成状態で残す。誰が何を見るかはトポロジごとに
+異なる — spoke は相互にブラインドで、chain のリンクはすべての上流の作業を見て、mob の
+異議者は 1 回の confirm-or-maintain ラウンドを得る一方、judgment-call の異議は stage の
+途中で human に浮上する — が、どのトポロジでも conductor がすべての委譲を行う; agent が
+subagent を spawn することは決してない。完全な契約は stage-protocol.md §5
+&quot;Multi-agent stages&quot; を参照。</p>
+<p>例: Feasibility は <code>aidlc-architect-agent</code>（lead）+ <code>aidlc-aws-platform-agent</code> +
+<code>aidlc-compliance-agent</code> を使い、すべて inline である。mob のショーケースは
+<code>user-stories</code> である: <code>aidlc-product-agent</code> が persona とストーリーをドラフトする;
+design、developer、quality の協力者が相互にブラインドのままそのドラフトに対して貢献する;
+その後 lead が gate の前に彼らの作業を統合し、<code>aidlc-product-lead-agent</code> がレビューする。
+hub-and-spoke のショーケースは <code>practices-discovery</code> である: pipeline-deploy lead の
+ドラフト、相互にブラインドな quality・developer・devsecops の貢献、human インタビュー、
+その後 lead の統合。その gate は <strong>Approve</strong> / <strong>Request Changes</strong> を提供する; Approve の
+後、conductor が stage を approved と報告する前に、<code>practices-promote</code> は affirmed
+タイムスタンプと、現在の stage 試行からの <code>PRACTICES_AFFIRMED</code> audit レシートの両方を
+コミットせねばならない。</p>
+<h3 id="the-11-domain-agents">11 個の Domain Agent</h3>
+<p>完全な 14 agent の陣容は、11 個の domain agent、2 個の review 専用 agent、そして
+adaptive-workflows の composer から成る。stage の作業を lead し support する domain agent は:</p>
+<p>aidlc-product-agent, aidlc-design-agent, aidlc-delivery-agent, aidlc-architect-agent,
+aidlc-aws-platform-agent, aidlc-compliance-agent, aidlc-devsecops-agent, aidlc-developer-agent,
+aidlc-quality-agent, aidlc-pipeline-deploy-agent, aidlc-operations-agent.</p>
+<p>2 個の review 専用 agent は、stage の frontmatter が reviewer を名指すときに独立した
+チェックを走らせる; <a href="#reviewer-invocation">Reviewer の呼び出し</a> を参照。composer は、
+domain の stage 作業を lead する代わりに、適応的な stage plan を提案し再形成する。完全な
+<a href="agents/README.html">Agent Reference</a> を参照。</p>
+<hr>
+<h2 id="error-recovery">エラーリカバリ</h2>
+<p><em>(Protocol Section 6)</em></p>
+<h3 id="resume-context">Resume コンテキスト</h3>
+<p>セッション開始時に <code>aidlc-state.md</code> が存在するとき、conductor はそれを読んで、完了した
+stage（<code>[x]</code>）、現在/次の stage、成果物の存在を判定し、その後、最後の未完了 stage からの
+再開を申し出る。</p>
+<h3 id="resume-context-loading-by-phase">Phase 別の Resume コンテキストロード</h3>
+<table>
+<thead>
+<tr>
+<th>Phase/Stage グループ</th>
+<th>ロードするコンテキスト</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Initialization (0.1-0.3)</strong></td>
+<td>Workspace のファイルシステム; <code>aidlc-state.md</code></td>
+</tr>
+<tr>
+<td><strong>Ideation (1.1-1.7)</strong></td>
+<td><code>&lt;record&gt;/ideation/</code> の成果物; guardrail</td>
+</tr>
+<tr>
+<td><strong>Inception -- RE</strong></td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> のリポジトリごとの RE 成果物; ideation の scope/feasibility</td>
+</tr>
+<tr>
+<td><strong>Inception -- Practices Discovery</strong></td>
+<td>lead のドラフトと既存の contribution ファイルを保つ; 欠けている quality/developer/devsecops の spoke だけを dispatch し、その後 human インタビューと lead の統合を続ける</td>
+</tr>
+<tr>
+<td><strong>Inception -- Requirements</strong></td>
+<td>リポジトリごとの <code>codekb/</code> 成果物（実行された場合）; requirements-analysis のドキュメント</td>
+</tr>
+<tr>
+<td><strong>Inception -- Design</strong></td>
+<td>要件; user story; application-design のドキュメント</td>
+</tr>
+<tr>
+<td><strong>Inception -- Delivery Planning</strong></td>
+<td>すべての inception 成果物; 部分的なら delivery-planning</td>
+</tr>
+<tr>
+<td><strong>Construction -- Code Gen</strong></td>
+<td>現在の unit の design 成果物、story design、受け入れ基準、先行コード</td>
+</tr>
+<tr>
+<td><strong>Construction -- Build/Test</strong></td>
+<td>現在の unit のコード、テスト計画、受け入れ基準、build 設定</td>
+</tr>
+<tr>
+<td><strong>Construction -- CI/Infra</strong></td>
+<td>インフラ設計; code generation の出力</td>
+</tr>
+<tr>
+<td><strong>Operation (4.1-4.7)</strong></td>
+<td>Construction の出力; これまでの operation 成果物; 4.4+ には 4.1-4.3 からの deployment 出力</td>
+</tr>
+</tbody></table>
+<h3 id="re-run-behavior">再実行の振る舞い</h3>
+<p>stage の再実行が必要な場合（承認後に変更が要求された）:</p>
+<ol>
+<li>stage ファイルを再読する</li>
+<li>先行成果物をコンテキストとしてロードする</li>
+<li>前の成果物を上書きして再実行する</li>
+<li>新しい完了メッセージを提示する</li>
+</ol>
+<h3 id="compaction-recovery">Compaction リカバリ</h3>
+<p><code>PreCompact</code> hook は compaction の前に <code>aidlc-state.md</code> の構造を検証する（情報提供のみ、
+ブロック不可）。最後に検証された状態（stage、タイムスタンプ）を持つ <code>.aidlc-recovery.md</code>
+のパンくずを書く。再開時、conductor はパンくずと状態ファイルを比較して compaction 関連の
+破損を検出する。</p>
+<h3 id="corrupted-state-file-recovery">破損した状態ファイルのリカバリ</h3>
+<p><code>aidlc-state.md</code> は存在するがパースできない場合:</p>
+<ol>
+<li><code>aidlc-state.md.bak</code> にバックアップする</li>
+<li>実際の完了を判定するため <code>&lt;record&gt;/</code> を成果物についてスキャンする:<ul>
+<li>RE 分析ファイル -&gt; RE stage 完了</li>
+<li>要件ドキュメント -&gt; requirements 完了</li>
+<li>Design ドキュメント -&gt; design 完了</li>
+<li>story design に合致するコード -&gt; code gen 完了</li>
+</ul>
+</li>
+<li>成果物の証拠から状態を再構築する</li>
+<li>「Current Status」を証拠を欠く最初の stage に設定する</li>
+<li>ユーザーに知らせる: &quot;State file was corrupted. Rebuilt from artifacts. Please verify.&quot;</li>
+</ol>
+<h3 id="missing-artifact-recovery">欠けた成果物のリカバリ</h3>
+<p>stage がディスク上に存在しない成果物を参照する場合:</p>
+<ol>
+<li>欠けた成果物をリストする</li>
+<li>生成する stage が完了とマークされているか確認する</li>
+<li>完了しているが欠けている場合: ユーザーに知らせ、再実行または手動での提供を申し出る</li>
+<li>完了していない場合: stage を通常どおり走らせる</li>
+</ol>
+<h3 id="contradictory-inputs-recovery">矛盾する入力のリカバリ</h3>
+<p>異なる stage からの user 入力が矛盾する場合:</p>
+<ol>
+<li>両方のソースからの引用とともに、具体的な矛盾をフラグする</li>
+<li>1 つの解釈を選ぶことで解決しない</li>
+<li>どちらが優先されるかを訊く</li>
+<li>上書きされる成果物を更新する</li>
+<li>解決を <code>audit/</code> シャードにログする</li>
+</ol>
+<h3 id="severity-levels">Severity レベル</h3>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>説明</th>
+<th>例</th>
+<th>アクション</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Critical</strong></td>
+<td>継続不可</td>
+<td>破損した状態、欠けた重要成果物、回復不能なパースエラー</td>
+<td>停止し、即座にユーザーに訊く</td>
+</tr>
+<tr>
+<td><strong>High</strong></td>
+<td>出力が誤っている可能性</td>
+<td>矛盾する入力、不完全な回答、欠けた依存</td>
+<td>停止し、即座にユーザーに訊く</td>
+</tr>
+<tr>
+<td><strong>Medium</strong></td>
+<td>品質低下</td>
+<td>曖昧な応答、部分的なコンテキスト、曖昧な要件</td>
+<td>解決を試みる; 未解決なら、ユーザーに訊く</td>
+</tr>
+<tr>
+<td><strong>Low</strong></td>
+<td>見た目のみ</td>
+<td>フォーマット、命名、スタイルの問題</td>
+<td>静かに処理し、<code>audit/</code> シャードにログする</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="change-handling">変更のハンドリング</h2>
+<p>ワークフロー途中の変更の 5 つのカテゴリ。それぞれ異なるハンドリングを持つ。</p>
+<p><em>(Protocol Section 7)</em></p>
+<h3 id="minor-changes">マイナーな変更</h3>
+<p>現在の stage だけに影響する。変更を成果物に適用し、完了メッセージを再提示する。
+ロールバックは不要。</p>
+<h3 id="major-changes">メジャーな変更</h3>
+<p>先行する stage に影響する:</p>
+<ol>
+<li>影響を受ける先行 stage を特定する</li>
+<li><code>AskUserQuestion</code> を通じて影響分析を提示する</li>
+<li>承認されたら、影響を受ける stage を順に再実行する</li>
+<li>orchestrator の directive と report を通じてそれらに再突入して完了させる; ライフ
+サイクルのチェックボックスを直接編集しない</li>
+</ol>
+<h3 id="scope-changes">Scope の変更</h3>
+<p>新しい要件、または scope レベルの変更:</p>
+<ol>
+<li><code>audit/</code> シャードに記録する</li>
+<li>Requirements Analysis (2.3) または Delivery Planning (2.8) に戻る</li>
+<li>その地点から再計画する</li>
+<li>変更が stage の選択に影響する場合（例: <code>poc</code> -&gt; <code>feature</code>）、engine が plan をアトミック
+に更新するよう scope/recompose コマンドを使う</li>
+</ol>
+<h3 id="unit-changes">Unit の変更</h3>
+<table>
+<thead>
+<tr>
+<th>変更</th>
+<th>手順</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Add</strong></td>
+<td>plan に追加し、story design を作成し、build 順に差し込む。完了した unit を再実行しない。</td>
+</tr>
+<tr>
+<td><strong>Remove</strong></td>
+<td>skip とマークし、成果物をアーカイブする。依存を確認する — 依存先への影響をフラグする。</td>
+</tr>
+<tr>
+<td><strong>Split</strong></td>
+<td>元をアーカイブし、2 つのエントリを作り、ストーリーを分配し、それぞれに story design を走らせる。</td>
+</tr>
+</tbody></table>
+<h3 id="architectural-changes">アーキテクチャの変更</h3>
+<p>アプリケーションアーキテクチャに影響する（DB の切り替え、デプロイメントモデル、大きな
+統合）:</p>
+<ol>
+<li>scope を特定する: 影響を受ける design 成果物、story design、生成されたコード</li>
+<li>完全な影響分析を提示する</li>
+<li>承認されたら、App Design stage に戻り、そこから再実行する</li>
+<li>影響を受ける unit のすべての下流成果物を再生成する</li>
+<li>影響を受けない unit を保つ</li>
+</ol>
+<h3 id="archive-before-change">変更前のアーカイブ</h3>
+<p>成果物を上書きする大きな変更の前に:</p>
+<ol>
+<li>必要なら <code>&lt;record&gt;/archive/</code> を作成する</li>
+<li>影響を受ける成果物を <code>&lt;record&gt;/archive/[ISO-date]-[stage-name]/</code> にコピーする</li>
+<li>進む。先行する作業が永続的に失われることはない。</li>
+</ol>
+<hr>
+<h2 id="depth-guidance">Depth ガイダンス</h2>
+<p>必要な詳細をちょうど作る — 多すぎず、少なすぎず。depth は scope と問題の複雑さに適応する。</p>
+<p><em>(Protocol Section 8)</em></p>
+<h3 id="scope-to-depth-and-test-strategy-defaults">Scope から Depth へのマッピングとテスト戦略の既定値</h3>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>既定の Depth</th>
+<th>テスト戦略</th>
+<th align="right">典型的な stage 数</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enterprise</td>
+<td>Comprehensive</td>
+<td>Comprehensive</td>
+<td align="right">32</td>
+<td>全 stage</td>
+</tr>
+<tr>
+<td>feature</td>
+<td>Standard</td>
+<td>Standard</td>
+<td align="right">32</td>
+<td>全 stage</td>
+</tr>
+<tr>
+<td>mvp</td>
+<td>Standard</td>
+<td>Standard</td>
+<td align="right">22</td>
+<td>Operation を全 skip</td>
+</tr>
+<tr>
+<td>poc</td>
+<td>Minimal</td>
+<td>Minimal</td>
+<td align="right">~8</td>
+<td>Initialization + Ideation + コアの Inception</td>
+</tr>
+<tr>
+<td>bugfix</td>
+<td>Minimal</td>
+<td>Minimal</td>
+<td align="right">~8</td>
+<td>対象を絞る</td>
+</tr>
+<tr>
+<td>refactor</td>
+<td>Minimal</td>
+<td>Minimal</td>
+<td align="right">8</td>
+<td>対象を絞る</td>
+</tr>
+<tr>
+<td>infra</td>
+<td>Standard</td>
+<td>Standard</td>
+<td align="right">~13</td>
+<td>インフラ中心</td>
+</tr>
+<tr>
+<td>security-patch</td>
+<td>Minimal</td>
+<td>Minimal</td>
+<td align="right">~10</td>
+<td>セキュリティ中心</td>
+</tr>
+<tr>
+<td>workshop</td>
+<td>Standard</td>
+<td><strong>Minimal</strong></td>
+<td align="right">25</td>
+<td>学習のための Standard depth; ペースのための Nyquist テスト</td>
+</tr>
+</tbody></table>
+<p>user はどの承認 gate でも depth やテスト戦略を上書きできる。</p>
+<h3 id="three-depth-levels">3 つの Depth レベル</h3>
+<p><strong>Minimal</strong>（poc, bugfix, refactor, security-patch）— 最小限の成果物、簡潔な分析、任意の
+stage を skip:</p>
+<ul>
+<li>Requirements: 5-10 項目、簡潔な説明、最小限の NFR</li>
+<li>App Design: 単一の component 図、基本的なデータモデル、ADR なし</li>
+<li>Functional Design: 簡潔なビジネスルール、単純な entity、<code>frontend-components.md</code> を
+skip</li>
+</ul>
+<p><strong>Standard</strong>（feature, mvp, infra）— 中程度の詳細での完全な成果物:</p>
+<ul>
+<li>Requirements: 受け入れ基準付きで 15-30、中程度の NFR</li>
+<li>App Design: インタラクションを伴う component 図、関係、2-3 個の ADR</li>
+<li>Functional Design: 詳細なビジネスロジック、包括的なルール、entity のライフサイクル</li>
+</ul>
+<p><strong>Comprehensive</strong>（enterprise）— 深い分析、全 stage を実行:</p>
+<ul>
+<li>Requirements: 30 以上、詳細な基準、全カテゴリにわたる包括的な NFR</li>
+<li>App Design: 多層の図、詳細なデータフロー、統合シーケンス、代替案を伴う 5 個以上の ADR</li>
+<li>Functional Design: 決定木、状態機械、並行性、error recovery、unit 横断のパターン</li>
+</ul>
+<hr>
+<h2 id="terminology-glossary">用語集</h2>
+<p><em>(Protocol Section 9)</em></p>
+<table>
+<thead>
+<tr>
+<th>用語</th>
+<th>定義</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>AI-DLC</strong></td>
+<td>AI-Driven Development Life Cycle — このシステムが実装する方法論</td>
+</tr>
+<tr>
+<td><strong>Phase</strong></td>
+<td>トップレベルのグルーピング: Initialization, Ideation, Inception, Construction, Operation</td>
+</tr>
+<tr>
+<td><strong>Stage</strong></td>
+<td>phase 内の個別のステップ（例: Intent Capture, Code Generation）</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>どの stage がどの depth で実行されるかを制御する（enterprise, feature, mvp, poc, bugfix, refactor, infra, security-patch, workshop）</td>
+</tr>
+<tr>
+<td><strong>Depth</strong></td>
+<td>成果物の詳細度のスケール: Minimal, Standard, または Comprehensive</td>
+</tr>
+<tr>
+<td><strong>Unit of Work</strong></td>
+<td>独立して実装可能な機能のパッケージ; Construction のイテレーション単位。stage 3.1-3.7 の 1 巡。</td>
+</tr>
+<tr>
+<td><strong>Service</strong></td>
+<td>デプロイ可能なプロセスまたはコンテナ（API サーバー、worker、frontend アプリ）</td>
+</tr>
+<tr>
+<td><strong>Module</strong></td>
+<td>service 内のコードレベルの組織的境界（package、namespace）</td>
+</tr>
+<tr>
+<td><strong>Component</strong></td>
+<td>module 内の論理的な構成ブロック（class、関数グループ、UI component）</td>
+</tr>
+<tr>
+<td><strong>Planning</strong></td>
+<td>markdown 成果物を生成する stage（分析、質問、design）</td>
+</tr>
+<tr>
+<td><strong>Generation</strong></td>
+<td>実行可能なコードを生成する stage（Code Generation, Build and Test）</td>
+</tr>
+<tr>
+<td><strong>Artifact</strong></td>
+<td>決定・design・分析を記録する <code>&lt;record&gt;/</code> 内のバージョン管理された markdown ファイル</td>
+</tr>
+<tr>
+<td><strong>Guardrail</strong></td>
+<td>アクティブな space の memory 層（<code>aidlc/spaces/&lt;active-space&gt;/memory/</code>）に保存された、学習された振る舞いの rule</td>
+</tr>
+<tr>
+<td><strong>Approval Gate</strong></td>
+<td>user が承認または変更要求を行う構造化されたプロンプト</td>
+</tr>
+<tr>
+<td><strong>Inline Stage</strong></td>
+<td>orchestrator の会話で直接実行される stage</td>
+</tr>
+<tr>
+<td><strong>Subagent Stage</strong></td>
+<td>実行を Claude Code の Task tool 呼び出しに委譲する stage</td>
+</tr>
+<tr>
+<td><strong>Lead Agent</strong></td>
+<td>stage の作業に責任を持つ主要な agent persona</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="content-validation">コンテンツ検証</h2>
+<p><em>(Protocol Section 10)</em></p>
+<h3 id="mermaid-rules">Mermaid のルール</h3>
+<p>Mermaid 図を書く前に:</p>
+<ol>
+<li>構文を検証する（バランスした波括弧、有効なノード/エッジ、エスケープされていない
+特殊文字が無いこと）</li>
+<li>参照されるすべてのノードが宣言されていることを保証する</li>
+<li>テキストのフォールバックを含める: ``</li>
+</ol>
+<h3 id="pre-creation-checklist">作成前チェックリスト</h3>
+<p>成果物を作成する前に:</p>
+<ul>
+<li>参照されるすべての entity が先行成果物に存在する</li>
+<li>既存の成果物との命名衝突が無い</li>
+<li>ファイルパスが stage の規約に合致する</li>
+</ul>
+<h3 id="ascii-diagram-standards">ASCII 図の規格</h3>
+<p>基本的な ASCII のみを使う: <code>+</code> <code>-</code> <code>|</code> <code>^</code> <code>v</code> <code>&lt;</code> <code>&gt;</code> <code>/</code> <code>\</code> に加えて英数字とスペース。
+禁止: Unicode の罫線素片（U+2500-U+257F）。文字幅のルール: box 内のすべての行は等しい
+文字数を持たねばならない。</p>
+<p>リファレンスパターン:</p>
+<pre class="term"><code>+------------------+       +---------------------------+
+| Component Name   |       | Outer                     |
++------------------+       |  +-----+  +-----+        |
+                           |  | A   |  | B   |        |
+[Source] -----&gt; [Target]   |  +-----+  +-----+        |
+[Source] &lt;----&gt; [Target]   +---------------------------+</code></pre>
+<h3 id="character-escaping">文字のエスケープ</h3>
+<table>
+<thead>
+<tr>
+<th>文字</th>
+<th>ルール</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Pipe (<code>|</code>)</td>
+<td>テーブルセル内でエスケープする</td>
+</tr>
+<tr>
+<td>山括弧</td>
+<td>HTML タグでないときエスケープする</td>
+</tr>
+<tr>
+<td>Code fence</td>
+<td>言語識別子付きのトリプルバッククォート</td>
+</tr>
+<tr>
+<td>Mermaid ラベル</td>
+<td>特殊文字をクォートで囲む</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="subagent-return-summary">Subagent の返却サマリ</h2>
+<p>subagent が完了するとき、コンテキストが失われないことを保証するため、構造化されたサマリ
+を conductor に返さねばならない。</p>
+<p><em>(Protocol Section 11)</em></p>
+<h3 id="required-format">必須フォーマット</h3>
+<pre><code class="language-markdown">## Subagent Summary: [Stage Name]
+### Produced
+- [file path]: [brief description]
+### Key Decisions
+- [Decision]: [rationale]
+### Issues / Concerns
+- [Problems, edge cases, risks] or &quot;None&quot;
+### Next Steps
+- [What orchestrator should do next]
+</code></pre>
+<p><strong>Conductor のルール:</strong> 進む前にサマリを読まねばならない。空でない Issues/Concerns は
+ユーザーに提示せねばならない。期待より少ないファイル数は、完了とマークする前に調査を
+要する。</p>
+<h3 id="context-budget">Context バジェット</h3>
+<table>
+<thead>
+<tr>
+<th>ルール</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>現在の unit のみ</td>
+<td>現在の unit の design 成果物だけを渡す</td>
+</tr>
+<tr>
+<td>inception を要約する</td>
+<td>inception 成果物ごとにパス付きで 1-2 行のサマリ; 必要なら subagent が Read する</td>
+</tr>
+<tr>
+<td>常に含める</td>
+<td>具体的なタスク指示と関連する state/成果物のパス; harness agent の config が persona と knowledge をロードする</td>
+</tr>
+<tr>
+<td>大きな knowledge セット</td>
+<td>特に関連するファイルパスを名指す; persona や knowledge の散文をプロンプトに貼り付けない</td>
+</tr>
+</tbody></table>
+<h3 id="failure-recovery">失敗リカバリ</h3>
+<ol>
+<li>縮小したコンテキストで <strong>1 回リトライする</strong>（inception を要約、現在の unit のみ）</li>
+<li>リトライが失敗したら、ユーザーに申し出る: &quot;Run inline&quot;（orchestrator で実行）または
+&quot;Skip and revisit&quot;（未完了とマークして継続）</li>
+<li>Error ログ形式を使って失敗を <code>audit/</code> シャードにログする</li>
+</ol>
+<hr>
+<h2 id="reviewer-invocation">Reviewer の呼び出し</h2>
+<p><code>run-stage</code> directive が非 null の <code>reviewer</code> フィールドを運ぶとき、conductor は stage 本体
+が成果物を生成した後、§13 Learnings Ritual と承認 gate の前に、その reviewer を <strong>別個の
+sub-agent</strong> として呼び出す。stage の儀式のシーケンスの全体: questions → artifact →
+reviewer（宣言されていれば）→ learnings → gate。</p>
+<p><em>(Protocol Section 12a)</em></p>
+<ol>
+<li><strong>Invoke.</strong> <code>directive.reviewer</code> で名指された agent に委譲し、stage 定義のパス、Q&amp;A
+ファイル、生成された成果物のパス、および frontmatter の任意の検証ツールを渡す —
+builder の <code>memory.md</code> や plan は決して渡さず、reviewer が独立した判断を形成するように
+する。</li>
+<li><strong>Review.</strong> レビューは adversarial review 契約の下で走る: reviewer は成果物を確認する
+のではなく反証しようと試み、存在する場合は機械チェック可能な証拠に findings を根拠づける
+（READY は既定ではなく、到達し損ねる評決である）。reviewer は定義・Q&amp;A・成果物を読み、
+リストされた任意の検証ツールを走らせ、<strong>READY</strong> または <strong>NOT-READY</strong> の評決とともに
+<code>## Review</code> セクションを主要な成果物に追記する。</li>
+<li><strong>Verdict.</strong> READY → learnings の儀式、続けて gate へ進む。イテレーションが
+<code>reviewer_max_iterations</code>（既定 2）を下回って残っている NOT-READY → lead agent が
+findings に対処するため再実行し、reviewer が再チェックする。イテレーションを使い果たした
+NOT-READY → 未解決の findings を書き留めたうえで gate へ進む。</li>
+</ol>
+<p>reviewer は決してブロックしない — human は常に gate で最終決定権を持つ — し、<code>reviewer</code>
+フィールドの無い stage では発火しない。<a href="15-stage-definition.html">Stage Definition</a> の
+<code>reviewer</code> / <code>reviewer_max_iterations</code> frontmatter フィールドを参照。</p>
+<hr>
+<h2 id="learnings-ritual">Learnings Ritual</h2>
+<p>human が agent の振る舞いを訂正するとき、その訂正は次のワークフローのための永続的な rule
+（guardrail）になり得る。v0.5.0 はこれを、別個の guardrail 発行フローではなく、
+tool-as-actor の Learnings Ritual を通じて扱う。</p>
+<p><em>(Protocol Section 13)</em></p>
+<p>この儀式は、完了メッセージと承認 gate の間で、gate 付きのすべての stage で走る:</p>
+<ol>
+<li><strong>Diary</strong>: agent は作業しながら stage ごとの <code>memory.md</code>（Interpretations / Deviations
+/ Tradeoffs / Open questions）を保守する。</li>
+<li><strong>Surface</strong>: <code>aidlc-learnings.ts surface --slug &lt;slug&gt;</code> が diary を読み、構造化された
+候補を発行する — LLM は再パースや分類をしない。</li>
+<li><strong>Confirm</strong>: conductor が候補をレンダリングする; user はどれを保持するかを選び、自由
+記述の追加については、宛先を導く見出しを選ぶ。常に存在する &quot;Anything to add?&quot; チャネル
+は少なくとも <code>Nothing to add</code> と <code>Add a note</code> をレンダリングする; 1 選択肢の構造化質問
+は Claude Code と Codex では無効である。</li>
+<li><strong>Admission check</strong>: 保持された各 learning は <code>org.md</code> の合致するセクションに対して
+チェックされる; 矛盾は revise / skip / escalate へと浮上する。</li>
+<li><strong>Persist</strong>: <code>aidlc-learnings.ts persist</code> が確認された各 learning を practice として
+<code>aidlc/spaces/&lt;active-space&gt;/memory/{project,team}.md</code> に書き込む（そして sensor 束縛の
+learning については、manifest + stage の <code>sensors:</code> インポートを 1 つのロックされた
+トランザクションでインストールする）とともに、<code>RULE_LEARNED</code> / <code>SENSOR_PROPOSED</code> を
+発行する。</li>
+</ol>
+<p>learnings は進行中の実行ではなく、<strong>次の</strong> ワークフローの compile で適用される。完全な
+tool-as-actor プロトコルは <code>stage-protocol.md</code> §13 を、書かれた rule が供給される
+strict-additive の解決については <a href="08-rule-system.html">Rule System</a> を参照。</p>
+<hr>
+<h2 id="phase-boundary-verification">Phase 境界の検証</h2>
+<p>各 phase の遷移で、トレーサビリティ検証が、完了した phase の出力が次の phase にとって
+十分で一貫していることを保証する。</p>
+<p><em>(<code>stage-protocol-governance.md</code> の Section 13 — Learnings Ritual（<code>stage-protocol.md</code> の
+Section 13）とは別)</em></p>
+<h3 id="triggers">トリガー</h3>
+<ul>
+<li>各 phase の最後の stage が承認された後</li>
+<li>次の phase の最初の stage が始まる前</li>
+<li><code>/aidlc --status</code> を通じてオンデマンドで</li>
+</ul>
+<h3 id="process">プロセス</h3>
+<ol>
+<li><code>.claude/knowledge/aidlc-shared/verification.md</code> から方法論を読む</li>
+<li>phase 固有のトレーサビリティチェックを走らせる</li>
+<li>結果を <code>&lt;record&gt;/verification/[phase-boundary]-verification.md</code> に書く</li>
+<li>失敗した場合: 進む前に問題（欠けたリンク、孤立した成果物、不整合）を提示する</li>
+<li><code>PHASE_VERIFIED</code> を <code>audit/</code> シャードにログする</li>
+</ol>
+<h3 id="per-phase-checks">Phase ごとのチェック</h3>
+<table>
+<thead>
+<tr>
+<th>境界</th>
+<th>検証内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Ideation -&gt; Inception</strong></td>
+<td>intent がキャプチャされ、scope が定義され、feasibility が確認され、initiative が承認されている</td>
+</tr>
+<tr>
+<td><strong>Inception -&gt; Construction</strong></td>
+<td>すべての要件が design に辿れ、unit が定義され、delivery plan が承認されている</td>
+</tr>
+<tr>
+<td><strong>Construction -&gt; Operation</strong></td>
+<td>すべての unit がビルド/テストされ、CI pipeline が設定され、インフラが設計されている</td>
+</tr>
+</tbody></table>
+<h3 id="traceability-matrix">トレーサビリティマトリクス</h3>
+<p>検証は辿れるチェーンを保証する:</p>
+<pre class="term"><code>Intent -&gt; Scope -&gt; Requirements -&gt; Designs -&gt; Units -&gt; Code -&gt; Tests -&gt; Deployment</code></pre>
+<p>各境界で、左側のすべての成果物は右側に対応する成果物を持たねばならない。欠けたリンク、
+孤立、不整合は user のレビューのためにフラグされる。</p>
+<hr>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="01-architecture.html">Architecture</a> -- 5 層モデル、設計上の決定</li>
+<li><a href="03-orchestrator.html">Orchestrator</a> -- SKILL.md の deep-dive</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/">Stages</a> -- phase ごとの stage ドキュメント</li>
+<li><a href="05-agent-system.html">Agent System</a> -- agent の構造、frontmatter</li>
+<li><a href="06-hooks-and-tools.html">Hooks and Tools</a> -- hook システム、audit イベント</li>
+<li><a href="10-knowledge-system.html">Knowledge System</a> -- ロード順、テンプレート</li>
+<li><a href="diagrams.html">Diagrams</a> -- すべての図を 1 箇所に</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stage-protocol.md"><code>docs/reference/04-stage-protocol.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

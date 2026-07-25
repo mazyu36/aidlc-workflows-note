@@ -1,0 +1,1585 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Construction phase — Stage リファレンス (3.1-3.7) — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/04-stages/construction</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../reference/01-architecture.html">Architecture</a>
+  <a href="../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../reference/09-testing.html">テスト</a>
+  <a href="../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../reference/04-stages/construction.html" class="here">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#phase-overview">Phase 概観</a>
+  <a href="#bolt-by-bolt-construction">Bolt ごとの Construction</a>
+  <a href="#stage-summary-table">Stage サマリテーブル</a>
+  <a href="#stage-31-functional-design">Stage 3.1: Functional Design</a>
+  <a href="#stage-32-nfr-requirements">Stage 3.2: NFR Requirements</a>
+  <a href="#stage-33-nfr-design">Stage 3.3: NFR Design</a>
+  <a href="#stage-34-infrastructure-design">Stage 3.4: Infrastructure Design</a>
+  <a href="#stage-35-code-generation">Stage 3.5: Code Generation</a>
+  <a href="#stage-36-build-and-test">Stage 3.6: Build and Test</a>
+  <a href="#stage-37-ci-pipeline">Stage 3.7: CI Pipeline</a>
+  <a href="#phase-summary">Phase サマリ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="construction-phase-stage-reference-31-37">Construction phase — Stage リファレンス (3.1-3.7)</h1>
+<h2 id="phase-overview">Phase 概観</h2>
+<p>Construction phase は、Inception からの設計成果物を、動作しテスト済みの
+ソフトウェアへと変換する。functional design、non-functional requirements と
+design、infrastructure design、code generation、build/test 検証、CI pipeline
+設定にわたる 7 つの stage（3.1 から 3.7）をカバーする。</p>
+<p>Construction は AI-DLC 方法論における 5 つの phase のうち 4 番目である。それは
+Delivery Planning（Stage 2.8）中に生産される <strong>実行計画</strong> によって駆動される。
+この計画が、どの stage を実行し、どれを skip し、どの順序で unit をビルドするかを
+決める。</p>
+<p>すべての stage は、承認 gate・質問フォーマット・完了メッセージ・状態追跡について
+<code>stage-protocol.md</code> に従う。</p>
+<blockquote>
+<p><strong>パス規約。</strong> 各ワークフローの成果物は、その <strong>intent record dir</strong> —
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> の下に住む（<code>&lt;space&gt;</code> は、
+非既定の space が関与しない限り <code>default</code> であり、<code>&lt;YYMMDD&gt;-&lt;label&gt;</code> は intent
+ディレクトリ: <code>260624</code> のようなコンパクトな UTC 日付プレフィックスに、record が
+時系列でソートされるよう短い kebab-case ラベルを付けたもの）。以下では
+<code>&lt;record&gt;/</code> はそのディレクトリの略記である; 例えば
+<code>&lt;record&gt;/construction/{unit-name}/functional-design/</code> は
+<code>aidlc/spaces/default/intents/&lt;YYMMDD&gt;-&lt;label&gt;/construction/{unit-name}/functional-design/</code>
+に展開される。ディレクトリ名は人間可読なラベルである; 正規のアイデンティティは
+<code>intents.json</code> レジストリ行に格納される UUIDv7 である。（per-intent レイアウト
+以前に作られたプロジェクトはフラットなツリーを使っていた; engine は初回実行時に
+それらを移行する。）</p>
+</blockquote>
+<hr>
+<h2 id="bolt-by-bolt-construction">Bolt ごとの Construction</h2>
+<p>Construction は、stage 2.8 からの <code>bolt-plan.md</code>（Bolt シーケンス +
+walking-skeleton マーカー）と stage 2.7 からの依存 DAG に駆動され、<strong>Bolt ごと</strong>
+に実行される。<a href="../../guide/glossary.html">Bolt</a> は、1 つの Unit または依存で結ばれた
+小さな Unit 群に対する stage 3.1–3.5 の 1 パスである。stage 3.6（Build and Test）
+と 3.7（CI Pipeline）は、最後にすべての Bolt にわたって <strong>1 回</strong>走る。</p>
+<pre class="term"><code>Bolt 1 (walking skeleton) — always gated:
+  Questions (3.1–3.4 across the Bolt's Units in QUESTION-ONLY mode)
+  → Answers gate (Bolt-level)
+  Design artifacts (3.1–3.4 in ARTIFACT-ONLY mode)
+  Code generation (3.5 per Unit via Task delegation)
+  → Walking-skeleton gate
+  → Ladder prompt (fires once): "autonomous" or "gated"
+  → Write Construction Autonomy Mode to state
+
+Bolt 2..N — autonomy mode governs the gate:
+  (Parallel-eligible Bolts run as a batch; single batch-level gate covers
+   every Bolt in it.)
+  Questions → Answers gate (Bolt-level) → Design → Code-gen → Bolt/batch
+  gate (skipped if autonomous). Failure always halts and asks.
+
+After all Bolts:
+  3.6 Build and Test (runs once across the full codebase)
+  3.7 CI Pipeline<span class="t-comment">    (runs once, conditional)</span></code></pre>
+<p>各 design stage ファイル（3.1–3.4）は QUESTION-ONLY と ARTIFACT-ONLY の実行
+モードをサポートする — 詳細は個々の stage ファイルを参照。Code Generation の Step 3
+<strong>Plan Approval は、生成前に常にハードストップする</strong> — Bolt 実行中も含めて。通常の
+Bolt 実行中に <strong>engine によって抑制される</strong> のはその Step 7 の Unit ごとの完了
+承認 gate だけである; それは単一の Bolt レベル（またはバッチレベル）の完了 gate で
+置き換えられる。Unit ごとの完了 gate は直接起動での使用（例:
+<code>/aidlc --stage code-generation</code>）のために残る。</p>
+<p><strong>design stage の反復順序（opt-in）。</strong> 既定では、engine は 4 つの inline design
+stage（3.1 から 3.4）を stage-major で反復する: すべての Unit について 3.1 を
+走らせ、次にすべての Unit について 3.2 を走らせ、と続ける。state ファイルが
+<code>## Runtime State</code> の下に <code>Construction Iteration: unit-major</code> を記録するとき
+（delivery-planning で <code>aidlc-state.ts set-construction-iteration unit-major</code> に
+より、または人間によって設定される）、engine は代わりに unit-major で歩く: Bolt
+ビルド順の各 Unit について、次の Unit が始まる前にその Unit の 4 つの design
+ドキュメント（3.1 から 3.4）を連続して著述する。4 つの stage ごとの承認 gate は、
+数も機構も変わらない; unit-major の下では、それらは遅く、stage 順に、（stage ×
+Unit の）design グリッド全体がカバーされた後に、stage ごとに人間の承認 1 つで
+発火する。
+<code>code-generation</code>（3.5、<code>mode: subagent</code>）は決してこの歩みの一部ではない。正確な
+値 <code>unit-major</code> だけがそれを起動する; 不在または <code>stage-major</code> が既定である。</p>
+<p><strong>並列バッチ。</strong> 2 つ以上の Bolt が依存充足を共有し、互いに依存しないとき、
+conductor は単一の assistant メッセージで N 個の <code>Task</code> 呼び出しを発行することで、
+それらの Code Generation stage を並行してディスパッチする。1 つのバッチレベル gate
+がそれらすべてをカバーする。audit イベント（<code>BOLT_STARTED</code>、<code>BOLT_COMPLETED</code>）は
+<code>Batch=N</code> フィールドを運ぶので、兄弟はログから復元可能である。</p>
+<p><strong>失敗処理。</strong> Bolt の失敗は、autonomy mode に関わらず常に Construction を停止する。
+選択肢は、retry（失敗した Bolt だけを再実行）、skip（<code>[S]</code> とマークして続行 —
+依存する Bolt も失敗しうる）、または abort である。並列バッチ内の成功した兄弟は、
+その <code>[x]</code> ステータスと成果物を保つ。正規の仕様は <code>stage-protocol.md</code> §1
+「Construction Bolt gates」と SKILL.md §CONSTRUCTION Flow を参照。</p>
+<hr>
+<h2 id="stage-summary-table">Stage サマリテーブル</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>名前</th>
+<th>実行</th>
+<th>条件</th>
+<th>リードエージェント</th>
+<th>支援エージェント</th>
+<th>モード</th>
+<th>Unit ごと</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3.1</td>
+<td>Functional Design</td>
+<td>CONDITIONAL</td>
+<td>新しいデータモデル、複雑なビジネスロジック、またはビジネスルールの設計が必要</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-developer-agent</td>
+<td>inline</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>NFR Requirements</td>
+<td>CONDITIONAL</td>
+<td>パフォーマンス・セキュリティ・スケーラビリティの懸念、または tech stack の選定が必要</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-devsecops-agent, aidlc-compliance-agent, aidlc-quality-agent</td>
+<td>inline</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td>NFR Design</td>
+<td>CONDITIONAL</td>
+<td>NFR Requirements が実行され、NFR パターンの設計が必要</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-aws-platform-agent</td>
+<td>inline</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td>Infrastructure Design</td>
+<td>CONDITIONAL</td>
+<td>infrastructure サービスのマッピングが必要、deployment アーキテクチャが必要、またはクラウドリソースが必要</td>
+<td>aidlc-aws-platform-agent</td>
+<td>aidlc-devsecops-agent, aidlc-compliance-agent</td>
+<td>inline</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td>Code Generation</td>
+<td>ALWAYS</td>
+<td>実行計画内のすべての unit に対して常に実行される</td>
+<td>aidlc-developer-agent</td>
+<td>(なし)</td>
+<td>subagent (aidlc-developer-agent)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>3.6</td>
+<td>Build and Test</td>
+<td>ALWAYS</td>
+<td>Unit ごとの全 stage が終わった後に常に 1 回実行される</td>
+<td>aidlc-quality-agent</td>
+<td>aidlc-devsecops-agent</td>
+<td>inline</td>
+<td>No</td>
+</tr>
+<tr>
+<td>3.7</td>
+<td>CI Pipeline</td>
+<td>CONDITIONAL</td>
+<td>CI pipeline の作成または大幅な変更が必要なときに実行</td>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>(なし)</td>
+<td>inline</td>
+<td>No</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-31-functional-design">Stage 3.1: Functional Design</h2>
+<h3 id="metadata">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>3.1</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Construction</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（実行計画に従う）</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>新しいデータモデル、複雑なビジネスロジック、またはビジネスルールの設計が必要。新しいビジネスロジックの無い単純なロジック変更なら skip。</td>
+</tr>
+<tr>
+<td>Unit ごと</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>リードエージェント</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>aidlc-developer-agent</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>unit-of-work.md, unit-of-work-story-map.md, requirements.md, application design 成果物</td>
+</tr>
+<tr>
+<td>出力</td>
+<td><code>&lt;record&gt;/construction/{unit-name}/functional-design/</code> — business-logic-model.md, business-rules.md, domain-entities.md, CONDITIONAL: frontend-components.md</td>
+</tr>
+</tbody></table>
+<h3 id="purpose">目的</h3>
+<p>単一の unit of work のためにビジネスロジック、ドメインモデル、ルールを設計する。
+aidlc-architect-agent がリードし、aidlc-developer-agent が技術的実現性のインプットを
+提供する。</p>
+<h3 id="inputs">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/inception/units-generation/unit-of-work.md</code> からの unit 定義</li>
+<li><code>&lt;record&gt;/inception/units-generation/unit-of-work-story-map.md</code> からの割り当てられた stories</li>
+<li><code>&lt;record&gt;/inception/requirements-analysis/requirements.md</code> からの requirements</li>
+<li><code>&lt;record&gt;/inception/application-design/</code> からの application design 成果物</li>
+</ul>
+<h3 id="steps">ステップ</h3>
+<ol>
+<li><p><strong>Personas をロード</strong> — aidlc-architect-agent（lead）の persona と knowledge を
+ロードする。技術的な実装インプットのために aidlc-developer-agent の persona と
+knowledge をロードする。aidlc-architect-agent を主たる視点として適用する。</p>
+</li>
+<li><p><strong>Unit コンテキストを読む</strong> — unit 定義、割り当てられた stories、requirements、
+application design 成果物を読む。</p>
+</li>
+<li><p><strong>Functional Design Plan を作成</strong> — unit の scope を分析し、
+<code>&lt;record&gt;/construction/{unit-name}/functional-design/functional-design-questions.md</code>
+に <code>[Answer]:</code> タグを使ってコンテキストに適した質問を持つ questions ファイルを
+作成する。フォーカス領域:</p>
+<ul>
+<li>ビジネスロジックのワークフローとアルゴリズム</li>
+<li>ドメインモデルとエンティティ関係</li>
+<li>ビジネスルール、制約、検証ロジック</li>
+<li>データフローと変換</li>
+<li>他の unit または外部システムとの統合ポイント</li>
+<li>エラー処理とエッジケース</li>
+<li>Frontend コンポーネント（コンポーネント階層、props/state、インタラクション
+フロー、フォーム検証）</li>
+<li>ビジネスシナリオ（end-to-end のユーザージャーニー、happy/unhappy パス、
+並行性のエッジケース）</li>
+</ul>
+</li>
+<li><p><strong>回答を収集し分析</strong> — stage-protocol.md の質問フローに従って回答を収集する
+（インタラクションモードの選択を提示し、回答を収集し、ファイルに書き戻す）。
+必須の曖昧性分析を行う:</p>
+<ul>
+<li>曖昧な回答を特定する（&quot;mix of&quot;、&quot;not sure&quot;、&quot;depends&quot;、&quot;probably&quot;）</li>
+<li>回答間の矛盾をチェックする</li>
+<li>成果物生成に必要な欠けた詳細をフラグする</li>
+<li>曖昧性が 1 つでも見つかったら: フォローアップ質問を作成し、進む前に解消する</li>
+</ul>
+</li>
+<li><p><strong>成果物を生成</strong> — <code>&lt;record&gt;/construction/{unit-name}/functional-design/</code> に
+以下を生成する:</p>
+<ul>
+<li><strong>business-logic-model.md</strong>: unit のビジネスロジックの詳細なアルゴリズム、
+ワークフロー、データ変換、処理シーケンス、決定木</li>
+<li><strong>business-rules.md</strong>: 決定ルール、検証ロジック、制約、ポリシー、条件付き
+振る舞い、ビジネス不変条件</li>
+<li><strong>domain-entities.md</strong>: エンティティ、関係、データ構造、属性、ライフサイクル
+状態、エンティティ相互作用パターン</li>
+<li><strong>frontend-components.md</strong>（CONDITIONAL — unit が frontend/UI を含む場合のみ）:
+コンポーネント階層、props/state 設計、インタラクションフロー、フォーム検証
+ルール、API 統合ポイント</li>
+</ul>
+</li>
+<li><p><strong>完了を準備</strong> — unit の Functional Design 成果物を検証する。state を編集しない;
+gate の結果を <code>aidlc-orchestrate.ts</code> を通じて報告する。</p>
+</li>
+<li><p><strong>完了</strong> — 完了メッセージと承認 gate を提示する。</p>
+</li>
+</ol>
+<h3 id="outputs">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>business-logic-model.md</td>
+<td>アルゴリズム、ワークフロー、データ変換、処理シーケンス、決定木</td>
+</tr>
+<tr>
+<td>business-rules.md</td>
+<td>決定ルール、検証ロジック、制約、ポリシー、条件付き振る舞い</td>
+</tr>
+<tr>
+<td>domain-entities.md</td>
+<td>エンティティ、関係、データ構造、属性、ライフサイクル状態</td>
+</tr>
+<tr>
+<td>frontend-components.md</td>
+<td>(CONDITIONAL) コンポーネント階層、props/state、インタラクションフロー、フォーム検証、API 統合</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<h3 id="notes">注記</h3>
+<ul>
+<li>questions ファイルは stage 成果物と同じ場所
+<code>&lt;record&gt;/construction/{unit-name}/functional-design/functional-design-questions.md</code>
+に配置される。</li>
+<li>frontend-components.md は、unit が frontend/UI 作業を含むときにのみ生産される。</li>
+<li>すべての質問は 3 モードのインタラクションフロー（Guide me / I&#39;ll edit the
+file / Chat）を使う。</li>
+</ul>
+<hr>
+<h2 id="stage-32-nfr-requirements">Stage 3.2: NFR Requirements</h2>
+<h3 id="metadata-1">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>3.2</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Construction</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（実行計画に従う）</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>パフォーマンス要件、セキュリティ考慮、スケーラビリティの懸念、または tech stack の選定が必要。NFR 要件が無く tech stack が既に決定済みなら skip。</td>
+</tr>
+<tr>
+<td>Unit ごと</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>リードエージェント</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>aidlc-devsecops-agent, aidlc-compliance-agent, aidlc-quality-agent</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>functional design 成果物, requirements.md, RE 成果物</td>
+</tr>
+<tr>
+<td>出力</td>
+<td><code>&lt;record&gt;/construction/{unit-name}/nfr-requirements/</code> — performance-requirements.md, security-requirements.md, scalability-requirements.md, reliability-requirements.md, tech-stack-decisions.md</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-1">目的</h3>
+<p>単一の unit について、パフォーマンス、セキュリティ、スケーラビリティ、信頼性、
+技術選定にわたる非機能要件を定義する。aidlc-architect-agent がリードし、
+aidlc-devsecops-agent がセキュリティのインプットを、aidlc-compliance-agent が規制の
+インプットを、aidlc-quality-agent がテスト可能性と測定可能性のインプットを提供する。</p>
+<h3 id="inputs-1">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/construction/{unit-name}/functional-design/</code> からの functional design
+成果物（存在する場合）</li>
+<li><code>&lt;record&gt;/inception/requirements-analysis/requirements.md</code> からの requirements</li>
+<li><code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> からの reverse engineering 成果物
+（存在する場合）</li>
+</ul>
+<h3 id="steps-1">ステップ</h3>
+<ol>
+<li><p><strong>Personas をロード</strong> — aidlc-architect-agent（lead）の persona と knowledge を
+ロードする。支援インプットのために aidlc-devsecops-agent（セキュリティ要件）、
+aidlc-compliance-agent（規制要件）、aidlc-quality-agent（テスト可能性）の persona と
+knowledge をロードする。</p>
+</li>
+<li><p><strong>先行成果物を読む</strong> — functional design 成果物（存在する場合）、requirements、
+reverse engineering 成果物を読む。</p>
+</li>
+<li><p><strong>NFR カテゴリを評価</strong> — NFR カテゴリにわたって unit を分析する:</p>
+<ul>
+<li><strong>パフォーマンス</strong>: レスポンスタイム、スループット、レイテンシ目標、リソース
+利用率</li>
+<li><strong>セキュリティ</strong>: 認証、認可、データ保護、コンプライアンス要件</li>
+<li><strong>スケーラビリティ</strong>: 負荷処理、成長予測、スケーリング戦略</li>
+<li><strong>信頼性</strong>: 可用性目標、フォールトトレランス、災害復旧、データ耐久性</li>
+<li><strong>可観測性</strong>: モニタリング、ロギング、アラート、トレーシングの要件</li>
+</ul>
+</li>
+<li><p><strong>質問を生成</strong> — 不明確な NFR 領域について
+<code>&lt;record&gt;/construction/{unit-name}/nfr-requirements/nfr-requirements-questions.md</code>
+に <code>[Answer]:</code> タグを使って questions ファイルを作成する。定量化可能な目標と
+具体的な制約にフォーカスする。</p>
+</li>
+<li><p><strong>回答を収集し分析</strong> — stage-protocol.md の質問フローに従って回答を収集する。
+必須の曖昧性分析を行う:</p>
+<ul>
+<li>曖昧な回答を特定する（&quot;fast enough&quot;、&quot;highly available&quot;、&quot;secure&quot;）</li>
+<li>NFR 目標間の矛盾をチェックする</li>
+<li>欠けた定量目標をフラグする</li>
+<li>曖昧性が 1 つでも見つかったら: フォローアップ質問を作成し、進む前に解消する</li>
+</ul>
+</li>
+<li><p><strong>成果物を生成</strong> — <code>&lt;record&gt;/construction/{unit-name}/nfr-requirements/</code> に
+以下を生成する:</p>
+<ul>
+<li><strong>performance-requirements.md</strong>: レスポンスタイム目標、スループット要件、
+レイテンシ予算、リソース制約、ベンチマーク</li>
+<li><strong>security-requirements.md</strong>: 認証要件、認可モデル、データ保護、
+コンプライアンス、脅威の考慮</li>
+<li><strong>scalability-requirements.md</strong>: 負荷予測、スケーリングトリガー、キャパシティ
+計画、データ成長、並行性目標</li>
+<li><strong>reliability-requirements.md</strong>: 可用性目標（SLA/SLO）、フォールトトレランス
+要件、バックアップ/復旧、graceful degradation</li>
+<li><strong>tech-stack-decisions.md</strong>: 技術選定と根拠 — 言語、フレームワーク、
+データベース、インフラツール、および各選択の正当化</li>
+</ul>
+</li>
+<li><p><strong>完了を準備</strong> — unit の NFR Requirements 成果物を検証する。state を編集しない;
+gate の結果を <code>aidlc-orchestrate.ts</code> を通じて報告する。</p>
+</li>
+<li><p><strong>完了</strong> — 完了メッセージと承認 gate を提示する。</p>
+</li>
+</ol>
+<h3 id="outputs-1">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>performance-requirements.md</td>
+<td>レスポンスタイム、スループット、レイテンシ予算、リソース制約、ベンチマーク</td>
+</tr>
+<tr>
+<td>security-requirements.md</td>
+<td>認証、認可、データ保護、コンプライアンス、脅威</td>
+</tr>
+<tr>
+<td>scalability-requirements.md</td>
+<td>負荷予測、スケーリングトリガー、キャパシティ計画、並行性</td>
+</tr>
+<tr>
+<td>reliability-requirements.md</td>
+<td>可用性目標（SLA/SLO）、フォールトトレランス、バックアップ/復旧</td>
+</tr>
+<tr>
+<td>tech-stack-decisions.md</td>
+<td>各選択の根拠を伴う技術選定</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-1">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<h3 id="notes-nfr-granularity-expansion">注記 — NFR 粒度の拡張</h3>
+<p>この stage は <strong>5 つの成果物ファイル</strong> を生産する。これは、NFR Requirements に
+2 ファイルのみを定義する upstream リファレンスから拡張されている。これは SKILL.md
+（&quot;Deliberate Deviations from Reference&quot;）に文書化された意図的な逸脱である。より
+細かい粒度はトレーサビリティを改善し、単一ドキュメントを過負荷にすることなく関心
+ごとのレビューを可能にする。5 つのファイルはパフォーマンス、セキュリティ、
+スケーラビリティ、信頼性を専用の成果物に分離し、技術選定の根拠のために専用の
+tech-stack-decisions.md を追加する。</p>
+<hr>
+<h2 id="stage-33-nfr-design">Stage 3.3: NFR Design</h2>
+<h3 id="metadata-2">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>3.3</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Construction</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（NFR Requirements が実行された場合のみ）</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>NFR Requirements が実行され、NFR パターンの設計が必要。NFR Requirements が skip された場合は skip。</td>
+</tr>
+<tr>
+<td>Unit ごと</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>リードエージェント</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>aidlc-aws-platform-agent</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>NFR requirements 成果物, functional design 成果物</td>
+</tr>
+<tr>
+<td>出力</td>
+<td><code>&lt;record&gt;/construction/{unit-name}/nfr-design/</code> — performance-design.md, security-design.md, scalability-design.md, reliability-design.md, logical-components.md</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-2">目的</h3>
+<p>NFR requirements を具体的な設計パターンとアーキテクチャ的ソリューションに翻訳する。
+aidlc-architect-agent がリードし、aidlc-aws-platform-agent がインフラとプラットフォームの
+インプットを提供する。</p>
+<h3 id="inputs-2">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/construction/{unit-name}/nfr-requirements/</code> からの NFR requirements</li>
+<li><code>&lt;record&gt;/construction/{unit-name}/functional-design/</code> からの functional design
+成果物（存在する場合）</li>
+<li>アーキテクチャ的コンテキストのための
+<code>&lt;record&gt;/inception/application-design/</code> からの application design</li>
+</ul>
+<h3 id="steps-2">ステップ</h3>
+<ol>
+<li><p><strong>Personas をロード</strong> — aidlc-architect-agent（lead）の persona と knowledge を
+ロードする。インフラとプラットフォームのインプットのために aidlc-aws-platform-agent の
+persona と knowledge をロードする。</p>
+</li>
+<li><p><strong>先行成果物を読む</strong> — NFR requirements、functional design 成果物（存在する
+場合）、およびアーキテクチャ的コンテキストのための application design を読む。</p>
+</li>
+<li><p><strong>Design 質問を生成</strong> — <code>&lt;record&gt;/construction/{unit-name}/nfr-design/nfr-design-questions.md</code>
+に <code>[Answer]:</code> タグを使ってコンテキストに適した質問を持つ questions ファイルを
+作成する。フォーカス領域:</p>
+<ul>
+<li>レジリエンスパターン（circuit breaker、bulkhead、フォールバック戦略）</li>
+<li>スケーラビリティパターン（水平 vs 垂直、データパーティショニング、キャッシュ
+tier）</li>
+<li>パフォーマンス最適化（レイテンシ予算、スループット目標、リソースプーリング）</li>
+<li>セキュリティアプローチ（多層防御、ゼロトラスト、暗号化標準）</li>
+<li>論理コンポーネント境界（サービス分離、障害ドメイン、blast radius）</li>
+</ul>
+</li>
+<li><p><strong>回答を収集し分析</strong> — stage-protocol.md の質問フローに従って回答を収集する。
+必須の曖昧性分析を行う:</p>
+<ul>
+<li>曖昧な回答を特定する（&quot;mix of&quot;、&quot;not sure&quot;、&quot;depends&quot;、&quot;probably&quot;）</li>
+<li>回答間の矛盾をチェックする</li>
+<li>成果物生成に必要な欠けた詳細をフラグする</li>
+<li>曖昧性が 1 つでも見つかったら: フォローアップ質問を作成し、進む前に解消する</li>
+</ul>
+</li>
+<li><p><strong>NFR ソリューションを設計</strong> — 各 NFR カテゴリについて具体的なソリューションを
+設計する:</p>
+<ul>
+<li><strong>パフォーマンス</strong>: キャッシュ戦略、クエリ最適化、コネクションプーリング、
+非同期処理、CDN 利用、遅延ロード、ページネーション</li>
+<li><strong>セキュリティ</strong>: 認証フロー、認可モデル、暗号化（保存時および転送時）、
+入力検証、CSRF/XSS 保護、シークレット管理、監査ロギング</li>
+<li><strong>スケーラビリティ</strong>: 水平/垂直スケーリングアプローチ、負荷分散、データ
+パーティショニング/シャーディング、キューベースの疎結合、ステートレス設計</li>
+<li><strong>信頼性</strong>: circuit breaker、バックオフを伴うリトライポリシー、ヘルス
+チェック、graceful degradation、フェイルオーバー戦略、データレプリケーション</li>
+</ul>
+</li>
+<li><p><strong>成果物を生成</strong> — <code>&lt;record&gt;/construction/{unit-name}/nfr-design/</code> に以下を
+生成する:</p>
+<ul>
+<li><strong>performance-design.md</strong>: キャッシュアーキテクチャ、最適化戦略、リソース
+プーリング、非同期パターン、パフォーマンス予算</li>
+<li><strong>security-design.md</strong>: 認証/認可アーキテクチャ、暗号化設計、入力検証戦略、
+セキュリティヘッダ、コンプライアンス制御</li>
+<li><strong>scalability-design.md</strong>: スケーリングアーキテクチャ、負荷分散、データ
+パーティショニング戦略、キャパシティ閾値、オートスケーリングルール</li>
+<li><strong>reliability-design.md</strong>: レジリエンスパターン、circuit breaker 設定、
+リトライポリシー、ヘルスチェック設計、フェイルオーバー手順、バックアップ戦略</li>
+<li><strong>logical-components.md</strong>: 論理インフラコンポーネントのインベントリ — サービス
+境界、障害ドメイン、blast radius マッピング、コンポーネント分離戦略、共有
+リソースの特定。NFR パターンが適用される場所のコンポーネントレベルのビューを
+提供することで、NFR design の判断を Infrastructure Design と橋渡しする。</li>
+</ul>
+</li>
+<li><p><strong>完了を準備</strong> — unit の NFR Design 成果物を検証する。state を編集しない;
+gate の結果を <code>aidlc-orchestrate.ts</code> を通じて報告する。</p>
+</li>
+<li><p><strong>完了</strong> — 完了メッセージと承認 gate を提示する。</p>
+</li>
+</ol>
+<h3 id="outputs-2">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>performance-design.md</td>
+<td>キャッシュアーキテクチャ、最適化戦略、リソースプーリング、非同期パターン</td>
+</tr>
+<tr>
+<td>security-design.md</td>
+<td>認証アーキテクチャ、暗号化設計、入力検証、セキュリティヘッダ</td>
+</tr>
+<tr>
+<td>scalability-design.md</td>
+<td>スケーリングアーキテクチャ、負荷分散、データパーティショニング、オートスケーリングルール</td>
+</tr>
+<tr>
+<td>reliability-design.md</td>
+<td>レジリエンスパターン、circuit breaker、リトライポリシー、フェイルオーバー手順</td>
+</tr>
+<tr>
+<td>logical-components.md</td>
+<td>コンポーネントインベントリ、サービス境界、障害ドメイン、blast radius マッピング</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-2">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<h3 id="notes-nfr-design-granularity">注記 — NFR Design の粒度</h3>
+<p>この stage は <strong>5 つの成果物ファイル</strong>（4 つの NFR 固有の design に加えて
+logical-components.md）を生産する。これは、NFR Design に 2 ファイルのみを定義する
+upstream リファレンスから拡張されている。これは SKILL.md（&quot;Deliberate Deviations
+from Reference&quot;）に文書化された意図的な逸脱である。logical-components.md 成果物は、
+NFR パターンがコンポーネントレベルのどこに適用されるかをマッピングすることで、NFR
+design と Infrastructure Design（Stage 3.4）の間の橋渡しとして機能する。</p>
+<hr>
+<h2 id="stage-34-infrastructure-design">Stage 3.4: Infrastructure Design</h2>
+<h3 id="metadata-3">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>3.4</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Construction</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（実行計画に従う）</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>infrastructure サービスのマッピングが必要、deployment アーキテクチャが必要、またはクラウドリソースが必要。インフラ変更が無くインフラが既に定義済みなら skip。</td>
+</tr>
+<tr>
+<td>Unit ごと</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>リードエージェント</td>
+<td>aidlc-aws-platform-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>aidlc-devsecops-agent, aidlc-compliance-agent</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>NFR design 成果物, application design, functional design</td>
+</tr>
+<tr>
+<td>出力</td>
+<td><code>&lt;record&gt;/construction/{unit-name}/infrastructure-design/</code> — deployment-architecture.md, infrastructure-services.md, monitoring-design.md, cicd-pipeline.md, CONDITIONAL: shared-infrastructure.md</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-3">目的</h3>
+<p>単一の unit について、インフラ、deployment アーキテクチャ、モニタリング、CI/CD
+pipeline を設計する。aidlc-aws-platform-agent がリードし、aidlc-devsecops-agent が
+インフラのセキュリティを保証し、aidlc-compliance-agent がデータレジデンシーと規制
+制約をチェックする。</p>
+<h3 id="inputs-3">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/construction/{unit-name}/nfr-design/</code> からの NFR design（存在する場合）</li>
+<li><code>&lt;record&gt;/construction/{unit-name}/functional-design/</code> からの functional design
+（存在する場合）</li>
+<li><code>&lt;record&gt;/inception/application-design/</code> からの application design</li>
+<li><code>&lt;record&gt;/construction/{unit-name}/nfr-requirements/</code> からの NFR requirements
+（存在する場合）</li>
+</ul>
+<h3 id="steps-3">ステップ</h3>
+<ol>
+<li><p><strong>Personas をロード</strong> — aidlc-aws-platform-agent（lead）の persona と knowledge を
+ロードする。支援インプットのために aidlc-devsecops-agent（インフラセキュリティ）と
+aidlc-compliance-agent（データレジデンシー、規制制約）の persona と knowledge を
+ロードする。</p>
+</li>
+<li><p><strong>先行成果物を読む</strong> — コンテキストのためにすべての先行 design 成果物を読む:
+NFR design、functional design、application design、NFR requirements。</p>
+</li>
+<li><p><strong>Infrastructure 質問を生成</strong> —
+<code>&lt;record&gt;/construction/{unit-name}/infrastructure-design/infrastructure-design-questions.md</code>
+に <code>[Answer]:</code> タグを使ってコンテキストに適した質問を持つ questions ファイルを
+作成する。フォーカス領域:</p>
+<ul>
+<li>Deployment 戦略（コンテナ化、サーバーレス、ハイブリッド、マルチリージョン）</li>
+<li>コンピュート/ストレージ/ネットワーキング（サイジング、トポロジー、レイテンシ
+要件）</li>
+<li>モニタリングアプローチ（メトリクス、ロギング、トレーシング、アラート閾値）</li>
+<li>CI/CD pipeline（build stage、deployment 戦略、ロールバック手順）</li>
+<li>シークレット管理（vault、環境変数、ローテーションポリシー）</li>
+<li>スケーリングポリシー（オートスケーリングトリガー、キャパシティ上限、コスト
+制約）</li>
+</ul>
+</li>
+<li><p><strong>回答を収集し分析</strong> — stage-protocol.md の質問フローに従って回答を収集する。
+必須の曖昧性分析を行う:</p>
+<ul>
+<li>曖昧な回答を特定する（&quot;cloud-based&quot;、&quot;auto-scale&quot;、&quot;standard
+monitoring&quot;）</li>
+<li>回答間の矛盾をチェックする</li>
+<li>成果物生成に必要な欠けた詳細をフラグする</li>
+<li>曖昧性が 1 つでも見つかったら: フォローアップ質問を作成し、進む前に解消する</li>
+</ul>
+</li>
+<li><p><strong>Infrastructure を設計</strong> — 4 つの領域にわたってインフラを設計する:</p>
+<ul>
+<li><strong>Deployment アーキテクチャ</strong>: コンピュートモデル（コンテナ、サーバーレス、
+VM）、ネットワーキングトポロジー、ストレージ戦略、環境レイアウト
+（dev/staging/prod）</li>
+<li><strong>Infrastructure サービス</strong>: データベース（種類、サイジング、レプリケーション）、
+キャッシュ（戦略、退避）、メッセージキュー、検索サービス、CDN、DNS、ロード
+バランサ</li>
+<li><strong>モニタリング &amp; 可観測性</strong>: メトリクス収集、ログ集約、分散トレーシング、
+アラートルール、ダッシュボード、SLI/SLO トラッキング</li>
+<li><strong>CI/CD pipeline</strong>: build stage、test stage、deployment stage、環境の昇格、
+ロールバック戦略、フィーチャーフラグ、成果物管理</li>
+</ul>
+</li>
+<li><p><strong>成果物を生成</strong> — <code>&lt;record&gt;/construction/{unit-name}/infrastructure-design/</code>
+に以下を生成する:</p>
+<ul>
+<li><strong>deployment-architecture.md</strong>: コンピュートリソース、ネットワーキング、
+ストレージ、環境定義、infrastructure-as-code アプローチ、リソースサイジング</li>
+<li><strong>infrastructure-services.md</strong>: データベース設計、キャッシュ層、メッセージング
+インフラ、外部サービス統合、サービスディスカバリ</li>
+<li><strong>monitoring-design.md</strong>: メトリクスと KPI、ログ戦略、トレーシング設定、
+アラート定義、ダッシュボード仕様、インシデント対応</li>
+<li><strong>cicd-pipeline.md</strong>: pipeline stage、build 設定、テスト自動化の統合、
+deployment 戦略（blue-green、canary、rolling）、ロールバック手順、CI/CD での
+シークレット管理</li>
+<li><strong>shared-infrastructure.md</strong>（CONDITIONAL — 複数の unit がインフラリソースを
+共有するときに生産）: 共有データベース、共有キャッシュ、共有メッセージキュー、
+共有ネットワーキング、unit を跨ぐサービスディスカバリ、リソースの所有権と
+アクセス境界</li>
+</ul>
+</li>
+<li><p><strong>完了を準備</strong> — unit の Infrastructure Design 成果物を検証する。state を
+編集しない; gate の結果を <code>aidlc-orchestrate.ts</code> を通じて報告する。</p>
+</li>
+<li><p><strong>完了</strong> — 完了メッセージと承認 gate を提示する。</p>
+</li>
+</ol>
+<h3 id="outputs-3">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>deployment-architecture.md</td>
+<td>コンピュート、ネットワーキング、ストレージ、環境定義、IaC アプローチ</td>
+</tr>
+<tr>
+<td>infrastructure-services.md</td>
+<td>データベース、キャッシュ、メッセージング、外部統合、サービスディスカバリ</td>
+</tr>
+<tr>
+<td>monitoring-design.md</td>
+<td>メトリクス、ログ、トレーシング、アラート、ダッシュボード、SLI/SLO トラッキング</td>
+</tr>
+<tr>
+<td>cicd-pipeline.md</td>
+<td>pipeline stage、build 設定、deployment 戦略、ロールバック手順</td>
+</tr>
+<tr>
+<td>shared-infrastructure.md</td>
+<td>(CONDITIONAL) unit を跨ぐ共有リソース、所有権境界</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-3">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<h3 id="notes-infrastructure-design-expansion">注記 — Infrastructure Design の拡張</h3>
+<p>この stage は <strong>5 つの成果物ファイル</strong> を生産する。これは、2〜3 ファイルを持つ
+upstream リファレンスから拡張されている。これは SKILL.md（&quot;Deliberate Deviations
+from Reference&quot;）に文書化された意図的な逸脱である。monitoring-design.md と
+cicd-pipeline.md を専用の成果物として追加することで、運用の可視性を改善する。
+shared-infrastructure.md は、複数の unit がインフラリソースを共有するときにのみ
+条件付きで生産される。</p>
+<hr>
+<h2 id="stage-35-code-generation">Stage 3.5: Code Generation</h2>
+<h3 id="metadata-4">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>3.5</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Construction</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>ALWAYS（unit ごと）</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>実行計画内のすべての unit に対して常に実行される。</td>
+</tr>
+<tr>
+<td>Unit ごと</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>リードエージェント</td>
+<td>aidlc-developer-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>(なし — 集中した実装)</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>subagent (Task tool subagent_type: aidlc-developer-agent)</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>この unit のすべての先行 design 成果物</td>
+</tr>
+<tr>
+<td>出力</td>
+<td>application コード（workspace ルート） + <code>&lt;record&gt;/construction/{unit-name}/code-generation/</code> — code-generation-plan.md, code-generation-questions.md, code-summary.md</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-4">目的</h3>
+<p>単一の unit of work について、すべての application コード、テスト、設定を生成する。
+これは、実行計画に関わらずすべての unit について常に実行される唯一の stage である。
+コードは workspace ルートに書かれ、決して <code>&lt;record&gt;/</code> には書かれない。</p>
+<h3 id="critical-rules">重要なルール</h3>
+<ul>
+<li>application コードは workspace ルートへ行き、決して <code>&lt;record&gt;/</code> へは行かない</li>
+<li>Brownfield: ファイルをその場で変更する。<code>ClassName_modified.java</code> のような重複を
+決して作らない</li>
+<li>テスト自動化のため、インタラクティブな UI 要素に <code>data-testid</code> 属性を追加する</li>
+</ul>
+<h3 id="inputs-4">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/construction/{unit-name}/functional-design/</code> からの functional design
+（存在する場合）</li>
+<li><code>&lt;record&gt;/construction/{unit-name}/nfr-requirements/</code> からの NFR requirements
+（存在する場合）</li>
+<li><code>&lt;record&gt;/construction/{unit-name}/nfr-design/</code> からの NFR design（存在する場合）</li>
+<li><code>&lt;record&gt;/construction/{unit-name}/infrastructure-design/</code> からの infrastructure
+design（存在する場合）</li>
+<li><code>&lt;record&gt;/inception/application-design/</code> からの application design</li>
+<li><code>&lt;record&gt;/inception/units-generation/unit-of-work.md</code> からの unit 定義</li>
+<li><code>&lt;record&gt;/inception/units-generation/unit-of-work-story-map.md</code> からの story map</li>
+</ul>
+<h3 id="steps-4">ステップ</h3>
+<p>この stage は <strong>2 部構成</strong> を持つ: 計画に続いて生成。</p>
+<h4 id="part-1-planning-steps-1-3">PART 1 — 計画（Steps 1-3）</h4>
+<ol>
+<li><p><strong>すべての Unit 成果物を読む</strong> — 現在の unit のすべての design 成果物
+（functional design、NFR requirements、NFR design、infrastructure design、
+application design、unit 定義、story map）を読む。</p>
+</li>
+<li><p><strong>Code Generation Plan を作成</strong> —
+<code>&lt;record&gt;/construction/{unit-name}/code-generation/code-generation-plan.md</code> に、
+各実装ステップのチェックボックスを持つ詳細な計画を作成する。story-to-code-step の
+トレーサビリティを含める — 各計画ステップを、それが実装するユーザーストーリーへ
+マッピングし戻す。</p>
+<p><strong>推奨される計画構造</strong>（アーキテクチャが異なる順序を要求するなら適応する）:</p>
+</li>
+</ol>
+<pre class="term"><code>   Step 1:  Project structure setup (directories, config files, package.json/Cargo.toml/etc.)
+   Step 2:  Data models / database schema / migrations
+   Step 3:  Business logic layer (core domain logic, services)
+   Step 4:  Business logic tests (unit tests for Step 3)
+   Step 5:  API / endpoint layer (routes, controllers, handlers)
+   Step 6:  API tests (unit + integration tests for Step 5)
+   Step 7:  Repository / data access layer (queries, ORM config)
+   Step 8:  Frontend components (if applicable -- UI components, pages, state)
+   Step 9:  Frontend tests (component tests, interaction tests)
+   Step 10: Configuration and environment setup (.env templates, build config)
+   Step 11: Test configuration (vitest.config, jest.config, or equivalent)
+   Step 12: Documentation (inline docs, API docs, README updates)</code></pre>
+<p>   この層ごとのアプローチは、依存元が依存先の前にビルドされることを保証する
+   （ビジネスロジックの前にデータモデル、API の前にビジネスロジック）。
+   アーキテクチャが要求するとき（例: イベント駆動システム、独立したスタックを持つ
+   マイクロサービス）は逸脱する。</p>
+<p>   <strong>テストファイルは計画で MANDATORY である。</strong> 計画は以下のステップを含まねば
+   ならない:</p>
+<ul>
+<li>Unit テストファイル（キーとなる振る舞いのカバレッジを持つ、コンポーネント/
+モジュールごとに 1 つ）</li>
+<li>テスト設定（vitest.config、jest.config、または同等物）</li>
+</ul>
+<p>   計画がテストファイルのステップを省いている場合、ユーザーに提示する前にそれらを
+   追加せねばならない。テストは Build and Test に先送りされない — その stage は
+   検証と拡張を行うのであり、ゼロから作成するのではない。</p>
+<p>   明確な実行順序とトレーサビリティのため、各計画ステップに連番を振る（Step 1、
+   Step 2 など）。</p>
+<ol start="3">
+<li><p><strong>Plan Approval</strong> — 計画のサマリをユーザーに提示し、承認を求める。まず
+<code>&lt;record&gt;/construction/{unit-name}/code-generation/code-generation-questions.md</code>
+を <strong>Plan Approval</strong> 質問と空の <code>[Answer]:</code> とともに作成またはリセットし、
+次にそれを構造化された質問としてレンダリングし、ターンを止める:</p>
+<ul>
+<li>&quot;Approve Plan&quot; — code generation へ進む</li>
+<li>&quot;Request Changes&quot; — 計画を改訂する</li>
+</ul>
+<p>人間が応答した後にのみタグを埋める。変更の要求は記録され、計画は改訂され、
+Plan Approval タグは再プロンプト前に空にリセットされる。forwarding-loop の継続は
+決して承認ではない。</p>
+</li>
+</ol>
+<h4 id="part-2-generation-steps-4-7">PART 2 — 生成（Steps 4-7）</h4>
+<ol start="4">
+<li><p><strong>コードを生成</strong> — 委譲する前に、ユーザーに表示する:
+&quot;Generating code for [N] plan steps. This may take several minutes
+depending on project complexity. I&#39;ll show a summary when complete.&quot;</p>
+<p>aidlc-developer-agent subagent（subagent_type=&quot;aidlc-developer-agent&quot;）を持つ Task
+ツールへ委譲する。</p>
+<p><strong>subagent に渡されるコンテキスト:</strong></p>
+<ul>
+<li><code>agents/aidlc-developer-agent.md</code> からの lead agent の persona と
+<code>.claude/knowledge/aidlc-developer-agent/</code> からの knowledge（subagent は会話履歴に
+アクセスできないのでプロンプトに含める）</li>
+<li>現在の Unit のみの design 成果物（すべての unit ではない）</li>
+<li>各 inception-phase 成果物の 1〜2 行のサマリとそのファイルパス（requirements
+サマリ、stories サマリ、app design サマリ） — subagent は完全な内容が必要なら
+特定のファイルを Read できる</li>
+<li>承認された code-generation-plan.md（全内容）</li>
+<li>プロジェクト workspace の詳細（aidlc-state.md からの言語、フレームワーク、規約）</li>
+<li>各計画ステップを順次実行し、完了したらチェックボックスをマークする指示</li>
+</ul>
+<p><strong>コンテキスト予算:</strong> すべての unit ではなく、現在の unit の design 成果物のみを
+渡す。完全な内容を埋め込むのではなく、ファイルパスとともに inception 成果物を
+サマライズする。subagent は workspace ですべてのコード、テストファイル、設定
+成果物を生成する。</p>
+</li>
+<li><p><strong>Code サマリを生成</strong> — subagent の完了後、
+<code>&lt;record&gt;/construction/{unit-name}/code-generation/code-summary.md</code> を作成し、
+以下を文書化する:</p>
+<ul>
+<li>作成/変更されたファイル</li>
+<li>キーとなる実装判断</li>
+<li>テストカバレッジのサマリ</li>
+<li>計画からの逸脱</li>
+</ul>
+</li>
+<li><p><strong>完了を準備</strong> — unit のコードとサマリの成果物を検証する。state を編集しない;
+gate の結果を <code>aidlc-orchestrate.ts</code> を通じて報告する。</p>
+</li>
+<li><p><strong>完了</strong> — 完了メッセージと承認 gate を提示する。</p>
+</li>
+</ol>
+<h3 id="outputs-4">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>code-generation-plan.md</td>
+<td>チェックボックス、story トレーサビリティ、ステップの順序付けを持つ詳細な計画</td>
+</tr>
+<tr>
+<td>code-generation-questions.md</td>
+<td>永続化された Plan Approval 質問と明示的な人間の回答</td>
+</tr>
+<tr>
+<td>code-summary.md</td>
+<td>作成/変更されたファイル、判断、テストカバレッジ、計画からの逸脱</td>
+</tr>
+<tr>
+<td>(application コード)</td>
+<td>workspace ルートに書かれたすべてのソースコード、テスト、設定</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-4">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<h3 id="notes-1">注記</h3>
+<ul>
+<li><strong>2 部構成</strong>: 計画フェーズ（Steps 1-3）はユーザーインタラクションと plan approval
+とともに inline で走る。生成フェーズ（Steps 4-7）は Task ツール経由で
+aidlc-developer-agent subagent へ委譲する。これは、完全に inline で走るほとんどの
+Construction stage とは異なる。</li>
+<li><strong>Developer-agent subagent</strong>: Code generation は inline 実行ではなく
+<code>subagent_type=&quot;aidlc-developer-agent&quot;</code>（Task ツール経由で委譲）を使う。これは
+subagent を使う唯一の Construction stage である。subagent はフルセッションの
+ツールセットを継承する（aidlc-developer-agent は <code>tools:</code> allowlist を宣言しない）
+ので、Read、Edit、Write、Glob、Grep、Bash、AskUserQuestion、および継承した MCP
+ツールに到達する。</li>
+<li><strong>コンテキスト予算</strong>: 現在の unit の design 成果物のみが subagent に渡される。
+inception-phase の成果物は、subagent が必要なものを選択的に Read できるよう、
+ファイルパスとともに 1〜2 行でサマライズされる。</li>
+<li><strong>テストファイルの必須の包含</strong>: テストファイルは code generation 計画の一部で
+MUST である。Stage 3.6（Build and Test）はテストを検証・拡張するが、ゼロから
+作成はしない。</li>
+<li><strong>Brownfield の認識</strong>: brownfield プロジェクトでは、subagent は重複を作るのでは
+なく既存のファイルをその場で変更する。</li>
+</ul>
+<hr>
+<h2 id="stage-36-build-and-test">Stage 3.6: Build and Test</h2>
+<h3 id="metadata-5">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>3.6</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Construction</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>ALWAYS（すべての unit が完了した後）</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>Unit ごとの全 stage が終わった後に常に 1 回実行される。</td>
+</tr>
+<tr>
+<td>Unit ごと</td>
+<td>No（すべての unit に対して 1 回走る）</td>
+</tr>
+<tr>
+<td>リードエージェント</td>
+<td>aidlc-quality-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>aidlc-devsecops-agent</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>すべての unit にわたるすべての code generation 出力</td>
+</tr>
+<tr>
+<td>出力</td>
+<td><code>&lt;record&gt;/construction/build-and-test/</code> — build-instructions.md, unit-test-instructions.md, integration-test-instructions.md, performance-test-instructions.md, security-test-instructions.md, build-and-test-summary.md, test-results.md, および条件付きのテスト指示ファイル</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-5">目的</h3>
+<p>すべてのテスト種別にわたってテスト指示を生成し、次に Bash 経由で実際に build と
+テストを実行する。この stage はすべての unit にわたって動作する — Unit ごとでは
+ない。aidlc-quality-agent がリードし、aidlc-devsecops-agent がセキュリティテストの
+専門性を提供する。</p>
+<h3 id="inputs-5">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/construction/*/code-generation/code-summary.md</code> からの、すべての unit に
+わたる code generation 出力</li>
+<li>パフォーマンスおよびセキュリティテストのニーズのための、unit にわたる NFR
+requirements（存在する場合）</li>
+</ul>
+<h3 id="steps-5">ステップ</h3>
+<ol>
+<li><p><strong>Personas をロード</strong> — aidlc-quality-agent（lead）の persona と knowledge を
+ロードする。セキュリティテストのインプットのために aidlc-devsecops-agent の persona
+と knowledge をロードする。</p>
+</li>
+<li><p><strong>テスト要件を分析</strong> — すべての unit にわたる code generation 出力を読む。
+パフォーマンスおよびセキュリティテストのニーズを特定するため、NFR requirements
+（存在する場合）をレビューする。必要なすべてのテスト種別をカタログ化する。</p>
+</li>
+<li><p><strong>Build 指示を生成</strong> —
+<code>&lt;record&gt;/construction/build-and-test/build-instructions.md</code> を作成する:</p>
+<ul>
+<li>依存関係のインストール手順</li>
+<li>環境セットアップ（環境変数、設定ファイル、ローカルサービス）</li>
+<li>Build コマンド（コンパイル、バンドル、トランスパイル）</li>
+<li>Build 検証手順</li>
+<li>よくある build 問題のトラブルシューティング</li>
+</ul>
+</li>
+<li><p><strong>Unit テスト指示を生成</strong> —
+<code>&lt;record&gt;/construction/build-and-test/unit-test-instructions.md</code> を作成する:</p>
+<ul>
+<li>テストフレームワークのセットアップと設定</li>
+<li>unit テストの実行方法（コマンド、フラグ、フィルタ）</li>
+<li>期待されるテストカバレッジ目標</li>
+<li>モッキング/スタビングのガイダンス</li>
+<li>テストデータ管理</li>
+</ul>
+</li>
+<li><p><strong>Integration テスト指示を生成</strong> —
+<code>&lt;record&gt;/construction/build-and-test/integration-test-instructions.md</code> を
+作成する:</p>
+<ul>
+<li>テスト環境の前提条件（データベース、サービス、キュー）</li>
+<li>integration テストの実行方法</li>
+<li>unit を跨ぐ相互作用のテスト</li>
+<li>外部依存の扱い（スタブ、test double、サンドボックス）</li>
+<li>テストデータのセットアップとティアダウン</li>
+</ul>
+</li>
+<li><p><strong>Performance テスト指示を生成</strong>（CONDITIONAL） — いずれかの unit に NFR
+パフォーマンス要件が存在する場合、<code>performance-test-instructions.md</code> を作成する:</p>
+<ul>
+<li>負荷テストツールと設定</li>
+<li>NFR 目標にマッピングされたパフォーマンステストシナリオ</li>
+<li>ベースライン測定とベンチマーク</li>
+<li>ストレステストとソークテストの手順</li>
+<li>パフォーマンスリグレッションの検出</li>
+</ul>
+</li>
+<li><p><strong>Security テスト指示を生成</strong>（CONDITIONAL） — いずれかの unit に NFR
+セキュリティ要件が存在する場合、<code>security-test-instructions.md</code> を作成する:</p>
+<ul>
+<li>セキュリティスキャンツール（SAST、DAST、依存関係監査）</li>
+<li>認証/認可のテストシナリオ</li>
+<li>入力検証とインジェクションのテスト</li>
+<li>コンプライアンス検証手順</li>
+<li>脆弱性アセスメント手順</li>
+</ul>
+</li>
+<li><p><strong>追加のテスト種別を生成</strong>（CONDITIONAL） — プロジェクトのアーキテクチャに
+基づいて該当する場合、具体的に命名されたファイルを作成する:</p>
+<ul>
+<li><strong>contract-test-instructions.md</strong>: マイクロサービス API 向け —
+consumer-driven contract、スキーマ検証、API 互換性</li>
+<li><strong>e2e-test-instructions.md</strong>: UI 駆動のアプリケーション向け — ブラウザ
+自動化、ユーザージャーニーテスト、クロスブラウザ検証</li>
+<li><strong>accessibility-test-instructions.md</strong>: ユーザー向けインターフェース向け —
+WCAG 準拠、スクリーンリーダーテスト、キーボードナビゲーション</li>
+</ul>
+<p>すべてのファイルは <code>&lt;record&gt;/construction/build-and-test/</code> に行く。</p>
+</li>
+<li><p><strong>Build and Test サマリを生成</strong> —
+<code>&lt;record&gt;/construction/build-and-test/build-and-test-summary.md</code> を作成する:</p>
+<ul>
+<li>全体の build ステータスと前提条件</li>
+<li>テスト種別のインベントリ（どのテスト種別が生成されたか）</li>
+<li>unit ごとのカバレッジ期待</li>
+<li>レディネス評価（build-ready、test-ready、deployment-ready）</li>
+<li>既知の制限または未解決の項目</li>
+</ul>
+</li>
+<li><p><strong>Build とテストを実行</strong> — 指示ファイルに文書化された build とテストのコマンドを
+<strong>Bash 経由で</strong> 実行しようとする:</p>
+<p>a. <strong>Build</strong>: build-instructions.md からの build コマンドを Bash 経由で実行する。
+   出力をキャプチャする。
+b. <strong>Unit テスト</strong>: unit-test-instructions.md からの unit テストコマンドを Bash
+   経由で実行する。pass/fail のカウントをキャプチャする。
+c. <strong>Integration テスト</strong>（該当する場合）: integration テストコマンドを実行する。
+   結果をキャプチャする。
+d. <strong>結果を報告</strong>: <code>&lt;record&gt;/construction/build-and-test/test-results.md</code> を
+   以下とともに作成または更新する:</p>
+<ul>
+<li>Build ステータス（成功/失敗 + 出力）</li>
+<li>テスト結果（total、passed、failed、skipped）</li>
+<li>失敗の詳細（テスト名、アサーション、スタックトレース）</li>
+<li>カバレッジレポート（テストフレームワークがサポートする場合）</li>
+</ul>
+<p><strong>失敗診断ループ（2 回試行）:</strong> 失敗時、build またはテストが失敗したら、問題を
+診断して修正しようとする:</p>
+<ul>
+<li>エラー出力を読む</li>
+<li>失敗しているコードを特定する</li>
+<li>修正を適用する</li>
+<li>失敗したステップを再実行する</li>
+<li>2 回の試行後も修正できなければ、失敗を test-results.md に記録し、承認 gate で
+ユーザーに問題を提示する</li>
+</ul>
+<p><strong>成功時:</strong> Build and Test サマリを実際の結果（指示だけでなく）で更新する。</p>
+</li>
+<li><p><strong>完了を準備</strong> — build/test のエビデンスを検証する。stage または phase の state
+を編集しない; 報告された gate の結果が遷移を所有する。</p>
+</li>
+<li><p><strong>完了</strong> — 完了メッセージと承認 gate を提示する。</p>
+</li>
+</ol>
+<h3 id="outputs-5">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>build-instructions.md</td>
+<td>依存関係インストール、環境セットアップ、build コマンド、トラブルシューティング</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>unit-test-instructions.md</td>
+<td>テストフレームワークのセットアップ、実行コマンド、カバレッジ目標、モッキング</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>integration-test-instructions.md</td>
+<td>前提条件、unit を跨ぐテスト、外部依存、データセットアップ</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>performance-test-instructions.md</td>
+<td>負荷テスト、NFR シナリオ、ベースライン、ストレス/ソークテスト</td>
+<td>NFR perf が存在する場合</td>
+</tr>
+<tr>
+<td>security-test-instructions.md</td>
+<td>SAST/DAST、認証テスト、インジェクションテスト、コンプライアンス</td>
+<td>NFR sec が存在する場合</td>
+</tr>
+<tr>
+<td>contract-test-instructions.md</td>
+<td>consumer-driven contract、スキーマ検証、API 互換性</td>
+<td>マイクロサービスの場合</td>
+</tr>
+<tr>
+<td>e2e-test-instructions.md</td>
+<td>ブラウザ自動化、ユーザージャーニー、クロスブラウザ</td>
+<td>UI 駆動の場合</td>
+</tr>
+<tr>
+<td>accessibility-test-instructions.md</td>
+<td>WCAG 準拠、スクリーンリーダー、キーボードナビゲーション</td>
+<td>ユーザー向け UI の場合</td>
+</tr>
+<tr>
+<td>build-and-test-summary.md</td>
+<td>全体ステータス、テストインベントリ、カバレッジ、レディネス評価</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>test-results.md</td>
+<td>実際の build/test 実行結果、pass/fail、カバレッジ</td>
+<td>Always</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-5">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<h3 id="notes-2">注記</h3>
+<ul>
+<li><strong>実際の Bash 実行</strong>: この stage はテスト指示を文書化するだけではない — 実際に
+Bash 経由で build とテストのコマンドを走らせ、本物の結果をキャプチャする。これは、
+コードベースに対して本物のコマンドを実行する数少ない stage の 1 つである。</li>
+<li><strong>失敗診断ループ</strong>: この stage は失敗を自動的に診断・修正しようとし、最大 2 回の
+試行を行う。2 回の試行後も修正が失敗したら、失敗は記録され、承認 gate でユーザーに
+提示される。</li>
+<li><strong>条件付きのテスト種別</strong>: パフォーマンステスト、セキュリティテスト、contract
+テスト、E2E テスト、accessibility テストは、関連する条件が満たされたとき
+（NFR requirements が存在する、マイクロサービスアーキテクチャ、UI 駆動の
+アプリケーション、ユーザー向けインターフェース）にのみ生成される。</li>
+<li><strong>Unit を跨ぐ scope</strong>: Unit ごとの stage 3.1-3.5 とは異なり、Build and Test は
+すべての unit が生産したすべてのコードにわたって 1 回走る。それは個々の unit では
+なく、統合されたコードベースを検証する。</li>
+<li><strong>Phase の完了</strong>: この stage（該当する場合は 3.7 とともに）は Construction phase の
+終わりを画する。最終的に承認されたレポートにより、engine は Construction を完了と
+マークし、アトミックに Operation へルーティングする。</li>
+</ul>
+<hr>
+<h2 id="stage-37-ci-pipeline">Stage 3.7: CI Pipeline</h2>
+<h3 id="metadata-6">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>3.7</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Construction</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（CI が既に存在し十分なら skip）</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CI pipeline の作成または大幅な変更が必要なときに実行</td>
+</tr>
+<tr>
+<td>Unit ごと</td>
+<td>No（すべての unit に対して 1 回走る）</td>
+</tr>
+<tr>
+<td>リードエージェント</td>
+<td>aidlc-pipeline-deploy-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>(なし)</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>Stage 3.5 からの code generation 出力、Stage 3.6 からの build/test 結果</td>
+</tr>
+<tr>
+<td>出力</td>
+<td><code>&lt;record&gt;/construction/ci-pipeline/</code> — ci-config.md, quality-gates.md, ci-pipeline-questions.md</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-6">目的</h3>
+<p>quality gate、成果物管理、build/test 自動化を伴う CI（Continuous Integration）
+pipeline を設定する。aidlc-pipeline-deploy-agent がリードし、支援エージェントは無い。</p>
+<h3 id="inputs-6">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/construction/build-and-test/</code> からの build/test 結果</li>
+<li><code>&lt;record&gt;/construction/infrastructure-design/</code> からの infrastructure design
+（存在する場合）</li>
+<li>既存の CI 設定のための workspace プロファイル</li>
+</ul>
+<h3 id="steps-6">ステップ</h3>
+<ol>
+<li><p><strong>Agent Personas をロード</strong> — aidlc-pipeline-deploy-agent の persona と knowledge を
+ロードする。</p>
+</li>
+<li><p><strong>先行コンテキストをロード</strong> — build/test 結果、infrastructure design（存在する
+場合）、既存の CI 設定のための workspace プロファイルを読む。</p>
+</li>
+<li><p><strong>明確化のための質問を生成</strong> —
+<code>&lt;record&gt;/construction/ci-pipeline/ci-pipeline-questions.md</code> を以下の質問とともに
+作成する:</p>
+<ul>
+<li>どの CI ツールが使われているか（CodePipeline、CodeBuild、GitHub Actions、
+Jenkins）？</li>
+<li>ブランチ戦略は何か？</li>
+<li>マージ前にどの quality gate が必要か？</li>
+<li>どの成果物リポジトリが使われているか（ECR、CodeArtifact、S3）？</li>
+</ul>
+<p>stage-protocol.md の質問フローに従う。</p>
+</li>
+<li><p><strong>回答を収集し分析</strong> — 既存のインフラとチームの能力に照らして CI の選択を
+検証する。</p>
+</li>
+<li><p><strong>成果物を生成</strong> — CI pipeline 設定（buildspec.yml、workflow YAML、または同等
+物）、quality gate の定義、成果物リポジトリ設定を作成する。</p>
+</li>
+<li><p><strong>Phase 境界の検証</strong> — Construction-to-Operation の検証チェックを走らせる:</p>
+<ul>
+<li>アーキテクチャ-コード-テストの整合</li>
+<li>すべてのコードが design にトレースする</li>
+<li>受け入れ基準に対するテストカバレッジ</li>
+<li>結果を <code>&lt;record&gt;/verification/phase-check-construction.md</code> に書く</li>
+</ul>
+</li>
+<li><p><strong>完了を準備</strong> — CI と境界の成果物を検証する。stage または phase の state を
+編集しない; 報告された gate の結果が遷移を所有する。</p>
+</li>
+<li><p><strong>完了</strong> — 完了メッセージと承認 gate を提示する。</p>
+</li>
+</ol>
+<h3 id="outputs-6">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ci-config.md</td>
+<td>CI pipeline 設定（buildspec、workflow YAML など）</td>
+</tr>
+<tr>
+<td>quality-gates.md</td>
+<td>マージ/昇格のための quality gate 定義</td>
+</tr>
+<tr>
+<td>ci-pipeline-questions.md</td>
+<td>回答を伴う明確化のための質問</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-6">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<h3 id="notes-3">注記</h3>
+<ul>
+<li><strong>Phase 境界の検証</strong>: これは Construction phase の最後の stage である。それは
+Construction-to-Operation の phase 境界検証チェック（stage-protocol-governance.md
+セクション 13 に準拠）を行い、アーキテクチャがコードにトレースし、コードがテストに
+トレースすることを検証する。結果は
+<code>&lt;record&gt;/verification/phase-check-construction.md</code> に書かれる。</li>
+<li><strong>条件付き実行</strong>: この stage は、プロジェクトが既に十分な CI pipeline を持つ場合は
+skip される。Delivery Planning からの実行計画が、それが走るかどうかを決める。</li>
+<li><strong>Post-unit 実行</strong>: Stage 3.6 と同様、この stage は Unit ごとではなく、すべての
+Unit ごとの作業が完了した後に 1 回走る。</li>
+</ul>
+<hr>
+<h2 id="phase-summary">Phase サマリ</h2>
+<p>Construction phase は、フェーズ化された construction フローを通じて、Inception の
+design を動作するソフトウェアへと変換する:</p>
+<p><strong>Unit ごとの stage（3.1-3.5）:</strong></p>
+<ul>
+<li>3.1 Functional Design — ビジネスロジック、ドメインモデル、ルール（architect-led）</li>
+<li>3.2 NFR Requirements — パフォーマンス、セキュリティ、スケーラビリティ、信頼性、
+tech stack（architect-led）</li>
+<li>3.3 NFR Design — NFR カテゴリの具体的なパターン（architect-led）</li>
+<li>3.4 Infrastructure Design — deployment、サービス、モニタリング、CI/CD
+(aws-platform-led)</li>
+<li>3.5 Code Generation — subagent による 2 部構成の計画 + 生成
+(developer-led)</li>
+</ul>
+<p><strong>Post-unit の stage（3.6-3.7）:</strong></p>
+<ul>
+<li>3.6 Build and Test — 指示生成 + 失敗診断を伴う実際の Bash 実行（quality-led）</li>
+<li>3.7 CI Pipeline — CI 設定 + phase 境界検証
+(pipeline-deploy-led)</li>
+</ul>
+<p><strong>主な特徴:</strong></p>
+<ul>
+<li>Stage 3.1-3.4 は CONDITIONAL; 3.5-3.6 は ALWAYS 実行; 3.7 は CONDITIONAL</li>
+<li>すべての条件付き stage は Delivery Planning からの実行計画に従う</li>
+<li>Unit ごとのループは、次が始まる前に 1 つの unit が完全に完了することを保証する</li>
+<li>NFR 成果物は、upstream リファレンスと比べて拡張された粒度（requirements に 5
+ファイル、design に 5）を使う</li>
+<li>Infrastructure Design は、専用のモニタリングと CI/CD ファイルを持つ 5 つの成果物に
+拡張される</li>
+<li>Code generation は、コンテキスト予算の制御を伴う aidlc-developer-agent subagent を使う</li>
+<li>Build and Test は、実際のコマンド実行と自動化された失敗診断を行う</li>
+<li>CI Pipeline は、Operation への遷移前に phase 境界検証を含む</li>
+</ul>
+<p><strong>upstream リファレンスからの意図的な逸脱:</strong></p>
+<ul>
+<li>NFR Requirements: 5 ファイル（リファレンスの 2 から拡張）</li>
+<li>NFR Design: logical-components.md を含む 5 ファイル（リファレンスの 2 から拡張）</li>
+<li>Infrastructure Design: monitoring-design.md と cicd-pipeline.md を含む 5 ファイル
+（リファレンスの 2〜3 から拡張）</li>
+<li>計画/質問ファイルと stage 成果物の co-location</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/construction.md"><code>docs/reference/04-stages/construction.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

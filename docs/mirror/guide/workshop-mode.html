@@ -11,15 +11,17 @@
 <script type="module" src="../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/workshop-mode</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../index.html">総合索引</a>
   <a href="../../index.html">Atlas トップ</a>
@@ -83,7 +85,7 @@
 <h1 id="workshop-mode">Workshop モード</h1>
 <p><code>workshop</code> scope は、<em>ファシリテーション付きのグループセッション</em>のために設計された唯一の AI-DLC scope である — 典型的には、1 人（ファシリテーター）がグループの作るものを決めており、N 人の参加者が共有リモートに対して別々の Construction Bolt を並列で駆動するワークショップやトレーニングラボである。</p>
 <p>本章は<strong>手動のレシピ</strong>である: 今日すでに同梱されているプリミティブ（<code>aidlc-worktree</code>・<code>aidlc-bolt</code>・通常の git）を使ってワークショップのフローを文書化する。専用の <code>--claim-bolt</code> CLI はまだ無い — claim の意味論は共有リモートへの <code>git push</code> に乗っており、このレシピがその契約を明示する。将来のリリースが本章の手順を自動化するかもしれないが、いまはレシピが契約である。</p>
-<p>scope の depth / テスト戦略 / スキップ一覧は <a href="05-scopes-and-depth.html#workshop">Scope と Depth § workshop</a> を参照。本章が前提とする Bolt ごとの worktree の仕組みは <a href="10-state-and-audit.html">状態と audit</a> と orchestrator の <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/03-orchestrator.md">Construction フロー</a> を参照。初めてのファシリテーターは、まず <a href="01-getting-started.html">はじめかた</a> を一巡すること — 以下のどのワークショップ手順よりも前に、bun と harness のフレームワークコピーが揃っていなければならない。</p>
+<p>scope の depth / テスト戦略 / スキップ一覧は <a href="05-scopes-and-depth.html#workshop">Scope と Depth § workshop</a> を参照。本章が前提とする Bolt ごとの worktree の仕組みは <a href="10-state-and-audit.html">状態と audit</a> と orchestrator の <a href="../reference/03-orchestrator.html">Construction フロー</a> を参照。初めてのファシリテーターは、まず <a href="01-getting-started.html">はじめかた</a> を一巡すること — 以下のどのワークショップ手順よりも前に、bun と harness のフレームワークコピーが揃っていなければならない。</p>
 <blockquote>
 <p><strong>Harness に関する注記。</strong> このレシピは harness 非依存である: <code>aidlc-worktree</code> と
 <code>aidlc-bolt</code> のツール（全 harness で共有）と通常の git を駆動する。コマンド例は
@@ -315,7 +317,7 @@ git push origin :bolt-user-profile-api :bolt-billing-service :bolt-notifications
 <h3 id="parallel-batch-gates">並列バッチの gate</h3>
 <p>conductor が Bolt の並列バッチを走らせるとき（例: 4 人の参加者が 4 Bolt バッチの 1 Bolt ずつを駆動）、gate は <strong>Bolt ごとではなくバッチレベル</strong>である — 1 回の承認がバッチ内の全 Bolt をカバーする。グループは各 worktree の diff を順にレビューし、全承認 / 精査 / 一部差し戻しを決める。差し戻された Bolt の worktree はフォローアップのためにディスクに保全される。</p>
 <h3 id="multi-failure-halt-and-ask">複数失敗の halt-and-ask</h3>
-<p><strong>単独 Bolt の失敗</strong>（m=1）は、<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/03-orchestrator.md">orchestrator の Construction フロー</a> に記載の標準的な halt-and-ask の単一 AUQ 経路を使う。walking-skeleton の Bolt は常に単独で走るため、その失敗はこの経路を通る。</p>
+<p><strong>単独 Bolt の失敗</strong>（m=1）は、<a href="../reference/03-orchestrator.html">orchestrator の Construction フロー</a> に記載の標準的な halt-and-ask の単一 AUQ 経路を使う。walking-skeleton の Bolt は常に単独で走るため、その失敗はこの経路を通る。</p>
 <p><strong>同じ並列バッチ内で 2 つ以上の Bolt が失敗</strong>したとき（例: <code>email-delivery</code> と <code>admin-panel</code> の両方が code-generation のエラーに当たった）、conductor は<strong>逐次の AUQ</strong> を描画する — 失敗した Bolt を slug 順に 1 つずつ、質問本文に <code>failure &lt;k&gt; of &lt;m&gt;</code> のタグを付けて。同じバッチの成功した Bolt は <strong>HOLD-MERGE 不変条件</strong>によりマージを保留される。これは散文ではなくツーリングで強制される:</p>
 <ul>
 <li>AUQ のシーケンスを開く前に、conductor は成功した各 Bolt に <code>aidlc-bolt hold-merge --slug &lt;slug&gt;</code> を実行する。これはその Bolt の Bolt 別フォーク状態ファイルに <code>Merge-Held: true</code> を書く（冪等 — 既に保留中の Bolt の再保留は静かに成功する）。</li>
@@ -356,12 +358,12 @@ and run `aidlc-bolt release-merge --slug &lt;slug&gt;` before retrying.</code></
 <li><a href="05-scopes-and-depth.html#workshop">Scope と Depth § workshop</a> — scope の stage 一覧・depth・テスト戦略</li>
 <li><a href="10-state-and-audit.html">状態と audit</a> — Construction の worktree が状態と audit をフォークする仕組み</li>
 <li><a href="12-cli-commands.html">CLI コマンド</a> — <code>aidlc-worktree</code> と <code>aidlc-bolt</code> のサブコマンドリファレンス</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/03-orchestrator.md">Orchestrator: Construction フロー</a> — 各 Bolt の中で何が起きるか</li>
+<li><a href="../reference/03-orchestrator.html">Orchestrator: Construction フロー</a> — 各 Bolt の中で何が起きるか</li>
 <li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md">ブランチ戦略（ナレッジファイル）</a> — aidlc-pipeline-deploy-agent の merge-dispatch 契約</li>
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/workshop-mode.md"><code>docs/guide/workshop-mode.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/workshop-mode.md"><code>docs/guide/workshop-mode.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

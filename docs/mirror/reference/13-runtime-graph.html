@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runtime Graph — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/13-runtime-graph</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html" class="here">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#1-what-it-is">1. それは何か</a>
+  <a href="#2-schema">2. スキーマ</a>
+  <a href="#3-compile-lifecycle">3. Compile のライフサイクル</a>
+  <a href="#4-outcome-enum-and-chronological-pairing">4. Outcome enum と時系列のペアリング</a>
+  <a href="#5-memory_empty-semantics">5. MEMORY_EMPTY のセマンティクス</a>
+  <a href="#6-v040-backfill-rule">6. v0.4.0 の backfill 規則</a>
+  <a href="#7-recovery-model-snapshot-suffix-replay">7. 復旧モデル — snapshot + suffix replay</a>
+  <a href="#8-cli-surface">8. CLI サーフェス</a>
+  <a href="#9-why-hook-driven-not-llm-tool-coupled">9. なぜ hook 駆動で、LLM ツール結合ではないか</a>
+  <a href="#10-known-gaps-closed-by-future-prs">10. 将来の PR で解決される既知のギャップ</a>
+  <a href="#11-fragment-lifecycle">11. Fragment のライフサイクル</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="runtime-graph">Runtime Graph</h1>
+<blockquote>
+<p>対象読者: Tier 2/3（チーム導入者、フレームワーク貢献者）。</p>
+</blockquote>
+<p>この章は、v0.5.0 milestone 8 で導入されたワークフロー単位の <code>runtime-graph.json</code>
+成果物を文書化する — <code>stage-graph.json</code> のデータプレーン側の鏡であり、承認 gate の
+たびに audit ログから実体化される。<a href="02-plane-architecture.html">Plane アーキテクチャ</a>
+（この成果物を動機づける制御/データプレーンの分離）と
+<a href="12-state-machine.html">状態機械</a>（その遷移が compile を起動するライフサイクル）を
+相互参照せよ。</p>
+<hr>
+<h2 id="1-what-it-is">1. それは何か</h2>
+<p><code>stage-graph.json</code> は構造の真である — すべての stage 定義、すべての
+<code>requires_stage</code> / <code>produces</code> / <code>consumes</code> エッジ。ワークフロー実行をまたいで
+安定である。</p>
+<p><code>runtime-graph.json</code> は実行の真である — <em>現在の</em>ワークフローについて、どの stage が
+始まったか、どれが承認されたか、各 stage の memory.md がどう見えるか、どの sensor が
+発火したか。ワークフローごとに 1 ファイルで、<code>&lt;record&gt;/runtime-graph.json</code> に住む —
+<code>&lt;record&gt;/</code> = intent の record dir、<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>。
+<code>stage-graph.json</code> と同じノード形状で、構造の代わりに遠隔測定で満たされる。</p>
+<p>これが存在するのは、消費者（milestone 11 の Bolt fork/merge、milestone 12 の gate ritual、
+milestone 14 の doctor、v0.10.0 の cross-workflow observer）が、照会のたびに audit ログを
+歩き直すのではなく、1 つの実体化されたビューを読むためである。</p>
+<hr>
+<h2 id="2-schema">2. スキーマ</h2>
+<p>下の TS インターフェースはロックされた契約である。変更するには、同じ PR で
+すべての消費者を bump する必要がある。</p>
+<pre><code class="language-ts">interface RuntimeGraph {
+  workflow_id: string;            // ISO timestamp from LATEST WORKFLOW_STARTED audit row (so a re-birthed intent identifies the live workflow, not a dead one)
+  scope: string;                  // from state.md &quot;Scope&quot; field
+  started_at: string;             // ISO 8601, same row as workflow_id
+  stages: RuntimeStage[];         // chronological order by started_at
+  bolt_dag?: BoltDag;             // present only when units-generation&#39;s unit-of-work-dependency.md carries a valid (well-formed, acyclic) fenced edge block; absent/malformed/cyclic blocks omit the node
+}
+
+interface BoltDag {
+  units: { name: string; depends_on: string[]; kind?: string }[]; // verbatim from the authored edge block; kind (service|spec|ui|packaging|library) present only when the edge block tags the unit
+  batches: string[][];            // topological levels; each level = units whose deps are all satisfied by prior levels; level entries sorted lexicographically (deterministic)
+}
+
+interface RuntimeStage {
+  stage_slug: string;
+  started_at: string | null;      // ISO from STAGE_STARTED; null when `instances` is present
+  completed_at: string | null;    // ISO from STAGE_COMPLETED; null when pending OR when `instances` is present
+  agent: string | null;           // lead_agent; null when `instances` is present
+  memory_path: string;            // &lt;record&gt;/&lt;phase&gt;/&lt;stage&gt;/memory.md (parent stage path even on instance-bearing rows)
+  memory_entries: number | null;  // null = no memory.md file OR `instances` is present; else parseMemoryHeadings.total
+  memory_breakdown: {             // null when memory_entries is null
+    interpretations: number;
+    deviations: number;
+    tradeoffs: number;
+    open_questions: number;
+  } | null;
+  sensor_firings: SensorFiring[]; // empty array in milestone 8 (sensors fire in milestone 9 + milestone 10)
+  outcome: &quot;approved&quot; | &quot;failed&quot; | &quot;pending&quot;;
+  learnings_captured: {           // null on pending rows; populated on transition to approved
+    from_orchestrator: number;    // zero in milestone 8 (gate ritual is milestone 12)
+    from_user_addition: number;
+  } | null;
+  instances?: BoltInstance[];     // present only when stage runs per-Bolt; milestone 11 populates
+}
+
+interface BoltInstance {
+  bolt: string;
+  worktree: string;
+  started_at: string;
+  completed_at: string | null;
+  memory_path: string;
+  memory_entries: number | null;
+  memory_breakdown: { interpretations: number; deviations: number; tradeoffs: number; open_questions: number; } | null;
+  sensor_firings: SensorFiring[];
+  outcome: &quot;approved&quot; | &quot;failed&quot; | &quot;pending&quot;;
+}
+
+interface SensorFiring {
+  id: string;
+  fire_id: string;                // 8-hex correlator emitted by the milestone 9 dispatcher on every row
+  result: &quot;passed&quot; | &quot;failed&quot; | &quot;budget-override&quot; | &quot;incomplete&quot;; // 4-state (milestone 12 Q10)
+  ts: string;                     // FIRED row&#39;s timestamp
+  detail_path?: string;
+}
+</code></pre>
+<p><code>instances</code> が在るとき、stage 行の単一インスタンスフィールド（<code>started_at</code>、
+<code>completed_at</code>、<code>memory_entries</code>、<code>memory_breakdown</code>）は NULL である — それらの値は
+代わりに各インスタンスに載る。stage 行のフィールドとインスタンス配列のフィールドは
+決して共存しない。</p>
+<h3 id="the-boltunit-dependency-dag-bolt_dag">Bolt/unit 依存 DAG（<code>bolt_dag</code>）</h3>
+<p>任意の <code>bolt_dag</code> ノードは、engine が並列ビルドバッチを計算するために読む機械可読な
+unit 依存グラフである — swarm の fan-out における「DAG が許可である」。そのソースは、
+units-generation（2.7）が人間可読な散文の傍らで <code>unit-of-work-dependency.md</code> に
+著述する <strong><code>yaml</code> フェンス付き <code>units:</code> エッジブロック</strong> である:</p>
+<pre><code class="language-yaml">units:
+  - name: auth
+    kind: service
+    depends_on: []
+  - name: api
+    depends_on: [auth]
+</code></pre>
+<p>各 unit は任意の <code>kind</code>（<code>service | spec | ui | packaging | library</code>）を運べる — その unit が何であるか。それは <code>bolt_dag.units[].kind</code> にそのまま
+乗り、unit 単位の construction 設計の刈り込みを駆動する（<a href="15-stage-definition.html">Stage 定義</a>
+の <code>produces_kinds</code> を参照）: stage の produces 成果物は、各 unit の kind に適用される
+ものへと絞り込まれる。タグの無い unit は <code>kind</code> キーを持たず、設計成果物のマトリクス
+全体を保つ。不正な kind 値はブロック全体を <code>malformed</code>（下記参照）にするので、typo は
+誤って刈り込むのではなく 2.7 gate で大きな音で失敗する。</p>
+<p><code>compile</code> は <em>その構造化ブロック</em> を — 純粋なデータのパース、モデル呼び出し無し —
+<code>units</code>（そのままのエッジ）と <code>batches</code>（トポロジカルなレベル）にパースする。各 batch は、
+依存がすべて先行 batch によって満たされる unit の集合であり、したがって batch の unit は
+相互依存を持たず並列に走れる。レベルのエントリは発行前に辞書順にソートされるので、
+ノードは著述順に関わらず決定論的である。</p>
+<p>ノードは、成果物が無いとき、あるいはそのエッジブロックが無い・malformed（重複名、
+dangling または自己依存、パース不能）・cyclic のとき、<strong>完全に省かれる</strong> — <code>compile</code> は
+理由を名指す stderr の診断を書き、誤って有効な DAG を発行するのではなく <code>bolt_dag</code> を
+envelope から外す。それらの失敗は、同じブロックを検証し <code>edge_block: ok | absent | malformed | cyclic</code> を報告する <code>required-sections</code> sensor によって、上流の 2.7 gate で
+表面化される。エッジを構造化データとして著述すること（知的作業、一度きり、2.7 承認
+gate の背後）が、hook 発火の <code>compile</code> を再実行でバイト同一に保つ: compile の経路に
+モデルは座らない。orchestrate engine はキャッシュされた <code>bolt_dag</code> を
+<code>unit-of-work-dependency.md</code> に対して検証し、ノードが無いかその著述された成果物と
+食い違うとき、読み取り側で unit 単位のイテレーションを自己修復する; グラフファイル自体は
+次の compile によってのみ修復される。</p>
+<hr>
+<h2 id="3-compile-lifecycle">3. Compile のライフサイクル</h2>
+<p>compile は、遷移クラスの audit 発行のたびに PostToolUse Bash hook
+（<code>.claude/hooks/aidlc-runtime-compile.ts</code>）によって起動される。この hook は
+conductor からのすべての <code>Bash</code> ツール呼び出しで発火し、安価にフィルタする:</p>
+<ol>
+<li><strong>Command filter</strong> — <code>bun .claude/tools/aidlc-(state|jump|bolt|utility).ts</code>
+の呼び出しだけが early exit を通り抜ける。<code>aidlc-runtime.ts</code> は除外される
+（recursion guard）; <code>aidlc-log.ts</code> は饒舌な stage 内イベントのみを発行する;
+<code>aidlc-worktree.ts</code> は WORKTREE_* イベントのみを発行する。</li>
+<li><strong>Audit-existence guard</strong> — intent の <code>audit/</code> シャードがまだ存在しなければ exit する。</li>
+<li><strong>Heartbeat</strong> — doctor の silent-hook 検出のために
+<code>&lt;record&gt;/.aidlc-hooks-health/runtime-compile.last</code> を書く。</li>
+<li><strong>Last-3-block tail-read</strong> — <code>audit.md</code> を <code>\n---\n</code> で分割し、最後の 3 エントリを
+取る。</li>
+<li><strong>Event-class filter</strong> —
+<code>**Event**: (GATE_APPROVED|STAGE_STARTED|STAGE_AWAITING_APPROVAL|AUDIT_MERGED|WORKFLOW_COMPLETED)</code>
+を 3 ブロックのいずれかに対して照合する。合致しなければ exit する。</li>
+<li><strong>Dispatch</strong> — <code>spawnSync(&quot;bun&quot;, [&quot;.claude/tools/aidlc-runtime.ts&quot;, &quot;compile&quot;, ...])</code>。</li>
+</ol>
+<p><code>WORKFLOW_COMPLETED</code> は遷移集合に在るので、最終 stage の approve が compile を
+発火させる。<code>aidlc-state.ts:575-593</code> の <code>handleCompleteWorkflow</code> は 4 つの audit 行 —
+STAGE_COMPLETED + PHASE_COMPLETED + PHASE_VERIFIED + WORKFLOW_COMPLETED — を発行し、
+そのうち最後の 3 つは <code>PHASE_COMPLETED + PHASE_VERIFIED + WORKFLOW_COMPLETED</code> である。
+（approve の経路では、approve が既に発行済みなので STAGE_COMPLETED は抑制され、
+<code>GATE_APPROVED</code> が実行に先行する — だから最終 stage の approve は、いずれにせよ 1 回の
+Bash 呼び出しで 5 行を追記する。）regex に <code>WORKFLOW_COMPLETED</code> が無ければ、
+runtime-graph は最終 stage を approved として決して記録しないだろう。</p>
+<p>compile 自体は audit ログ全体を歩き（したがって結果は event-sourced であり、遷移増分
+ではない）、<code>STAGE_STARTED</code> を同じ slug の次の <code>STAGE_COMPLETED</code> と対にし、各 stage の
+memory.md を <code>aidlc-lib.ts</code> の <code>parseMemoryHeadings()</code> 経由で読み、成果物を
+<code>withAuditLock</code> の中で <code>writeFileAtomic</code> 経由でアトミックに書く。</p>
+<hr>
+<h2 id="4-outcome-enum-and-chronological-pairing">4. Outcome enum と時系列のペアリング</h2>
+<p>3 つの outcome 値: <code>&quot;approved&quot; | &quot;failed&quot; | &quot;pending&quot;</code>。</p>
+<ul>
+<li><strong>approved</strong> — <code>STAGE_STARTED@T1</code> が後続の <code>STAGE_COMPLETED@T2</code> と対になる。
+行の <code>completed_at</code> は <code>T2</code> である。</li>
+<li><strong>pending</strong> — <code>STAGE_STARTED@T1</code> があり、その slug の後続の <code>STAGE_COMPLETED</code> が
+無い。行の <code>completed_at</code> は <code>null</code> である。</li>
+<li><strong>failed</strong> — <code>instances[]</code> の親 stage rollup によってのみ発行される（単一インスタンスの
+stage は <code>&quot;approved&quot; | &quot;pending&quot;</code> のままである）。Construction stage の <code>instances[]</code> が
+空でないとき、親の <code>outcome</code> はそのインスタンスの rollup である: すべて approved →
+<code>approved</code>; いずれか failed → <code>failed</code>; それ以外（いずれか pending、失敗なし）→
+<code>pending</code>。単一インスタンスの stage は <code>failed</code> を発行しない。なぜなら基盤の
+<code>BOLT_FAILED</code> イベントは instances を持つ経路の外では Construction-stage スコープを
+持たないからである。</li>
+</ul>
+<p>Re-jump の扱い: <code>/aidlc --stage &lt;slug&gt;</code> は、すでに完了した slug に対して
+<code>STAGE_STARTED</code> を再発行する。audit ログは
+<code>STAGE_STARTED@T1, STAGE_COMPLETED@T2, STAGE_STARTED@T3</code> を運ぶ。ペアリング規則は
+<code>STARTED@T1</code> を <code>COMPLETED@T2</code> と合致させ → approved を生むはずだが、その slug の
+最新の <code>STAGE_STARTED</code> がより古い行を上書きする — slug ごとに 1 行、最新の STARTED が
+勝つ。したがって結果は <code>started_at: T3, completed_at: null</code> の pending 行である。</p>
+<p>Single-stage の除外: <code>--single</code> の stage-runner 実行は、その
+<code>STAGE_STARTED</code>/<code>STAGE_COMPLETED</code> の対を、合成された
+<code>**Workflow**: single-stage:&lt;slug&gt;</code> id の下でコミットする（audit のみ;
+<code>aidlc-orchestrate.ts</code> の <code>handleSingleReport</code> を参照）。ペアリングは、<code>Workflow</code>
+フィールドが <code>single-stage:</code> で始まる <code>STAGE_*</code> 行をすべてスキップする — それらの行は
+どのメインワークフローにも属さないので、メインの <code>runtime-graph.json</code> に行を作ることも
+完了させることも決してない（したがって <code>summary</code> のカウントを膨らませることも決して
+ない）。メインワークフローの <code>STAGE_*</code> 行は <code>Workflow</code> フィールドを持たない; 不在は行が
+保たれることを意味する。同じ除外が <code>aidlc-state.ts</code> の <code>hasStageAuditEvent</code> 重複排除
+チェックにも適用されるので、single 実行の <code>STAGE_COMPLETED</code> が、同じ slug のメイン
+ワークフロー自身の完了発行を抑制することはできない。</p>
+<hr>
+<h2 id="5-memory_empty-semantics">5. MEMORY_EMPTY のセマンティクス</h2>
+<p><code>MEMORY_EMPTY</code> audit 行は、stage 行が次のすべてを満たすとき compile によって発行される
+（唯一の emitter — <code>audit-format.md:171</code> が <code>tools/aidlc-runtime.ts compile</code> を登録する）:</p>
+<ul>
+<li><code>outcome === &quot;approved&quot;</code>（pending 行は発行しない — 下の §6 を参照）</li>
+<li><code>memory_entries === 0</code>（ファイルは存在し、正準の §13 の 4 見出しの下にエントリが 0）</li>
+</ul>
+<p>エントリが 0 の pending 行は発行しない。まだ進行中の stage は、conductor がまだ memory.md
+に書いていないために正当にエントリ 0 でありうる — 進行中に MEMORY_EMPTY を発行すると、
+本物の日記スキップを表さないノイズを生む。milestone 14 の doctor が欲しいシグナルは
+「エントリ 0 で承認された stage」である — それには stage が承認されていることが必要である。</p>
+<h3 id="idempotency-exactly-once-per-slug-gate-completion">冪等性 — (slug, gate-completion) ごとに正確に一度</h3>
+<p><code>runtime-graph.json</code> 自体は、同じ audit ログに対する再 compile をまたいでバイト等価で
+ある。MEMORY_EMPTY の発行はより強い:
+<strong><code>(stage_slug, completed_at)</code> タプルごとに最大 1 つの MEMORY_EMPTY 行</strong>。</p>
+<p>ロックされた区画の中で、compile は <code>audit.md</code> を再読し、エントリ 0 で承認された各 slug
+について既存の MEMORY_EMPTY 行を走査し、いずれかの先行行の Timestamp がこの slug の
+<code>completed_at</code> 以上であれば発行を抑制する。これが意味するのは:</p>
+<ul>
+<li>stage がエントリ 0 で承認された後の最初の compile は、1 つの MEMORY_EMPTY 行を発行する。</li>
+<li>同じワークフロー中のその後の compile はすべて、その slug について再発行しない。</li>
+<li><code>--stage &lt;slug&gt;</code> の re-jump + 再承認は新しい <code>STAGE_COMPLETED</code>（より後の
+<code>completed_at</code>）を生む — 再承認時に stage がなお空なら、先行行の Timestamp が今や新しい
+completed_at より &lt; なので、新鮮な MEMORY_EMPTY 行が発行される。</li>
+</ul>
+<p>doctor の MEMORY_EMPTY 率メトリクスは、重複排除なしにこれらの行を直接読む; 空の日記を
+伴う gate 完了ごとに 1 行。</p>
+<p>ロックされた区画の中で MEMORY_EMPTY が発行された後に成果物の書き込みが失敗すると、
+audit ログは runtime-graph.json が決して着地しなかった stage について N 個の
+MEMORY_EMPTY 行を運ぶ。次の compile はその抑制走査でそれらの行を見て再発行をスキップ
+する; そして成果物が着地する。重複発行なし、幻の成果物なし。</p>
+<hr>
+<h2 id="6-v040-backfill-rule">6. v0.4.0 の backfill 規則</h2>
+<p>milestone 13 の memory.md ライフサイクルが出荷される前に完了した stage は、memory.md の
+履歴を持たない。backfill 規則:</p>
+<ul>
+<li><code>memory_entries: null</code> ↔ <code>memory_breakdown: null</code> ↔ MEMORY_EMPTY 発行なし。</li>
+<li>両フィールドは一緒に動く。判別子は「<code>parseMemoryHeadings</code> は実行されたか？」である —
+memory.md が存在すれば（ゼロバイトでも）実行され、キーは数値である; memory.md が
+無ければ、両方とも <code>null</code> である。</li>
+</ul>
+<p>この規則が無ければ、v0.5.0 にアップグレードするすべての v0.4.x ユーザーは、アップグレード
+後の最初のワークフローで MEMORY_EMPTY 行の嵐を見るだろう。</p>
+<hr>
+<h2 id="7-recovery-model-snapshot-suffix-replay">7. 復旧モデル — snapshot + suffix replay</h2>
+<p><code>runtime-graph.json</code> + <code>audit.md</code> は event-sourced な対を成す。<code>audit.md</code> は追記専用の
+イベントログ; <code>runtime-graph.json</code> は最後の gate 遷移で取られた実体化 snapshot である。
+両方を持つ読み手は、snapshot を読み、次に snapshot の最後の <code>completed_at</code> 以降の audit
+行を replay することで、現在の状態を再構成する。</p>
+<p>人間の読み順で、5 つの復旧ソース:</p>
+<ol>
+<li><strong>成果物ツリー</strong>（<code>&lt;record&gt;/&lt;phase&gt;/&lt;stage&gt;/</code>） — 何が生産されたか。</li>
+<li><strong>memory.md</strong>（<code>&lt;record&gt;/&lt;phase&gt;/&lt;stage&gt;/memory.md</code>） — conductor が捕らえることを
+選んだもの。</li>
+<li><strong>audit/ シャード</strong> — 正準のイベントログ; 実際に何が起きたか。</li>
+<li><strong>state.md</strong> — アクティブ stage のカーソル。</li>
+<li><strong>runtime-graph.json</strong> — 実体化されたビュー; audit を歩き直すより照会が速いが、
+常にそこから再導出可能。</li>
+</ol>
+<h3 id="freshness-caveat-for-pending-rows">pending 行の鮮度に関する注意</h3>
+<p>pending 行の <code>memory_entries</code> と <code>memory_breakdown</code> は、最後の compile 時点で snapshot
+されたものである。stage が進行中で、conductor が最後の compile 発火以降にさらにエントリを
+書いていれば、snapshot は遅れる。復旧の消費者は復旧時に memory.md を再パースしなければ
+ならない; pending 行について snapshot されたカウントを信頼してはならない。</p>
+<p>v0.5.0 には pending のカウントをライブで読む消費者は無い。この切り出しを必要とする
+v0.6.0 の <code>--resume</code> のために文書化しておく。</p>
+<h3 id="parallel-bolt-mid-flight-recovery-closed-in-v050">並列 Bolt の進行中復旧（v0.5.0 で解決）</h3>
+<p>batch の途中でクラッシュする並列 Bolt を持つワークフローは、milestone 8 では Bolt 単位の
+復旧の継ぎ目を持たなかった — スキーマは <code>instances?</code> を予約していたが、compile は main で
+単一インスタンスの行しか書かず、worktree は runtime-graph fragment を決して受け取らな
+かった。v0.5.0 で、<code>aidlc-runtime.ts fragment-fork</code>（Bolt 開始）と
+<code>fragment-merge</code>（Bolt complete --merge）、および audit が Construction phase の stage の
+ウィンドウ内に 2 つ以上の異なる slug を示すとき <code>BoltInstance[]</code> を発行する compile
+populator の拡張によって解決された。</p>
+<p>Bolt 単位の fragment は v0.5.0 では dead-on-arrival である（worktree の record-dir の
+<code>runtime-graph.json</code> を読む v0.5.0 の読み手は無い）。v0.6.0 の <code>--resume</code> は、この
+fragment をヒントとして扱い、main の merge 後の runtime-graph を正準とし、加えて
+<code>aidlc-bolt.ts</code> に従って孤立した worktree をチェックして、それらのための復旧プロンプトを
+表面化すべきである。</p>
+<hr>
+<h2 id="8-cli-surface">8. CLI サーフェス</h2>
+<pre><code class="language-bash"># Walk audit + memory.md, write runtime-graph.json (invoked by hook).
+bun .claude/tools/aidlc-runtime.ts compile
+
+# Print one stage row from runtime-graph.json (debug/test surface).
+bun .claude/tools/aidlc-runtime.ts read &lt;stage-slug&gt;
+
+# Print deterministic aggregates over runtime-graph.json: stage/phase
+# outcome tallies, memory-entry counts by category, sensor 4-state
+# tallies, learnings captured, and workflow duration. Read-only; the
+# session skills (session-cost, replay, outcomes-pack) consume the
+# --json shape so every number they render comes from here, not from
+# LLM-side counting.
+bun .claude/tools/aidlc-runtime.ts summary [--json]
+
+# Byte-copy main runtime-graph.json into a Bolt&#39;s worktree fragment
+# (one-shot; called by `aidlc-bolt start --worktree`). No audit emit —
+# the fragment lifecycle rides on STATE_FORKED + AUDIT_FORKED.
+bun .claude/tools/aidlc-runtime.ts fragment-fork --slug &lt;kebab-slug&gt;
+
+# Remove the worktree fragment (idempotent; called by
+# `aidlc-bolt complete --merge`). No audit emit — the fragment
+# lifecycle rides on STATE_MERGED + AUDIT_MERGED. Main&#39;s runtime-graph
+# is rebuilt event-source by the post-Bash compile hook on AUDIT_MERGED.
+bun .claude/tools/aidlc-runtime.ts fragment-merge --slug &lt;kebab-slug&gt;
+</code></pre>
+<p>すべてのサブコマンドは、標準の cwd ベースの解決を上書きするための
+<code>--project-dir &lt;path&gt;</code> を受け付ける。</p>
+<p>compile は通常運用では hook 駆動である; 手動起動はテストとデバッグのために存在する。</p>
+<hr>
+<h2 id="9-why-hook-driven-not-llm-tool-coupled">9. なぜ hook 駆動で、LLM ツール結合ではないか</h2>
+<p>以前の計画リビジョンは、<code>handleApprove</code> / <code>handleAdvance</code> / <code>handleComplete --merge</code> の
+中に <code>spawnSibling(..., &quot;aidlc-runtime.ts compile&quot;, ...)</code> 呼び出しを挿入することを
+提案した。そのアプローチは、<a href="02-plane-architecture.html">Plane アーキテクチャ</a> に
+文書化された荷重を受けるテネットに違反する:</p>
+<blockquote>
+<p>決定性が要るところでは、ツールを使え。知識が要るところでは、LLM/agent を使え。
+判断が要るところでは、人間を使え。</p>
+</blockquote>
+<p>Runtime-graph の compile は、いかなる特定のセッションの外からも観測可能でなければ
+ならないデータプレーンの基盤である。それを LLM が起動するツールに結合すると、LLM の
+脱落が決定性の保証を壊すことを意味する — 人間が Approve をクリックした後に conductor が
+<code>aidlc-orchestrate.ts report --stage &lt;slug&gt; --result approved --user-input &quot;&lt;exact choice&gt;&quot;</code>
+の呼び出しを忘れると、audit 行は決して追記されず、かつ compile は決して発火しない;
+runtime-graph は静かに遅れ、復旧の基盤は壊れる。</p>
+<p>PostToolUse Bash hook は、LLM が次に何をするかに関わらず、conductor の実際のサブ
+プロセス起動で発火する。audit 発行側の継ぎ目（<code>bun aidlc-(state|jump|bolt|utility).ts</code>）が
+決定論的なアンカーである。</p>
+<hr>
+<h2 id="10-known-gaps-closed-by-future-prs">10. 将来の PR で解決される既知のギャップ</h2>
+<ul>
+<li><strong>MEMORY_EMPTY 率メトリクス</strong> — milestone 14 の doctor が、§5 で凍結された
+<code>(Stage, ISO-second)</code> 重複排除タプルを使ってその率を表面化する。</li>
+<li><strong><code>learnings_captured</code> の由来カウント</strong> — milestone 12 の gate ritual が
+<code>from_orchestrator</code> と <code>from_user_addition</code> を満たす。</li>
+<li><strong><code>sensor_firings</code> 配列</strong> — milestone 9 + milestone 10 が sensor をディスパッチし、
+このスロットを満たす。</li>
+<li><strong>runtime-graph.json の Bolt fork/merge</strong> — v0.5.0 で <code>fragment-fork</code>（新しい audit
+イベントなし; STATE_FORKED + AUDIT_FORKED に便乗）と <code>fragment-merge</code>（新しい audit
+イベントなし; STATE_MERGED + AUDIT_MERGED に便乗）によって解決された。compile は、
+Construction stage のウィンドウ内に 2 つ以上の異なる slug が座るとき、audit の
+BOLT_* タグ付きイベントから <code>instances[]</code> を満たす。</li>
+<li><strong>ヘッドレスワークフローのための CLI モードディスパッチ</strong> — v0.6.0+ は非 Claude Code の
+実行経路を出荷するかもしれない; hook は Claude Code セッションの中でのみ発火する。</li>
+</ul>
+<hr>
+<h2 id="11-fragment-lifecycle">11. Fragment のライフサイクル</h2>
+<p>Bolt 単位の runtime-graph fragment ファイルは <code>&lt;worktree&gt;/&lt;record&gt;/runtime-graph.json</code>
+に住み、gitignore され、main の位置を鏡写しにする。そのライフサイクルは:</p>
+<ol>
+<li><strong>Bolt 開始時の fork。</strong> <code>aidlc-bolt start --worktree --slug &lt;slug&gt;</code> は、state-fork +
+audit-fork の後に <code>aidlc-runtime fragment-fork --slug &lt;slug&gt;</code> に委譲する。単一読み取り
+プロトコル: <code>readFileSync</code> で一度バッファに読み、<code>writeFileSync</code> でそのバッファから
+fragment パスへ書き、同じバッファを stdout envelope 用にハッシュする。fork の途中で
+main を書き換える並行 compile に対する byte-copy / hash の競合を塞ぐ。main にまだ
+runtime-graph.json が無ければ、fragment は worktree の state カーソルに錨づけされた
+空グラフである。</li>
+<li><strong>Bolt の生存中の進化。</strong> post-Bash compile hook は、遷移クラスの audit 発行のたびに
+発火する — worktree 内の遷移を含む。各発火は、worktree の audit ビューから worktree の
+runtime-graph.json（fragment）を再 compile する。fragment は、この Bolt の audit-fork の
+瞬間にアクティブだった兄弟について <code>instances[]</code> が満たされた状態になりうる; worktree の
+audit は fork 時点の snapshot なので、後から始まる兄弟は fragment に現れない。</li>
+<li><strong>Bolt complete 時の merge。</strong> <code>aidlc-bolt complete --merge --slug &lt;slug&gt;</code> は、
+state-merge + audit-merge の後に <code>aidlc-runtime fragment-merge --slug &lt;slug&gt;</code> に
+委譲する。fragment-merge は fragment を stdout の可観測性のためにハッシュし、それを
+<code>unlinkSync</code> し、JSON envelope を発行する。親の Bash 起動が戻った後、compile hook が
+main で再発火し、たった今 merge された slug について <code>instances[]</code> を満たした状態で
+main の runtime-graph を再構築する。</li>
+<li><strong>多層防御による除去。</strong> <code>aidlc-worktree merge</code> と <code>aidlc-worktree discard</code> はどちらも
+<code>git worktree remove</code> を呼び、それが推移的に fragment を除去する。fragment-merge の
+明示的な除去は、暗黙のクリーンアップと多層防御パターンとして対になり、state 側で
+state-merge と <code>git worktree remove</code> が既に対になっているのを鏡写しにする。</li>
+<li><strong>失敗モード。</strong> <code>fragment-fork</code> の失敗（worktree なし、fragment がすでに存在、
+byte-copy IO エラー、spawn タイムアウト）は、<code>aidlc-bolt</code> に doctor の帰属のための
+<code>Reason: fragment-fork-*</code> フィールド付きの <code>BOLT_FAILED</code> を発行させる（IO / guard
+エラーには <code>fragment-fork-failed</code>; spawn SIGTERM には <code>fragment-fork-timeout</code>）;
+state-fork + audit-fork はロールバックされない（各々がすでに自身の audit 行を発行
+済み）。audit-merge がすでに着地した後の <code>fragment-merge</code> の失敗は、異常な部分成功の
+audit シグネチャ <code>BOLT_COMPLETED → STATE_MERGED → AUDIT_MERGED → BOLT_FAILED (Reason: fragment-merge-*)</code> を生む（IO / guard エラーには <code>fragment-merge-failed</code>;
+spawn SIGTERM には <code>fragment-merge-timeout</code>）; fragment ファイルは暗黙の
+<code>git worktree remove</code> クリーンアップまで残存する。main に対するその後の compile は、
+一貫した runtime-graph を生む（この位置の BOLT_FAILED はインスタンスを <code>&quot;approved&quot;</code> と
+採点する。なぜなら rollup における STATE_MERGED 優先の序列は、Bolt の内容がすでに main
+に伝播したことを反映するからである。ここでの BOLT_FAILED は復旧の遠隔測定である;
+それは継ぎ目を記録し、内容自体は無傷のままだった）。</li>
+</ol>
+<hr>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><strong>なぜデータプレーンはこのように構造化されているか</strong> — <code>runtime-graph.json</code> を第 2 の
+真のソースではなく <code>stage-graph.json</code> の鏡にする、制御/データプレーンの分離。
+<a href="02-plane-architecture.html">Plane アーキテクチャ</a> を参照。</li>
+<li><strong>compile を起動するライフサイクル</strong> — その audit 発行が compile hook を駆動する、
+workflow / phase / stage の遷移。<a href="12-state-machine.html">状態機械</a> を参照。</li>
+<li><strong>このグラフが導出される元の audit ログ</strong> - 74 イベントの分類と emitter レジストリ。
+<a href="12-state-machine.html">状態機械</a> と、ユーザーガイドの
+<a href="../guide/10-state-and-audit.html">状態と Audit トレイル</a> を参照。</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/13-runtime-graph.md"><code>docs/reference/13-runtime-graph.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

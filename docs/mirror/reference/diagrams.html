@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-DLC ワークフロー図 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/diagrams</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html" class="here">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#1-end-to-end-lifecycle">1. エンドツーエンドのライフサイクル</a>
+  <a href="#2-ideation-flow">2. Ideation フロー</a>
+  <a href="#3-inception-flow">3. Inception フロー</a>
+  <a href="#4-construction-flow">4. Construction フロー</a>
+  <a href="#5-operation-flow">5. Operation フロー</a>
+  <a href="#6-agent-collaboration-map">6. Agent コラボレーションマップ</a>
+  <a href="#7-execution-model">7. 実行モデル</a>
+  <a href="#8-session-resume-flow">8. Session Resume フロー</a>
+  <a href="#9-scope-routing">9. Scope ルーティング</a>
+  <a href="#10-knowledge-loading-order">10. Knowledge のロード順序</a>
+  <a href="#11-approval-gate-flow">11. Approval Gate フロー</a>
+  <a href="#12-state-tracking">12. State トラッキング</a>
+  <a href="#summary-of-execution-modes-by-stage">Stage 別の実行モードのまとめ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="ai-dlc-workflow-diagrams">AI-DLC ワークフロー図</h1>
+<p>本ドキュメントは、AI-DLC（AI-Driven Development Life Cycle）方法論を可視化するすべての Mermaid 図を収める。各節は短い説明のあとにレンダリング済みの図を置く。これらの図は、engine と conductor（<code>aidlc-orchestrate.ts</code> + <code>SKILL.md</code>）、stage protocol（<code>stage-protocol.md</code>）、stage ファイル、agent 定義から導出したものである。</p>
+<blockquote>
+<p><strong>Note:</strong> これらの図は、対応するリファレンス各章にもインラインで埋め込まれている。本ファイルは、すべての図を 1 か所に集約したインデックスとして機能する。下の図中の <code>&lt;record&gt;/</code> = アクティブな intent の record dir、<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>。</p>
+<ul>
+<li>図 1 と 7: <a href="01-architecture.html">Architecture</a></li>
+<li>図 8: <a href="03-orchestrator.html">Orchestrator</a> -- Session Management セクション</li>
+<li>図 9: <a href="03-orchestrator.html">Orchestrator</a> -- Scope Routing セクション</li>
+<li>図 10: <a href="10-knowledge-system.html">Knowledge System</a></li>
+<li>図 11: <a href="04-stage-protocol.html">Stage Protocol</a> -- Approval Gates セクション</li>
+<li>図 12: <a href="03-orchestrator.html">Orchestrator</a> -- State Tracking セクション</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="1-end-to-end-lifecycle">1. エンドツーエンドのライフサイクル</h2>
+<p>AI-DLC 方法論は、作業を 5 つの逐次的な phase に編成する。各 phase はその境界に verification gate を持ち、それが通過しなければ次の phase は始まらない。完全なライフサイクルは 5 つの phase にまたがる 32 の stage に及び、どの stage が実際に実行されるかは scope が決める。</p>
+<pre class="mermaid">
+graph LR
+    subgraph INITIALIZATION["INITIALIZATION (0.1-0.3)"]
+        Z1["Workspace Scaffold"]
+        Z4["State Init"]
+        Z1 -.-&gt;|"3 stages"| Z4
+    end
+
+    subgraph IDEATION["IDEATION (1.1-1.7)"]
+        I1["Intent Capture"]
+        I7["Approval &amp; Handoff"]
+        I1 -.-&gt;|"7 stages"| I7
+    end
+
+    subgraph INCEPTION["INCEPTION (2.1-2.8)"]
+        N1["Reverse Engineering"]
+        N7["Delivery Planning"]
+        N1 -.-&gt;|"8 stages"| N7
+    end
+
+    subgraph CONSTRUCTION["CONSTRUCTION (3.1-3.7)"]
+        C1["Functional Design"]
+        C7["CI Pipeline"]
+        C1 -.-&gt;|"3.1-3.5 per Bolt; 3.6-3.7 once after all Bolts"| C7
+    end
+
+    subgraph OPERATION["OPERATION (4.1-4.7)"]
+        O1["Deployment Pipeline"]
+        O7["Feedback &amp; Optimization"]
+        O1 -.-&gt;|"7 stages"| O7
+    end
+
+    Z4 --&gt;|"auto-proceed"| I1
+    I7 --&gt;|"Verification Gate 1"| N1
+    N7 --&gt;|"Verification Gate 2"| C1
+    C7 --&gt;|"Verification Gate 3"| O1
+    O7 -.-&gt;|"Feedback Loop"| I1
+
+    style INITIALIZATION fill:#2a2440,stroke:#b895ff
+    style IDEATION fill:#1d332b,stroke:#57d9a9
+    style INCEPTION fill:#1b2c47,stroke:#6db3ff
+    style CONSTRUCTION fill:#38291a,stroke:#f2b35c
+    style OPERATION fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<hr>
+<h2 id="2-ideation-flow">2. Ideation フロー</h2>
+<p>Ideation phase は、ビジネス上の intent を捉え、feasibility を検証し、scope を定義し、チームを編成し、rough mockup を作り、承認用の initiative brief を生成する。ALWAYS と記された stage はすべての scope で実行される; CONDITIONAL の stage は特定の scope でスキップされる（例: poc, bugfix, refactor は Market Research をスキップする）。実線の矢印は ALWAYS のルーティングを、破線の矢印は CONDITIONAL のルーティングを示す。</p>
+<pre class="mermaid">
+flowchart TD
+    S11["1.1 Intent Capture &amp; Framing\n(aidlc-product-agent)"]
+    S12["1.2 Market Research\n(aidlc-product-agent)"]
+    S13["1.3 Feasibility &amp; Constraints\n(aidlc-architect-agent)"]
+    S14["1.4 Scope Definition\n(aidlc-product-agent)"]
+    S15["1.5 Team Formation\n(aidlc-delivery-agent)"]
+    S16["1.6 Rough Mockups\n(aidlc-design-agent)"]
+    S17["1.7 Approval &amp; Handoff\n(aidlc-delivery-agent)"]
+    VG1{{"Verification Gate:\nIdeation --&gt; Inception"}}
+
+    S11 ==&gt;|ALWAYS| S12
+    S11 -.-&gt;|"skip: poc, bugfix,\nrefactor, infra,\nsecurity-patch"| S14
+    S12 -.-&gt;|CONDITIONAL| S13
+    S12 -.-&gt;|"skip if no\nfeasibility needed"| S14
+    S13 -.-&gt;|CONDITIONAL| S14
+    S14 ==&gt;|ALWAYS| S15
+    S14 -.-&gt;|"skip: poc,\nbugfix, refactor"| S17
+    S15 -.-&gt;|CONDITIONAL| S16
+    S15 -.-&gt;|"skip if no UI"| S17
+    S16 -.-&gt;|CONDITIONAL| S17
+    S17 ==&gt;|ALWAYS| VG1
+
+    style S11 fill:#1d332b,stroke:#57d9a9
+    style S14 fill:#1d332b,stroke:#57d9a9
+    style S17 fill:#1d332b,stroke:#57d9a9
+    style S12 fill:#35301b,stroke:#e5cf63
+    style S13 fill:#35301b,stroke:#e5cf63
+    style S15 fill:#35301b,stroke:#e5cf63
+    style S16 fill:#35301b,stroke:#e5cf63
+    style VG1 fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<hr>
+<h2 id="3-inception-flow">3. Inception フロー</h2>
+<p>Inception phase は、（brownfield プロジェクトでは）コードベースを分析し、チームの practices を発見し、要件を引き出し、user story と mockup を生成し、アプリケーションアーキテクチャを設計し、実装 unit に分解し、デリバリを計画する。Stage 2.1（Reverse Engineering）は pipeline（2-link チェーン）として走り、六角形で示される: まず developer subagent がコードをスキャンし、次に architect subagent が結果を統合して成果物を書く。</p>
+<pre class="mermaid">
+flowchart TD
+    S21{{"`**2.1 Reverse Engineering**
+    (aidlc-developer-agent + aidlc-architect-agent)
+    pipeline: 2-link`"}}
+    S22a["2.2 Practices Discovery\n(aidlc-pipeline-deploy-agent)"]
+    S22["2.3 Requirements Analysis\n(aidlc-product-agent)"]
+    S23["2.4 User Stories\n(aidlc-product-agent)"]
+    S24["2.5 Refined Mockups\n(aidlc-design-agent)"]
+    S25["2.6 Application Design\n(aidlc-architect-agent)"]
+    S26["2.7 Units Generation\n(aidlc-architect-agent)"]
+    S27["2.8 Delivery Planning\n(aidlc-delivery-agent)"]
+    VG2{{"Verification Gate:\nInception --&gt; Construction"}}
+
+    BF_CHECK{"Brownfield?\n(from Initialization 0.3)"}
+    BF_CHECK --&gt;|Yes| S21
+    BF_CHECK --&gt;|"No (greenfield:\nprompt user)"| S22a
+    S21 -.-&gt;|CONDITIONAL| S22a
+    S22a -.-&gt;|CONDITIONAL| S22
+
+    subgraph RE_DETAIL["Two-Link RE Pipeline"]
+        direction LR
+        DEV_SCAN["Step 1: Developer\nCode Scan"]
+        ARCH_SYNTH["Step 2: Architect\nSynthesis"]
+        DEV_SCAN --&gt; ARCH_SYNTH
+    end
+
+    S21 -.-&gt; RE_DETAIL
+
+    S22 ==&gt;|ALWAYS| S23
+    S22 -.-&gt;|"skip if no user-facing\nfeatures"| S25
+    S23 -.-&gt;|CONDITIONAL| S24
+    S23 -.-&gt;|"skip if no UI\nor mockups skipped"| S25
+    S24 -.-&gt;|CONDITIONAL| S25
+    S25 -.-&gt;|CONDITIONAL| S26
+    S25 ==&gt;|ALWAYS| S27
+    S26 -.-&gt;|CONDITIONAL| S27
+    S27 ==&gt;|ALWAYS| VG2
+
+    style S21 fill:#1b2c47,stroke:#6db3ff
+    style S22 fill:#1d332b,stroke:#57d9a9
+    style S27 fill:#1d332b,stroke:#57d9a9
+    style S22a fill:#35301b,stroke:#e5cf63
+    style S23 fill:#35301b,stroke:#e5cf63
+    style S24 fill:#35301b,stroke:#e5cf63
+    style S25 fill:#35301b,stroke:#e5cf63
+    style S26 fill:#35301b,stroke:#e5cf63
+    style VG2 fill:#3a1f27,stroke:#ff8f8f
+    style RE_DETAIL fill:#1b2c47,stroke:#6db3ff
+</pre>
+<hr>
+<h2 id="4-construction-flow">4. Construction フロー</h2>
+<p>Construction phase は、<code>bolt-plan.md</code> に従って Bolt 単位で実行する。各 Bolt は 1 つ以上の Units of Work のまとまったスライスをカバーし、stage 3.1–3.5 を一度走らせる。walking-skeleton の Bolt は常に single-Bolt バッチとして最初に走る; 後続の Bolt は依存グラフが許す限り並列バッチで走ってよい。最後の Bolt のあと、stage 3.6（Build and Test）と 3.7（CI Pipeline）が全 Bolt を通じて一度走る。Stage 3.5（Code Generation）は subagent として走り、六角形で示される。</p>
+<pre class="mermaid">
+flowchart TD
+    START(["Begin Construction"])
+
+    subgraph PER_BOLT["Per-Bolt Loop (walking skeleton first; later Bolts may parallelise)"]
+        S31["3.1 Functional Design\n(aidlc-architect-agent)\nCONDITIONAL"]
+        S32["3.2 NFR Requirements\n(aidlc-architect-agent)\nCONDITIONAL"]
+        S33["3.3 NFR Design\n(aidlc-architect-agent)\nCONDITIONAL"]
+        S34["3.4 Infrastructure Design\n(aidlc-aws-platform-agent)\nCONDITIONAL"]
+        S35{{"3.5 Code Generation\n(aidlc-developer-agent)\nsubagent: aidlc-developer-agent\nALWAYS per unit in Bolt"}}
+
+        S31 -.-&gt; S32
+        S32 -.-&gt; S33
+        S33 -.-&gt; S34
+        S34 -.-&gt; S35
+        S31 -.-&gt;|"skip if not\nin plan"| S35
+    end
+
+    START --&gt; PER_BOLT
+    PER_BOLT --&gt;|"More Bolts?"| PER_BOLT
+    PER_BOLT --&gt;|"All Bolts done"| S36
+
+    S36["3.6 Build and Test\n(aidlc-quality-agent)\nALWAYS"]
+    S37["3.7 CI Pipeline\n(aidlc-pipeline-deploy-agent)\nCONDITIONAL"]
+    VG3{{"Verification Gate:\nConstruction --&gt; Operation"}}
+
+    S36 ==&gt; S37
+    S36 -.-&gt;|"skip CI if\nnot in scope"| VG3
+    S37 -.-&gt; VG3
+
+    style PER_BOLT fill:#38291a,stroke:#f2b35c
+    style S35 fill:#1b2c47,stroke:#6db3ff
+    style S31 fill:#35301b,stroke:#e5cf63
+    style S32 fill:#35301b,stroke:#e5cf63
+    style S33 fill:#35301b,stroke:#e5cf63
+    style S34 fill:#35301b,stroke:#e5cf63
+    style S36 fill:#1d332b,stroke:#57d9a9
+    style S37 fill:#35301b,stroke:#e5cf63
+    style VG3 fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<hr>
+<h2 id="5-operation-flow">5. Operation フロー</h2>
+<p>Operation phase は、デプロイ、環境プロビジョニング、observability、インシデント対応、パフォーマンス検証、フィードバックをカバーする。7 つの stage はすべて CONDITIONAL である（phase 全体が poc と bugfix の scope でスキップされることがある）。すべての stage は inline で走る。Stage 4.7 は終端の stage である; 承認されると、ワークフローは完了するか、新しい Ideation サイクルを始められる。</p>
+<pre class="mermaid">
+flowchart TD
+    S41["4.1 Deployment Pipeline\n(aidlc-pipeline-deploy-agent)"]
+    S42["4.2 Environment Provisioning\n(aidlc-aws-platform-agent)"]
+    S43["4.3 Deployment Execution\n(aidlc-pipeline-deploy-agent)"]
+    S44["4.4 Observability Setup\n(aidlc-operations-agent)"]
+    S45["4.5 Incident Response\n(aidlc-operations-agent)"]
+    S46["4.6 Performance Validation\n(aidlc-quality-agent)"]
+    S47["4.7 Feedback &amp; Optimization\n(aidlc-operations-agent)"]
+
+    S41 -.-&gt;|CONDITIONAL| S42
+    S42 -.-&gt;|CONDITIONAL| S43
+    S43 -.-&gt;|CONDITIONAL| S44
+    S44 -.-&gt;|CONDITIONAL| S45
+    S45 -.-&gt;|CONDITIONAL| S46
+    S46 -.-&gt;|CONDITIONAL| S47
+
+    S47 --&gt;|"Approve"| DONE(["Workflow Complete"])
+    S47 --&gt;|"Start New Cycle"| IDEATION(["Return to Ideation 1.1"])
+
+    style S41 fill:#3a1f27,stroke:#ff8f8f
+    style S42 fill:#3a1f27,stroke:#ff8f8f
+    style S43 fill:#3a1f27,stroke:#ff8f8f
+    style S44 fill:#3a1f27,stroke:#ff8f8f
+    style S45 fill:#3a1f27,stroke:#ff8f8f
+    style S46 fill:#3a1f27,stroke:#ff8f8f
+    style S47 fill:#3a1f27,stroke:#ff8f8f
+    style DONE fill:#1d332b,stroke:#57d9a9
+    style IDEATION fill:#1d332b,stroke:#57d9a9
+</pre>
+<hr>
+<h2 id="6-agent-collaboration-map">6. Agent コラボレーションマップ</h2>
+<p>完全な 14 agent の陣容は、11 の domain agent、2 つの review-only agent、そして adaptive-workflows composer から成る。この図は、意図的に 11 の domain agent とそれらの主要な成果物フローを扱う。review-only agent は独立した product とアーキテクチャのチェックを行い、composer は適応的な stage plan を提案し再形成する; <a href="agents/README.html">Agent Reference</a> と <a href="04-stage-protocol.html#reviewer-invocation">Reviewer Invocation</a> を参照。</p>
+<p>conductor（SKILL.md）は、engine の指示どおりに各 agent の呼び出しを行う; agent どうしが直接呼び合うことは決してない。情報は、intent の record dir（<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>）に格納された成果物を通じて agent 間を流れる。図は、aidlc-operations-agent から aidlc-product-agent へ戻るフィードバックループで締めくくられる。</p>
+<pre class="mermaid">
+flowchart TD
+    ORCH(["SKILL.md (Conductor)"])
+
+    PA["aidlc-product-agent\n(Product Manager)"]
+    DA["aidlc-design-agent\n(UX Designer)"]
+    DLA["aidlc-delivery-agent\n(Delivery Manager)"]
+    AA["aidlc-architect-agent\n(Solutions Architect)"]
+    AWSA["aidlc-aws-platform-agent\n(AWS Platform)"]
+    CA["aidlc-compliance-agent\n(Compliance)"]
+    DSA["aidlc-devsecops-agent\n(DevSecOps)"]
+    DEVA["aidlc-developer-agent\n(Developer)"]
+    QA["aidlc-quality-agent\n(QA Engineer)"]
+    PDA["aidlc-pipeline-deploy-agent\n(Pipeline/Deploy)"]
+    OA["aidlc-operations-agent\n(SRE)"]
+
+    ORCH --&gt;|delegates| PA
+    ORCH --&gt;|delegates| DA
+    ORCH --&gt;|delegates| DLA
+    ORCH --&gt;|delegates| AA
+    ORCH --&gt;|delegates| AWSA
+    ORCH --&gt;|delegates| CA
+    ORCH --&gt;|delegates| DSA
+    ORCH --&gt;|delegates| DEVA
+    ORCH --&gt;|delegates| QA
+    ORCH --&gt;|delegates| PDA
+    ORCH --&gt;|delegates| OA
+
+    PA --&gt;|"requirements,\nstories, scope"| AA
+    PA --&gt;|"intent, scope"| DA
+    PA --&gt;|"prioritized backlog"| DLA
+    AA --&gt;|"architecture,\nunit specs"| DEVA
+    AA --&gt;|"NFR targets"| QA
+    AA --&gt;|"infra requirements"| AWSA
+    DA --&gt;|"mockups, UX specs"| DEVA
+    DEVA --&gt;|"code scan"| AA
+    DEVA --&gt;|"code artifacts"| QA
+    QA --&gt;|"test results,\nbug reports"| DEVA
+    AWSA --&gt;|"provisioned infra"| PDA
+    DSA --&gt;|"security review"| DEVA
+    DSA --&gt;|"security tests"| QA
+    PDA --&gt;|"deployed services"| OA
+    CA --&gt;|"compliance constraints"| AA
+    DLA --&gt;|"delivery plan"| DEVA
+    OA ==&gt;|"feedback loop:\noperational insights"| PA
+
+    style ORCH fill:#2a2440,stroke:#b895ff
+    style PA fill:#1d332b,stroke:#57d9a9
+    style OA fill:#3a1f27,stroke:#ff8f8f
+    style DEVA fill:#38291a,stroke:#f2b35c
+    style AA fill:#1b2c47,stroke:#6db3ff
+</pre>
+<hr>
+<h2 id="7-execution-model">7. 実行モデル</h2>
+<p>この実装は、stage について 4 つの実行モードをアクティブに使う。<strong>Inline</strong> の stage は、orchestrator の会話の中で直接実行される（ユーザーは対話できる）。<strong>Subagent</strong> の stage は、Claude Code Task tool を介して単一の agent に委譲する（stage が support agent を宣言するとき hub-and-spoke になる）。<strong>Pipeline</strong> の stage は agent を逐次に連鎖させ、各リンクが work product を前進させる（Reverse Engineering が同梱の例である）。<strong>Mob</strong> の stage は、すべての support agent を並列ラウンドで召集する（User Stories が同梱の例である）。</p>
+<pre class="mermaid">
+flowchart LR
+    subgraph INLINE["Mode 1: Inline"]
+        direction TB
+        IN1["Orchestrator reads\nstage file"]
+        IN2["Load agent persona\n+ knowledge"]
+        IN3["Execute stage steps\ndirectly in conversation"]
+        IN4["User interaction\navailable"]
+        IN5["Approval gate\n(AskUserQuestion)"]
+        IN1 --&gt; IN2 --&gt; IN3 --&gt; IN4 --&gt; IN5
+    end
+
+    subgraph SUBAGENT["Mode 2: Subagent (simple)"]
+        direction TB
+        SA1["Orchestrator reads\nstage file"]
+        SA2["Prepare context:\nartifacts + persona"]
+        SA3["Task tool call\n(subagent_type specified)"]
+        SA4["Subagent executes\n(no user interaction)"]
+        SA5["Return structured\nsummary to orchestrator"]
+        SA6["Orchestrator presents\ncompletion + approval"]
+        SA1 --&gt; SA2 --&gt; SA3 --&gt; SA4 --&gt; SA5 --&gt; SA6
+    end
+
+    subgraph TWOSTEP["Mode 3: Pipeline (2-link RE chain)"]
+        direction TB
+        TS1["Orchestrator reads\nRE stage file"]
+        TS2["Task: aidlc-developer-agent\ncode scan"]
+        TS3["Developer returns\nscan results"]
+        TS4["Task: aidlc-architect-agent\nsynthesis"]
+        TS5["Architect produces\n9 artifacts"]
+        TS6["Orchestrator presents\ncompletion + approval"]
+        TS1 --&gt; TS2 --&gt; TS3 --&gt; TS4 --&gt; TS5 --&gt; TS6
+    end
+
+    subgraph MOB["Mode 4: Mob (parallel rounds)"]
+        direction TB
+        MB1["Orchestrator reads\nstage file"]
+        MB2["Lead drafts the\nartifacts inline"]
+        MB3["Parallel Tasks: all\nsupport agents, blind"]
+        MB4["Each writes its\ncontribution file"]
+        MB5["Lead integrates;\nobjection triage\n(judgment -&gt; human,\nknowledge -&gt; round 2)"]
+        MB6["Orchestrator presents\ncompletion + approval"]
+        MB1 --&gt; MB2 --&gt; MB3 --&gt; MB4 --&gt; MB5 --&gt; MB6
+    end
+
+    style INLINE fill:#1d332b,stroke:#57d9a9
+    style SUBAGENT fill:#1b2c47,stroke:#6db3ff
+    style TWOSTEP fill:#38291a,stroke:#f2b35c
+    style MOB fill:#2a2440,stroke:#b895ff
+</pre>
+<hr>
+<h2 id="8-session-resume-flow">8. Session Resume フロー</h2>
+<p>ユーザーが <code>/aidlc</code> を起動すると、orchestrator はアクティブな intent の <code>aidlc-state.md</code> をチェックする。見つかれば、4 つの resume オプションを提示する。見つからなければ、最初の intent を誕生させる。orchestrator はまた <code>.aidlc-recovery.md</code> をチェックし、context compaction による state の破損の可能性を検知する。</p>
+<pre class="mermaid">
+flowchart TD
+    START(["/aidlc invoked"])
+    ARG_CHECK{"Arguments\nprovided?"}
+    STATUS_CHECK{"Argument =\n--status?"}
+    STATE_EXISTS{"Active intent\nexists?"}
+    RECOVERY_CHECK{".aidlc-recovery.md\nexists?"}
+    CORRUPTION{"State matches\nrecovery file?"}
+    WARN["Warn user about\npossible corruption"]
+
+    RESUME_MENU["AskUserQuestion:\nResume Options"]
+    OPT_RESUME["Resume from\nlast checkpoint"]
+    OPT_REDO["Redo\ncurrent stage"]
+    OPT_JUMP["Jump to\nspecific stage"]
+    OPT_FRESH["Start fresh\n(archive existing)"]
+
+    STATUS_DISPLAY["Display read-only\nstatus summary"]
+    SCOPE_DETECT{"Known scope\nor freeform text?"}
+    KNOWN_SCOPE["Use explicit scope"]
+    FREEFORM["Auto-detect scope\nfrom keywords"]
+    CONFIRM_SCOPE["Confirm scope\nwith user"]
+    BIRTH["Birth the intent:\nmint record dir,\nstate + audit, begin\nfirst stage"]
+
+    START --&gt; ARG_CHECK
+    ARG_CHECK --&gt;|Yes| STATUS_CHECK
+    ARG_CHECK --&gt;|No| STATE_EXISTS
+
+    STATUS_CHECK --&gt;|Yes| STATUS_DISPLAY
+    STATUS_CHECK --&gt;|No| STATE_EXISTS
+
+    STATE_EXISTS --&gt;|Yes| RECOVERY_CHECK
+    STATE_EXISTS --&gt;|No| SCOPE_DETECT
+
+    RECOVERY_CHECK --&gt;|Yes| CORRUPTION
+    RECOVERY_CHECK --&gt;|No| RESUME_MENU
+    CORRUPTION --&gt;|Mismatch| WARN --&gt; RESUME_MENU
+    CORRUPTION --&gt;|Match| RESUME_MENU
+
+    RESUME_MENU --&gt; OPT_RESUME
+    RESUME_MENU --&gt; OPT_REDO
+    RESUME_MENU --&gt; OPT_JUMP
+    RESUME_MENU --&gt; OPT_FRESH
+
+    OPT_FRESH --&gt;|"archive + confirm"| BIRTH
+
+    SCOPE_DETECT --&gt;|"Known scope"| KNOWN_SCOPE --&gt; CONFIRM_SCOPE
+    SCOPE_DETECT --&gt;|"Freeform text"| FREEFORM --&gt; CONFIRM_SCOPE
+    CONFIRM_SCOPE --&gt; BIRTH
+
+    style START fill:#2a2440,stroke:#b895ff
+    style RESUME_MENU fill:#1b2c47,stroke:#6db3ff
+    style BIRTH fill:#1d332b,stroke:#57d9a9
+    style WARN fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<hr>
+<h2 id="9-scope-routing">9. Scope ルーティング</h2>
+<blockquote>
+<p>Scope ルーティングテーブル: <a href="03-orchestrator.html#scope-to-stage-mapping">Orchestrator Reference -- Scope Mapping</a> を参照。</p>
+</blockquote>
+<hr>
+<h2 id="10-knowledge-loading-order">10. Knowledge のロード順序</h2>
+<p>各 stage は、厳密な 6 ステップの順序で knowledge をロードする。これにより、まず guardrail が優先され、続いて共有の方法論、次に agent 固有の knowledge、次にチームのカスタマイズ、最後に前段 stage の成果物、という順序が保証される。下のシーケンス図は、任意の stage 起動におけるロード順序を示す。</p>
+<blockquote>
+<p><strong>Note:</strong> ステップ 1-5 は agent knowledge のロードである（各 agent ファイルで定義される）; ステップ 6（前段 stage の成果物）は、ファイルロードのステップではなく、実行時に orchestrator が追加するコンテキストである。</p>
+</blockquote>
+<pre class="mermaid">
+sequenceDiagram
+    participant O as Orchestrator
+    participant G as Rules
+    participant SM as Shared Methodology
+    participant AM as Agent Methodology
+    participant TK as Team Knowledge
+    participant TAK as Team Agent Knowledge
+    participant PA as Prior Artifacts
+
+    O-&gt;&gt;G: Step 1: Load aidlc/spaces/&lt;active-space&gt;/memory/
+    Note over G: org.md + team.md + project.md + phases/&lt;phase&gt;.md
+    G--&gt;&gt;O: Rules loaded (strict-additive — all layers present)
+
+    O-&gt;&gt;SM: Step 2: Load .claude/knowledge/aidlc-shared/
+    Note over SM: Shared methodology principles
+    SM--&gt;&gt;O: Shared knowledge loaded
+
+    O-&gt;&gt;AM: Step 3: Load .claude/knowledge/[agent-name]/
+    Note over AM: Agent-specific methodology
+    AM--&gt;&gt;O: Agent methodology loaded
+
+    O-&gt;&gt;TK: Step 4: Load aidlc/knowledge/aidlc-shared/
+    Note over TK: Team shared knowledge (if exists)
+    TK--&gt;&gt;O: Team knowledge loaded
+
+    O-&gt;&gt;TAK: Step 5: Load aidlc/knowledge/[agent-name]/
+    Note over TAK: Team agent-specific knowledge (if exists)
+    TAK--&gt;&gt;O: Team agent knowledge loaded
+
+    O-&gt;&gt;PA: Step 6: Load prior stage artifacts
+    Note over PA: As required by current stage inputs
+    PA--&gt;&gt;O: Prior artifacts loaded
+
+    Note over O: Stage execution begins with full context
+</pre>
+<hr>
+<h2 id="11-approval-gate-flow">11. Approval Gate フロー</h2>
+<p>すべての stage（3 つの Initialization stage を除く）は approval gate で終わる。orchestrator は、オプションをユーザーに提示する前に audit trail へ記録し、そのあとユーザーの応答を記録する。3 回の revision サイクルのあと、「Accept as-is」の escape hatch が利用可能になる。Ideation と Inception の stage は、以前スキップした stage を追加する条件付きの第 3 オプションを含むこともある。</p>
+<pre class="mermaid">
+flowchart TD
+    COMPLETE["Stage work complete"]
+    AUDIT_PRE["Append to audit.md:\nstage summary + options\n(fresh ISO timestamp)"]
+    ASK["AskUserQuestion:\nApproval Gate"]
+
+    APPROVE["Approve"]
+    CHANGES["Request Changes"]
+    ACCEPT["Accept as-is\n(escape hatch)"]
+    ADD_STAGE["Add Skipped Stage\n(Ideation/Inception only)"]
+
+    AUDIT_POST_A["Log: User approved\n(fresh timestamp)"]
+    AUDIT_POST_C["Log: User requested changes\n(fresh timestamp)"]
+    AUDIT_POST_ACC["Log: User accepted as-is\n(fresh timestamp)"]
+    AUDIT_POST_ADD["Log: User added stage\n(fresh timestamp)"]
+
+    REVISION_COUNT{"Revision\ncycle &gt;= 3?"}
+    NOTE_2ND["After 2nd revision:\nnote that escape hatch\nactivates next cycle"]
+
+    REPORT_APPROVED["Report approved:\nengine completes + routes"]
+    PROGRESS["Display progress line:\nN/total overall"]
+    NEXT_STAGE["Proceed to next stage"]
+
+    REVISE["Apply user feedback\nto stage artifacts"]
+    RE_PRESENT["Re-present completion\nmessage"]
+
+    ADD_EXEC["Insert skipped stage\ninto workflow"]
+
+    COMPLETE --&gt; AUDIT_PRE --&gt; ASK
+    ASK --&gt; APPROVE
+    ASK --&gt; CHANGES
+    ASK --&gt; ACCEPT
+    ASK --&gt; ADD_STAGE
+
+    APPROVE --&gt; AUDIT_POST_A --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
+    ACCEPT --&gt; AUDIT_POST_ACC --&gt; REPORT_APPROVED
+
+    CHANGES --&gt; AUDIT_POST_C --&gt; REVISION_COUNT
+    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; RE_PRESENT --&gt; AUDIT_PRE
+    REVISION_COUNT --&gt;|"&gt;= 3"| REVISE
+
+    ADD_STAGE --&gt; AUDIT_POST_ADD --&gt; ADD_EXEC
+
+    style COMPLETE fill:#1d332b,stroke:#57d9a9
+    style ASK fill:#1b2c47,stroke:#6db3ff
+    style APPROVE fill:#1d332b,stroke:#57d9a9
+    style CHANGES fill:#35301b,stroke:#e5cf63
+    style ACCEPT fill:#38291a,stroke:#f2b35c
+    style ADD_STAGE fill:#2a2440,stroke:#b895ff
+    style NEXT_STAGE fill:#1d332b,stroke:#57d9a9
+</pre>
+<hr>
+<h2 id="12-state-tracking">12. State トラッキング</h2>
+<p><code>aidlc-state.md</code> ファイルは、各 stage を checkbox 記法で追跡する: <code>[ ]</code>（未着手）、<code>[-]</code>（進行中）、<code>[?]</code>（承認待ち）、<code>[R]</code>（修正中）、<code>[x]</code>（完了）、<code>[S]</code>（スキップ）。これらの遷移は engine が所有する; conductor は checkbox の state を編集するのではなく、結果を報告する。図はまた、skip・redo・jump 操作のサイドフローも示す。</p>
+<pre class="mermaid">
+stateDiagram-v2
+    [*] --&gt; NotStarted
+
+    state "[ ] Not Started" as NotStarted
+    state "[-] In Progress" as InProgress
+    state "[?] Awaiting Approval" as Awaiting
+    state "[R] Revising" as Revising
+    state "[x] Completed" as Completed
+    state "[S] Skipped" as Skipped
+
+    NotStarted --&gt; InProgress : engine route
+    InProgress --&gt; Awaiting : report awaiting-approval
+    Awaiting --&gt; Completed : report approved
+    Awaiting --&gt; Revising : report rejected
+    Revising --&gt; Awaiting : report revised
+
+    NotStarted --&gt; Skipped : scope composition
+    InProgress --&gt; Skipped : report skipped
+    Revising --&gt; Skipped : report skipped
+
+    note right of Skipped
+        Task created but immediately
+        marked completed with skip reason.
+        Description: "Skipped: [reason]"
+    end note
+</pre>
+<pre class="mermaid">
+flowchart TD
+    subgraph NORMAL["Normal Flow"]
+        direction LR
+        NS1["[ ] Not Started"]
+        IP1["[-] In Progress"]
+        AW1["[?] Awaiting Approval"]
+        CO1["[x] Completed"]
+        NS1 --&gt;|"engine route"| IP1
+        IP1 --&gt;|"report gate open"| AW1
+        AW1 --&gt;|"report approved"| CO1
+    end
+
+    subgraph SKIP["Skip Flow"]
+        direction LR
+        NS2["[ ] Not Started"]
+        SK2["[S] Skipped"]
+        NS2 --&gt;|"scope composition"| SK2
+    end
+
+    subgraph REDO["Redo Flow"]
+        direction LR
+        CO3["[x] Completed\nor [-] In Progress"]
+        NS3["[ ] Not Started"]
+        IP3["[-] In Progress"]
+        CO3 --&gt;|"user requests redo\n(delete artifacts)"| NS3
+        NS3 --&gt;|"re-execute stage"| IP3
+    end
+
+    subgraph JUMP["Jump Flow"]
+        direction LR
+        IP4["[-] In Progress\n(stage A)"]
+        NS4["[ ] Not Started\n(stage B)"]
+        IP4B["[-] In Progress\n(stage B)"]
+        IP4 --&gt;|"user requests jump\n(warn about skipped stages)"| NS4
+        NS4 --&gt;|"begin target stage"| IP4B
+    end
+
+    style NORMAL fill:#1d332b,stroke:#57d9a9
+    style SKIP fill:#35301b,stroke:#e5cf63
+    style REDO fill:#1b2c47,stroke:#6db3ff
+    style JUMP fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<hr>
+<h2 id="summary-of-execution-modes-by-stage">Stage 別の実行モードのまとめ</h2>
+<p>このリファレンス表は、素早い参照のために、すべての stage をその実行モードと lead agent に対応づける。</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>名前</th>
+<th>モード</th>
+<th>Lead Agent</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.1</td>
+<td>Workspace Scaffold</td>
+<td>inline（auto-proceed）</td>
+<td>orchestrator</td>
+</tr>
+<tr>
+<td>0.2</td>
+<td>Workspace Detection</td>
+<td>inline（auto-proceed・決定論的スキャナ）</td>
+<td>orchestrator</td>
+</tr>
+<tr>
+<td>0.3</td>
+<td>State Init</td>
+<td>inline（auto-proceed）</td>
+<td>orchestrator</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>Intent Capture</td>
+<td>inline</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>Market Research</td>
+<td>inline</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>Feasibility</td>
+<td>inline</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>Scope Definition</td>
+<td>inline</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>Team Formation</td>
+<td>inline</td>
+<td>aidlc-delivery-agent</td>
+</tr>
+<tr>
+<td>1.6</td>
+<td>Rough Mockups</td>
+<td>inline</td>
+<td>aidlc-design-agent</td>
+</tr>
+<tr>
+<td>1.7</td>
+<td>Approval &amp; Handoff</td>
+<td>inline</td>
+<td>aidlc-delivery-agent</td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>Reverse Engineering</td>
+<td>pipeline（2-link）</td>
+<td>aidlc-developer-agent + aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>Practices Discovery</td>
+<td>subagent</td>
+<td>aidlc-pipeline-deploy-agent</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>Requirements Analysis</td>
+<td>inline</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td>User Stories</td>
+<td>mob</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>2.5</td>
+<td>Refined Mockups</td>
+<td>inline</td>
+<td>aidlc-design-agent</td>
+</tr>
+<tr>
+<td>2.6</td>
+<td>Application Design</td>
+<td>inline</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>2.7</td>
+<td>Units Generation</td>
+<td>inline</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>2.8</td>
+<td>Delivery Planning</td>
+<td>inline</td>
+<td>aidlc-delivery-agent</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>Functional Design</td>
+<td>inline</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>NFR Requirements</td>
+<td>inline</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td>NFR Design</td>
+<td>inline</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td>Infrastructure Design</td>
+<td>inline</td>
+<td>aidlc-aws-platform-agent</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td>Code Generation</td>
+<td>subagent（aidlc-developer-agent）</td>
+<td>aidlc-developer-agent</td>
+</tr>
+<tr>
+<td>3.6</td>
+<td>Build and Test</td>
+<td>inline</td>
+<td>aidlc-quality-agent</td>
+</tr>
+<tr>
+<td>3.7</td>
+<td>CI Pipeline</td>
+<td>inline</td>
+<td>aidlc-pipeline-deploy-agent</td>
+</tr>
+<tr>
+<td>4.1</td>
+<td>Deployment Pipeline</td>
+<td>inline</td>
+<td>aidlc-pipeline-deploy-agent</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>Environment Provisioning</td>
+<td>inline</td>
+<td>aidlc-aws-platform-agent</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>Deployment Execution</td>
+<td>inline</td>
+<td>aidlc-pipeline-deploy-agent</td>
+</tr>
+<tr>
+<td>4.4</td>
+<td>Observability Setup</td>
+<td>inline</td>
+<td>aidlc-operations-agent</td>
+</tr>
+<tr>
+<td>4.5</td>
+<td>Incident Response</td>
+<td>inline</td>
+<td>aidlc-operations-agent</td>
+</tr>
+<tr>
+<td>4.6</td>
+<td>Performance Validation</td>
+<td>inline</td>
+<td>aidlc-quality-agent</td>
+</tr>
+<tr>
+<td>4.7</td>
+<td>Feedback &amp; Optimization</td>
+<td>inline</td>
+<td>aidlc-operations-agent</td>
+</tr>
+</tbody></table>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/diagrams.md"><code>docs/reference/diagrams.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

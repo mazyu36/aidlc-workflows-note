@@ -11,15 +11,17 @@
 <script type="module" src="../../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/agents/devsecops-agent</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../../index.html">総合索引</a>
   <a href="../../../index.html">Atlas トップ</a>
@@ -78,7 +80,7 @@
 <p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
 <h1 id="devsecops-agent">DevSecOps Agent</h1>
 <blockquote>
-<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/devsecops-agent.md">devsecops-agent</a></p>
+<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="../../reference/agents/devsecops-agent.html">devsecops-agent</a></p>
 </blockquote>
 <p>aidlc-devsecops-agent はあなたのセキュリティエンジニアである。セキュリティが最後に貼り付けられるのではなく、ライフサイクルのすべての phase に埋め込まれることを保証する。Ideation で特定されたコンプライアンス要件を受け取り、セキュリティコントロール・脅威モデル・スキャンパイプライン・ランタイム監視として実装する。アプリケーションセキュリティ、クラウドセキュリティ、パイプラインセキュリティをカバーする。</p>
 <p>aidlc-compliance-agent と同様、aidlc-devsecops-agent は支援ロール専任で動く。Inception・Construction・Operation にまたがる 5 つの stage でセキュリティの専門性を提供する。セキュリティスキャンツールを実行するための Bash アクセスを持つ。</p>
@@ -134,7 +136,7 @@
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/devsecops-agent.md"><code>docs/guide/agents/devsecops-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/devsecops-agent.md"><code>docs/guide/agents/devsecops-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

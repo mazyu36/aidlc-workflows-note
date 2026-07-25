@@ -11,15 +11,17 @@
 <script type="module" src="../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/14-artifacts-reference</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../index.html">総合索引</a>
   <a href="../../index.html">Atlas トップ</a>
@@ -315,7 +317,7 @@ flowchart LR
 </tbody></table>
 <h3 id="construction-stages-31-37">Construction（stage 3.1-3.7）</h3>
 <p>stage 3.1-3.5 は unit of work ごとに繰り返す。成果物は <code>construction/{unit-name}/{stage-name}/</code> に入る。stage 3.6-3.7 は全 unit の後に 1 回だけ走る。</p>
-<p>4 つの設計 stage（3.1-3.4）は、成果物を各 unit の <strong>kind</strong>（2.7 のエッジブロックで付くタグ: <code>service</code>・<code>spec</code>・<code>ui</code>・<code>packaging</code>・<code>library</code>）に合わせて剪定する。<code>spec</code> の unit はスケーラビリティ文書を負わず、<code>packaging</code> の unit はビジネスロジックモデルを負わない。タグの無い unit は下の完全なマトリクスを受け取る。どの成果物がどの kind に当てはまるかは stage frontmatter のデータである（<code>produces_kinds</code>。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/15-stage-definition.md">Stage 定義</a> を参照）。ある stage のどの成果物も当てはまらない unit は、その stage をファイル 0 個で完了とする。</p>
+<p>4 つの設計 stage（3.1-3.4）は、成果物を各 unit の <strong>kind</strong>（2.7 のエッジブロックで付くタグ: <code>service</code>・<code>spec</code>・<code>ui</code>・<code>packaging</code>・<code>library</code>）に合わせて剪定する。<code>spec</code> の unit はスケーラビリティ文書を負わず、<code>packaging</code> の unit はビジネスロジックモデルを負わない。タグの無い unit は下の完全なマトリクスを受け取る。どの成果物がどの kind に当てはまるかは stage frontmatter のデータである（<code>produces_kinds</code>。<a href="../reference/15-stage-definition.html">Stage 定義</a> を参照）。ある stage のどの成果物も当てはまらない unit は、その stage をファイル 0 個で完了とする。</p>
 <table>
 <thead>
 <tr>
@@ -477,7 +479,7 @@ flowchart LR
 <li><strong>すべての Construction 成果物</strong>は Build and Test と CI Pipeline へ流れる</li>
 <li><strong>Infrastructure Design</strong> の成果物は Operation の stage へ流れる</li>
 </ul>
-<p>完全な stage 別入力表は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">オーケストレーションリファレンス</a> を参照。</p>
+<p>完全な stage 別入力表は <a href="../reference/00-overview.html">オーケストレーションリファレンス</a> を参照。</p>
 <hr>
 <h2 id="phase-boundary-verification">Phase 境界の検証</h2>
 <p>各 phase の遷移で、トレーサビリティを確認する検証チェックが走る:</p>
@@ -524,7 +526,7 @@ flowchart LR
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/14-artifacts-reference.md"><code>docs/guide/14-artifacts-reference.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/14-artifacts-reference.md"><code>docs/guide/14-artifacts-reference.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

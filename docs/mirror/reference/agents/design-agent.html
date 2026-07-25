@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aidlc-design-agent -- 技術リファレンス — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/agents/design-agent</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../reference/01-architecture.html">Architecture</a>
+  <a href="../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../reference/09-testing.html">テスト</a>
+  <a href="../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/design-agent.html" class="here">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#identity">識別情報</a>
+  <a href="#stage-ownership">Stage の担当</a>
+  <a href="#collaboration-patterns">協働パターン</a>
+  <a href="#knowledge-sources">Knowledge ソース</a>
+  <a href="#cross-references">関連リンク</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="aidlc-design-agent-technical-reference">aidlc-design-agent -- 技術リファレンス</h1>
+<h2 id="identity">識別情報</h2>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>名称</td>
+<td>aidlc-design-agent</td>
+</tr>
+<tr>
+<td>Tier</td>
+<td><strong>judgment</strong></td>
+</tr>
+<tr>
+<td>許可される Claude Code ツール</td>
+<td>Read, Edit, Write, Glob, Grep, WebSearch, AskUserQuestion</td>
+</tr>
+<tr>
+<td>禁止される Claude Code ツール</td>
+<td>Task</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-ownership">Stage の担当</h2>
+<h3 id="lead-stages">リードする stage</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>名称</th>
+<th>この agent の役割</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>rough-mockups</td>
+<td>Rough Mockups and Concept Visualization</td>
+<td>Ideation の間に、低忠実度のワイヤーフレーム、コンセプトスケッチ、初期の情報アーキテクチャを作る</td>
+</tr>
+<tr>
+<td>refined-mockups</td>
+<td>Refined Mockups and UX Design</td>
+<td>ワイヤーフレームを、インタラクション仕様、レスポンシブデザイン、アクセシビリティ注釈を備えた中〜高忠実度のモックアップへ発展させる</td>
+</tr>
+</tbody></table>
+<h3 id="support-stages">支援する stage</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>名称</th>
+<th>この agent の貢献</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>user-stories</td>
+<td>User Stories</td>
+<td>story を、インタラクションの詳細と UX 受け入れ基準で拡充する</td>
+</tr>
+<tr>
+<td>application-design</td>
+<td>Application Design</td>
+<td>UI コンポーネント仕様と、デザインシステムのマッピングを貢献する</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="collaboration-patterns">協働パターン</h2>
+<h3 id="receives-from">受け取り元</h3>
+<table>
+<thead>
+<tr>
+<th>供給元</th>
+<th>成果物</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>aidlc-product-agent</td>
+<td>user story、persona、intent、ユーザージャーニーの文脈</td>
+</tr>
+<tr>
+<td>aidlc-architect-agent</td>
+<td>コンポーネント設計の制約、UI に影響する技術の制限</td>
+</tr>
+</tbody></table>
+<h3 id="hands-off-to">引き継ぎ先</h3>
+<table>
+<thead>
+<tr>
+<th>受け渡し先</th>
+<th>成果物</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>aidlc-developer-agent</td>
+<td>実装のためのインタラクション仕様、コンポーネント仕様</td>
+</tr>
+<tr>
+<td>aidlc-quality-agent</td>
+<td>テストのための UX 受け入れ基準、アクセシビリティ要件</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="knowledge-sources">Knowledge ソース</h2>
+<h3 id="methodology-tier-1">方法論（Tier 1）</h3>
+<p>パス: <code>.claude/knowledge/aidlc-design-agent/</code></p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>accessibility-wcag.md</td>
+<td>WCAG 2.1 AA のガイドラインと実装パターン</td>
+</tr>
+<tr>
+<td>component-spec-template.md</td>
+<td>コンポーネント仕様（状態、props、振る舞い）を文書化するテンプレート</td>
+</tr>
+<tr>
+<td>interaction-design-patterns.md</td>
+<td>ナビゲーション、フォーム、フィードバック、状態遷移のインタラクションパターン</td>
+</tr>
+<tr>
+<td>ux-guide.md</td>
+<td>UX デザインの方法論と原則</td>
+</tr>
+<tr>
+<td>wireframing-guide.md</td>
+<td>低忠実度・高忠実度のワイヤーフレーミング手法</td>
+</tr>
+</tbody></table>
+<h3 id="team-tier-2">チーム（Tier 2）</h3>
+<p>パス: <code>aidlc/knowledge/aidlc-design-agent/</code>（space レベルの knowledge dir。user 管理）</p>
+<p>チームがコンテンツを持つときに作る space レベルのディレクトリ（engine は <code>aidlc/knowledge/</code> を空で出荷する）。チームがプロジェクト固有の
+デザインアセット — 既存のデザインシステム、ブランドガイドライン、タイポグラフィの
+ルール、コンポーネントライブラリなど — を投入する。</p>
+<hr>
+<h2 id="cross-references">関連リンク</h2>
+<ul>
+<li><a href="README.html">Agent リファレンス概要</a></li>
+<li><a href="../../guide/agents/design-agent.html">Agent ガイド: aidlc-design-agent</a></li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/">Stage ドキュメント</a></li>
+<li>ソース: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/dist/claude/.claude/agents/aidlc-design-agent.md"><code>dist/claude/.claude/agents/aidlc-design-agent.md</code></a></li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/design-agent.md"><code>docs/reference/agents/design-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

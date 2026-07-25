@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コントリビューション — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/11-contributing</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html" class="here">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#overview">概要</a>
+  <a href="#prerequisites">前提条件</a>
+  <a href="#repository-structure">リポジトリ構成</a>
+  <a href="#development-workflow">開発ワークフロー</a>
+  <a href="#testing">テスト</a>
+  <a href="#adding-a-utility-handler">Utility ハンドラの追加</a>
+  <a href="#adding-a-scope">Scope の追加</a>
+  <a href="#adding-a-stage">Stage の追加</a>
+  <a href="#adding-an-agent">Agent の追加</a>
+  <a href="#documentation-policy">ドキュメントポリシー</a>
+  <a href="#submitting-changes">変更の提出</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="contributing">コントリビューション</h1>
+<h2 id="overview">概要</h2>
+<p>この実装へのコントリビューションを歓迎する。本ガイドは、前提条件、開発ワークフロー、テスト、そして変更の提出方法を扱う。</p>
+<blockquote>
+<p><strong>パス規約。</strong> 以下の <code>&lt;record&gt;/</code> = 生まれた intent の record dir、
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> — intent ごとの state、audit
+シャード、knowledge、成果物が住む場所である。</p>
+</blockquote>
+<h2 id="prerequisites">前提条件</h2>
+<ul>
+<li><strong>Claude Code</strong> -- ネイティブインストール（推奨、自動更新）: macOS/Linux/WSL は <code>curl -fsSL https://claude.ai/install.sh | bash</code>; Windows PowerShell は <code>irm https://claude.ai/install.ps1 | iex</code>。あるいは <code>brew install --cask claude-code</code>。（<a href="https://code.claude.com/docs/en/quickstart">Claude Code docs</a> を参照）</li>
+<li><strong>bun</strong> -- すべての CLI ツールと 13 個すべての hook に必須。<code>curl -fsSL https://bun.sh/install | bash</code> でインストールする。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code>。非対話シェルでは PATH 上に在る必要がある（zsh は <code>~/.zshenv</code>、bash / Windows の Git Bash は <code>~/.bashrc</code>）。</li>
+<li><strong>timeout</strong>（GNU coreutils）-- LLM テストのタイムアウト（L2/L3）のためにテストスイートが必要とする。Linux にはプリインストール済み。macOS: <code>brew install coreutils</code> の後、gnubin を PATH に足す: <code>export PATH=&quot;/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH&quot;</code>（<code>~/.zshenv</code> または <code>~/.zshrc</code> で）。</li>
+<li><strong>Bash</strong> -- POSIX 互換ラッパー（<code>tests/run-tests.sh</code>）向けに任意。主要なテストランナーは <code>bun tests/run-tests.ts</code> である; 実行時には、配布される hook のいずれも Bash を必要としない。</li>
+<li><strong>Bedrock access</strong> -- ライブの integration および e2e テスト（L2/L3）を走らせるのに必須。L1 の protocol テストには不要。</li>
+</ul>
+<p>clone 後、packager、type checker、テストが使う、ピン留めされた開発依存関係をインストールする:</p>
+<pre><code class="language-bash">bun install --frozen-lockfile
+</code></pre>
+<h2 id="repository-structure">リポジトリ構成</h2>
+<pre class="term"><code>core/<span class="t-comment">                # Hand-authored, harness-neutral source (tools, stages, agents, rules, knowledge, hooks)</span>
+harness/&lt;name&gt;/<span class="t-comment">      # Per-harness authored surfaces; claude/, kiro/, kiro-ide/, codex/</span>
+scripts/package.ts<span class="t-comment">   # The build: regenerates dist/&lt;harness&gt;/ from core/ + harness/ (`--check` drift-guards it)</span>
+scripts/build-binaries.ts # Release-only compiled CLI artifacts in ignored build/binaries/ after package --check
+dist/&lt;harness&gt;/<span class="t-comment">      # GENERATED: dist/claude/, dist/kiro/, dist/kiro-ide/, dist/codex/ — never hand-edit</span>
+tests/<span class="t-comment">               # All-TypeScript test suite (t*.test.ts, run via bun)</span>
+docs/<span class="t-comment">                # Documentation</span>
+  guide/<span class="t-comment">             # User guide (how to use AI-DLC)</span>
+  harness-engineering/<span class="t-comment">  # Harness engineer guide (configure AI-DLC without code)</span>
+  reference/<span class="t-comment">         # Developer reference (how it works internally)</span></code></pre>
+<p>完全なアーキテクチャは <a href="01-architecture.html">reference/01-architecture.md</a> を参照。</p>
+<h2 id="development-workflow">開発ワークフロー</h2>
+<ol>
+<li><strong>Fork してブランチを切る</strong> — <code>main</code> から。その後 <code>bun install --frozen-lockfile</code> を走らせる</li>
+<li><strong>アーキテクチャを読む</strong> -- <a href="01-architecture.html">reference/01-architecture.md</a> は実行モデル、agent 委譲、hook システムを説明する</li>
+<li><strong>エントリポイントを理解する</strong> -- 決定論的な engine <code>core/tools/aidlc-orchestrate.ts</code>（正確に 3 つのサブコマンド: <code>next</code>、<code>report</code>、<code>park</code> を持つ）がルーティングを所有する; conductor <code>harness/claude/skills/aidlc/SKILL.md</code> は、その directive に基づいて動作する薄い転送ループである。規範的な engine / directive / conductor / swarm の契約は <a href="17-skill-system.html">The Skill System</a> を参照</li>
+<li><strong>変更を加える</strong> -- <code>core/</code> の harness 中立なソース（tools、stages、agents、hooks、rules、knowledge）、または <code>harness/&lt;name&gt;/</code> の harness サーフェス（orchestrator skill、settings）を編集する。その後 <code>bun scripts/package.ts</code> を走らせて <code>dist/</code> を再生成する — <code>dist/</code> を決して手で編集しないこと。drift guard（<code>package.ts --check</code>）が CI を失敗させる</li>
+<li><strong>テスト</strong> -- 提出前に <code>bun tests/run-tests.ts</code> を走らせる</li>
+<li><strong>提出</strong> -- <code>main</code> に対して PR を開く</li>
+</ol>
+<p>リリースのバイナリ成果物は <code>dist/</code> の一部ではなく、packager によって生成されない。<code>bun scripts/package.ts --check</code> がクリーンになった後、ネイティブ成果物には <code>bun scripts/build-binaries.ts</code> を走らせるか、リリースマトリクスには <code>--all-targets</code> を足す。このスクリプトは各実行ファイルを <code>build/binaries/&lt;target&gt;/</code> の下に書き、そのターゲットの <code>runtime/&lt;harness&gt;/</code> ディレクトリの下に完全な生成ディストリビューションをステージし、<code>build/binaries/</code> に <code>build-results.json</code> を書く。ネイティブ gate は、<code>PATH</code> 上に <code>bun</code> 実行ファイルが無い状態で、sensor、グラフコンパイル、検証、生成サーフェスのチェック、plugin の選択/合成、オーケストレーション、Bolt/Swarm の合成、パッケージ済みランタイムの不変性、hook、statusline、アダプタ、明示的なプロジェクトルーティングを走らせる。ステージされた <code>runtime/&lt;harness&gt;/</code> ツリーは読み取り専用のフォールバックである; 変更を伴うコマンドは、インストール済みのプロジェクト harness を対象にしなければならない。失敗した gate はどれもビルドを失敗させる。</p>
+<h2 id="testing">テスト</h2>
+<p>テストスイートは完全に TypeScript（<code>t*.test.ts</code>、<code>bun</code> 経由で走る）で、4 つのレベル — <code>smoke</code>、<code>unit</code>、<code>integration</code>、<code>e2e</code> — にわたり、3 層ピラミッド（smoke + unit = L1 Protocol、integration = L2 Stage、e2e = L3 Acceptance）に対応する。ピン留めされた開発依存関係がインストールされた後、L1 は外部サービス無しでローカルに走る; ライブの integration および e2e ファイルは <code>claude</code> CLI ツール（および Bedrock 資格情報）を必要とし、それが無いときはきれいにスキップする。</p>
+<p><strong>クイックリファレンス:</strong></p>
+<pre><code class="language-bash"># L1 Protocol -- runs in seconds, no dependencies
+bun tests/run-tests.ts
+
+# L2 Stage -- CI pipeline (requires claude CLI tool)
+bun tests/run-tests.ts --ci
+
+# L3 Acceptance -- release gate (requires claude CLI tool)
+bun tests/run-tests.ts --release
+
+# POSIX compatibility wrapper
+bash tests/run-tests.sh --ci
+
+# Individual levels
+bash tests/run-tests.sh --smoke        # File structure validation
+bash tests/run-tests.sh --unit         # Hook behavior, stage content
+bash tests/run-tests.sh --integration  # Cross-component and stage/CLI tests
+bash tests/run-tests.sh --e2e          # Workflow, worktree, and terminal journeys
+</code></pre>
+<p>完全なテスト戦略、スタブ、新しいテストの追加方法は <a href="09-testing.html">reference/09-testing.md</a> を参照。</p>
+<h2 id="adding-a-utility-handler">Utility ハンドラの追加</h2>
+<blockquote>
+<p><strong>audit イベントを足す前に</strong>、<a href="12-state-machine.html">State Machine</a> を読むこと。この章はタクソノミ内のすべてのイベント、その emitter、そして「same-commit rule」を列挙する — コードとその章の表を同じ PR で更新すること。さもなければ drift テストが失敗する。</p>
+</blockquote>
+<p>Utility ハンドラは 2 つのカテゴリに分かれる:</p>
+<h3 id="deterministic-handlers-preferred">決定論的ハンドラ（推奨）</h3>
+<p>LLM の推論を必要としないハンドラ（テキストを出力する、ファイルを読む/整形する、前提条件をチェックする、ディレクトリを作成する）向け:</p>
+<ol>
+<li><code>core/tools/aidlc-utility.ts</code> にサブコマンドを足す</li>
+<li>SKILL.md から単一の Bash 呼び出しでディスパッチする: <code>bun .claude/tools/aidlc-utility.ts &lt;subcommand&gt;</code></li>
+<li>タスクトラッキングは不要 -- スクリプトは 1 秒未満で走る</li>
+<li>audit ログ記録は、<code>aidlc-audit.ts</code> の <code>appendAuditEntry</code> 経由でスクリプト内で処理する（<code>**Event**:</code> の markdown ブロックを決して手書きしない）</li>
+<li>verb を <code>aidlc-utility</code> の usage 文字列に足す。それが生成される SKILL.md リージョンをレンダリングするなら、対応する <code>--check</code> guard もこの章に文書化する。</li>
+</ol>
+<p><code>--help</code>、<code>--version</code>、<code>--status</code>、<code>--doctor</code> の各ハンドラはリファレンス実装である。<code>--doctor</code> は <code>--export</code>（任意の <code>--output &lt;dir&gt;</code> 付き）も受理し、これは新規の doctor パスを走らせてから、小さくリダクトされた診断レポートを書く; 共有の <code>DoctorFinding</code> モデルとレポート組み立てロジックは <code>core/tools/aidlc-doctor-bundle.ts</code> に住むので、ライブのレポートとエクスポートされたレポートは 1 つの findings 集合から引く。</p>
+<p><code>codekb-path</code> ハンドラは読み取り専用の <strong>直接 utility verb</strong> である: stage の散文は <code>/aidlc codekb-path</code> ではなく <code>bun &lt;harness-dir&gt;/tools/aidlc-utility.ts codekb-path</code> を起動する。これは audit イベントを一切発せず、SKILL.md のタスクトラッキングを一切駆動せず、ディレクトリ（<code>mkdir</code>）を一切作成しない。これは単に、reverse-engineering stage が成果物を書き込む正規のリポジトリごとの codekb ディレクトリを出力するだけなので、散文はそのパスを決して手で導出しない。</p>
+<h3 id="llm-driven-handlers">LLM 駆動ハンドラ</h3>
+<p>agent の推論から恩恵を受けるハンドラ（ファイルシステムの走査、意思決定）向け:</p>
+<ol>
+<li><strong>タスクトラッキング</strong> -- 各論理ステップについて <code>TaskCreate</code> でタスクを作成し、作業が進むにつれて <code>TaskUpdate</code>（<code>in_progress</code> -&gt; <code>completed</code>）でそれらを遷移させる。これが Claude Code のタスクサイドバーを駆動する。</li>
+<li><strong>Statusline の更新</strong> -- アクティブな intent の <code>aidlc-state.md</code> が存在するなら、走っている utility を記述するように <code>Current Stage</code> を一時的に設定し（例: <code>running health check</code>）、完了時に元の値へ復元する。<code>aidlc-statusline.ts</code> hook はターミナルのステータスバー向けにこのフィールドを読む。</li>
+<li><strong>audit ログ記録</strong> -- 適切なツールのサブコマンド（例: 内部で <code>appendAuditEntry</code> を呼ぶ <code>bun .claude/tools/aidlc-utility.ts &lt;handler&gt;</code>）を起動する。<code>**Event**:</code> の markdown ブロックを LLM の散文から決して手書きしない — <a href="12-state-machine.html">State Machine: Forbidden patterns</a> を参照。</li>
+</ol>
+<p><code>intent-birth</code> ハンドラは完全に決定論的である: 3 つの init stage すべて（workspace-scaffold、workspace-detection、state-init）が単一の <code>aidlc-utility intent-birth</code> 呼び出しの内側で走る。ウェルカムメッセージは <code>settings.json</code> の <code>companyAnnouncements</code> 経由でセッション開始時にレンダリングされ、stage ではない。</p>
+<h2 id="adding-a-scope">Scope の追加</h2>
+<p>scope は、ファイル（そのアイデンティティ）に加えて stage ごとのメンバーシップタグとして著述される。アイデンティティは <code>core/scopes/aidlc-&lt;name&gt;.md</code> に住む; メンバーシップは <code>core/aidlc-common/stages/</code> の下の各 stage の frontmatter <code>scopes:</code> リストに住む。<code>init</code>、<code>scope-change</code>、<code>resolve-env-scope</code>、<code>doctor</code>、そして state ツーリングにわたる検証ロジックは、有効な scope のリストを、<code>core/tools/aidlc-lib.ts</code> の <code>validScopes()</code> 経由で実行時に <code>.claude/scopes/*.md</code> ファイルから導出する; EXECUTE/SKIP グリッドは各 stage の <code>scopes:</code> リストの転置であり、<code>tools/data/scope-grid.json</code> にコンパイルされる。scope の追加に TypeScript の編集は不要である。</p>
+<h3 id="steps">手順</h3>
+<ol>
+<li><p><strong><code>core/scopes/aidlc-hotfix.md</code> を作成する</strong> — scope のアイデンティティ。frontmatter:</p>
+<ul>
+<li><code>name</code>（必須）: scope 名; ファイル名の語幹に等しくなければならない。</li>
+<li><code>depth</code>（必須）: <code>Minimal</code> | <code>Standard</code> | <code>Comprehensive</code>。</li>
+<li><code>keywords</code>（任意）: <code>/aidlc &lt;freeform text&gt;</code> 自動検出のための NL トリガ。単語境界でマッチし、アルファベット順 scope でタイブレークする。空リストは推論からオプトアウトする。</li>
+<li><code>description</code>（任意）: <code>/aidlc --help</code> と SKILL.md のコンパイル済み scope-table でレンダリングされる 1 行の要約。</li>
+<li><code>testStrategy</code>（任意）: depth から独立して test strategy をオーバーライドする（例: workshop には <code>Minimal</code>）。既定では depth に一致する。</li>
+<li><code>runner</code>（任意）: 既定の生成 runner 集合に scope を含めるには <code>true</code> に設定する。</li>
+</ul>
+<p>本体は散文の intent である — 「なぜこれらの stage か、なぜそれらをスキップするか」。<code>validScopes()</code> は <code>.claude/scopes/*.md</code> の存在から導出するので、ファイルが着地した瞬間に scope は有効になる。構造的な問題を捕らえるには、編集後に <code>/aidlc --doctor</code> を走らせる。</p>
+<pre><code class="language-yaml">---
+name: hotfix
+depth: Minimal
+keywords:
+  - hotfix
+  - urgent
+description: Urgent production fix
+runner: true
+---
+
+# hotfix scope
+
+Lean path for the urgent production patch — regression test and deploy, nothing else.
+</code></pre>
+</li>
+<li><p><strong>メンバー stage にタグ付けする</strong> — <code>hotfix</code> の下で走るべき各 stage（<code>core/aidlc-common/stages/&lt;phase&gt;/</code> の下）で、その frontmatter <code>scopes:</code> リストに <code>hotfix</code> を足す。タグ付けしない stage はその scope で <code>SKIP</code> になる。3 つの初期化 stage（<code>workspace-scaffold</code>、<code>workspace-detection</code>、<code>state-init</code>）はそれを含まねばならない — それらは常に走る。</p>
+</li>
+<li><p><strong>再コンパイル + scope-table を再生成する</strong> — <code>bun .claude/tools/aidlc-graph.ts compile</code> が <code>scopes:</code> タグを <code>tools/data/scope-grid.json</code> に転置する。次に <code>bun .claude/tools/aidlc-utility.ts scope-table</code> が、SKILL.md のコンパイル済み scope テーブル向けの正規の Markdown リージョンを出力する。リージョンを <code>/</code> マーカーの間で生成された状態に保ち、その後 <code>bun .claude/tools/aidlc-graph.ts compile --check</code> と <code>bun .claude/tools/aidlc-utility.ts scope-table --check</code> を走らせて exit 0（drift 無し）を確認する。</p>
+</li>
+<li><p><strong>scope が解決することを検証する</strong> - <code>bun core/tools/aidlc-utility.ts intent-birth --scope hotfix --project-dir /tmp/scope-smoke</code> は成功し、<code>Scope: hotfix</code> を持つ state ファイルを生成するはずである。</p>
+</li>
+<li><p><strong><code>doctor</code> がそれを env の既定として受理することを検証する</strong> — <code>AWS_AIDLC_DEFAULT_SCOPE=hotfix bun aidlc-utility.ts doctor</code> は env var を有効と報告するはずである。</p>
+</li>
+<li><p><strong>keyword 推論を検証する</strong>（<code>keywords</code> が populate されている場合）— <code>bun aidlc-utility.ts detect-scope --from-text --input &quot;urgent customer issue&quot; --project-dir /tmp/scope-smoke</code> は <code>{&quot;scope&quot;:&quot;hotfix&quot;,&quot;source&quot;:&quot;keyword&quot;,&quot;matches&quot;:[&quot;urgent&quot;]}</code> を返すはずである。</p>
+</li>
+<li><p><strong>plan の一致を検証する（任意だが推奨）</strong> — <code>AIDLC_GRAPH_RESOLVE=1 bun .claude/tools/aidlc-graph.ts resolve hotfix --stdout</code> が scope の plan を発する; EXECUTE 集合がタグ付けしたものに一致することを目視する。</p>
+</li>
+<li><p><strong>scope を意識したドキュメントを更新する</strong> — <code>docs/guide/05-scopes-and-depth.md</code>（完全な scope リファレンス）、<code>docs/guide/13-customization.md</code>（有効値のリストと scope テーブル）、<code>docs/reference/03-orchestrator.md</code>（scope から stage へのマッピング）はすべて scope を明示的に列挙する。本章末尾のドキュメントポリシーに従い、同じ PR で更新する。</p>
+</li>
+<li><p><strong>scope ルーティングのワークフローテストを足す</strong> — scope が既存の scope と異なる振る舞い（新しい phase スキップパターン、新しい depth の組み合わせ）を持つなら、<code>tests/e2e/t53.test.ts</code>（sdk scope ルーティング）または <code>tests/e2e/t-tui-t50-bugfix-scope.serial.test.ts</code>（tui scope の通し）を手本にしたルーティング済み journey テストを足す。</p>
+</li>
+</ol>
+<h3 id="what-validates-automatically">自動で検証されるもの</h3>
+<ul>
+<li><code>validScopes().has(&quot;hotfix&quot;)</code> は <code>.claude/scopes/aidlc-hotfix.md</code> ファイルが着地した瞬間に <code>true</code> を返す — すべての検証サイトがこのヘルパーを使う。</li>
+<li>エラーメッセージは、いかなるコード変更も無しに、新しい scope をアルファベット順で列挙する。</li>
+<li><code>/aidlc --doctor</code> は <code>AWS_AIDLC_DEFAULT_SCOPE=hotfix</code> を有効として扱う。</li>
+<li>進行中のワークフローに対する <code>aidlc-utility scope-change --scope hotfix</code> は、新しい scope を受理する。</li>
+<li>転置 drift guard: stage の <code>scopes:</code> タグが <code>scope-grid.json</code> を再コンパイルせずに編集された場合、<code>aidlc-graph compile --check</code> がビルドを失敗させる。SKILL.md のコンパイル済み scope-table は独自の <code>--check</code> drift guard を持つ（t67）。</li>
+<li>フリーフォームの <code>/aidlc &lt;text&gt;</code> 起動に対する keyword 検出は、各 scope の <code>keywords</code> をその <code>.claude/scopes/*.md</code> frontmatter から読む。独自の NL トリガを持つカスタム scope は、<code>keywords</code> リストが populate されるとすぐに自動検出される（SKILL.md の変更は不要）。ユーザーは依然として <code>--scope hotfix</code> を明示的に渡して推論をバイパスできる。</li>
+</ul>
+<h3 id="what-does-not-validate-automatically">自動で検証されないもの</h3>
+<ul>
+<li>scope 名をタイポした <code>scopes:</code> タグでも依然としてコンパイルされる — それは単に誰も求めないグリッド列を生み、その stage を本物の scope から静かに落とすだけである。<code>/aidlc --doctor</code> と scope ごとのテストがガードレールである。</li>
+<li>Stage スキップのセマンティクス（<code>PHASE_SKIPPED</code> イベント）。<code>tests/integration/t39.test.ts</code> は 9 個の既知の scope 名を scope ごとのループにハードコードする — 新しい scope は、そのリストが拡張されるまで実行されない。同じ PR の一部として、新しい scope をそのループに足す。</li>
+</ul>
+<h2 id="adding-a-stage">Stage の追加</h2>
+<p>stage は、<code>core/aidlc-common/stages/&lt;phase&gt;/&lt;slug&gt;.md</code> の下に YAML frontmatter 付きの Markdown ファイルとして著述される。コンパイラは frontmatter を <code>tools/data/stage-graph.json</code> に読み込み、runner ジェネレータは core stage についてコンパイル済み stage リストからタイプ可能な <code>/aidlc-&lt;slug&gt;</code> skill を発する（plugin 所有の stage は、その裸の plugin プレフィックス付き slug を使う）。拡張性の契約は「stage を足すには、stage ファイルを書く」である — engine はコンパイル済みグラフからルーティングするので、それを登録するのに engine の編集は不要である。（完全なフィールドリファレンスと 3 区画の本体フォーマットは、Harness Engineer Guide の <a href="../harness-engineering/01-anatomy-of-a-stage.html">Anatomy of a Stage</a> と <a href="../harness-engineering/02-adding-a-stage.html">Adding a Stage</a> に住む; スキーマは <a href="15-stage-definition.html">Stage Definition</a> である。）</p>
+<h3 id="steps-1">手順</h3>
+<ol>
+<li><p><strong>stage ファイルを書く</strong> - <code>core/aidlc-common/stages/&lt;phase&gt;/&lt;slug&gt;.md</code> を作成する。frontmatter は次を宣言する: <code>slug</code>、<code>phase</code>、<code>execution</code>/<code>condition</code>、<code>lead_agent</code> と任意の <code>support_agents</code>（agent slug で）、<code>mode</code>（<code>inline</code>、<code>subagent</code>、<code>pipeline</code>、または <code>mob</code>; <code>agent-team</code> は予約済みでまだ未実装）、<code>consumes</code> / <code>produces</code>（artifact vocabulary 名）、stage が unit ごとに条件付きでのみ書く成果物向けの <code>optional_produces</code>（unit ごとのカバレッジから免除）、<code>requires_stage</code>（順序エッジ）、<code>scopes:</code> メンバーシップリスト、束ねる任意の <code>sensors:</code>、Unit ごとに反復するなら <code>for_each</code>、そして（unit ごとの stage では）produces 成果物を各 Unit の kind に刈り込む任意の <code>produces_kinds</code> マップ。本体は stage の 3 区画を運ぶ。完全なフィールド契約は <a href="15-stage-definition.html">Stage Definition</a> を参照。</p>
+</li>
+<li><p><strong>グラフを再コンパイルする</strong> — <code>bun .claude/tools/aidlc-graph.ts compile</code> が新しい frontmatter を <code>tools/data/stage-graph.json</code> に読み込み、<code>scopes:</code> タグを <code>tools/data/scope-grid.json</code> に転置する。<code>bun .claude/tools/aidlc-graph.ts compile --check</code> を走らせて exit 0（drift 無し）を確認する。次に <code>bun .claude/tools/aidlc-utility.ts stage-table</code> と <code>bun .claude/tools/aidlc-utility.ts scope-table</code> で生成された SKILL.md のミラーをリフレッシュし、<code>bun .claude/tools/aidlc-utility.ts stage-table --check</code> と <code>scope-table --check</code> の両方が exit 0 になることを確認する。stage は <code>bun .claude/tools/aidlc-orchestrate.ts next --stage &lt;slug&gt; --single</code> 経由で直ちに実行可能である。</p>
+</li>
+<li><p><strong>runner を再生成する</strong> — <code>bun .claude/tools/aidlc-runner-gen.ts write</code> が実行可能なコンパイル済み stage ごとに <code>/aidlc-&lt;slug&gt;</code> runner skill を発するので、新しい stage は手作業の著述無しにそのタイプ可能なコマンドを得る。<code>bun .claude/tools/aidlc-runner-gen.ts check</code> を走らせて、ディスク上の runner 集合がコンパイル済み stage 集合に一致することを確認する（drift guard; bootstrap の初期化 stage は設計上除外される）。</p>
+</li>
+<li><p><strong>stage がルーティングされることを検証する</strong> — その stage を scope に含むワークフローに対して <code>bun .claude/tools/aidlc-orchestrate.ts next</code> を駆動し、engine が、解決された <code>lead_agent</code>、gate、<code>consumes</code>、<code>produces</code> とともにあなたの slug を名指す <code>run-stage</code> directive を発することを確認する。</p>
+</li>
+<li><p><strong>scope を意識した・stage を意識したドキュメントを更新する</strong> — 新しい stage は stage 数と scope ごとの plan を変える。<code>docs/reference/16-artifact-vocabulary.md</code>（初期化以外の stage 数）、Harness Engineer Guide の stage の章、そして plan を列挙する任意の scope リファレンスを更新する。本章末尾のドキュメントポリシーに従い、同じ PR で行う。</p>
+</li>
+<li><p><strong>テストを足してカバレッジをリフレッシュする</strong> — stage の振る舞いのための <code>t*.test.ts</code> を著述する（スイートは発見されるので、正しいレベルのディレクトリの下にファイルを落とすことがランナーに必要なすべてである — 足すべきレジストリ行は無い）。次に <code>bun tests/gen-coverage-registry.ts</code> でカバレッジインデックスを再生成し、<code>bun tests/gen-coverage-registry.ts --check</code> がクリーンであることを確認する。stage-runner drift guard <code>tests/unit/t129-stage-runner-drift.test.ts</code> は、生成された runner 集合がコンパイル済み stage 集合に等しいことをアサートし、<code>tests/integration/t55-test-suite-drift.test.ts</code> は古いパスとマーカーを掃引する。</p>
+</li>
+</ol>
+<h3 id="what-validates-automatically-1">自動で検証されるもの</h3>
+<ul>
+<li><strong>グラフ配置。</strong> いったん <code>compile</code> すると、stage のエッジ（<code>requires_stage</code>、<code>consumes</code>、<code>produces</code>）が解決され順序付けられる; ディスク上の <code>stage-graph.json</code> が frontmatter から drift すると、<code>compile --check</code> がビルドを失敗させる。</li>
+<li><strong>生成される stage テーブル。</strong> SKILL.md の Stage Graph テーブルはコンパイル済みの <code>stage-graph.json</code> からレンダリングされる; 生成されたリージョンが drift すると <code>aidlc-utility stage-table --check</code> が失敗する（t32）。</li>
+<li><strong>スキーマ + 参照。</strong> <code>aidlc-graph.ts compile</code> は <code>aidlc-stage-schema.ts</code> 経由ですべての stage の frontmatter を検証し、<code>/aidlc --doctor</code> は <code>validateStageFrontmatter</code> に加えて、すべての <code>lead_agent</code> / <code>support_agents</code> / <code>consumes</code> slug が解決するという「Graph references」チェックを再実行する。</li>
+<li><strong>Runner の一致。</strong> コンパイル済み stage に runner が無い、または消えた stage に runner が存在する場合、<code>aidlc-runner-gen.ts check</code>（および <code>t129</code>）が失敗する。</li>
+</ul>
+<h3 id="what-does-not-validate-automatically-1">自動で検証されないもの</h3>
+<ul>
+<li><strong>コンパイラが認識しない新しい frontmatter キー。</strong> スキーマが実装しないキーを欲することはフレームワークの変更である: それはデータを読むコードを編集するので、このレシピではなく engine / compile パイプラインの経路をたどる。<a href="15-stage-definition.html">Stage Definition</a> の予約キー名前空間は、将来の構造的拡張が予測可能に着地するために存在する。</li>
+<li><strong>ドキュメントの列挙。</strong> <code>docs/</code> にわたる stage 数と scope ごとの plan テーブルは手で保守される; 同じ PR で更新する（下記のドキュメントポリシーを参照）。</li>
+</ul>
+<h2 id="adding-an-agent">Agent の追加</h2>
+<p>Agent のメタデータ（display name、example の knowledge ファイル）は、<code>core/agents/</code> の下の各 agent の <code>.md</code> frontmatter から読まれる。<code>core/tools/aidlc-lib.ts</code> の <code>loadAgents()</code> ヘルパーは、そのディレクトリ内のすべての <code>.md</code> ファイルを発見し、statusline hook が消費する（display name をレンダリングするための）メタデータマップを導出する。agent の追加に TypeScript の編集は不要である。</p>
+<h3 id="steps-2">手順</h3>
+<ol>
+<li><p><strong>agent ファイルを作成する</strong> — 必須の frontmatter を持つ新しい <code>core/agents/&lt;slug&gt;-agent.md</code> を落とす:</p>
+<pre><code class="language-yaml">---
+name: &lt;slug&gt;-agent
+display_name: &lt;Human-Readable Name&gt;
+examples:
+  - example-knowledge-file-one.md
+  - example-knowledge-file-two.md
+description: &gt;
+  One-paragraph description of the agent&#39;s responsibilities and which stages it leads or supports.
+disallowedTools: Task
+tier: judgment
+---
+</code></pre>
+<p><code>name</code> フィールドはファイル名の語幹に正確に一致しなければならない。<code>display_name</code> は statusline が使う人間向けのラベルである。<code>examples</code> は、agent→examples テーブルに文書化された推奨 knowledge ファイル名を列挙する — それらはユーザーへの提案であり、実行時にロードされず、ディスクにも書かれない。<code>tier</code>（<code>judgment</code> | <code>balanced</code> | <code>templated</code>）は、packager が各 harness の model/effort キーに投影する著述用のダイヤルである — core frontmatter に生の <code>model:</code>/<code>effort:</code> を決して著述しない（<a href="05-agent-system.html">Agent System</a> を参照）。</p>
+</li>
+<li><p><strong>agent が発見されることを検証する</strong> — <code>bun -e &quot;import { loadAgents } from &#39;core/tools/aidlc-lib.ts&#39;; console.log(loadAgents().find(a =&gt; a.slug === &#39;&lt;slug&gt;-agent&#39;));&quot;</code> は新しい agent のメタデータを出力するはずである。</p>
+</li>
+<li><p><strong>intent birth が space の knowledge ディレクトリを作成することを検証する</strong> — <code>bun core/tools/aidlc-utility.ts intent-birth --scope poc --project-dir /tmp/agent-smoke</code> は、空の space レベルの <code>aidlc/knowledge/</code> ディレクトリ（space の <code>intents/</code> の兄弟）を作成するはずである。Birth は agent ごとのサブディレクトリや README をシードしない — チームは、コンテンツができたときに <code>aidlc/knowledge/&lt;slug&gt;-agent/</code> 自体を作成する。</p>
+</li>
+<li><p><strong>statusline がレンダリングされることを検証する</strong> — <code>Active Agent: &lt;slug&gt;-agent</code> を持つ state ファイルをシードし、statusline hook を起動する; 出力は <code>--</code> セパレータの後に display name を含むはずである。</p>
+</li>
+<li><p><strong>agent を stage に配線する</strong> — stage をリードまたはサポートすべき新しい agent は、各 stage の frontmatter、すなわち <code>core/aidlc-common/stages/&lt;phase&gt;/</code> の下の stage <code>.md</code> ファイルの <code>lead_agent</code> / <code>support_agents</code> フィールドで名指される。次に <code>bun .claude/tools/aidlc-graph.ts compile</code>（および drift guard としての <code>compile --check</code>）を走らせて、その frontmatter から <code>tools/data/stage-graph.json</code> を再生成する。<code>stage-graph.json</code> を手で編集しないこと — それはコンパイル済みの成果物であり、次の <code>compile</code> が手作業の変更を上書きする。これは発見とは別である — <code>loadAgents()</code> は agent を可視にする; stage frontmatter（グラフにコンパイルされる）がそれをアクティブにする。</p>
+</li>
+</ol>
+<h3 id="what-validates-automatically-2">自動で検証されるもの</h3>
+<ul>
+<li><code>loadAgents()</code> は、次の起動時に <code>.claude/agents/</code> 内の任意の新しい <code>.md</code> ファイルを発見する — コード編集は無い。</li>
+<li><code>name</code> または <code>display_name</code> が欠けている場合、parser はファイルと欠けているフィールドを名指して投げる。</li>
+<li>agent は slug でアルファベット順にソートされて返されるので、任意のプラットフォームでの <code>readdirSync</code> の順序は同じ出力を生む。</li>
+<li>Intent birth は空の space レベルの <code>aidlc/knowledge/</code> ディレクトリを作成する（agent ごとのサブディレクトリや README はシードしない）。</li>
+<li>Statusline のレンダリングは、同じメタデータソースから display name を導出する。</li>
+<li><code>tests/unit/t61.test.ts</code> は、fixture agent に対して 5 つの性質すべてを end-to-end でアサートする。</li>
+</ul>
+<h3 id="what-does-not-validate-automatically-2">自動で検証されないもの</h3>
+<ul>
+<li><strong>Stage-graph への参加</strong>。Stage frontmatter は、その <code>lead_agent</code> / <code>support_agents</code> フィールドで slug によって agent を参照し、<code>aidlc-graph.ts compile</code> がそれらを <code>stage-graph.json</code> に運ぶ。どの stage の frontmatter でも名指さずに新しい agent を足すことは、agent は存在するが決して走らないことを意味する。Stage-graph のスキーマ検証（<code>core/tools/aidlc-stage-schema.ts</code>）は配線済みである: <code>aidlc-graph.ts compile</code> はすべての stage の frontmatter を検証し（そして <code>compile --check</code> が CI の drift guard である）、<code>/aidlc --doctor</code> は同じ <code>validateStageFrontmatter</code> に加えて、すべての <code>lead_agent</code> / <code>support_agents</code> slug が解決するという「Graph references」チェックを再実行する。</li>
+<li><strong>Knowledge ファイルの存在</strong>。<code>examples</code> は、agent→examples テーブルに文書化された推奨ファイル名のリストである — それらは作成も検証もされない。ユーザーは実際のコンテンツを <code>aidlc/knowledge/&lt;agent&gt;/</code>（space レベルの knowledge dir）に置く。</li>
+<li><strong>agent を列挙する doc テーブル</strong>。<code>docs/reference/05-agent-system.md:119-131</code> の Phase Participation マトリクスと、<code>core/knowledge/aidlc-shared/knowledge-readme-template.md:16-29</code> の agent→examples テーブルは手で保守される。agent を足すのと同じ PR でそれらを更新する（下記のドキュメントポリシーを参照）。</li>
+<li><strong><code>.claude/agents/&lt;new-agent&gt;.md</code> の本体コンテンツ</strong>。frontmatter だけがパースされる。本体の散文（Core Responsibilities、Knowledge Loading シーケンス、等）は、アクティブ化されたときに agent 自身によって読まれる — 既存の agent ファイルの構造に合わせて書く。</li>
+</ul>
+<h2 id="documentation-policy">ドキュメントポリシー</h2>
+<p>ファイル、ディレクトリ、コマンド、またはフラグを追加・削除・リネームするとき:</p>
+<ol>
+<li><code>docs/</code> と <code>README.md</code> を古い参照について grep する</li>
+<li>すべての参照を同じコミットで更新する</li>
+</ol>
+<h2 id="submitting-changes">変更の提出</h2>
+<ol>
+<li>何が変わったか・なぜかを明確に記述して、<code>main</code> に対して PR を開く</li>
+<li>L1 テストが通ることを確認する: <code>bash tests/run-tests.sh</code></li>
+<li>hook の変更には: <code>bash tests/run-tests.sh --unit</code> を走らせる</li>
+<li>integration テストには: <code>bash tests/run-tests.sh --integration</code> を走らせる（<code>claude</code> CLI ツールが必要）</li>
+<li>変更がファイル、コマンド、またはフラグに影響する場合はドキュメントを更新する（上記のドキュメントポリシーを参照）</li>
+</ol>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md"><code>docs/reference/11-contributing.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

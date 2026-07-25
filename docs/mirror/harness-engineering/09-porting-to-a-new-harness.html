@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-DLC を新しい harness へ移植する — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / harness-engineering/09-porting-to-a-new-harness</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">HARNESS ENGINEERING</div>
+  <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a>
+  <a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>
+  <a href="../harness-engineering/02-adding-a-stage.html">Stage を足す</a>
+  <a href="../harness-engineering/03-adding-an-agent.html">Agent を足す</a>
+  <a href="../harness-engineering/04-scopes.html">Scope</a>
+  <a href="../harness-engineering/05-rules-and-the-loop.html">Rule と学習ループ</a>
+  <a href="../harness-engineering/06-sensors.html">Sensor</a>
+  <a href="../harness-engineering/07-team-knowledge.html">チーム Knowledge</a>
+  <a href="../harness-engineering/08-construction-and-swarm.html">Construction と swarm</a>
+  <a href="../harness-engineering/09-porting-to-a-new-harness.html" class="here">AI-DLC を新しい harness へ移植する</a>
+  <a href="../harness-engineering/10-authoring-a-plugin.html">Plugin を著述する</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#the-shape">その形</a>
+  <a href="#step-1-the-manifest-the-declarative-80">Step 1 — manifest（宣言的な 80%）</a>
+  <a href="#step-2-the-hook-adapter-the-per-harness-shim">Step 2 — hook adapter（harness ごとの shim）</a>
+  <a href="#step-3-emitts-the-imperative-20-only-if-needed">Step 3 — emit.ts（命令的な 20%、必要な場合のみ）</a>
+  <a href="#step-4-the-one-transform-class">Step 4 — 唯一の transform クラス</a>
+  <a href="#step-5-tests-the-gate">Step 5 — テストと gate</a>
+  <a href="#next">次へ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / HARNESS-ENGINEERING</p>
+<h1 id="porting-ai-dlc-to-a-new-harness">AI-DLC を新しい harness へ移植する</h1>
+<p>AI-DLC は <strong>one core, many harnesses</strong> から出荷される — 今日は Claude Code、Kiro CLI、
+Kiro IDE、Codex CLI、そして opencode であり、その集合は開いている。手著述のソースは、
+harness 中立な <code>core/</code> に加え、CLI ごとの薄い <code>harness/&lt;name&gt;/</code> サーフェスである; packager
+（<code>scripts/package.ts</code>）はコミット済みの各 <code>dist/&lt;harness&gt;/</code> ツリーを再生成する。別の harness を
+足すことは <strong>1 つのディレクトリと 1 つの manifest 行</strong> である — engine、methodology、そして
+harness-dir/rules の解決は <code>core/</code> の編集を一切要さない; 唯一の任意の例外は、harness ごとの
+<code>--doctor</code> アームである（Step 2 を参照）。このページはその契約を辿る。</p>
+<blockquote>
+<p>このリポジトリにおける &quot;harness&quot; の 3 つの意味: <strong><code>harness/</code></strong>（トップレベル — この
+ページが扱う CLI ごとのディストリビューションサーフェス）、<strong><code>docs/harness-engineering/</code></strong>
+（このガイド）、そして <strong><code>tests/harness/</code></strong>（テストスイートのヘルパーライブラリ）。
+無関係である; ディストリビューションは最初のものだけである。</p>
+</blockquote>
+<h2 id="the-shape">その形</h2>
+<pre class="term"><code>core/<span class="t-comment">                      # harness-neutral source — not edited to add a harness (save the optional --doctor arm)</span>
+harness/
+  claude/  manifest.ts · skills/aidlc/ · CLAUDE.md · settings.json
+  kiro/    manifest.ts · skills/aidlc/ · agents/*.json · hooks/aidlc-kiro-adapter.ts · settings/cli.json · AGENTS.md
+  codex/   manifest.ts · emit.ts · skills/aidlc/ · hooks/aidlc-codex-adapter.ts
+scripts/
+  package.ts<span class="t-comment">               # bun scripts/package.ts [&lt;name&gt;] [--check]</span>
+  manifest-types.ts<span class="t-comment">        # the HarnessManifest contract every manifest implements</span>
+dist/&lt;name&gt;/<span class="t-comment">               # GENERATED, committed, drift-guarded</span></code></pre>
+<p><code>core/</code> の散文は <code>{{HARNESS_DIR}}</code> トークンで harness ディレクトリを名指す; packager は
+manifest が宣言する <code>harnessDir</code> が何であれ（<code>.claude</code> / <code>.kiro</code> / <code>.codex</code> / あなたの <code>.foo</code>）
+それに置換する。<code>.ts</code> は無変換でバイトコピーされる — <code>core/tools/aidlc-lib.ts</code> のランタイムの
+<code>harnessDir()</code> seam が、実行時に出荷されたレイアウトからディレクトリを導く（open-set:
+ハードコードされたリストではなく、ツール自身のパスからディレクトリ名を読む）ので、同じツール
+ソースがすべてのツリーで走る。受理 gate は <strong>byte-parity</strong> である: harness を再生成するとき、
+そのコミット済み dist を正確に再現せねばならない（<code>package.ts --check</code>）。</p>
+<p>packager は <code>harness/</code> を <code>manifest.ts</code> について走査することで harness を <strong>発見する</strong> ので、
+新しいディレクトリは packager 自身への編集無しに、既定の <code>bun scripts/package.ts</code> と <code>--check</code>
+によってビルドされる — 「1 つのディレクトリと 1 つの manifest 行、共有コードの編集ゼロ」の
+文字どおりの意味である。</p>
+<h2 id="step-1-the-manifest-the-declarative-80">Step 1 — manifest（宣言的な 80%）</h2>
+<p><code>HarnessManifest</code>（<code>scripts/manifest-types.ts</code>）をエクスポートする
+<code>harness/&lt;name&gt;/manifest.ts</code> を作る。そのフィールドは:</p>
+<ul>
+<li><code>name</code> / <code>harnessDir</code> — トークンが置換される先のディレクトリ（例: <code>.foo</code>）。</li>
+<li><code>coreDirs: DirMap[]</code> — どの <code>core/&lt;src&gt;</code> ディレクトリが <code>&lt;harnessDir&gt;/&lt;dst&gt;</code> に射影されるか。
+ここでディレクトリをリネームまたはドロップする（Kiro は <code>rules → steering</code>; Codex は
+<code>rules → aidlc-rules</code> かつ <code>skills/</code> をドロップする — emit を参照）。3 つの session skill は、
+in-tree の harness（claude、kiro、kiro-ide）にとって core ディレクトリである; codex は代わりに
+それらを emit する。</li>
+<li><code>harnessFiles: FileMap[]</code> — <code>harness/&lt;name&gt;/&lt;src&gt;</code> から dist へ逐語的にコピーされる、
+著述されたサーフェス（<code>.md</code> はトークン置換を受ける）。<code>projectRoot: true</code> は harness
+ディレクトリの傍らにファイルを配置する（例: <code>AGENTS.md</code>）。</li>
+<li><code>frontmatterAdditions</code>（任意）- 射影の間に、core 射影された <code>.md</code> の frontmatter に追記される
+ファイルごとの YAML 行。他の harness へ出荷してはならない harness ネイティブなフィールドの
+ためのものである（kiro-ide は自身の委任対象 agent ファイルに
+<code>tools: [&quot;read&quot;, &quot;write&quot;, &quot;shell&quot;]</code> を注入する - IDE は subagent のツール付与を <code>.md</code> の
+frontmatter から読む）。core が単一ソースのままであるよう manifest データとして宣言される;
+packager は、タイプミスのパス、欠けた frontmatter ブロック、または core が既に宣言するキーに
+対してエラーを出す。</li>
+<li><code>rulesRename</code> — リネームされた rules ディレクトリ（<code>&quot;steering&quot;</code> | <code>&quot;aidlc-rules&quot;</code> | <code>null</code>）。
+packager はそれを、コピーされたディレクトリに、かつ散文中の <code>&lt;harnessDir&gt;/rules/</code> 参照に、かつ
+コンパイルされた stage-graph の rule パスに（<code>loadRules</code> がリネームされたディレクトリを
+見つけるよう、コンパイル時に <code>AIDLC_RULES_DIR</code> を設定する）、かつランタイムの <code>rulesSubdir()</code>
+seam が読む生成された <code>tools/data/harness.json</code> へそれを emit する形で適用する — その結果、
+実際のインストールはハードコードされたマップ無しにリネームされたディレクトリを解決する。これが
+<code>rulesRename</code> を純粋な manifest データにする seam である: ここで設定すれば、あらゆるレイヤー
+（build 散文、コンパイルされたパス、ランタイム）が <code>core/</code> の編集無しに追随する。</li>
+<li><code>skipRunnerGen</code> — harness が <code>&lt;harnessDir&gt;/skills/</code> を出荷しないときに設定する（Codex は自身の
+skill ツリーを <code>emit</code> 経由で <code>.agents/skills/</code> に emit する）; そのとき packager は標準の
+runner-gen ステップをスキップする。</li>
+<li><code>emit</code> — 任意のプラグイン（Step 3）、必要としない harness には <code>null</code>。</li>
+</ul>
+<p>Claude の manifest は最小のリファレンスである（リネーム無し、emit 無し）; Kiro のものは
+リネームと <code>harnessFiles</code>（agent の JSON 群、adapter、project-root の AGENTS.md）を足す。</p>
+<h2 id="step-2-the-hook-adapter-the-per-harness-shim">Step 2 — hook adapter（harness ごとの shim）</h2>
+<p>core hook は Claude 形状の stdin を正規形として消費する。新しい harness は、harness の hook
+ペイロードをその契約へと正規化し、共有の core hook へ subprocess でパイプする <strong>1 つの著述された
+adapter</strong>（<code>harness/&lt;name&gt;/hooks/aidlc-&lt;name&gt;-adapter.ts</code>、<code>harnessFiles</code> に列挙される）を
+出荷する。core hook を logic+adapter に分割してはならない — core の本体はすべての harness を
+跨いでバイト共有のままである（<code>--check</code> がそれを証明する: dist 中のすべての <code>.ts</code> は、その
+<code>core/</code> ソースとバイト同一である）。</p>
+<p>adapter を harness のイベントに、harness 自身のやり方で結線する: Kiro は <code>agents/aidlc.json</code> に
+ターゲットを登録する; Codex は <code>hooks.json</code> を emit する。実際の core-hook 消費者があるイベント
+だけを登録する。</p>
+<p>3 つの hook はフローを変えるもので、単にパイプするだけでなく、その block チャネルを転送する
+必要がある: Stop hook は stdout で <code>{&quot;decision&quot;:&quot;block&quot;}</code> を返し、一方 PreToolUse の
+reviewer-scope と state-transition のガードは stderr で exit 2 と理由を返す（adapter がその exit
+コードを中継するとき、そのツール呼び出しは拒否されねばならない）。新しい harness が自身の
+pre-tool seam からツール呼び出しをハードブロックできないなら、reviewer-scope の登録を省き、
+死んだ hook を結線するのではなくギャップを文書化する - stage-protocol §12a に束縛された散文が
+依然そこを統べる。harness のペイロードが subagent の identity を運ばないときは、harness が agent
+ごとの hook をサポートする場所で、reviewer agent 自身に登録をスコープする（Kiro CLI のパターン:
+adapter はそのとき <code>agent_type</code> に合致させる代わりに <code>scoped_registration</code> をアサートする）。</p>
+<blockquote>
+<p><strong>唯一認可された <code>core/</code> の編集: doctor アーム。</strong> <code>/aidlc --doctor</code>
+（<code>core/tools/aidlc-utility.ts</code>）はインストール済みツリーをヘルスチェックし、新しい harness は
+自身のインストールサーフェス（adapter と結線ファイルの存在、任意のバイナリバージョンの下限）の
+ために、そこへ harness ごとのアームを足す。これは意図的な harness ごとの <em>ロジック</em> であり、
+データではない — バージョンチェックは CLI を spawn して semver を比較するが、それはどの
+manifest 行も表現できない（three-concerns ルール: 知識はコードに住む） — ので、これは
+「<code>core/</code> の編集ゼロ」への祝福された例外であって、違反ではない（意図的な設計上のトレードオフ）。
+それは優雅に劣化する: アームの無い harness は、失敗するのではなく単に汎用チェックを得る。
+それ以外のすべて — ディレクトリ解決、rules-dir のリネーム、パッケージング — は純粋な manifest
+データのままである。</p>
+</blockquote>
+<h2 id="step-3-emitts-the-imperative-20-only-if-needed">Step 3 — <code>emit.ts</code>（命令的な 20%、必要な場合のみ）</h2>
+<p>宣言的な行が表現できない構造的な分岐が <code>emit.ts</code> である — manifest が参照し、packager が
+<code>EmitContext</code>（<code>coreRoot</code>、<code>harnessRoot</code>、<code>distRoot</code>、<code>harnessDir</code>、<code>substituteToken</code>、
+<code>tierCap</code>）とともに呼ぶプラグインである。emitter はその出力を <code>distRoot</code> の下に書く。Codex の
+ものが実践例である: <code>config.toml</code>、<code>hooks.json</code>、hook-trust の事前シード、<code>AGENTS.md</code> の
+マージ、agent-TOML の転置、そして <code>.agents/skills/</code> ツリー（<code>AIDLC_HARNESS_DIR</code> の下で
+<code>core/tools/aidlc-runner-gen.ts</code> のエクスポートされた render 関数から合成され、決して再実装
+されない）。サーフェスがすべて著述されたファイルである harness（Claude、Kiro）は <code>emit: null</code> を
+設定する。</p>
+<p><code>--check</code> の下では、packager は一時的な <code>distRoot</code> を供給し、同じ emitter を走らせ、それから
+生成されたルート全体をコミット済みディストリビューションと比較する。<code>&lt;harnessDir&gt;</code> の外にある
+emit 所有のファイル（例えば <code>.agents/skills/</code> とルートの <code>AGENTS.md</code>）は、それゆえ宣言的な出力と
+同じ missing、differing、orphan のチェックに参加する。</p>
+<h2 id="step-4-the-one-transform-class">Step 4 — 唯一の transform クラス</h2>
+<p>許される唯一のテキスト transform は、スラッシュアンカーされた harness-dir ファミリである: <code>.md</code>
+散文中の <code>{{HARNESS_DIR}}</code> → harness ディレクトリ、加えて rules-dir のリネーム。盲目的な <code>sed</code>
+は無い。<code>core/</code> 中の真正な harness 固有のリテラル（<code>$CLAUDE_PROJECT_DIR</code> の注記、
+workspace-detection 中の harness-dir 列挙）はトークンを運ばず、無変更で通過する — core-hygiene
+テスト（<code>t146-core-hygiene</code>）が、新しい生のパスリテラルの紛れ込みを防ぐ。</p>
+<h2 id="step-5-tests-the-gate">Step 5 — テストと gate</h2>
+<ul>
+<li>パッケージング parity テスト（<code>t145</code>）は <code>package.ts --check</code> を走らせる; それは manifest を
+持つすべての harness を自動でカバーする。</li>
+<li><code>&lt;name&gt;</code> hook-adapter 契約テストは、ライブキャプチャされたペイロードを adapter を通してパイプ
+し、観測可能な core-hook の効果をアサートする。</li>
+<li>ライブジャーニーは <code>skipReason()</code>（<code>AIDLC_&lt;NAME&gt;_*_LIVE=1</code> env とバイナリの存在と認証済み）で
+ゲートされた e2e として出荷され、その結果、決定論的な tier ではきれいにスキップし、port が
+マージされる前にローカルで green に走る。</li>
+</ul>
+<p>再生成には <code>bun scripts/package.ts &lt;name&gt;</code> を、drift-guard には <code>--check</code> を、そしてゲートには
+決定論的スイート（<code>bash tests/run-tests.sh --smoke --unit --integration -P 8</code>）とライブジャーニーを走らせる。</p>
+<h2 id="next">次へ</h2>
+<p>それがアークを閉じる: あなたはデータサーフェスを形作り（chapters 01–08）、そして今 core を
+新しい CLI 上にレンダリングした。ここから:</p>
+<ul>
+<li>全体像は <a href="00-overview.html">Harness Engineer Guide overview</a> へ戻る。</li>
+<li>新しい harness は他のものと並んで <strong>ユーザー向けの章</strong> を得る — 既存のものがどう読めるかは、
+User Guide の <a href="../guide/harnesses/README.html">Running on other harnesses</a> ファミリを参照。</li>
+<li>規範的なビルド契約（manifest 型、<code>emit</code> プラグイン API、<code>harnessDir()</code> seam）は、Developer
+Reference の <a href="../reference/01-architecture.html#source-vs-distribution-one-core-many-harnesses">Architecture § Source vs distribution</a>
+に住む。</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/09-porting-to-a-new-harness.md"><code>docs/harness-engineering/09-porting-to-a-new-harness.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

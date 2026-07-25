@@ -1,0 +1,294 @@
+# Plugin メカニズム
+
+> 対象読者: Tier 2/3（team adopter、framework contributor）。
+
+> **パス規約。** 以下の `<harness-dir>/` = harness のランタイムディレクトリ（`.claude` / `.codex` / `.kiro`）; `plugins/<name>/` = 著述された plugin ソース; `dist/plugins/<name>/<harness>/` = emit された、インストール可能な host plugin。
+
+この章は **AIDLC plugin** システムの正典リファレンスである: 任意で、所有され、バージョン付けされた contribution の集合 — 新しい stage、agent、scope、method/rules、sensor、そして *既存の core stage への追加的な変更* — であり、harness 中立なツリーとして一度だけ著述され、各 harness のために **本物の host plugin として emit される**。plugin は決して `core/` を編集しない; すべての plugin を無効にすれば、インストールは素の core とバイト同一である。このシステムは、実証済みの唯一の編集不要な seam（追加的に compose される phase rule）をあらゆるサーフェスへ一般化し、それを専用のインストーラーではなく各 host 自身の plugin 機構を通して届ける。[ステージ定義](15-stage-definition.md)（plugin が著述する stage frontmatter、`plugin`/`number`/`when` を含む）、[Engine と Skill システム](17-skill-system.md)（composer が供給し orchestrator が経路を決めるグラフ）、[Artifact Vocabulary](16-artifact-vocabulary.md)（名前空間化のルール）、そして著述のウォークスルー [Plugin を著述する](../harness-engineering/10-authoring-a-plugin.md) を相互参照せよ。
+
+---
+
+## 1. plugin とは何か
+
+plugin は、宣言的な manifest と core 形状のサブツリーを持つディレクトリ（かつ git リポジトリ）である。次のことができる:
+
+- 新しい stage（それ自身の表示番号レンジで）、agent、scope、method/rules（space memory seed へ）、sensor を **足す（add）**; そして
+- contribution seam（§6）を通じて既存の core stage を **追加的に変更する（modify additively）** — stage が produce・consume・check・instruct するものを、それを編集せずに豊かにする。
+
+ファーストパーティ plugin（AIDLC チームが出荷する）とサードパーティ plugin（それ以外の誰か）は **機構的に同一** である — 同じ構造、同じ seam、同じ composer、同じ host-install 経路。唯一の違いは出所である: plugin が誰のリポジトリに住み、誰がレビューしたか。`plugins/test-pro/` が参照 fixture である。
+
+メカニズムが守る **設計原則**:
+
+- **strict-additive、決して override しない。** contribution は *足す* だけである。構造的サーフェスに対する set-union は可換であり、それが独立した著者を安全にするものである; 本物の衝突は plugin の帰属付きの compose エラーであって、決して静かな last-writer-wins ではない。
+- **core の不変性。** どの plugin も `core/` ファイルを編集しない; plugin が出荷するものはすべて plugin 自身のツリーに住む。
+- **オフのとき可逆かつ inert。** plugin を無効にすると、それの無いインストールとちょうど同じものへ再 compose される。
+- **slug が identity である。** stage は、重要なところ（edge、jump、解決）のすべてで slug によって識別される。`number` は表示/順序づけ専用なので、挿入された plugin stage が core を再番号付けしたり不安定化させたりすることは決してない。
+
+## 2. なぜインストール時か、host plugin として届けるのか
+
+繰り返し現れた設計上の問いは、plugin が *ビルド時* の成果物（中央で事前 compose され、コピーで持ち込まれる）なのか *インストール時* のもの（消費者のマシン上で、彼らが選んだ集合に対して compose される）なのか、であった。メカニズムは **インストール時** である。より広いエコシステム（npm、Cargo、Helm、VS Code、Nix）がすでに収束している 2 つの構造的理由による:
+
+- **組合せ爆発。** N 個の plugin は最大で 2ⁿ の有効サブセットを生む; 中央ビルドはすべての組合せを事前 compose できない。事前ビルドする価値のある唯一の成果物は **bare core**（空集合）であり、それは全員にとって同一である。
+- **遅延解決。** 正しい plugin の集合 — そして 2 つの plugin の同じ stage への contribution がどうマージされるか — は、それらを選んだインストールの上でのみ知り得る。
+
+配送手段は、専用の AIDLC インストーラーではなく **host 自身の plugin システム** である。フレームワークが対象とするあらゆる harness は、すでに manifest ファースト・git 配布の plugin モデルを出荷している（Claude Code `.claude-plugin/`、Codex `.codex-plugin/`）; AIDLC plugin は *その一つ* である。これが **ハイブリッド** である: store が存在するところ（Claude、Codex）では本物の host plugin、store を持たない一つ（Kiro）では folder-drop。その帰結:
+
+- **我々はディストリビューションインフラを一切運用しない。** 顧客が自身の plugin リポジトリをホストする（git + semver タグ + `marketplace.json`）。1 つの marketplace エントリが、混成フリートに向けて 1 つの plugin をリストする。
+- **信頼は host-native である。** org の制限は host のマネージド allowlist を使う（Claude `strictKnownMarketplaces`、ユーザーが上書き不可; Codex hash でピン留めされた trust）。AIDLC は trust レイヤーを一切作らない。
+- **composer はインストール時に、host hook によってトリガーされて走る。** 組合せごとの事前ビルドツリーは無い; SessionStart hook が、選ばれた集合をローカルで compose する。
+
+> **セキュリティ注記 — Kiro の folder-drop にはインストール時の trust gate が無い。** Claude と Codex は、その hook が走れるよう *になる前に*、自身の trust プロンプト（マネージド marketplace / hash でピン留めされた承認）を通して plugin を仲介する。Kiro には plugin store が無いので、folder-drop 経路は plugin のファイル — 次のプロンプトで `compose.ts` を走らせる `.kiro.hook` を含む — を **同等の gate 無しで** コピーする: ツリーを drop すること *が* trust の決定である。Kiro の plugin drop は `git clone && run` のように扱うこと: 自分がコードを走らせてもよいソースからのみ plugin をインストールし、drop が持ち込む差分をレビューし、動いているブランチを追うのではなく plugin リポジトリをレビュー済みのタグにピン留めせよ。composer 自身は追加的で決して `core/` を編集しないが、それがインストールする hook はあなたのシェルの権限で実行される。
+
+contribution seam（§6）が、これが重要である理由である: それは構造的に VS Code の `contributes` + Cargo の追加的 feature-union — この分野で最良の compose 特性を持つモデル — であり、ゲートキーピング無しに、ファーストパーティ・サードパーティを問わず *すべての* plugin に利用可能である。
+
+## 3. plugin の構造と manifest
+
+plugin のツリーは `core/` の形を鏡写しにするので、packager はそれをあらゆる harness に射影できる — 一度だけ著述され、harness 中立である:
+
+ツリーは *設計された* サーフェスとして `core/` の完全な形を鏡写しにする; ✅ は packager が今日射影するサブツリーを、⏳ は設計されたがまだ射影されていないもの（§7）を標す:
+
+```text
+plugins/<name>/
+  .aidlc-plugin/plugin.json              # the manifest
+  stages/<phase>/<slug>.md               # ✅ NEW stages (slug identity; number is display-only)
+  sensors/aidlc-<id>.md                  # ✅ NEW sensor manifests
+  tools/<id>.ts                          # ✅ sensor scripts (so a sensor can run)
+  contributions/<phase>/<slug>.md        # ✅ ADDITIVE modifications to core stages (§6)
+  agents/<plugin>-<role>-agent.md        # ✅ NEW agents (stem == frontmatter name)
+  scopes/<plugin>-<name>.md              # ✅ NEW scopes (stem == frontmatter name)
+  knowledge/<agent-slug>/…               # ✅ per-agent METHODOLOGY knowledge
+  tests/                                 # the plugin's own content validation (integration tier)
+  memory/{org,team,project}.md           # ⏳ method/rule additions → default-space seed (§7)
+  memory/phases/<phase>.md               # ⏳
+```
+
+core の scope ファイルは `aidlc-` ファイル名プレフィックスを使う; plugin の scope ファイルはそれを
+plugin プレフィックスで置き換え（`<plugin>-<name>.md`）、ファイル名の語幹は frontmatter の
+`name` に等しい。plugin の agent ファイルも同じルールに従う:
+`<plugin>-<role>-agent.md`、frontmatter の `name` は語幹に等しい。
+
+`.aidlc-plugin/plugin.json` は **宣言的な** manifest である。そのトップレベルは共通の host plugin-manifest 形状を鏡写しにする（その結果、marketplace や host ツーリングがそれを list/version/trust できる）; AIDLC 固有の設定は、ネストされた `aidlc` ブロックに隔離される:
+
+```jsonc
+{
+  "name": "test-pro",                 // == dir name; "core", "aidlc", and "aidlc-*" are reserved; kebab-case
+  "version": "0.1.0",                 // semver; checked against dependents' constraints
+  "description": "…",
+  "author": { "name": "AWS AIDLC" },
+  "dependencies": ["core", "compliance@^1.2.0"],  // resolved vs git tags (<plugin>--v<version>)
+  "aidlc": {
+    "contributes": {                  // which subtrees this plugin ships
+      "stages": "stages/", "agents": "agents/", "scopes": "scopes/",
+      "memory": "memory/", "sensors": "sensors/", "knowledge": "knowledge/",
+      "tools": "tools/", "overlays": "contributions/"
+    }
+  }
+}
+```
+
+contribution のパスは plugin 相対であり、plugin ルートから外へ出てはならない。トップレベルは **寛容（lenient）** である（未知のキーは前方互換とツール間の許容のために保持される）; `aidlc` ブロックは **厳格（strict）** である *ように設計されている*（未知のキーは著述のタイポを捕らえるために拒否される） — ただし注意すべきは、今日 packager がコンテンツをディレクトリ規約（`stages/`、`sensors/`、`tools/`、`contributions/`、`scopes/`、`agents/`、`knowledge/`）で発見し、`aidlc.contributes` ブロックをまだ読ま **ず**、その厳格性を強制しないことである。Stage の番号は表示専用なので、plugin は manifest で番号レンジを主張しない。`overlays` は contribution ディレクトリ（§6）の意図された名前であり、コピーされるのではなくマージによって消費される。
+
+## 4. composition モデル
+
+composer は `bare core + {chosen plugins}` の上で一度走り、実効インストールを書く。**同じ composer** が、どうトリガーされるかに関わらず走る:
+
+| Host | Trigger | Trust |
+|------|---------|-------|
+| **Claude** | SessionStart hook（セッション spawn 時に即座に発火） | マネージド allowlist（`strictKnownMarketplaces`） |
+| **Codex** | SessionStart hook（最初のインタラクション時に遅延発火） | 一度きりの trust プロンプト、content-hash でピン留め |
+| **Kiro**（CLI/IDE） | バイナリが PATH 上にあるときは `aidlc plugin sync`、または folder-drop の後に手動で `bun <plugin>/hooks/compose.ts` | 該当なし - folder-drop ディストリビューション |
+
+ステップ（トリガーに関わらず同一）:
+
+1. **解決（Resolve）** — 選ばれた plugin に加え、それらの推移的な `dependencies` クロージャを、公開されたバージョンに対して解決する。
+2. **新しいプリミティブをコピー（Copy new primitives）** — 各 plugin の `stages`/`agents`/`scopes`/`knowledge`/`sensors`/`tools` サブツリーを、対応する harness ルートへ、`{{HARNESS_DIR}}` トークンを harness の実際のディレクトリへ置換しながらコピーする; `memory` は延期のまま（§7）。
+3. **contribution をマージ（Merge contributions）** — stage への各アクティブな contribution が、対象 stage のソースに折り込まれる（§6）: 構造的サーフェスは set-union、散文フラグメントはそのアンカーで splice される。
+4. **コンパイル（Compile）** — `aidlc-graph compile` が `stage-graph.json` + `scope-grid.json` を再生成する; orchestrator は完全にそれらから経路を決めるので、plugin stage は compose された瞬間に走る — 散文や skill の編集は不要である。
+
+composition は 1 つの N-way マージであり（独立した overlay の列ではない）ので、**同じ stage に両方が contribute する 2 つの plugin は本当にマージされる** — 構造的追加は set-union され、散文フラグメントは決定論的に順序づけられる — のであって、一方が静かに他方を上書きするのではない。ランタイムは composition に関して **read-only** のままである: すべてのマージは compose 時に起こり、決してセッションごとではない。マージは **stage ソース**（コンパイル済み JSON ではない）を編集するので、後のあらゆる `aidlc-graph compile`（例えば runtime-compile hook）にわたって **durable** であり、かつ **冪等（idempotent）** である — 毎 SessionStart で再実行しても新しくは何も compose しない。
+
+## 5. 選択（Selection）
+
+plugin は足す; インストールが選ぶ。plugin を compose すると、そのファイルはインストールにコピーされ、その追加的 contribution はマージされるが、そのインストールのユーザーが目にするのは `<harness-dir>/tools/data/harness.json` が名指す plugin だけである:
+
+```json
+{
+  "harnessDir": ".claude",
+  "rulesSubdir": "rules",
+  "plugins": ["aidlc", "test-pro"]
+}
+```
+
+`plugins` キーは任意である。それが無ければ、インストール済みのすべての plugin が有効になり、既存のインストールを保ち、出荷される core をバイト同一に保つ。それが在るとき、そのリストが有効な集合である。`aidlc` は暗黙の core plugin である; それを省くと core の stage/scope/runner が無効になるが、ファイルはインストールされたまま、再有効化可能なまま残る。3 つの Initialization stage は例外である: bootstrap は plugin identity を持たないので、それらの stage は有効なすべての scope に対して常に有効である。
+
+選択を検査または変更するには、決定論的なユーティリティコマンドを使う:
+
+```bash
+aidlc plugin list
+aidlc plugin select test-pro
+aidlc plugin select aidlc,test-pro
+bun <harness-dir>/tools/aidlc-utility.ts select-plugins
+bun <harness-dir>/tools/aidlc-utility.ts select-plugins test-pro
+bun <harness-dir>/tools/aidlc-utility.ts select-plugins aidlc,test-pro
+```
+
+`select-plugins` は名前を既知の集合（`aidlc` に加え、コンパイル済みノードと scope ファイルに見つかる plugin 名）に対して検証し、`harness.json` を書き、グラフを再コンパイルし、stage/scope runner を再生成し、生成された SKILL.md の scope/stage テーブルを、1 つのトランザクションで更新する。それは `harness.json`、`stage-graph.json`、`scope-grid.json` をスナップショットする; 後段の再生成ステップが失敗すると 3 つすべてを復元し、復元された選択に対して再生成チェーンを再実行するので、インストールが裂けたまま残されることは無い。`/aidlc --doctor` は有効な plugin、plugin ごとの有効 stage 数を報告し、グラフの `enabled:false` フラグが `harness.json` と食い違えば hard-fail する。
+
+`aidlc plugin sync` は、インストール済み plugin の composition のためのコマンドラインの窓口である。それは発見された plugin ルートの `hooks/compose.ts` ファイルを走らせ、利用可能な plugin ルートが無いとき `no installed plugins; nothing to sync` でクリーンに終了する。
+
+コンパイル済みの `stage-graph.json` は、インストール済みの完全な stage 集合を永続化する。無効なノードは `"enabled": false` を運ぶ; 有効なノードはそのキーを省く。ランタイムローダーは無効なノードをフィルタするので、runner、状態行、scope テーブル、そしてオーケストレーションは、選択されたグラフだけを見る。`loadStageGraphAll()` は doctor と選択ツーリングのために予約されている。Stage の番号は完全なグラフから割り当てられるので、plugin を無効にして後で再有効化しても番号は厳密に保たれる。選択フィルタは stage・scope・runner をカバーする; 無効な plugin の `agents/` と `knowledge/` ファイルはディスク上に残り、かつロード可能なまま（agent ロスターと knowledge ルックアップは選択フィルタされない） - 何かがそれらを参照しない限り inert である。なぜなら、それらの agent を dispatch するであろう stage がフィルタで除かれるからである。
+
+コンパイル済みの scope グリッドは、有効な scope identity だけを含む。無効な plugin の scope ファイルはディスク上に残るが、plugin が再び選択されるまでは有効なランタイム scope ではない。core が無効で、plugin scope の所有者がちょうど 1 つ有効なら、freeform/default scope のフォールバックはその plugin の最初の scope をアルファベット順で使う。複数の plugin scope 所有者が有効で、core の `feature` フォールバックが利用不可なら、orchestrator はエラーとなり、明示的な `--scope` を求める。
+
+plugin を無効にすると、それが core stage にマージしたものも、自身のファイルだけでなく取り除かれる。compose は、実際に適用した構造的追加（対象 stage ごとの produces / sensors / consumes / required_sections）を、`tools/data/plugin-contrib-<key>.json` の plugin ごとの sidecar に記録する; splice された散文フラグメントはそれ自身の sentinel マーカーを運ぶ。無効化時、`select-plugins` は同じロールバックトランザクションの内側で、インストール済みの stage ソースから両者を取り除くので、無効な plugin の contribution は有効な stage を steer するのをやめる。再有効化は次のセッション開始でそれらを復元する: plugin の compose hook が、バイト同一に再マージする。
+
+選択はコンパイル時に closure チェックされる: 有効な stage は、その唯一の producer stage が無効であるような artifact を要求してはならない。エラーは消費側の stage、artifact、無効な producer stage、そしてそれらを提供する plugin を名指し、それらの plugin を有効にするか消費側を無効にするよう伝える。これは、さもなくば飢えた必須入力を持つ stage へ経路づけてしまう plugin-only の選択を捕らえる。無効な stage を指す `requires_stage` edge はエラーで **は** ない（依存が決して走らないとき順序 edge は空虚である - plugin-only のインストールは plugin stage を core のものの後に正当に順序づける）が、doctor はそのようなドロップされた edge を advisory としてリストする。
+
+`select-plugins` はまた、アクティブなワークフローを座礁させる変更を拒む: 走行中ワークフローの scope を所有する plugin、またはそのプランに保留中の EXECUTE stage を所有する plugin を無効にすることは、各依存を名指して拒否される（まずワークフローを完了するか park するか、あるいは plugin を有効に保て）。doctor は、すでに 1 つを座礁させている選択に対して hard-fail する。
+
+plugin を compose しても、選択がすでに存在するとき、それを自動で有効にはしない。compose hook はなお plugin 自身のファイル（stage、scope、agent、knowledge、sensor、tool - すべてランタイムフィルタされる）をコピーし、その plugin を露出させる `select-plugins` コマンドを名指す advisory ドロップを記録するが、無効の間は contribution を core stage ソースにマージし **ない** - マージされた contribution は選択フィルタを迂回し、それらをマージすると毎セッション開始で無効化時の strip を打ち消してしまう。選択キーが無ければ、compose された plugin は即座にアクティブとなり、元々の status quo を保つ。
+
+`bundle` は今日、意図的に使われていない。この語は、将来ありうる collection-of-plugins のコンセプトのために予約されている; plugin の所有権は常に `plugin:` で表現される。
+
+## 6. contribution seam
+
+**contribution** は、名前を挙げた既存の stage を追加的に変更するために plugin が出荷するファイルで、`contributions/<phase>/<slug>.md` に置く。それは決して対象を編集しない:
+
+```yaml
+---
+target: build-and-test        # the existing core stage being enriched
+plugin: test-pro
+adds:                         # STRUCTURAL — set-unioned into the stage node
+  produces:
+    - test-pro-regression-suite            # plugin-namespaced (§8)
+  consumes:
+    - artifact: test-pro-testability-requirements
+      required: false
+  sensors:
+    - coverage-threshold
+  required_sections:
+    - "Branch Coverage"        # declared H2 (merged into the stage; not machine-enforced yet — see §9)
+fragments:                    # PROSE — spliced into the stage body
+  - anchor: after-step:9
+    order: 100
+---
+
+## fragment: after-step:9
+
+### Step 9a (test-pro): Branch + coverage enrichment
+…prose the agent reads, inserted after the target stage's Step 9…
+```
+
+`bundle:` は予約され未使用である; plugin の所有権には `plugin:` と書く。
+
+**マージのセマンティクス:**
+
+- **構造的サーフェス** — 対象 stage のソース frontmatter への **set union**。可換で、順序に依らず、非協調な著者間で安全である。*今日実装済み:* `produces`、`consumes`（artifact + `required` + `conditional_on`、各々が保持される）、`sensors`、`required_sections`。*まだマージされない（延期）:* `adds.scopes` と `adds.requires_stage` — contribution はそれらを宣言してよいが、compose hook はマージするのではなく drops ログに記録する（`--doctor` がそれを露出する）ので、その不在は静かではなく、常に可視である。これらが昇格するとき、他と同様に set-union する。
+- **散文フラグメント**（step/question 散文の `fragments`） — 宣言されたアンカーで stage の本体に splice され、`(order, plugin)` によって決定論的に順序づけられる。splice された各ブロックは content-hash された sentinel で包まれるので、再 compose は冪等であり、アップグレードされたフラグメントはその以前のブロックを置き換え、別々の plugin からのブロックは hook 発火順に関わらず `(order, plugin)` で交互に並ぶ。agent はランタイムに、ベース本体 + 順序づけられたフラグメントを読む。
+- **決して override しない。** contribution は足すことしかできない。それは stage の `lead_agent` を変えたり、`consumes[].required` を緩めたり、フィールドを取り除いたり、既存の step 散文を置き換えたりできない。上流の振る舞いを *変える* 本物の必要は、フレームワークレベルの決定であって、決して plugin 内部の静かなパッチではない。
+
+**フラグメントのアンカー:**
+
+| Anchor | fragment を挿入する位置… |
+|--------|------------------------|
+| `after-step:<n>` | `### Step <n>` の内容の直後（次の見出しの前） |
+| `before-step:<n>` | `### Step <n>` の直前 |
+| `after-questions` | questions を生成するステップの後 |
+| `end-of-steps` | `## Steps` ブロックの末尾 |
+| `in:<Compartment>` | 名前付きの `## <Compartment>` ブロックの末尾 |
+
+**サーフェスごと** — plugin が各種の上流変更に対して何を使うか。「Status」は、compose hook が今日マージするものと、設計されたが延期されたものを標す:
+
+| 変更 | メカニズム | Status |
+|--------|-----------|--------|
+| stage が新しい questions を尋ねる | question 散文の `fragments` | ✅ implemented |
+| stage が追加の artifact を produce する | `adds.produces` + それを emit する `fragments` step | ✅ implemented |
+| stage が新しいセクションを要求する | `adds.required_sections` | ✅ merged (⚠️ declarative — not machine-enforced yet, §9) |
+| stage に検証を足す | `adds.sensors`（+ manifest と `tools/` スクリプトを出荷） | ✅ implemented |
+| consume edge を足す | `adds.consumes` | ✅ implemented |
+| `requires_stage` edge を足す | `adds.requires_stage` | ⏳ deferred (declared → logged, not merged) |
+| 既存の stage を plugin scope の下に置く | `adds.scopes`（または scope 自身の `includes_*` — §7） | ⏳ deferred (declared → logged, not merged) |
+| phase ポリシー / ガードレールを注入する | `memory/phases/<p>.md` を default-space seed に出荷（§7） | ⏳ deferred (not yet projected) |
+
+## 7. method/rules、agent、knowledge、scope、そして activation
+
+このセクションは、新しい stage + contribution seam を超えたサーフェスを記述し、著者が誤導されないよう status を明示する:
+
+**method/rules → memory seed** *(⏳ 延期)。* フレームワークの rule レイヤーは、space ごとの **memory** ツリー（`aidlc/spaces/<space>/memory/{org,team,project}.md`、`phases/<phase>.md`）であり、`core/memory/` からシードされる。設計は、plugin が `memory/phases/<p>.md` を contribute し、それがそのシードに set-union する、というものである。packager はまだ plugin の `memory/` ツリーを射影しないので、これは今日効果を持たない。
+
+**Agent** *(✅ 射影 + compose 済み)。* plugin は `agents/<plugin>-<role>-agent.md` の下に新しいペルソナを出荷し、frontmatter の `name` はファイル名の語幹に、`plugin: <plugin>` に等しい。compose はそれらを `<harness>/agents/` に、core や別の plugin を上書きせずにコピーする; 同一のファイルは冪等なスキップ、同じ宛先での異なるコンテンツは drop-log される。OpenCode では、compose はさらに `mode: subagent`、`permission.task: deny`、そして OpenCode 妥当な model/memory frontmatter を持つネイティブの `.opencode/agents/` の双子を emit する。
+
+Kiro CLI/IDE、Codex、OpenCode では、engine ロスター中の Markdown ペルソナは `mode: inline` に対してのみ利用可能である。ネイティブ dispatch はさらに、harness ごとの dispatch サーフェスを要求する — Kiro では手で著述された agent-v1 JSON に加え conductor の `trustedAgents` リストへの登録、Codex では agent 設定 TOML（出荷される `aidlc-*-agent.toml` の形）、OpenCode ではネイティブの `.opencode/agents/` subagent ファイル。それゆえ compose は、dispatch されるトポロジー（lead と support の `mob`、`pipeline`、または `subagent`; モードに関わらず任意の gate 付き stage の `reviewer:`）が、完全なインストール済み dispatch サーフェスを欠く agent を名指す plugin stage を拒否し、その stage・agent・是正を compose drops ログに記録する。Kiro では、JSON と `trustedAgents` 登録は独立にチェックされる: 片方だけを持っても stage はなお拒否される。OpenCode — そのネイティブサーフェスを compose 自身が emit する唯一の harness — では、plugin が出荷したペルソナは、それがネイティブ双子の emit を生き延びるとき（閉じた frontmatter、射影不能な `disallowedTools` が無い）サーフェスとして数える; Kiro/Codex のサーフェスは常に手で著述されるので、plugin 自身のファイルがそれらのチェックを満たすことは決してない。欠けたサーフェスを手で著述して compose を再実行すれば stage は受理される。Markdown ペルソナは、それを併用する受理済みの任意の inline stage のために compose されたままである。
+
+`agent-team` はスキーマ予約されているがランタイム消費者を持たないので、compose はそれを選ぶ plugin stage を、静かに inline として扱う代わりに、あらゆる harness で拒否する。インストール済みの stage parser が利用不可なら、Kiro/Codex/OpenCode の compose は fail closed する: 明示的な `mode: inline` スカラーと `reviewer:` 無しの stage だけが受理される（引用符付きのスカラー形も認識される）。no-clobber なアップグレードは、より古い hook が compose した stage を取り除けないので、これらの dispatch チェックに失敗する既存の stage はディスク上に残るが、是正を名指す劣化した health 行を emit する。
+
+**knowledge = methodology のみ** *(✅ 射影 + compose 済み)。* plugin は agent ごとの methodology knowledge を `knowledge/<agent-slug>/` に出荷し、それは `<harness>/knowledge/<agent-slug>/` に compose される。ドメイン/space knowledge（`aidlc/spaces/<space>/knowledge/`）は、bootstrap 時に空のユーザーランタイム状態であり、plugin はそれを出荷もシードもしない。
+
+**Scope** *(✅ 射影 + compose 済み)。* plugin scope の identity は、`scopes/<plugin>-<name>.md` の下の 1 つのファイルであり、frontmatter の `name` はファイル名の語幹に、`plugin: <plugin>` に等しい。compose はそれを `<harness>/scopes/` に上書きせずにコピーする。plugin が著述した stage 上のメンバーシップは、それらの stage の `scopes:` frontmatter を通して働く。既存の core stage に `adds.scopes` 経由で plugin scope を足すことは、依然として延期され、logged-not-merged である（§6）。
+
+**activation（`when:`）** *(⚠️ パースされるが、評価されない)。* stage は構造化された `when:` 述語を運んでよい; `{producer-in-plan: X}` はスキーマ検証されパースされるが、**まだそれを評価する engine 消費者は無い** — `aidlc-graph` が将来の住処として自身を名指す。だから `when:` を運ぶ stage は、今日は宣言された scope の下で無条件に EXECUTE である。plugin 自身の stage は plugin が選ばれた集合に在るときだけ存在するので、「この plugin はアクティブか」はすでに compose 時のファクトである。
+
+**`plugin.json` の `aidlc.contributes`** *(⏳ 延期)。* manifest は `aidlc.contributes` ブロックを運んでよいが、packager は現在コンテンツをディレクトリ規約（`stages/`、`sensors/`、`tools/`、`contributions/`、`scopes/`、`agents/`、`knowledge/`）で発見するのであって、そのブロックからではない — それはまだ読まれない。`aidlc.lock.json` の読み取りも無い; composer は今日、lockfile からは何も解決しない。
+
+## 8. マルチテナントのガード
+
+決して協調しない独立した著者は、次によって安全に保たれる:
+
+- **名前空間化。** contribute された artifact の論理名は `<plugin>-` プレフィックスされる; `core-*` は予約されている。plugin の stage・agent・scope・sensor は、選ばれた集合にわたって、そして core に対して一意であるべきである。プリミティブのファイル衝突は no-clobber で、帰属付きで drop-log される（静かなシャドウイングは無い）。
+- **依存解決。** `dependencies` は semver によって git タグに対して解決される; サイクルは拒否される; 満たせない依存は、要求している plugin を名指す compose エラーである。
+- **決定論的な順序づけ。** 唯一の非可換なサーフェス（散文フラグメント）は、ロード順ではなく明示的な `(order, plugin)` によって順序づけられる。
+- **衝突は可視である。** 真に非可換な衝突 — 同じ stage の同じフラグメントアンカーの同じ order、満たせない plugin 間の edge、または重複したプリミティブパス — は、overlay の順序で解決されるのではなく、帰属付きでドロップまたは拒否される。
+
+## 9. As-built: emission、インストール、そして具体例
+
+`bun scripts/package.ts` は `plugins/<name>/`（`.aidlc-plugin/plugin.json` を持つ任意のディレクトリ）を発見し、`dist/plugins/<name>/<harness>/` に harness ごとの host plugin を emit する — 4 つの harness ツリーと並ぶ、もう 1 つの射影ターゲットである。各射影は、host ネイティブの manifest（`.claude-plugin/` / `.codex-plugin/` / `.kiro-plugin/`）、`marketplace.json`、compose hook、そして plugin のコンテンツ（`number`/`plugin`/`when` の完全な frontmatter を持つ stage — スキーマはそれらをネイティブに受理する）を運ぶ。compose hook は、単一のポータブルな `compose.ts`（bun — GNU 固有のシェル無し）であり、**harness 非依存** である: plugin ルートは `CLAUDE_PLUGIN_ROOT | PLUGIN_ROOT | AIDLC_PLUGIN_ROOT` から、プロジェクトディレクトリは `CLAUDE_PROJECT_DIR | AIDLC_PROJECT_DIR | PWD` から（Codex はプロジェクトディレクトリの var を未設定のまま残す — PWD がフォールバック）、そして harness のリーフは `AIDLC_HARNESS_DIR` から解決され、それは各 host の hook コマンドが export する。それは新しい stage/scope/agent/knowledge/sensor/tool を上書きせずにコピーし、seam を冪等にマージし（content-hash された sentinel splice、書き込み前比較）、ドロップせざるを得ない任意の contribution（欠けた target、不正なアンカー、インストール済みの engine が受理しないキー）を plugin ごとの `<hooksHealthDir>/plugin-compose-<key>.drops` ファイル — core hook が書き込み、`/aidlc --doctor` がスキャンするのと同じ space ごとの health ディレクトリ — に記録する。セッションを失敗させはしない。
+
+emit された SessionStart コマンドは、まず `PATH` 上の `aidlc` を探り、利用可能なら `aidlc plugin sync` を走らせる。`aidlc` バイナリが見つからなければ、直接の bun `hooks/compose.ts` 起動にフォールバックし、どちらの実行可能ファイルも利用不可のときでもなお 0 で終了する。
+
+**host ごとのインストール:**
+
+```bash
+# Claude Code
+/plugin marketplace add <repo-or-path>/dist/plugins/<name>/claude
+/plugin install aidlc-<name>@aidlc-plugins        # SessionStart hook composes on next session
+
+# Codex CLI (in a git repo)
+codex plugin marketplace add <…>/dist/plugins/<name>/codex
+codex plugin add aidlc-<name>@aidlc-plugins       # approve the one-time hook trust
+
+# Kiro (no store — folder-drop, then run the composer explicitly).
+# PLUGIN_ROOT is the emitted projection dir (it carries hooks/compose.ts + the
+# plugin content); PROJECT_DIR is the install you dropped .kiro into.
+PLUGIN_ROOT="$(pwd)/dist/plugins/<name>/kiro"
+cp -r "$PLUGIN_ROOT"/. <project>/
+AIDLC_PLUGIN_ROOT="$PLUGIN_ROOT" AIDLC_PROJECT_DIR="<project>" \
+  AIDLC_HARNESS_DIR=.kiro aidlc plugin sync
+# fallback when aidlc is not installed:
+AIDLC_PLUGIN_ROOT="$PLUGIN_ROOT" AIDLC_PROJECT_DIR="<project>" \
+  AIDLC_HARNESS_DIR=.kiro bun "$PLUGIN_ROOT/hooks/compose.ts"
+```
+
+その後 `/aidlc plugin list` と `/aidlc --doctor` が有効な集合を反映し（例えば `core + test-pro` の 34-stage グラフ、または `select-plugins` がそれを絞ったときのフィルタ済みグラフ）、scope 付きの実行（`/aidlc --scope enterprise`）が、plugin の stage をその scope が経路上に置くところへどこへでも経路づける。
+
+**具体例 — 混成フリートにわたる test-pro。** プラットフォームチームが `test-pro` を一度公開する（`core/` に対して著述し、`bun scripts/package.ts`、`<plugin>--v<version>` タグを push、`marketplace.json` を drop）。Claude チームは `/plugin install`; Codex チームは `codex plugin add`（一度だけ trust を承認）; Kiro チームは `git pull` + composer を明示的に走らせる（上記）。いずれの場合も、composer は test-pro の 2 つの新しい stage **と** その `build-and-test`/`nfr-requirements`/`nfr-design`/`performance-validation` への contribution をマージする — 同じ、豊かにされた、34-stage の、doctor がクリーンなインストールである。4 つすべての harness 射影（Claude、Codex、Kiro CLI、Kiro IDE）にわたって検証済み。
+
+**Status。** 実装済みかつ検証済み: `number`/`name`/`plugin`/`when` のスキーマサポート（`aidlc-stage-schema.ts`）; 著述された `plugin` 所有権のコンパイル済み stage ノードへの compile 側キャリースルー（core はフィールドを省く）; `harness.json` + `select-plugins` を通じたインストール時の選択、完全グラフの永続化、フィルタ済みのランタイムロード、closure チェック、runner の刈り込み、doctor 行、compose advisory ドロップを含む; `aidlc plugin list` と `aidlc plugin sync`; plugin 名前空間化された stage/scope runner の生成; packager emitter（発見されたあらゆる harness 射影）; plugin の `stages/`、`scopes/`、`agents/`、`knowledge/`、`sensors/`、`tools/` の射影と no-clobber compose; harness 非依存の compose hook（`scripts/plugin-hooks-template/compose.ts`）; `produces` / `consumes` / `sensors` / `required_sections` + 散文フラグメント（content-hash 済み、冪等、順序決定論的）の contribution seam。`tests/integration/t188-plugin-compose.test.ts`（compose メカニズム）、`tests/integration/t224-plugin-selection.test.ts`（選択）、そして各 plugin 自身の `tests/`（コンテンツ; integration tier に結線される）でガードされる。**延期 / まだ結線されていない:** plugin の `memory/` サブツリーの射影/マージ; `adds.scopes` / `adds.requires_stage` のマージ（宣言 → ログ）; `when:` 述語の評価（パースされるが engine 消費者無し）; マージされた `required_sections` の機械強制（フィールドはマージ + 検証されるがコンパイル済みノードに届かず、出荷される required-sections sensor はその期待をテンプレートから導くので、欠けた宣言済みセクションのために stage を失敗させるものはまだ無い）; `after-questions` フラグメントアンカー（`locateAnchor` にケースが無い — "unknown anchor" を drop-log する; `after-step:<n>` を使う）; `aidlc.contributes` / 任意の lockfile / `dependencies` の読み取り; そして著述された `number` のコンパイル済みノードへの compile 側キャリースルー（stage は今日なお再シード/ピン留めされた番号を使う）。
+
+## 9. 不変条件
+
+- **core は不変である。** どの plugin も決して `core/` を編集しない。
+- **追加のみ。** contribution は足す; 決して override も削除もしない。
+- **オフのとき inert。** すべての plugin を無効にすると、素の core が、バイト同一で得られる。
+- **1 つの composer、host トリガー。** 同じコードが、走るところどこでも compose する; 中央で事前ビルドされる唯一の成果物は bare core である。
+- **plugin は host plugin で「ある」。** packager は本物の `.claude-plugin/` / `.codex-plugin/` / `.kiro-plugin/` manifest を emit し、host のネイティブコマンドを通してインストールされる。AIDLC はディストリビューションインフラを一切運用しない。
+- **slug identity、表示専用の番号。** plugin stage を挿入しても core が再番号付けされることは決してない。
+- **信頼は host-native である。** org の制限は host のマネージド allowlist を使う; AIDLC は trust レイヤーを一切作らない。
+- **ゲートキーピング無し。** ファーストパーティとサードパーティの plugin は機構的に等しい; 出所が唯一の違いである。
+
+## クロスリファレンス
+
+- [Plugin を著述する](../harness-engineering/10-authoring-a-plugin.md) — 著者向けのウォークスルー（fixture を端から端まで組む）。
+- [ステージ定義](15-stage-definition.md) — stage frontmatter の契約、`plugin`/`number`/`when` を含む。
+- [Artifact Vocabulary](16-artifact-vocabulary.md) — 論理名の名前空間化。
+- [Engine と Skill システム](17-skill-system.md) — composer が供給し orchestrator が経路を決めるコンパイル済みグラフ。
+- 設定例ドキュメント（`marketplace.json`、`managed-settings.json`、`aidlc.lock.json`）は [`examples/test-pro/`](examples/test-pro/) の下; composition のタイミングの証拠と、順序づけられたビルド履歴は、このリポジトリの git ログに保存されている。

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>開発者リファレンス概要 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/00-overview</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html" class="here">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#what-this-reference-covers">このリファレンスが扱う範囲</a>
+  <a href="#how-to-navigate">ナビゲーションの仕方</a>
+  <a href="#relationship-to-the-user-guide">ユーザーガイドとの関係</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="developer-reference-overview">開発者リファレンス概要</h1>
+<blockquote>
+<p><a href="../README.html">AI-DLC ドキュメント</a> の一部 · <a href="../guide/00-introduction.html">ユーザーガイド</a> · <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a> · <strong>開発者リファレンス</strong></p>
+</blockquote>
+<p>このリファレンスは AI-DLC の内部アーキテクチャと実装を文書化する。対象読者は、AI-DLC のコードベース自体 — orchestrator、hook、CLI ツール、stage-graph のコンパイル pipeline、audit の分類体系、テストスイート — を変更するコントリビューターである。</p>
+<p>AI-DLC を<strong>使って</strong>ソフトウェアを構築する立場なら、まず <a href="../guide/00-introduction.html">ユーザーガイド</a> から始める。設定を通じて <strong>AI-DLC の振る舞いを再形成する</strong>立場 — stage や agent の追加、scope の定義、rule と sensor の著述、チーム knowledge の追加 — なら、まず <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a> から始める; それらはコード変更ではなくデータ変更であり、そこの各章は、網羅的なスキーマを求めてここへ指し戻す前に、ワークフローを物語る。</p>
+<blockquote>
+<p><strong>このリファレンスにおけるパス。</strong> AI-DLC は一度だけ著述され harness ごとに生成されるので、ファイルは意図によって 3 つの規約のいずれかで名付けられる:</p>
+<ul>
+<li><strong><code>core/…</code></strong> -- 手で著述される、harness 中立な<strong>信頼できる源泉</strong>（例: <code>core/tools/aidlc-orchestrate.ts</code>、<code>core/aidlc-common/stages/</code>）。ここで編集する。ファイルが<em>著述</em>または<em>変更</em>される場所を名指すパスは <code>core/</code> パスである。</li>
+<li><strong><code>dist/&lt;harness&gt;/…</code></strong> -- <strong>生成され、コミットされ、drift ガードされた</strong>ディストリビューション（<code>dist/claude/.claude/</code>、<code>dist/kiro/.kiro/</code>、<code>dist/kiro-ide/.kiro/</code>、<code>dist/codex/</code>）。決して手で編集されない; <code>bun scripts/package.ts</code> によってバイト単位で再生成される。<em>出荷される</em>ものを説明するときだけ引用される。</li>
+<li><strong><code>&lt;harness-dir&gt;/…</code></strong>（例: <code>.claude/</code>、<code>.kiro/</code>、<code>.codex/</code>） -- <em>インストールされた</em>プロジェクトの中の<strong>ランタイム</strong>の場所であり、そこでコマンドが走り、ワークフロー中にフレームワークが読み書きする（<code>bun .claude/tools/aidlc-graph.ts compile</code>、<code>.claude/agents/</code> を読む <code>loadAgents()</code>）。このディレクトリは harness のパラメータである。</li>
+</ul>
+<p>このリファレンスが裸の <code>.claude/</code> パスを示すとき、それは特に Claude harness のランタイムの場所と読むこと; 同じファイルは <code>core/</code> で著述され、各 harness 自身のディレクトリに出荷される。</p>
+</blockquote>
+<h2 id="what-this-reference-covers">このリファレンスが扱う範囲</h2>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>トピック</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="01-architecture.html">Architecture</a></td>
+<td>5 層モデル、<a href="01-architecture.html#configuration-layers">Configuration layers</a> のルーティング原則、実行モデル、設計判断</td>
+</tr>
+<tr>
+<td><a href="02-plane-architecture.html">Plane アーキテクチャ</a></td>
+<td>control / data / management plane の分離とその境界</td>
+</tr>
+<tr>
+<td><a href="03-orchestrator.html">Orchestrator</a></td>
+<td>SKILL.md の conductor: 転送ループ、gate の儀式、それが駆動する状態機械</td>
+</tr>
+<tr>
+<td><a href="04-stage-protocol.html">Stage プロトコル</a></td>
+<td>振る舞いの契約: 承認 gate、コンプライアンスチェックリスト</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/">Stages</a></td>
+<td>phase ごとの stage ドキュメント（5 ファイル）</td>
+</tr>
+<tr>
+<td><a href="05-agent-system.html">Agent System</a></td>
+<td>agent の構造、frontmatter の契約、設定マトリクス</td>
+</tr>
+<tr>
+<td><a href="06-hooks-and-tools.html">Hook とツール</a></td>
+<td>hook システム、CLI ツール、74 イベントの audit 分類体系</td>
+</tr>
+<tr>
+<td><a href="07-sensor-system.html">Sensor System</a></td>
+<td>sensor manifest スキーマ、PULL インポート、発火モデル、default severity</td>
+</tr>
+<tr>
+<td><a href="08-rule-system.html">Rule System</a></td>
+<td>rule ファイルのレイアウト、scope の導出、layer-chain resolver、競合 gate</td>
+</tr>
+<tr>
+<td><a href="09-testing.html">テスト</a></td>
+<td>テストピラミッド、tier、スタブ、フィクスチャ、テストレジストリ</td>
+</tr>
+<tr>
+<td><a href="10-knowledge-system.html">Knowledge System</a></td>
+<td>2 層アーキテクチャ、ロード順、テンプレート</td>
+</tr>
+<tr>
+<td><a href="11-contributing.html">Contributing</a></td>
+<td>開発ワークフロー、ユーティリティハンドラのチェックリスト、ドキュメントポリシー</td>
+</tr>
+<tr>
+<td><a href="12-state-machine.html">状態機械</a></td>
+<td>workflow / phase / stage の機械、74 イベントの分類体系、audit-first のルール</td>
+</tr>
+<tr>
+<td><a href="13-runtime-graph.html">Runtime Graph</a></td>
+<td>コンパイル済みの <code>runtime-graph.json</code> 成果物: stage graph の data-plane ミラー</td>
+</tr>
+<tr>
+<td><a href="14-claude-features.html">Harness プリミティブの対応</a></td>
+<td>各 AI-DLC 概念が harness のネイティブプリミティブにどう対応するか（Claude Code を深く）</td>
+</tr>
+<tr>
+<td><a href="15-stage-definition.html">Stage 定義</a></td>
+<td>YAML frontmatter の契約、3 区画の本体、コンパイル pipeline</td>
+</tr>
+<tr>
+<td><a href="16-artifact-vocabulary.html">Artifact Vocabulary</a></td>
+<td>命名規則、衝突ポリシー、ファイルシステムへの対応、ライブレジストリの見方</td>
+</tr>
+<tr>
+<td><a href="17-skill-system.html">Engine と Skill システム</a></td>
+<td>orchestration engine（<code>next</code>/<code>report</code>/<code>park</code>）、型付き directive の契約、conductor、複数 skill、scope shape、swarm referee</td>
+</tr>
+<tr>
+<td><a href="18-plugin-mechanism.html">Plugin Mechanism</a></td>
+<td>AIDLC plugin システム: manifest、本物のホストプラグインとしてのインストール時合成、加算的なコントリビューションの継ぎ目、マルチテナントのガード、as-built ステータス。著述のウォークスルーは <a href="../harness-engineering/10-authoring-a-plugin.html">harness-engineering/10</a></td>
+</tr>
+<tr>
+<td><a href="diagrams.html">図</a></td>
+<td>すべての Mermaid 図を 1 箇所に</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/">Agents</a></td>
+<td>技術的な agent リファレンス（frontmatter、ツール、stage の所有）</td>
+</tr>
+</tbody></table>
+<h2 id="how-to-navigate">ナビゲーションの仕方</h2>
+<ul>
+<li><strong>新しい関心事（rule、方法論、knowledge の事実）はどこに属すか？</strong> <a href="01-architecture.html#configuration-layers">Architecture: Configuration layers</a> を読む — 境界テストを備えた 2 軸モデル（著述 × 消費）が、あらゆる新しい関心事を正しいファイルへルーティングする。</li>
+<li><strong>新しい stage を足す？</strong> <a href="04-stage-protocol.html">Stage プロトコル</a>、続けて <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/">Stages</a> の該当する phase ファイル、続けて <a href="11-contributing.html">Contributing</a> を読む。</li>
+<li><strong>stage 定義のフォーマットを変える？</strong> どの stage <code>.md</code> ファイルを編集する前にも <a href="15-stage-definition.html">Stage 定義</a> を読む。stage ファイルのフォーマットはデータ駆動である; ランタイムはコンパイル済みの JSON を読む。</li>
+<li><strong>成果物を足す、または改名する？</strong> <a href="16-artifact-vocabulary.html">Artifact Vocabulary</a> を読む — この章は命名規則、安定性ポリシー（改名/削除 = major、追加 = minor）を説明し、ライブなリストとして <code>bun aidlc-graph.ts artifacts</code> を指す。レジストリは stage ファイルから導出され、書かれるものではない。</li>
+<li><strong>新しい scope を足す？</strong> <a href="11-contributing.html#adding-a-scope">Contributing: Adding a Scope</a> を読む。scope はファイルで著述される — <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイルと、各メンバー stage の <code>scopes:</code> タグ — TypeScript の編集は不要である。</li>
+<li><strong>新しい agent を足す？</strong> <a href="11-contributing.html#adding-an-agent">Contributing: Adding an Agent</a> を読む。agent はその <code>.md</code> frontmatter を通じてデータ駆動である — TypeScript の編集は不要である。</li>
+<li><strong>agent を変更する？</strong> <a href="05-agent-system.html">Agent System</a> と、<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/">Agents</a> にある該当 agent のファイルを読む。</li>
+<li><strong>hook に取り組む？</strong> <a href="06-hooks-and-tools.html">Hook とツール</a> と、hook のテストパターンとして <a href="09-testing.html">テスト</a> を読む。</li>
+<li><strong>orchestrator を変える？</strong> <a href="03-orchestrator.html">Orchestrator</a> と <a href="01-architecture.html">Architecture</a> を読む。audit イベントを足す、または変更するなら、<a href="12-state-machine.html">状態機械</a> の章から始める — そうしなければ drift テストが捕まえる。</li>
+</ul>
+<h2 id="relationship-to-the-user-guide">ユーザーガイドとの関係</h2>
+<p>ユーザーガイド（<code>docs/guide/</code>）は AI-DLC が<strong>何をするか</strong>と<strong>どう使うか</strong>を説明する。この開発者リファレンスは<strong>どう動くか</strong>と<strong>どう変えるか</strong>を説明する。いくつかのトピックは両方に現れる:</p>
+<table>
+<thead>
+<tr>
+<th>トピック</th>
+<th>ユーザーガイド</th>
+<th>開発者リファレンス</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Agents</td>
+<td>何をするか、いつ現れるか</td>
+<td>frontmatter の契約、足し方/変え方</td>
+</tr>
+<tr>
+<td>Knowledge</td>
+<td>会社標準の足し方</td>
+<td>ロード順の内部、テンプレートシステム</td>
+</tr>
+<tr>
+<td>Hooks</td>
+<td>何がログされるか</td>
+<td>hook の実装、audit イベントの分類体系</td>
+</tr>
+</tbody></table>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md"><code>docs/reference/00-overview.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scope — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / harness-engineering/04-scopes</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">HARNESS ENGINEERING</div>
+  <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a>
+  <a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>
+  <a href="../harness-engineering/02-adding-a-stage.html">Stage を足す</a>
+  <a href="../harness-engineering/03-adding-an-agent.html">Agent を足す</a>
+  <a href="../harness-engineering/04-scopes.html" class="here">Scope</a>
+  <a href="../harness-engineering/05-rules-and-the-loop.html">Rule と学習ループ</a>
+  <a href="../harness-engineering/06-sensors.html">Sensor</a>
+  <a href="../harness-engineering/07-team-knowledge.html">チーム Knowledge</a>
+  <a href="../harness-engineering/08-construction-and-swarm.html">Construction と swarm</a>
+  <a href="../harness-engineering/09-porting-to-a-new-harness.html">AI-DLC を新しい harness へ移植する</a>
+  <a href="../harness-engineering/10-authoring-a-plugin.html">Plugin を著述する</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#what-a-scope-is-made-of">scope が何でできているか</a>
+  <a href="#how-scopes-relate-to-stages">scope と stage の関係</a>
+  <a href="#adding-a-team-scope">チーム scope を足す</a>
+  <a href="#tuning-an-existing-scope">既存 scope の調律</a>
+  <a href="#next">次へ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / HARNESS-ENGINEERING</p>
+<h1 id="scopes">Scope</h1>
+<p>scope は、ある種の仕事に対してフレームワークの 32 stage の<em>どれ</em>が走り、どれが座るかを決めるダイヤルである。bugfix に market research やデプロイパイプラインは要らない。規制下の enterprise feature にはそのすべてが要る。毎回ユーザーに stage を手で選ばせるのではなく、AI-DLC は名前付きの 9 scope を同梱する — それぞれが全 stage 集合に対する EXECUTE/SKIP の判定を厳選したもので、既定の depth とテスト戦略とペアになっている。scope を選べば、残りはカスケードする。</p>
+<p>harness engineer にとって、scope は純粋なデータであり、他のすべてのプリミティブと同じ方法 — ファイルとして — で著述される。2 つの半分から成る: 1 つの <code>core/scopes/aidlc-&lt;name&gt;.md</code> ファイル（その同一性 — name、depth、keywords、description）に、stage 別のメンバーシップタグ（各 stage の frontmatter の <code>scopes:</code> リストが、それが走る scope を名指す）を加えたもの。scope の追加や調律に TypeScript は要らない。この章はワークフローを歩く: scope が何でできているか、チーム scope をどう足すか、既存のものをどう調律するか、ツールが何を確認し何をあなたに委ねるか。</p>
+<p>ユースケースとユーザーが読むルーティング表を含む 9 scope の完全なカタログは、ユーザーガイドの <a href="../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> を参照。この章は同じデータの著述側である。</p>
+<hr>
+<h2 id="what-a-scope-is-made-of">scope が何でできているか</h2>
+<p>scope は 2 箇所で著述され、その分割こそがアイデアのすべてである: scope の<em>同一性</em>は自分のファイルに住み、その<em>メンバーシップ</em>（どの stage がその下で走るか）は stage の上に転置されて住む。</p>
+<p><strong>1. scope ファイル — <code>core/scopes/aidlc-&lt;name&gt;.md</code>。</strong> scope ごとに 1 ファイルで、<code>core/sensors/</code> を映す。<code>feature</code> scope の frontmatter はこう見える:</p>
+<pre><code class="language-yaml">---
+name: feature
+depth: Standard
+keywords: []
+description: Default for new features, practical depth
+skeleton: on
+---
+
+# feature scope
+
+Prose intent: why these stages, why skip those.
+</code></pre>
+<p>frontmatter のフィールドは、1 つの必須フィールドと 3 つの任意のつまみに分かれる:</p>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>必須</th>
+<th>何をするか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>Yes</td>
+<td>scope 名。core ファイルは <code>aidlc-&lt;name&gt;.md</code> を使う。plugin scope ファイルは <code>name</code> と等しい語幹を使う。</td>
+</tr>
+<tr>
+<td><code>depth</code></td>
+<td>Yes</td>
+<td>既定の詳細レベル — <code>Minimal</code>、<code>Standard</code>、<code>Comprehensive</code>。</td>
+</tr>
+<tr>
+<td><code>testStrategy</code></td>
+<td>No</td>
+<td>depth と独立にテスト量を上書きする。既定は <code>depth</code> に一致。</td>
+</tr>
+<tr>
+<td><code>keywords</code></td>
+<td>No</td>
+<td><code>/aidlc &lt;freeform text&gt;</code> の自動検出のための自然言語トリガ。空リストはオプトアウト。</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>No</td>
+<td><code>/aidlc --help</code> に描画される 1 行。（SKILL.md のコンパイル済み scope テーブルは Scope / Depth / TestStrategy / EXECUTE / Total のみを表示し、description は省く。）</td>
+</tr>
+<tr>
+<td><code>skeleton</code></td>
+<td>No</td>
+<td>practice が scope 依存のとき、<code>on</code> は scope を walking-skeleton の儀式にオプトインさせる。<code>off</code> または不在はオプトアウト。</td>
+</tr>
+</tbody></table>
+<p>ローダーはファイル間で重複した scope の <code>name</code> 値を拒否し、エラーで両方の
+ファイルを名指す。</p>
+<h3 id="walking-skeleton-default">walking-skeleton の既定</h3>
+<p>任意の <code>skeleton:</code> フィールドは、scope 依存の walking-skeleton の
+スタンスを制御する。<code>skeleton: on</code> は、チームの <code>## Walking Skeleton</code>
+practice が <code>scope-dependent</code> に解決するとき、Construction がこの scope の
+walking-skeleton の儀式で開くことを意味する。<code>skeleton: off</code> は最初の Bolt が
+通常の Bolt として走ることを意味する。不在は off を既定にするので、compose された／
+ランタイム承認された scope や plugin scope は、明示的にオプトインしない限り skeleton Bolt を
+呼び出さない。</p>
+<p><strong>2. メンバーシップタグ — 各 stage の <code>scopes:</code> frontmatter。</strong> stage は、自身の frontmatter（<code>core/aidlc-common/stages/&lt;phase&gt;/&lt;slug&gt;.md</code>）で、それが走る scope を名指す:</p>
+<pre><code class="language-yaml">scopes:
+  - enterprise
+  - feature
+  - mvp
+</code></pre>
+<p>scope を名指す stage はその下で <code>EXECUTE</code>、不在は <code>SKIP</code>。ビルドステップ <code>bun .claude/tools/aidlc-graph.ts compile</code> は、すべての stage の <code>scopes:</code> リストを <code>.claude/tools/data/scope-grid.json</code> のコンパイル済み EXECUTE/SKIP グリッドに<em>転置</em>する — 純粋な転置で、<code>stage-graph.json</code> と全く同じに <code>compile --check</code> でドリフトガードされる。グリッドがランタイムが読むものであり、それを手編集することは決してない。3 つの初期化 stage はすべての scope を名指す（常に走る）。</p>
+<p>理解する価値のある唯一の判断は、<code>depth</code> と <code>testStrategy</code> の関係である。depth は各 stage の成果物がどれだけ詳細を運ぶかを制御する。テスト戦略はいくつのテストが生成されるかを制御する。両者は意図的に独立である。ほとんどの scope は <code>testStrategy</code> を off にするので、<code>depth</code> から継承する — Standard depth の scope は Standard 量でテストする。<code>workshop</code> scope はタイを破る同梱の例である: <code>&quot;depth&quot;: &quot;Standard&quot;</code>（参加者が学んでいるのでフル成果物）を走らせつつ <code>&quot;testStrategy&quot;: &quot;Minimal&quot;</code>（セッションを動かし続けるため速い Nyquist テスト）にする。あなたの scope がその分割を望むなら、両方を宣言する。各レベルの意味は、ユーザーガイドの <a href="../guide/05-scopes-and-depth.html#the-3-depth-levels">3 つの Depth レベル</a> と <a href="../guide/05-scopes-and-depth.html#the-3-test-strategy-levels">3 つのテスト戦略レベル</a> を参照。</p>
+<p><code>keywords</code> がどう単語境界でマッチされるか、そしてアルファベット順の scope タイブレークが曖昧な freeform 呼び出しをどう解決するかを含む、フィールドごとの網羅的な契約は、開発者リファレンスの <a href="../reference/11-contributing.html#adding-a-scope">Contributing § Scope を足す</a> に住む。この章は決定を要約する。その節が規範的なスペックである。</p>
+<hr>
+<h2 id="how-scopes-relate-to-stages">scope と stage の関係</h2>
+<p>scope と stage は反対の端から互いを指し、両方向を視界に保つと助けになる。</p>
+<p><strong>stage</strong> は自身の同一性を宣言する — その phase、率いる agent、消費・生産する成果物、そして今やそれが走る scope（その <code>scopes:</code> リスト）。<strong>scope</strong> は自身の <code>.md</code> ファイルで同一性を宣言する — name、depth、keywords、description — その中に stage 別のメンバーシップは無い。メンバーシップは stage に住む。両者の束縛は scope 名である。新しい stage を足すとき（<a href="02-adding-a-stage.html">Stage を足す</a> を参照）、scope メンバーシップを<em>その stage の上に</em>置く — その <code>scopes:</code> リストが、それを走らせるべきすべての scope を名指す。scope を名指さない stage はどこでも <code>SKIP</code> である。コンパイル時の転置がその stage 別リストをグリッドに変えるので、メンバーシップは 9 個の別々の scope ブロックで再宣言されるのではなく、stage の上で一度だけ著述される。</p>
+<p>その分離は、このガイドの残りが乗るのと同じデータ対コードの線である（<a href="00-overview.html">Harness Engineer ガイド</a> を参照）。scope ファイルは<em>同一性</em>についてのデータである。stage の <code>scopes:</code> リストは<em>メンバーシップ</em>についてのデータである。コンパイル済みグリッドは両者の転置である。</p>
+<hr>
+<h2 id="adding-a-team-scope">チーム scope を足す</h2>
+<p>あなたのチームが <code>hotfix</code> scope を望むとしよう — <code>bugfix</code> より軽く、回帰テストとデプロイだけが欲しい緊急の本番パッチ用。変更は、新しい scope ファイル、走るべき各 stage の <code>scopes:</code> タグ、そして再コンパイルである。以下の規律を映す。検証ステップと完全なコマンドラインは <a href="../reference/11-contributing.html#adding-a-scope">Contributing § Scope を足す</a> にある。</p>
+<h3 id="steps">Steps</h3>
+<ol>
+<li><p><strong><code>core/scopes/aidlc-hotfix.md</code> を置く。</strong> <code>aidlc-bugfix.md</code>（最も近い既存 scope）をコピーし、frontmatter を編集する: <code>name: hotfix</code> を設定、<code>depth</code> を選び、freeform 自動検出が欲しければ <code>keywords</code>（<code>[hotfix, urgent]</code>）、ヘルプ用の <code>description</code>、scope 依存の Construction 儀式の既定用に <code>skeleton: on|off</code>、<code>depth</code> から分岐すべき場合のみ <code>testStrategy</code> を足す。意図を説明する短い散文の本体を書く。</p>
+</li>
+<li><p><strong><code>hotfix</code> の下で走るべき stage にタグする。</strong> <code>EXECUTE</code> にしたい各 stage（<code>core/aidlc-common/stages/&lt;phase&gt;/</code> 下）で、その frontmatter の <code>scopes:</code> リストに <code>hotfix</code> を足す。タグしない stage はその scope で <code>SKIP</code> である。3 つの初期化 stage はそれを含めねばならない（常に走る）。</p>
+</li>
+<li><p><strong>再コンパイル。</strong> <code>bun .claude/tools/aidlc-graph.ts compile</code> を走らせてタグを <code>scope-grid.json</code> に転置し、続けて <code>bun .claude/tools/aidlc-utility.ts scope-table</code> から SKILL.md のコンパイル済み scope テーブルをリフレッシュする。<code>bun .claude/tools/aidlc-graph.ts compile --check</code> と <code>bun .claude/tools/aidlc-utility.ts scope-table --check</code> を走らせてドリフトが無いこと（exit 0）を確認する。</p>
+</li>
+<li><p><strong>scope が解決し受理されることを検証する。</strong> <code>/aidlc --doctor</code> を走らせる。次に、新しい scope での init が正しい <code>Scope:</code> 行を持つ状態ファイルを生むこと、そしてそれが env 既定として、また mid-workflow の <code>--scope</code> 変更として受理されることを確認する。</p>
+</li>
+<li><p><strong>キーワード推論を検証する</strong>（<code>keywords</code> を populated した場合のみ）。あなたのトリガの 1 つを含む freeform フレーズが、<code>feature</code> に落ちるのではなく新しい scope を検出することを確認する。</p>
+</li>
+<li><p><strong>scope を意識した docs を更新し、ルーティングテストを足す。</strong> いくつかの docs は scope を手で列挙する — ユーザーガイドの scope リファレンスとルーティング表、customization 章の valid-values リスト、orchestrator リファレンスの scope-to-stage マッピング。同じ変更でそれらを更新する。あなたの scope が既存のどの scope も使わないパターンで stage を飛ばすなら、既存の scope 別テストをモデルにしたワークフローテストを足す。</p>
+</li>
+<li><p><strong>（任意）タイプ可能なランナーを生成する。</strong> scope はファイルが着地した瞬間から <code>/aidlc --scope &lt;name&gt;</code> 経由で完全に使える — ランナーは不要。1 語のコマンド（<code>/aidlc-hotfix</code>）が欲しければ、scope frontmatter に <code>runner: true</code> を足し <code>bun .claude/tools/aidlc-runner-gen.ts scopes</code> を走らせる。<code>bun .claude/tools/aidlc-runner-gen.ts scopes --all</code> はそのフラグに関わらずすべての scope ファイルに <code>skills/aidlc-&lt;scope&gt;/SKILL.md</code> を emit する。各ランナーは、scope を焼き込んで <code>aidlc-orchestrate next --scope &lt;name&gt;</code> を <code>done</code> まで駆動する ~6 行のシェルである。ランナーは既に走れる scope をパッケージし、scope ファイルがその定義である。それは <code>hooks:</code> ブロックを運ばない: 決定論的な背骨（audit、sensor、runtime-compile、状態検証）は <code>settings.json</code> にプロジェクト全体で登録されているので、すべてのランナーがそれを無料で継承する。scope ファイルを足すかリネームするたびにジェネレータ（または <code>scopes --check</code>）を再実行する。</p>
+</li>
+</ol>
+<h3 id="what-validates-automatically">何が自動で検証されるか</h3>
+<p>この実装は、有効な scope のリストをランタイムに <code>.claude/scopes/*.md</code> の存在から <code>validScopes()</code> を通して導くので、ファイルが着地した瞬間に多くが所定の位置に嵌まる:</p>
+<ul>
+<li>scope は一度にどこでも有効になる — <code>init</code>、<code>--scope</code> 変更、env 既定の解決、<code>doctor</code> はすべて同じヘルパーを参照するので、どれもコード編集を要さない。</li>
+<li>エラーメッセージは変更なしにあなたの scope をアルファベット順に挙げる。</li>
+<li><code>keywords</code> を与えたなら、frontmatter のリストが populated になり次第、freeform の <code>/aidlc &lt;text&gt;</code> がそれを自動検出する — SKILL.md の散文編集は不要、テーブル再生成だけである。</li>
+<li>転置のドリフトガード（<code>compile --check</code>）は、stage の <code>scopes:</code> タグが再コンパイルなしに編集されたらビルドを落とす。</li>
+</ul>
+<h3 id="what-does-not-validate-automatically">何が自動で検証されないか</h3>
+<ul>
+<li><strong>タイプミスした scope 名の <code>scopes:</code> タグでもパースは通る。</strong> <code>hotfix</code> の代わりに <code>hotfx</code> を名指す stage frontmatter はきれいにコンパイルされる — 誰も求めないグリッド列を生むだけである。落とし穴は、<code>validScopes()</code> が <code>.md</code> ファイルから導くので、ファイルの無い scope は呼び出し時に拒否されるが、stage 上のタイプミスしたタグはその stage を本物の scope から静かに落とすことである。<code>/aidlc --doctor</code> と scope 別テストがガードレールである。</li>
+<li><strong>コンパイル済み scope テーブルはドリフトしうる。</strong> stage の <code>scopes:</code> を編集してステップ 3 の再コンパイル + テーブル再生成を飛ばすと、エンジンは古いグリッドを読み続ける。<code>--check</code> フラグ（テストスイートが走らせる）がこれを捕まえるが、あなたがそれを走らせた場合だけである。</li>
+<li><strong>scope 別の phase-sequence カバレッジ。</strong> 同梱の phase-sequence テストは既知の scope 名のハードコードされたリストを反復する。新しい scope は、そのリストを拡張するまでそれによって行使されない。同じ変更であなたの scope をそれに足す。</li>
+<li><strong>手で保守される docs。</strong> 何もあなたのために docs を grep しない。scope リファレンス、ルーティング表、customization の valid-values リストは散文である。scope ファイルと歩調を合わせて自分で保つこと。</li>
+</ul>
+<hr>
+<h2 id="tuning-an-existing-scope">既存 scope の調律</h2>
+<p>調律はより小さな編集だが、scope ではなく stage に着地する。2 つの変更がよく出てくる:</p>
+<ul>
+<li><strong>stage を出し入れする。</strong> stage の <code>scopes:</code> リストから scope 名を足すか除く。これが、例えば、あなたのチームが最初の一手でも常に監視を配線するので <code>observability-setup</code> の <code>scopes:</code> に <code>mvp</code> を足す方法である。タグ 1 つ、続けて再コンパイル（<code>compile</code> + scope-table）と <code>--doctor</code>。</li>
+<li><strong>既定の depth やテスト戦略を変える。</strong> scope が生むものを再較正するために、scope の <code>core/scopes/aidlc-&lt;name&gt;.md</code> frontmatter で <code>depth</code> を調整するか、<code>testStrategy</code> を足す／除く。各 scope が自身の既定を運ぶので、この変更はその scope を選ぶすべてのワークフローにカスケードする — 実行別のフラグは不要。ユーザーはなお任意の実行で <code>--depth</code> や <code>--test-strategy</code> で上書きできるが、scope の値がチーム全体のベースラインである。</li>
+</ul>
+<p>いずれにせよ、上のステップ 3 の再コンパイルと doctor のペアが当てはまる。編集は小さく、検証は同じである。</p>
+<p>レイヤーについての注記: 同梱の scope を調律することは、フレームワークが同梱するファイルを直接編集する — stage の <code>scopes:</code> タグや同梱の <code>core/scopes/aidlc-*.md</code>。それは異なる既定を望む fork にとって正当だが、<code>aidlc-</code> の系譜を運ぶファイルを変えていることを認識せよ。フレームワークのアップグレードがそれらを調停したがるかもしれない。同梱の 9 個と並べてまっさらな scope ファイルを足すのが、他のみんなが頼る既定に触れずにチーム固有の振る舞いが欲しいときのより清潔な道である。</p>
+<hr>
+<h2 id="next">次へ</h2>
+<p><a href="05-rules-and-the-loop.html">Rule と学習ループ</a> — すべてのワークフローに旅する恒常的な決定を著述し、ループが一度きりの訂正を永続的な rule に昇格させるに任せる。</p>
+<p>規範的な scope-shape とランナーの契約 — <code>.claude/scopes/</code> ファイルがワークフローの訪れる stage をどう駆動するか、ジェネレータがそれをタイプ可能な <code>/aidlc-&lt;scope&gt;</code> スキルにどう変えるか — は、開発者リファレンスの <a href="../reference/17-skill-system.html">スキルシステム §5（scope shape）と §4（runner）</a> を参照。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/04-scopes.md"><code>docs/harness-engineering/04-scopes.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

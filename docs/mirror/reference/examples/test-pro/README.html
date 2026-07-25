@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>test-pro — 具体的な config/JSON の例 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../../assets/style.css">
+<script defer src="../../../../assets/mermaid.min.js"></script>
+<script defer src="../../../../assets/highlight.min.js"></script>
+<script defer src="../../../../assets/app.js"></script>
+<script type="module" src="../../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/examples/test-pro/README</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../../index.html">総合索引</a>
+  <a href="../../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../../reference/01-architecture.html">Architecture</a>
+  <a href="../../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../../reference/09-testing.html">テスト</a>
+  <a href="../../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../../reference/examples/test-pro/README.html" class="here">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#status-of-these-files">これらのファイルの状態</a>
+  <a href="#the-lifecycle-these-files-trace">これらのファイルが辿るライフサイクル</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="test-pro-concrete-configjson-examples"><code>test-pro</code> — 具体的な config/JSON の例</h1>
+<p>これらは、plugin 設計における <strong>設定ドキュメント</strong> であり、同梱の <code>test-pro</code> fixture 向けに
+具体化したものである。これらは、唯一の plugin-mechanism 章である <a href="../../18-plugin-mechanism.html">doc 18</a>
+を例示する。<strong>これらが描くもののほとんどは deferred であり</strong>、shipped ではない — 今日何が
+結線されているか（plugin manifest + compose の継ぎ目）と、設計済みだが将来のもの（marketplace の
+解決、managed-settings の信頼、lockfile、<code>aidlc plugin add</code>/<code>sync</code> インストーラ）とを正確に知るには、
+doc 18 §8「Status」を参照。これらは、現在の挙動ではなく、意図されたライフサイクルを示す。</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>役割</th>
+<th>著述者</th>
+<th>どこに在るか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/plugins/test-pro/.aidlc-plugin/plugin.json"><code>../../../../plugins/test-pro/.aidlc-plugin/plugin.json</code></a></td>
+<td><strong>Plugin manifest</strong> — plugin が何であるか + 何を同梱するか</td>
+<td>plugin 作者</td>
+<td>plugin リポジトリ内（実在のファイル、作成済み）</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/examples/test-pro/marketplace.json"><code>marketplace.json</code></a></td>
+<td><strong>Catalogue entry</strong> — plugin がどう発見/バージョン付けされるか</td>
+<td>marketplace メンテナ</td>
+<td>marketplace リポジトリ</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/examples/test-pro/managed-settings.json"><code>managed-settings.json</code></a></td>
+<td><strong>Trust allowlist</strong> — org がどのソースを許可するか</td>
+<td>org 管理者（managed scope）</td>
+<td>マシンの managed-settings パス</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/examples/test-pro/aidlc.lock.json"><code>aidlc.lock.json</code></a></td>
+<td><strong>Install lock</strong> — 再現性のために compose 結果を固定する</td>
+<td><code>aidlc plugin</code> インストーラ</td>
+<td>消費者のプロジェクト</td>
+</tr>
+</tbody></table>
+<h2 id="status-of-these-files">これらのファイルの状態</h2>
+<ul>
+<li><code>plugin.json</code> はリポジトリ内の <strong>実在の、作成済みファイル</strong> である — 同梱の <code>test-pro</code>
+fixture 向けの manifest である。（注: packager は今日、ディレクトリ規約によって plugin
+コンテンツを発見し、manifest の <code>aidlc.contributes</code> ブロックはまだ読まない — doc 18 §3 を参照。）</li>
+<li><code>marketplace.json</code>、<code>managed-settings.json</code>、<code>aidlc.lock.json</code> は、設計レビューのため
+だけの <strong>説明用の例</strong> である。それらを <em>生成</em> し <em>消費</em> するであろう installer、marketplace の
+解決、lockfile writer は <strong>将来の作業</strong> である（doc 18 §8「Status」）。lockfile 中のすべての
+<code>sha256:…</code> と <code>commit</code> の値は <strong>プレースホルダ</strong> であり、計算されたハッシュではない。</li>
+</ul>
+<h2 id="the-lifecycle-these-files-trace">これらのファイルが辿るライフサイクル</h2>
+<ol>
+<li><strong>Author</strong> が <code>plugin.json</code> と plugin のサブツリーを書き、git タグを公開する。</li>
+<li><strong>Marketplace</strong>（任意）が、発見のために <code>marketplace.json</code> に plugin を列挙する。</li>
+<li><strong>Org admin</strong> が <code>managed-settings.json</code> を設定し、承認されたソースだけがインストール
+され得るようにする — 開発者はそれを上書きできない（managed scope、最高の優先順位）。</li>
+<li><strong>Developer</strong> が <code>aidlc plugin add test-pro</code> を実行する: バージョンを解決し、allowlist に
+照合し、取得 + 検証し、<code>bare core + test-pro</code> を compose し、<code>aidlc.lock.json</code> を書く。</li>
+<li><strong>Teammate</strong> が、コミット済みの <code>aidlc.lock.json</code> に対して <code>aidlc plugin sync</code> を実行し、
+バイト単位で同一のインストールを得る。</li>
+</ol>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/examples/test-pro/README.md"><code>docs/reference/examples/test-pro/README.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

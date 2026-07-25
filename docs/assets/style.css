@@ -146,14 +146,63 @@ li { margin: 3px 0; }
 .pagetoc a:hover { color: var(--paper); }
 .pagetoc a.active { color: var(--hue); border-left-color: var(--hue); }
 
-@media (max-width: 1100px) {
+/* off-canvas 左ナビ: ≤1400px で .toc をドロワー化し、masthead 左端の ☰ ボタンと背景
+   (.nav-backdrop) で開閉する。ボタンと背景は既定で display:none にして、メディアクエリ内
+   でのみ表示する（≥1400px では body.nav-open が付かず、背景も出ないので本文を覆わない）。
+   ボタンは masthead 内のインライン要素なので、sticky にした masthead に同居する。 */
+.nav-toggle {
+  display: none;
+  align-self: center;
+  width: 36px; height: 36px; align-items: center; justify-content: center;
+  font-size: 1.1rem; line-height: 1; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  color: var(--paper);
+}
+.nav-toggle:hover { border-color: var(--hue); color: var(--hue); }
+.nav-backdrop {
+  display: none;
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+/* 1000–1400px: 左ナビをグリッドから外して中央+右の 2 カラムにし、.toc をドロワー化。
+   右のページ内目次 (.pagetoc) は sticky の右レールのまま。☰ ボタンを表示。 */
+@media (max-width: 1400px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 200px;
+    grid-template-areas: "main pagetoc";
+  }
+  .toc {
+    position: fixed; top: 0; left: 0;
+    width: min(280px, 80vw); height: 100vh; max-height: 100vh;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    z-index: 50;
+    background: var(--panel); border-right: 1px solid var(--line);
+    padding: 18px 16px; box-shadow: 4px 0 24px rgba(8, 10, 16, 0.55);
+  }
+  body.nav-open .toc { transform: translateX(0); }
+  .nav-toggle { display: inline-flex; }
+  .nav-backdrop { display: block; }
+  body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
+  /* masthead を上部に貼り付けてスクロール中も ☰ を届かせる。背景を敷いて本文の透けを防ぐ。
+     z-index 順: content(0) < masthead(30) < .nav-backdrop(40) < ドロワー .toc(50)。 */
+  .masthead { position: sticky; top: 0; z-index: 30; background: var(--ink); padding: 12px 0; }
+  /* sticky masthead（約 61px）の下へページ内目次の sticky 開始位置をずらす */
+  .pagetoc { top: 76px; }
+}
+
+/* ≤1000px: 単一カラム。ページ内目次は本文冒頭のボックスに畳む (NN/g: 全画面サイズで安全)。
+   左ナビはドロワーのまま (≤1400px のバンドを継承)。 */
+@media (max-width: 1000px) {
   .layout, .layout.no-nav {
     grid-template-columns: 1fr;
-    grid-template-areas: "nav" "pagetoc" "main";
+    grid-template-areas: "pagetoc" "main";
     gap: 0;
   }
-  .toc { position: static; max-height: none; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 14px; }
-  /* 狭い画面では目次を本文冒頭のボックスに畳む (NN/g: 本文内配置が全画面サイズで安全) */
   .pagetoc {
     position: static; max-height: none;
     background: var(--panel); border: 1px solid var(--line); border-radius: 10px;

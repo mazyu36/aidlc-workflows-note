@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent System — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/05-agent-system</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html" class="here">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#agent-structure">Agent Structure</a>
+  <a href="#shared-configuration">Shared Configuration</a>
+  <a href="#agent-comparison-matrix">Agent Comparison Matrix</a>
+  <a href="#phase-participation">Phase Participation</a>
+  <a href="#how-to-add-an-agent">How to Add an Agent</a>
+  <a href="#how-to-modify-an-agent">How to Modify an Agent</a>
+  <a href="#cross-references">Cross-References</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="agent-system">Agent System</h1>
+<p>この章は agent アーキテクチャを文書化する: agent がどう構造化され、設定され、framework によってロードされるか、そしてどう足すか、または変更するか。</p>
+<p>ユーザー向けの agent 記述については、<a href="../guide/06-agents.html">User Guide -- Agents</a> を参照。</p>
+<hr>
+<h2 id="agent-structure">Agent Structure</h2>
+<p>各 agent は <code>.claude/agents/</code> 内のフラットな <code>.md</code> ファイルで、YAML frontmatter に続けて markdown 本体を持つ。conductor は、inline stage の実行中に視点をフレーミングするため、あるいは subagent 委譲のためのコンテキストを構築するために、これらのファイルを読む。</p>
+<h3 id="frontmatter-contract">Frontmatter Contract</h3>
+<p>すべての agent ファイルは、この YAML frontmatter を含まねばならない:</p>
+<pre><code class="language-yaml">---
+name: aidlc-architect-agent               # Agent identifier (matches filename without .md)
+description: &gt;                      # Brief role summary (shown in Claude Code agent list)
+  System architect responsible for application design,
+  NFR design, and component decomposition.
+disallowedTools: Task               # Agents cannot spawn subagents
+tier: judgment                      # judgment | balanced | templated (see Agent Tiers)
+---
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>Yes</td>
+<td>agent の識別子。ファイル名に一致せねばならない</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>Yes</td>
+<td>簡潔な役割のサマリ</td>
+</tr>
+<tr>
+<td><code>tools</code></td>
+<td>No</td>
+<td>任意の allowlist; 省略するとフルのセッション toolset を継承する。列挙すると agent を絞り、<code>mcp__&lt;server&gt;__&lt;tool&gt;</code> の id も列挙されない限り継承された MCP tools を落とす</td>
+</tr>
+<tr>
+<td><code>disallowedTools</code></td>
+<td>Yes</td>
+<td><code>Task</code> を含まねばならない -- conductor だけが委譲する</td>
+</tr>
+<tr>
+<td><code>tier</code></td>
+<td>Yes</td>
+<td><code>judgment</code>、<code>balanced</code>、または <code>templated</code>。AUTHORED なダイヤル: packager がそれを各 harness のネイティブな model/effort キーへ射影する（下の Agent Tiers を参照）。生の <code>model:</code>/<code>effort:</code> が著述された frontmatter に現れることは決してない -- それらは <code>dist/&lt;harness&gt;/</code> の射影 OUTPUT である</td>
+</tr>
+</tbody></table>
+<h3 id="markdown-body-sections">Markdown Body Sections</h3>
+<p>frontmatter の下で、markdown 本体は次を定義する:</p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Core Responsibilities</strong></td>
+<td>agent が自身の所有する各 stage で何をするか</td>
+</tr>
+<tr>
+<td><strong>Stages Owned</strong></td>
+<td>lead と supporting の stage 割り当て</td>
+</tr>
+<tr>
+<td><strong>Collaboration</strong></td>
+<td>Receives from / Works with / Hands off to</td>
+</tr>
+<tr>
+<td><strong>Knowledge Loading</strong></td>
+<td>6 ステップのロード順（<a href="10-knowledge-system.html">Knowledge System</a> を参照）</td>
+</tr>
+<tr>
+<td><strong>Key Principles</strong></td>
+<td>agent のための振る舞いのガイドライン</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="shared-configuration">Shared Configuration</h2>
+<p>14 すべての agent が共通の configuration ベースラインを共有する。どれも <code>tools:</code> allowlist を宣言しないので、すべての agent が <strong>フルのセッション toolset</strong> を継承する — Claude Code のすべての組み込み tool に加え、セッションにプロビジョンされた任意の MCP tools。同梱される唯一の制限は <code>disallowedTools: Task</code> である。</p>
+<h3 id="the-session-toolset-inherited-by-every-agent">The session toolset (inherited by every agent)</h3>
+<p>すべての agent は組み込みの Claude Code tool を継承する。次を含む:</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Read</td>
+<td>ファイルシステムからファイルを読む</td>
+</tr>
+<tr>
+<td>Edit</td>
+<td>ファイル内で正確な文字列置換を行う</td>
+</tr>
+<tr>
+<td>Write</td>
+<td>ファイルシステムへファイルを書く</td>
+</tr>
+<tr>
+<td>Glob</td>
+<td>高速なファイルパターンマッチング</td>
+</tr>
+<tr>
+<td>Grep</td>
+<td>ripgrep を用いた内容検索</td>
+</tr>
+<tr>
+<td>AskUserQuestion</td>
+<td>対話的なユーザープロンプト（メインスレッドの stage のみ）</td>
+</tr>
+</tbody></table>
+<h3 id="common-disallowed-claude-code-tools">Common Disallowed Claude Code Tools</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Task</td>
+<td>agent は委譲されたワーカーとして動作する。SKILL.md の conductor だけが Task 呼び出しを行う。<code>disallowedTools: Task</code> はカスケードする subagent チェーンを避ける。</td>
+</tr>
+</tbody></table>
+<h3 id="tools-each-persona-is-expected-to-exercise">Tools each persona is expected to exercise</h3>
+<p>すべての agent は継承によって Bash と WebSearch に <em>到達できる</em>; この表は、どの persona が stage の作業でそれらを使うと方法論が <strong>期待する</strong> かを記録するのであって、agent ごとの付与ではない。persona を真に制限するには、任意の <code>tools:</code> allowlist を足す（<code>mcp__&lt;server&gt;__&lt;tool&gt;</code> の id も列挙されない限り継承された MCP を落とす）— この実装はそのような制限を同梱しない。</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Expected to exercise it</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Bash</td>
+<td>aidlc-aws-platform-agent, aidlc-devsecops-agent, aidlc-developer-agent, aidlc-quality-agent, aidlc-pipeline-deploy-agent, aidlc-operations-agent</td>
+</tr>
+<tr>
+<td>WebSearch</td>
+<td>aidlc-product-agent, aidlc-design-agent, aidlc-compliance-agent</td>
+</tr>
+</tbody></table>
+<h3 id="agent-tiers">Agent Tiers</h3>
+<p>すべての agent の著述されたダイヤルは <code>tier:</code> である -- それは persona が行う作業の種類を名指し、packager（<code>bun scripts/package.ts</code>）がそれを各 harness のネイティブな model/effort 形式へ射影する。以前の振る舞い（v2.2.15 から v2.2.19; それ以前はキーが不活性な <code>modelOverride:</code> だった）は agent ごとに生の <code>model: opus|sonnet</code> を固定し、より大きな model を走らせるセッションを強制的にダウングレードしていた; tier の射影はその固定を置き換える。</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Agents</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>judgment</code></td>
+<td>architect, aws-platform, compliance, composer, design, developer, devsecops, product, quality</td>
+<td>曖昧さの下での多制約推論; 出力は下流へカスケードする。決してダウングレードされない: セッションの model と effort の両方を継承する</td>
+</tr>
+<tr>
+<td><code>balanced</code></td>
+<td>architecture-reviewer, product-lead</td>
+<td>レビュアー型の作業 -- 明示的な基準に対する新規の入力。中サイズの model、セッションの effort</td>
+</tr>
+<tr>
+<td><code>templated</code></td>
+<td>delivery, operations, pipeline-deploy</td>
+<td>支配的にパターン追従の出力; 方法論はすでに knowledge にある（delivery plan、CI/CD YAML、runbook）。Claude Code、Codex、opencode では中サイズの model を減らした effort で -- 唯一の意図的なダウングレード（Kiro では、すべての tier と同様にセッションの model を継承する）</td>
+</tr>
+</tbody></table>
+<p>harness ごとの射影（<code>core/tools/aidlc-tiers.ts</code> が single source of truth）:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Claude Code (.md frontmatter)</th>
+<th>Codex CLI (.toml)</th>
+<th>Kiro CLI/IDE (agent JSON <code>&quot;model&quot;</code>, CLI / <code>.md</code> frontmatter <code>model:</code>, IDE)</th>
+<th>Kiro cli.json <code>chat.modelDefaults</code></th>
+<th>opencode (.md frontmatter)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>judgment</code></td>
+<td><code>model: inherit</code>、<code>effort:</code> 行なし</td>
+<td><code>model</code>/<code>model_reasoning_effort</code> キーなし（config.toml のセッションデフォルトが適用される）</td>
+<td>フィールド省略（スキーマのフォールバック: ユーザーのデフォルト model）</td>
+<td>tier エントリなし</td>
+<td><code>model:</code>/<code>variant:</code> キーなし（opencode.json のセッションデフォルトが適用される）</td>
+</tr>
+<tr>
+<td><code>balanced</code></td>
+<td><code>model: sonnet</code>、<code>effort:</code> 行なし</td>
+<td><code>model = &quot;openai.gpt-5.4&quot;</code>、effort キーなし</td>
+<td>フィールド省略（下記参照）</td>
+<td>tier エントリなし</td>
+<td><code>model: amazon-bedrock/global.anthropic.claude-sonnet-4-6</code>、variant キーなし</td>
+</tr>
+<tr>
+<td><code>templated</code></td>
+<td><code>model: sonnet</code>、<code>effort: medium</code></td>
+<td><code>model = &quot;openai.gpt-5.4&quot;</code>、<code>model_reasoning_effort = &quot;medium&quot;</code></td>
+<td>フィールド省略（下記参照）</td>
+<td>tier エントリなし</td>
+<td>同じ model、<code>variant: medium</code></td>
+</tr>
+</tbody></table>
+<p>表の背後にある主要な事実:</p>
+<ul>
+<li><strong>省略が継承のメカニズムである。</strong> Claude Code では、<code>effort:</code> キーの無い agent .md はセッションの effort を継承し、固定された <code>effort:</code> は両方向でセッションを上書きする（固定は cap であって floor ではない）-- だから不在が judgment と balanced の契約である。Codex では、<code>model</code> の無いロール TOML は同梱の <code>.codex/config.toml</code> のセッションデフォルトで spawn する（codex-cli 0.139.0（doctor が強制する最小）と 0.142.5 で live に検証済み）。Kiro では、agent-v1 スキーマが不在-<code>&quot;model&quot;</code> のフォールバックを文書化している: &quot;If not specified, uses the default model&quot;（<code>/model</code> の永続化された設定）。</li>
+<li><strong>Kiro は決して model を固定しない。</strong> 同梱の Kiro model ID は、その model がユーザーのインストールで有効なときにだけ解決する; 他の任意の model を走らせるセッションは、委譲された spawn を <code>Invalid model ID</code> ですべて拒否し、Kiro は Claude 方言の tier エイリアス（<code>opus</code>/<code>sonnet</code>）を真っ向から拒否する -- だから普遍的に安全に固定できる値は無い。したがってすべての Kiro tier は <code>&quot;model&quot;</code>（および <code>.md</code> frontmatter の <code>model:</code> 行）を省略する: すべての agent がセッションの model を継承する。<code>TIER_PROJECTIONS</code> の kiro スロットと <code>kiroModelDefaults()</code> の機構は、解決可能なインストールごとの固定メカニズムが現れたときに備え、休眠状態のまま残る。</li>
+<li><strong>Kiro は agent ごとの effort サーフェスを持たない。</strong> kiro-cli は agent JSON 内の effort 的なキーに対して fail-close するので、model ごとの effort デフォルトは <code>settings/cli.json</code> の <code>chat.modelDefaults[&lt;modelId&gt;].output_config.effort</code> にしか乗れない。tier が model を固定しないので、著述された条件付きエントリだけが同梱される（<code>claude-opus-4.8</code> -&gt; <code>xhigh</code>、セッションが実際にその model を走らせるときにだけ適用される）。そのファイルは CLI 専用である: Kiro IDE は cli.json を完全に無視し、拡張機能に埋め込まれた model ごとのデフォルト（またはユーザーの <code>/effort</code> のセッション state）を適用する。</li>
+</ul>
+<h3 id="tier-cap-cost-override">Tier cap (cost override)</h3>
+<p>プロジェクトは、どの agent ファイルも編集せずに、pack 時にすべての射影を cap できる:</p>
+<ul>
+<li><strong>永続的なノブ:</strong> space memory レイヤーのファイル（<code>core/memory/org.md</code> -&gt; <code>team.md</code> -&gt; <code>project.md</code>、最後の書き手が勝つ -- プロジェクトは org の天井を下げても上げてもよい）の YAML frontmatter の <code>tier_cap:</code> キー。例: <code>tier_cap: balanced</code> は、すべての harness の射影で <code>judgment</code> を <code>balanced</code> に潰す（tier が model を固定しない Kiro では、cap は不活性 -- すべての tier はすでにセッションの model を継承している）。</li>
+<li><strong>呼び出しごとの上書き:</strong> <code>AIDLC_TIER_CAP</code> env var は、1 回の packager 実行について memory レイヤーに勝つ（<code>AIDLC_TIER_CAP=templated bun scripts/package.ts</code>）。memory の cap が効いている間に一度だけ CAP なしでビルドするには、それを最上位の tier に設定する -- <code>AIDLC_TIER_CAP=judgment</code> -- これは memory レイヤーに勝ち、何も clamp しない（空の値は uncapped ではなく unset を意味する）。</li>
+</ul>
+<p>2 つのノブは scope が異なる: memory の cap はリポジトリとともに移動するので、write と <code>--check</code> の両方のモードで適用される（cap した dist をコミットするプロジェクトは自己整合を保つ）。env var は一度きりの WRITE ノブであり、<code>--check</code> の下では無視される - drift ガードは、コミットされた dist が正当に何からビルドされたかを比較するのであり、CI やテストランナーの環境にある迷子の <code>AIDLC_TIER_CAP</code> は、drift を失敗させても隠してもならない（packager は 1 つを無視するときに通知を出力する）。packager はまた、cap されたすべての実行で、アクティブな cap とそのソースを出力する。</p>
+<p>代わりに単一の agent をオプトアウトするには、インストール済みの <code>dist/&lt;harness&gt;/</code> のコピーで射影された値を編集する（例: 1 つの Claude agent .md に <code>model: opus</code> を設定する）-- その編集は dist シェルを再コピーするまで生き残る。</p>
+<hr>
+<h2 id="agent-comparison-matrix">Agent Comparison Matrix</h2>
+<p>次の 2 列の <code>Yes</code> は、継承された tool の期待される使用を意味するのであって、アクセスの
+付与ではない。</p>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Bash Expected Use</th>
+<th>WebSearch Expected Use</th>
+<th>Tier</th>
+<th>Lead Stages</th>
+<th>Support Stages</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>aidlc-product-agent</td>
+<td>No</td>
+<td>Yes</td>
+<td>judgment</td>
+<td>5</td>
+<td>3</td>
+<td>8</td>
+</tr>
+<tr>
+<td>aidlc-design-agent</td>
+<td>No</td>
+<td>Yes</td>
+<td>judgment</td>
+<td>2</td>
+<td>2</td>
+<td>4</td>
+</tr>
+<tr>
+<td>aidlc-delivery-agent</td>
+<td>No</td>
+<td>No</td>
+<td>templated</td>
+<td>3</td>
+<td>2</td>
+<td>5</td>
+</tr>
+<tr>
+<td>aidlc-architect-agent</td>
+<td>No</td>
+<td>No</td>
+<td>judgment</td>
+<td>6</td>
+<td>3</td>
+<td>9</td>
+</tr>
+<tr>
+<td>aidlc-aws-platform-agent</td>
+<td>Yes</td>
+<td>No</td>
+<td>judgment</td>
+<td>2</td>
+<td>4</td>
+<td>6</td>
+</tr>
+<tr>
+<td>aidlc-compliance-agent</td>
+<td>No</td>
+<td>Yes</td>
+<td>judgment</td>
+<td>0</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>aidlc-devsecops-agent</td>
+<td>Yes</td>
+<td>No</td>
+<td>judgment</td>
+<td>0</td>
+<td>5</td>
+<td>5</td>
+</tr>
+<tr>
+<td>aidlc-developer-agent</td>
+<td>Yes</td>
+<td>No</td>
+<td>judgment</td>
+<td>2</td>
+<td>4</td>
+<td>6</td>
+</tr>
+<tr>
+<td>aidlc-quality-agent</td>
+<td>Yes</td>
+<td>No</td>
+<td>judgment</td>
+<td>2</td>
+<td>3</td>
+<td>5</td>
+</tr>
+<tr>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>Yes</td>
+<td>No</td>
+<td>templated</td>
+<td>4</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr>
+<td>aidlc-operations-agent</td>
+<td>Yes</td>
+<td>No</td>
+<td>templated</td>
+<td>3</td>
+<td>0</td>
+<td>3</td>
+</tr>
+</tbody></table>
+<p><strong>Observations:</strong></p>
+<ul>
+<li>aidlc-architect-agent が最も広い stage 関与を持つ（3 つの phase にまたがる 9 stage）。</li>
+<li>14 agent の全ロスターにわたり、9 つの agent が <code>judgment</code> tier を持ち、5 つが Claude Code、Codex、opencode でステップダウンする（2 つの <code>balanced</code> レビュアーに加え 3 つの <code>templated</code> プランナー; Kiro ではすべての tier がセッションの model と effort を継承するので、そこではどの agent もステップダウンしない）; ステップダウンした agent は、明示的なチェックリストに対するレビュー、または支配的にテンプレート化された planning、CI/CD、runbook の作業を生産する。上のマトリクスは 11 のドメインエキスパート agent をカバーする。</li>
+<li>aidlc-compliance-agent は純粋に助言的な立場で動作する（4 support stage、lead stage なし）。</li>
+<li>11 agent のうち 6 つが CLI 対話のために Bash を使うと期待される。</li>
+<li>3 つの agent がリサーチタスクのために WebSearch を使うと期待される。</li>
+</ul>
+<hr>
+<h2 id="phase-participation">Phase Participation</h2>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>Init (0)</th>
+<th>Ideation (1)</th>
+<th>Inception (2)</th>
+<th>Construction (3)</th>
+<th>Operation (4)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>aidlc-product-agent</td>
+<td>--</td>
+<td>L (intent-capture, market-research, scope-definition), S (rough-mockups, approval-handoff)</td>
+<td>L (requirements-analysis, user-stories), S (refined-mockups)</td>
+<td>--</td>
+<td>--</td>
+</tr>
+<tr>
+<td>aidlc-design-agent</td>
+<td>--</td>
+<td>L (rough-mockups)</td>
+<td>L (refined-mockups), S (user-stories, application-design)</td>
+<td>--</td>
+<td>--</td>
+</tr>
+<tr>
+<td>aidlc-delivery-agent</td>
+<td>--</td>
+<td>L (team-formation, approval-handoff), S (scope-definition)</td>
+<td>L (delivery-planning), S (units-generation)</td>
+<td>--</td>
+<td>--</td>
+</tr>
+<tr>
+<td>aidlc-architect-agent</td>
+<td>--</td>
+<td>L (feasibility), S (intent-capture)</td>
+<td>L (application-design, units-generation), S (reverse-engineering, delivery-planning)</td>
+<td>L (functional-design, nfr-requirements, nfr-design)</td>
+<td>--</td>
+</tr>
+<tr>
+<td>aidlc-aws-platform-agent</td>
+<td>--</td>
+<td>S (feasibility)</td>
+<td>S (application-design)</td>
+<td>L (infrastructure-design), S (nfr-design)</td>
+<td>L (environment-provisioning), S (feedback-optimization)</td>
+</tr>
+<tr>
+<td>aidlc-compliance-agent</td>
+<td>--</td>
+<td>S (feasibility)</td>
+<td>--</td>
+<td>S (nfr-requirements, infrastructure-design)</td>
+<td>S (environment-provisioning)</td>
+</tr>
+<tr>
+<td>aidlc-devsecops-agent</td>
+<td>--</td>
+<td>--</td>
+<td>S (practices-discovery)</td>
+<td>S (nfr-requirements, infrastructure-design, build-and-test)</td>
+<td>S (environment-provisioning)</td>
+</tr>
+<tr>
+<td>aidlc-developer-agent</td>
+<td>--</td>
+<td>--</td>
+<td>L (reverse-engineering), S (practices-discovery, user-stories)</td>
+<td>L (code-generation), S (functional-design)</td>
+<td>S (deployment-execution)</td>
+</tr>
+<tr>
+<td>aidlc-quality-agent</td>
+<td>--</td>
+<td>--</td>
+<td>S (practices-discovery, user-stories)</td>
+<td>L (build-and-test), S (nfr-requirements)</td>
+<td>L (performance-validation)</td>
+</tr>
+<tr>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>--</td>
+<td>--</td>
+<td>L (practices-discovery)</td>
+<td>L (ci-pipeline)</td>
+<td>L (deployment-pipeline, deployment-execution)</td>
+</tr>
+<tr>
+<td>aidlc-operations-agent</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>--</td>
+<td>L (observability-setup, incident-response, feedback-optimization)</td>
+</tr>
+</tbody></table>
+<p>L = Lead、S = Support</p>
+<hr>
+<h2 id="how-to-add-an-agent">How to Add an Agent</h2>
+<p>agent の display name と example knowledge ファイルは、各 agent の <code>.md</code> frontmatter の <code>display_name</code> と <code>examples</code> フィールドを通じて権威を持つ — TypeScript の編集は不要。完全なレシピ（必須の frontmatter フィールド、verification のステップ、そして何が自動的に対して手動で検証されるか）は <a href="11-contributing.html#adding-an-agent">Contributing: Adding an Agent</a> を参照。ステップの手短なサマリ:</p>
+<ol>
+<li>必須の frontmatter とともに <code>core/agents/{name}-agent.md</code> を作成する: <code>name</code>、<code>display_name</code>、<code>examples</code>、<code>description</code>、<code>disallowedTools</code>（<code>Task</code> を含む）、<code>tier</code>。core の frontmatter に生の <code>model:</code>/<code>effort:</code> を決して著述しない -- それらは射影の出力である（上の Agent Tiers を参照）。任意の <code>tools:</code> allowlist は継承された toolset を絞る; 省略するとフルのセッション toolset を継承する。<code>core/tools/aidlc-lib.ts</code> の <code>loadAgents()</code> が次の呼び出しでそのファイルを発見する。</li>
+<li>knowledge ファイルを <code>core/knowledge/{name}-agent/</code> に足す</li>
+<li>agent が参加する stage ファイル（<code>core/aidlc-common/stages/</code>）に agent を足す — 各 stage の frontmatter で <code>lead_agent</code> / <code>support_agents</code> を設定する。コンパイルされた <code>tools/data/stage-graph.json</code> は <code>bun scripts/package.ts</code> によってその frontmatter から生成される; 決して手編集しない（<code>package.ts --check</code> の drift ガードが手編集された dist で CI を失敗させる）。</li>
+<li>ディストリビューションを再生成する: <code>bun scripts/package.ts</code>（続けて <code>--check</code> で drift が無いことを確認する）</li>
+<li>手で維持される knowledge テーブルに agent→examples の行を足す（space レベルのチーム knowledge dir は <code>aidlc/knowledge/{name}-agent/</code> で、内容があるときにチームによって作成される — engine はそれをスキャフォールドしない）</li>
+<li>テストを更新する: ファイル存在のための smoke テスト、stage-agent の相互参照のための feature テスト</li>
+<li>このファイルと <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/">reference/agents/</a> のドキュメントを更新する</li>
+</ol>
+<h2 id="how-to-modify-an-agent">How to Modify an Agent</h2>
+<ul>
+<li><strong>tools を変える</strong>: agent を絞るために frontmatter の <code>tools:</code> allowlist を足すか編集する; 省略するとフルのセッション toolset を継承する。<code>tools:</code> リストは、<code>mcp__&lt;server&gt;__&lt;tool&gt;</code> の id も列挙されない限り、継承された MCP tools を落とす。</li>
+<li><strong>tier を変える</strong>: <code>tier:</code> を <code>judgment</code>、<code>balanced</code>、または <code>templated</code> に編集し、再生成する（<code>bun scripts/package.ts</code>）。代わりにインストール済みのコピーで単一の agent に特定の model を強制するには、<code>dist/&lt;harness&gt;/</code> の agent ファイルで射影された <code>model:</code> を編集する（Claude Code はエイリアス、フルの id、<code>inherit</code> を受理する）。</li>
+<li><strong>振る舞いを変える</strong>: markdown 本体のセクション（responsibilities、principles）を編集する。</li>
+<li><strong>stage の割り当てを変える</strong>: agent ファイル（Stages Owned セクション）と関連する stage ファイル（<code>core/aidlc-common/stages/</code>）の両方を編集し、その後 <code>bun scripts/package.ts</code> で再生成する — コンパイルされた stage graph は stage frontmatter から導出され、決して手編集されない。</li>
+</ul>
+<hr>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="01-architecture.html">Architecture</a> -- agent レイヤーを含む 5 層モデル</li>
+<li><a href="10-knowledge-system.html">Knowledge System</a> -- knowledge のロード順</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/">Agents Technical Reference</a> -- agent ごとの技術的詳細</li>
+<li><a href="04-stage-protocol.html">Stage Protocol</a> -- agent persona のロード rule</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/05-agent-system.md"><code>docs/reference/05-agent-system.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

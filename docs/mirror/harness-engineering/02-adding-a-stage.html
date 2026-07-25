@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stage を足す — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / harness-engineering/02-adding-a-stage</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">HARNESS ENGINEERING</div>
+  <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a>
+  <a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>
+  <a href="../harness-engineering/02-adding-a-stage.html" class="here">Stage を足す</a>
+  <a href="../harness-engineering/03-adding-an-agent.html">Agent を足す</a>
+  <a href="../harness-engineering/04-scopes.html">Scope</a>
+  <a href="../harness-engineering/05-rules-and-the-loop.html">Rule と学習ループ</a>
+  <a href="../harness-engineering/06-sensors.html">Sensor</a>
+  <a href="../harness-engineering/07-team-knowledge.html">チーム Knowledge</a>
+  <a href="../harness-engineering/08-construction-and-swarm.html">Construction と swarm</a>
+  <a href="../harness-engineering/09-porting-to-a-new-harness.html">AI-DLC を新しい harness へ移植する</a>
+  <a href="../harness-engineering/10-authoring-a-plugin.html">Plugin を著述する</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#before-you-start-is-a-new-stage-the-right-move">始める前に: 新しい stage が正しい一手か？</a>
+  <a href="#steps">Steps</a>
+  <a href="#to-add-a-stage-write-a-stage-file-the-runner-is-opt-in-sugar">stage を足すには、stage ファイルを書く — ランナーはオプトインの砂糖</a>
+  <a href="#what-validates-automatically-vs-what-you-must-check-yourself">何が自動で検証されるか 対 自分で確認せねばならないもの</a>
+  <a href="#the-boundary-case-data-work-vs-code-work">境界のケース: データの仕事 対 コードの仕事</a>
+  <a href="#next">次へ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / HARNESS-ENGINEERING</p>
+<h1 id="adding-a-stage">Stage を足す</h1>
+<p>stage はワークフローグラフのノードである: 消費・生産する成果物、それを率いる agent、
+どう走るかを宣言する仕事の単位。1 つ足すことは harness engineer が行う最も構造的な変更である
+— あなたは方法論そのものに新しいステップを導入している。この章は end-to-end のレシピを歩く:
+phase を選び、ファイルを著述し、依存エッジを配線し、グラフをコンパイルし、新しい stage が
+期待どおりの場所に着地することを確認する。</p>
+<p>先に <a href="01-anatomy-of-a-stage.html">Stage の解剖</a> を読むこと。その章は、このレシピがあなたに
+既に理解済みと想定するファイル形式 — frontmatter の契約と 3 区画の本体 — を扱う。ここでは
+<em>ワークフロー</em>に焦点を当てる: フィールドごとのスキーマではなく、判断のポイントと検証の
+ステップ。網羅的な契約について、この章は各ステップで
+<a href="../reference/15-stage-definition.html">Stage 定義</a> へリンクで降りる。</p>
+<p>規律は、開発者リファレンスの
+<a href="../reference/11-contributing.html#adding-a-scope">Scope を足す</a> と
+<a href="../reference/11-contributing.html#adding-an-agent">Agent を足す</a> のレシピを映す:
+番号付きのステップのリスト、続けて<em>何が自動で検証されるか</em>と<em>自分で確認せねばならないもの</em>の
+明確な分割。</p>
+<hr>
+<h2 id="before-you-start-is-a-new-stage-the-right-move">始める前に: 新しい stage が正しい一手か？</h2>
+<p>新しい stage は、既存のどの stage も生産しない成果物を生産する、または既存のどの stage も
+扱わない形で消費するとき、その場所を得る。<em>既存の stage が何をするか</em>だけを変えたいなら
+— 手順を言い換える、率いる agent を付け替える、sensor を付ける — その stage ファイルを
+その場で編集する。新しいノードは要らない。その場の編集は <a href="01-anatomy-of-a-stage.html">Stage の解剖</a> を参照。</p>
+<p>stage を足すことは<strong>データの仕事</strong>である: YAML frontmatter 付きの Markdown ファイルを
+著述し、JSON 成果物を再コンパイルする。TypeScript の変更は無い。念頭に置く 1 つの境界 —
+グラフ<em>コンパイラ自身</em>が新しい振る舞い（まだ理解しない新しい frontmatter キー、新しい探索
+ルール）を要するなら、それは開発者リファレンスの関心であり、harness の仕事ではない。スペックが
+既に知る予約キー（<code>when</code>、<code>on_failure</code>、<code>blocks_on</code>、他）は
+<a href="../reference/15-stage-definition.html">Stage 定義</a> に挙げられている。まだ実装されていない
+ものに手を伸ばすことは、あなたがコードの線を越えたことを意味する。</p>
+<hr>
+<h2 id="steps">Steps</h2>
+<h3 id="1-decide-which-phase-the-stage-belongs-to">1. stage がどの phase に属すかを決める</h3>
+<p>stage ファイルは
+<code>core/aidlc-common/stages/&lt;phase&gt;/&lt;slug&gt;.md</code> 下に住む。phase はディレクトリである。
+5 つある:</p>
+<pre class="term"><code>core/aidlc-common/stages/
+├── initialization/
+├── ideation/
+├── inception/
+├── construction/
+└── operation/</code></pre>
+<p>stage が座る phase は装飾ではない。コンパイル時にどの
+<code>phases/&lt;phase&gt;.md</code> rule レイヤーが stage に付くかを決める — construction phase の
+stage は construction phase rule を継承し、inception stage は inception rule を継承する。
+（initialization に phase rule ファイルは無い。）stage を、ファイルするのに便利な場所ではなく、
+その仕事がライフサイクル上で実際に起きる場所に置くこと。</p>
+<h3 id="2-create-the-stage-file-with-required-frontmatter">2. 必須の frontmatter とともに stage ファイルを作る</h3>
+<p>選んだ phase ディレクトリに新しい <code>&lt;slug&gt;.md</code> を置く。slug は
+ファイル名の語幹であり、他のあらゆる場所での stage の同一性である — <code>requires_stage</code>
+エッジ、scope マッピング、audit ログにおいて。慎重に選ぶこと。後でリネームすると波及する。</p>
+<p>frontmatter はグラフエッジと実行契約を宣言する。構造的な重みを運ぶ
+フィールド:</p>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>何をするか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>requires_stage</code></td>
+<td>依存エッジ — どの stage がこれに先行せねばならないか</td>
+</tr>
+<tr>
+<td><code>consumes</code></td>
+<td>この stage が読む成果物、各々に <code>required</code> の真偽値</td>
+</tr>
+<tr>
+<td><code>produces</code></td>
+<td>この stage が書く成果物（その前方エッジ）</td>
+</tr>
+<tr>
+<td><code>lead_agent</code></td>
+<td>stage を所有するペルソナ</td>
+</tr>
+<tr>
+<td><code>support_agents</code></td>
+<td>conductor が率いる者の後にロードする任意の視点</td>
+</tr>
+<tr>
+<td><code>mode</code></td>
+<td><code>inline</code>、<code>subagent</code>、<code>pipeline</code>、<code>mob</code>、または予約済みの <code>agent-team</code></td>
+</tr>
+<tr>
+<td><code>for_each</code></td>
+<td>任意 — インスタンスが反復を駆動する成果物を名指す</td>
+</tr>
+</tbody></table>
+<p>本体は <code>## Steps</code> で開く — 率いる agent が従う命令形の散文。
+<code>## Sensors</code> と <code>## Learn</code> の区画はその後に来る。完全な
+フィールド表、型、制約は
+<a href="../reference/15-stage-definition.html#field-reference-when-to-use">フィールドリファレンス — いつ使うか</a> を参照。</p>
+<h3 id="3-wire-the-dependency-edges-so-the-graph-places-it">3. グラフが配置するよう依存エッジを配線する</h3>
+<p>ここで新しい stage が実際にワークフローに嵌まる。3 つのフィールドが
+配線を行い、互いに整合せねばならない:</p>
+<ul>
+<li><strong><code>requires_stage</code></strong> はエッジを符号化する。2 種のエッジを運ぶ:
+<em>意味的なデータ依存</em>（「私は成果物 X を消費し、それを stage Y が生産する」→
+<code>Y</code> を足す）と<em>提示順序のエッジ</em>（1 つの phase の 2 つの stage で、データ依存は
+無いが走る順序が固定）。順序エッジをコンパイラのアルファベット順のタイブレークに
+頼るのではなく明示的に著述する。タイブレークはあなたの明示的な配置の下のセーフティネット
+としてだけ働く。</li>
+<li><strong><code>consumes</code></strong> は stage が読む成果物を挙げる。各エントリは
+<em>アクティブな計画に</em>スコープされた <code>required</code> の真偽値を運ぶ: <code>required: true</code> は「生産する
+stage がこの scope で走るなら、consume は満たされねばならない」を意味する — 「生産者が
+常に走る」ではない。brownfield モードでのみ要る consume は
+<code>conditional_on: brownfield</code> を取る。無条件の consume はこのフィールドを
+完全に省く（<code>always</code> の値は無い）。</li>
+<li><strong><code>produces</code></strong> は前方エッジを挙げる。下流の stage が「誰が
+成果物 Z を生産するか？」と尋ねると、グラフは <code>producersOf()</code> 経由で答える — なので
+<code>produces: [Z]</code> を宣言する stage が、その上流に配線されるものである。</li>
+</ul>
+<p>この 3 つを整合させればコンパイラが自動で stage を配置する。
+配置するために <code>stage-graph.json</code> を手編集することは決してない。
+<code>requires_stage</code>、<code>consumes[].required</code>、<code>consumes[].conditional_on</code>、
+<code>for_each</code> のニュアンス（集約が宣言されるのではなく<em>推論される</em>仕方を含む）は
+<a href="../reference/15-stage-definition.html#field-reference-when-to-use">フィールドリファレンス — いつ使うか</a>
+で扱う。</p>
+<h3 id="4-regenerate-the-harnesses-so-stage-graphjson-recompiles">4. harness を再生成し、<code>stage-graph.json</code> を再コンパイルさせる</h3>
+<p><code>core/</code> 下にあなたが今著述した YAML が正のソースである。パッケージャを走らせて、すべての
+<code>dist/&lt;harness&gt;/</code> ツリーを <code>core/</code> から再生成する — これはあなたの新しい stage ファイルを
+コピーし、グラフを再コンパイルする:</p>
+<pre><code class="language-bash">bun scripts/package.ts            # regenerate every harness from core/ + harness/
+bun scripts/package.ts --check    # the CI drift guard — run before committing
+</code></pre>
+<p>ランタイムはコンパイル済みの成果物 <code>&lt;harness-dir&gt;/tools/data/stage-graph.json</code>
+（例: インストール済み Claude ツリーの <code>.claude/tools/data/stage-graph.json</code>）を読む。これは
+パッケージャが呼び出すグラフコンパイラが YAML から生む。既にインストール済みのツリーで
+反復しているなら、そのツリーのグラフを直接再コンパイルできる:</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-graph.ts compile
+</code></pre>
+<p>いずれにせよ著述フローは一方向のパイプラインである — <code>core/</code> で YAML を編集し、
+パッケージャ（またはインストール済みツリーに対する <code>compile</code>）を走らせ、JSON が更新され、
+ランタイムのローダー（<code>loadStageGraph()</code>）が新しいノードをそのまま拾う。決して
+<code>stage-graph.json</code> を手編集しない。それはビルド成果物であり、手編集は次の compile で
+上書きされる。完全なパイプライン図と CI ドリフト
+ガードは
+<a href="../reference/15-stage-definition.html#authoring-flow">著述フロー</a> にある。</p>
+<h3 id="5-verify-it-appears-and-in-which-scopes">5. それが現れることを — どの scope でかも — 検証する</h3>
+<p>新しいノードがコンパイルされて入ったことを確認し、それがどこで走るかを見る:</p>
+<pre><code class="language-bash"># Topological order of the full graph — your slug should appear
+bun .claude/tools/aidlc-graph.ts topo
+
+# Who produces / consumes your stage&#39;s artifacts
+bun .claude/tools/aidlc-graph.ts producers &lt;artifact&gt;
+bun .claude/tools/aidlc-graph.ts consumers &lt;artifact&gt;
+
+# The stages on a given scope&#39;s path — does your stage run for this scope?
+bun .claude/tools/aidlc-graph.ts scope &lt;scope-name&gt;
+
+# Dependency sanity for a scope
+bun .claude/tools/aidlc-graph.ts validate-scope &lt;scope-name&gt;
+</code></pre>
+<p>まっさらな stage はどの scope でも自動的には<strong>走らない</strong>。scope
+メンバーシップは今や stage 自身に住む: その frontmatter の <code>scopes:</code> リストが、それが走る
+すべての scope を名指す。scope を名指さない stage はどこでも <code>SKIP</code> である。
+なので stage を足した後、どの scope がそれを走らせるべきかを決め、stage の <code>scopes:</code> リストに
+各 scope 名を足す — 続けて再コンパイルして転置が <code>scope-grid.json</code> を更新するようにする —
+<a href="04-scopes.html">Scope</a> を参照。これは意図的な継ぎ目である:
+stage 本体を著述するとそれが<em>存在</em>する。<code>scopes:</code> タグがそれを<em>走らせる</em>。</p>
+<hr>
+<h2 id="to-add-a-stage-write-a-stage-file-the-runner-is-opt-in-sugar">stage を足すには、stage ファイルを書く — ランナーはオプトインの砂糖</h2>
+<p>この章の見出しはその拡張性の契約でもある: <strong>stage を足すには、
+stage ファイルを書く。</strong> 他に構造的に要るものは無い。stage がグラフにコンパイルされて入る
+（上のステップ 2〜4）と、スキルも登録も要さずに、それ単体で即座に走れる:</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-orchestrate.ts next --stage &lt;your-slug&gt; --single
+</code></pre>
+<p>エンジンの <code>--single</code> モードはその 1 つの stage を隔離して走らせる。stage のための単一の
+<code>run-stage</code> ディレクティブ（その率いる agent、解決した consumes/produces のパス、rule、sensor
+とともに）を発し、conductor がそれを走らせ、合成 id の
+<code>STAGE_STARTED</code>/<code>STAGE_COMPLETED</code> のペアが audit ログにコミットされる。
+ディレクティブは <code>single: true</code> を運ぶので、conductor は設定された本体、
+トポロジ、reviewer、完了チェックを走らせ、
+<code>report --single --stage &lt;slug&gt; --result completed</code> で一度報告し、<code>done</code> で止まる。
+ワークフローの learnings は走らせず、ワークフローの承認 gate も開かない。
+<code>--single</code> 実行は意図的に隔離される: それは<strong>メインワークフローの
+<code>Current Stage</code> に決して触れない</strong> — ツールは single 実行からメインワークフローを進めることを
+拒否するので、1 つの stage をそれ単体で走らせても進行中のワークフローを決して脱線させない。</p>
+<h3 id="the-runner-skill-is-optional-packaging">ランナースキルは任意のパッケージング</h3>
+<p>同梱される実行可能な各 stage も <code>skills/aidlc-&lt;slug&gt;/SKILL.md</code> に薄いランナースキルを得る
+ので、<code>/aidlc-&lt;slug&gt;</code>（例: <code>/aidlc-application-design</code>）としてタイプ可能である。これらは
+<strong><code>--single</code> フラグの上のオプトインの砂糖</strong>である — <code>next --stage &lt;slug&gt; --single</code> を駆動する
+~6 行のシェル。手書きではない: ジェネレータが実行可能なコンパイル済み stage slug ごとに 1 つ
+emit するので、ランナーの集合が手作業で stage の集合からドリフトすることは決してない。
+（3 つのブートストラップ初期化 stage は stage 別のランナーを得ない — それらに単独の <code>--single</code>
+の意味は無い。init phase 全体が代わりに <code>/aidlc-init</code> コマンドで、エンジンの intent-birth の
+手をパッケージする。）stage を足した（または除いた）後、ランナーを再生成する:</p>
+<pre><code class="language-bash"># Regenerate every runner dir from the compiled stage list
+bun .claude/tools/aidlc-runner-gen.ts write
+
+# CI drift guard: exits 1 if the runner set != the compiled stage set
+bun .claude/tools/aidlc-runner-gen.ts check
+</code></pre>
+<p>ランナーは <strong><code>hooks:</code> ブロックを運ばない</strong> — 決定論的な背骨（audit、sensor、
+runtime-graph の compile、状態検証）は <code>settings.json</code> にプロジェクト全体であるので、
+すべてのランナーがそれを無料で継承する。ランナー別に複製するものは無い。そして
+ランナーは conductor のペルソナを手でロード<strong>しない</strong>: エンジンがそれを、最初の <code>run-stage</code>
+ディレクティブに焼き込んで届ける。ランナー本体はただ、何をするかと駆動する 1 つのコマンドを
+述べるだけである。</p>
+<p>すべてのランナースキルを削除しても、すべての stage はなお
+<code>/aidlc --stage &lt;slug&gt; --single</code> 経由で走る — ランナーは既に走れる stage をパッケージし、stage ファイルが定義である。
+著述の道は「stage ファイルを書く」であり、そのままである。</p>
+<p>これらのランナーの背後の規範的な契約 — エンジン、conductor、
+<code>run-stage</code> ディレクティブがコンパイル済みの stage をタイプ可能な <code>/aidlc-&lt;slug&gt;</code> スキルに
+どう変えるか — は、開発者リファレンスの <a href="../reference/17-skill-system.html">スキルシステム §4（スキルとランナー）</a> を
+参照。</p>
+<hr>
+<h2 id="what-validates-automatically-vs-what-you-must-check-yourself">何が自動で検証されるか 対 自分で確認せねばならないもの</h2>
+<h3 id="what-validates-automatically">何が自動で検証されるか</h3>
+<ul>
+<li><strong>グラフの配置。</strong> <code>compile</code> すると、stage のエッジ（<code>requires_stage</code>、
+<code>consumes</code>、<code>produces</code>）はグラフに解決される。トポロジ順、
+producer/consumer のルックアップ、サイクル検出はすべて、さらなる編集なしに新しいノードを
+勘定に入れる。</li>
+<li><strong>コンパイル時のフィールド検証。</strong> コンパイラはグラフを組む際に frontmatter を検証する
+— 著述エラーは <code>compile</code> で大きな音で失敗し、実行時に静かに失敗しない。<code>lead_agent</code> や
+<code>support_agents</code> の値は、実際の <code>.claude/agents/*.md</code> ファイルに対して <code>loadAgents()</code>
+経由で確認される。更新すべきハードコードの agent 列挙は無い。ファイルの無い agent を
+名指す stage は compile を落とす（<code>lead_agent &quot;&lt;name&gt;&quot; has no matching .claude/agents/*.md</code>）
+ので、タイプミスは実行時に 404 になるグラフを出荷できない。予約済みの <code>orchestrator</code>
+slug（conductor 自身。ブートストラップ初期化 stage で使われる）は
+免除される — それに agent ファイルは無い。</li>
+<li><strong>CI ドリフトガード。</strong> <code>bun .claude/tools/aidlc-graph.ts compile --check</code> は清潔な
+ツリーで <code>0</code>、いずれかの stage YAML が JSON を再コンパイルせずに編集されたら <code>1</code> を
+exit する。CI はこれを走らせるので、忘れた <code>compile</code> は古いグラフを出荷するのではなく
+明確なメッセージでマージをブロックする。</li>
+<li><strong>phase rule の付与。</strong> stage はディレクトリで phase を宣言するので、
+合致する <code>phases/&lt;phase&gt;.md</code> rule レイヤーがコンパイル時に付く —
+そのエッジを自分で配線することはない。</li>
+</ul>
+<h3 id="what-you-must-check-yourself">自分で確認せねばならないもの</h3>
+<ul>
+<li><strong>scope への参加。</strong> コンパイラは stage をグラフに配置する。どの scope がそれを走らせるか
+は<strong>決めない</strong>。stage 自身の <code>scopes:</code> frontmatter リストに各 scope 名を足す（そして
+転置が <code>scope-grid.json</code> を更新するよう再コンパイルする）まで、新しい stage はグラフに
+存在するがどこでも走らない。気にする各 scope について <code>aidlc-graph.ts scope &lt;scope-name&gt;</code>
+で確認する。</li>
+<li><strong>本体の散文。</strong> frontmatter だけがパースされる。<code>## Steps</code> 本体は stage が起動するとき
+率いる agent が読む — 他の stage ファイルの構造に合わせて書く。パーサーは曖昧な、または
+欠けた指示を捕まえない。</li>
+<li><strong>散文とエッジの整合。</strong> <code>requires_stage</code> と <code>## Steps</code> の散文はドリフトしうる — パーサーは
+エッジだけを見て、散文は見ない。手順が「intent statement を読む」と言うなら、合致する
+producer stage が実際に <code>requires_stage</code> にあらねばならない。手で同期を保つこと。</li>
+<li><strong>あなたの scope 下の <code>required</code> の意味論。</strong> <code>required: true</code> の consume は、producer を
+飛ばすどの scope でも無意味になる — それは正当でありバグではないが、stage 本体が producer の
+不在を優雅に扱うことを確認するのはあなたの責任である（「利用可能なら」のフォールバック
+パターン）。</li>
+<li><strong>ドキュメント。</strong> 新しい stage が docs が手で列挙するカウントやテーブル（stage 数、
+phase 一覧）を変えるなら、ドキュメントポリシーに従い、同じ変更でそれらを更新する。</li>
+</ul>
+<hr>
+<h2 id="the-boundary-case-data-work-vs-code-work">境界のケース: データの仕事 対 コードの仕事</h2>
+<p>stage ファイルを著述しグラフを再コンパイルすることは、完全に
+harness-engineer のデータの仕事である — Markdown、YAML、JSON、<code>.ts</code> は無い。静かに
+越えてはならない線: あなたの stage を動かすためにグラフ<em>コンパイラ</em>が異なる振る舞い
+（認識しない frontmatter キー、新しいエッジ型、新しい探索ルール）を要するなら、それは
+データを読むコードへの変更であり、ここではなく
+<a href="../reference/15-stage-definition.html">開発者リファレンス</a> に属す。スペックの
+予約キー名前空間は、まさに将来の構造的拡張が場当たりの追加としてではなく予測どおりに
+着地するために存在する。それらのキーの 1 つに消費者が出荷されるまで、スキーマはそれを
+拒否する。コンパイラがまだ実装しないキーが欲しいと気づいたら、止まる — それは
+フレームワークの変更であり、検証の規律については
+<a href="../reference/11-contributing.html#adding-an-agent">Agent を足す</a> とその兄弟の
+contributing レシピに従うが、実装はコードに住む。</p>
+<hr>
+<h2 id="next">次へ</h2>
+<p><a href="03-adding-an-agent.html">Agent を足す</a> — 新しい stage が <code>lead_agent</code> として名指す
+ペルソナを著述し、それが率いる／支える stage に束ねる。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/02-adding-a-stage.md"><code>docs/harness-engineering/02-adding-a-stage.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

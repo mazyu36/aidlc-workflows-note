@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>クロスツール Plugin Manifest 比較 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/research/Cross-Tool Plugin Comparison</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../reference/01-architecture.html">Architecture</a>
+  <a href="../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../reference/09-testing.html">テスト</a>
+  <a href="../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../reference/research/Cross-Tool%20Plugin%20Comparison.html" class="here">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#platform-architecture-models">プラットフォームのアーキテクチャモデル</a>
+  <a href="#side-by-side-manifest-comparison">Manifest の横並び比較</a>
+  <a href="#directory-structure-comparison">ディレクトリ構造の比較</a>
+  <a href="#manifest-field-comparison">Manifest フィールド比較</a>
+  <a href="#component-types-supported">サポートされるコンポーネント型</a>
+  <a href="#distribution-models">配布モデル</a>
+  <a href="#hookevent-systems">Hook/イベントシステム</a>
+  <a href="#key-architectural-differences">主要なアーキテクチャの違い</a>
+  <a href="#summary-when-to-use-which-model">まとめ: どのモデルをいつ使うか</a>
+  <a href="#the-convergence-thesis">収束の論題</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="cross-tool-plugin-manifest-comparison">クロスツール Plugin Manifest 比較</h1>
+<blockquote>
+<p><strong>Codex Manifest Shape Report への追補</strong> | June 26, 2026<br><strong>出典</strong>: OpenAI Codex docs, Anthropic Claude Code docs, Cursor official plugins repo, OpenCode docs, HuggingFace Context Course<br><strong>比較対象プラットフォーム</strong>: Codex, Claude Code, Cursor, OpenCode, Pi</p>
+</blockquote>
+<hr>
+<h2 id="platform-architecture-models">プラットフォームのアーキテクチャモデル</h2>
+<p>AI コーディングツールのエコシステムは、2 つの基本的なアプローチに分かれる:</p>
+<table>
+<thead>
+<tr>
+<th>モデル</th>
+<th>プラットフォーム</th>
+<th>特徴</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Manifest-first</strong></td>
+<td>Codex, Claude Code</td>
+<td>宣言的な JSON manifest + root レベルのコンポーネントディレクトリ。インストール時にコードは走らない。</td>
+</tr>
+<tr>
+<td><strong>Code-first</strong></td>
+<td>OpenCode</td>
+<td>JS/TS モジュールが hook 関数をエクスポートする。plugin がコードそのものである。</td>
+</tr>
+<tr>
+<td><strong>IDE-extension</strong></td>
+<td>Cursor (VS Code fork)</td>
+<td>VS Code の extension モデルを継承 + 新しい plugin 仕様</td>
+</tr>
+<tr>
+<td><strong>Package-based</strong></td>
+<td>Pi</td>
+<td>規約ベースのディレクトリを持つ <code>package.json</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="side-by-side-manifest-comparison">Manifest の横並び比較</h2>
+<h3 id="codex-codex-pluginpluginjson">Codex <code>.codex-plugin/plugin.json</code></h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;text-processor-plugin&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;Text analysis skills&quot;,
+  &quot;skills&quot;: &quot;./skills/&quot;,
+  &quot;mcpServers&quot;: &quot;./.mcp.json&quot;,
+  &quot;apps&quot;: &quot;./.app.json&quot;,
+  &quot;hooks&quot;: &quot;./hooks/hooks.json&quot;,
+  &quot;interface&quot;: {
+    &quot;displayName&quot;: &quot;Text Processor&quot;,
+    &quot;shortDescription&quot;: &quot;Analyze text with AI&quot;,
+    &quot;category&quot;: &quot;Productivity&quot;,
+    &quot;capabilities&quot;: [&quot;Read&quot;, &quot;Write&quot;],
+    &quot;defaultPrompt&quot;: [&quot;Analyze this text for readability&quot;],
+    &quot;brandColor&quot;: &quot;#10A37F&quot;,
+    &quot;logo&quot;: &quot;./assets/logo.png&quot;
+  }
+}
+</code></pre>
+<h3 id="claude-code-claude-pluginpluginjson">Claude Code <code>.claude-plugin/plugin.json</code></h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;text-processor-plugin&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;Text analysis skills&quot;,
+  &quot;author&quot;: { &quot;name&quot;: &quot;Your Name&quot; }
+}
+</code></pre>
+<p><strong>注目点</strong>: Claude Code の manifest ははるかに簡素である — コンポーネントは規約（ディレクトリの存在）で発見され、明示的なパスで指し示されない。<code>interface</code> オブジェクトは無い。</p>
+<h3 id="opencode-no-manifest-code-is-the-plugin">OpenCode（Manifest 無し — コードが plugin である）</h3>
+<pre><code class="language-typescript">// .opencode/plugins/text-processor-plugin.ts
+import type { Plugin } from &quot;@opencode-ai/plugin&quot;
+
+export const TextProcessorPlugin: Plugin = async ({ project, client, $, directory }) =&gt; {
+  return {
+    &quot;tool.execute.before&quot;: async (input) =&gt; {
+      if (input.tool === &quot;read&quot;) {
+        await client.app.log({ body: { message: &quot;Consider text analysis&quot; } })
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="pi-packagejson">Pi <code>package.json</code></h3>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;text-processor-plugin&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;keywords&quot;: [&quot;pi-package&quot;],
+  &quot;pi&quot;: {
+    &quot;skills&quot;: [&quot;./skills&quot;],
+    &quot;extensions&quot;: [&quot;./extensions&quot;],
+    &quot;prompts&quot;: [&quot;./prompts&quot;],
+    &quot;themes&quot;: [&quot;./themes&quot;]
+  }
+}
+</code></pre>
+<hr>
+<h2 id="directory-structure-comparison">ディレクトリ構造の比較</h2>
+<h3 id="codex">Codex</h3>
+<pre class="term"><code>my-plugin/
+├── .codex-plugin/
+│   └── plugin.json          ← Manifest (ONLY file here)
+├── skills/
+│   └── analyze-text/
+│       └── SKILL.md
+├── .mcp.json                ← MCP server config
+├── .app.json                ← App/connector config  
+├── hooks/
+│   └── hooks.json
+└── assets/
+    ├── logo.png
+    └── screenshot-1.png</code></pre>
+<h3 id="claude-code">Claude Code</h3>
+<pre class="term"><code>my-plugin/
+├── .claude-plugin/
+│   └── plugin.json          ← Manifest (ONLY file here)
+├── skills/
+│   └── analyze-text/
+│       └── SKILL.md
+├── agents/                  ← UNIQUE: agent definitions
+│   └── reviewer.md
+├── .mcp.json                ← MCP server config
+├── .lsp.json                ← UNIQUE: LSP server config
+├── hooks/
+│   └── hooks.json
+├── monitors/                ← UNIQUE: background monitors
+│   └── monitors.json
+├── themes/                  ← UNIQUE: color themes
+│   └── dracula.json
+└── README.md</code></pre>
+<h3 id="opencode">OpenCode</h3>
+<pre class="term"><code>my-project/
+├── .opencode/
+│   ├── plugins/
+│   │   └── text-processor.ts   ← Plugin IS the code
+│   └── package.json
+├── opencode.json               ← npm plugin references
+└── README.md</code></pre>
+<h3 id="pi">Pi</h3>
+<pre class="term"><code>my-package/
+├── package.json                ← Manifest (no hidden dir)
+├── skills/
+│   └── analyze-text/
+│       └── SKILL.md
+├── extensions/                 ← Runtime TS/JS extensions
+│   └── text-processor.ts
+├── prompts/
+└── themes/</code></pre>
+<hr>
+<h2 id="manifest-field-comparison">Manifest フィールド比較</h2>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>Codex</th>
+<th>Claude Code</th>
+<th>OpenCode</th>
+<th>Pi</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>場所</strong></td>
+<td><code>.codex-plugin/plugin.json</code></td>
+<td><code>.claude-plugin/plugin.json</code></td>
+<td>N/A（code-first）</td>
+<td><code>package.json</code></td>
+</tr>
+<tr>
+<td><strong>必須</strong></td>
+<td><code>name</code> のみ</td>
+<td><code>name</code> のみ</td>
+<td>N/A</td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td><strong>名前の形式</strong></td>
+<td>kebab-case</td>
+<td>kebab-case</td>
+<td>モジュールのエクスポート</td>
+<td>npm 形式</td>
+</tr>
+<tr>
+<td><strong>バージョン</strong></td>
+<td>任意（semver）</td>
+<td>任意（semver または git SHA）</td>
+<td>N/A</td>
+<td>必須（semver）</td>
+</tr>
+<tr>
+<td><strong>コンポーネントポインタ</strong></td>
+<td>明示的（<code>&quot;skills&quot;: &quot;./skills/&quot;</code>）</td>
+<td>規約ベース（ディレクトリを自動検出）</td>
+<td>N/A</td>
+<td>明示的（<code>&quot;pi&quot;: {&quot;skills&quot;: [...]}</code>）</td>
+</tr>
+<tr>
+<td><strong>Interface/UI メタデータ</strong></td>
+<td>リッチな <code>interface</code> オブジェクト（15 フィールド）</td>
+<td>無し — marketplace メタデータは marketplace.json 内</td>
+<td>N/A</td>
+<td>無し</td>
+</tr>
+<tr>
+<td><strong>MCP 設定</strong></td>
+<td><code>.mcp.json</code>（manifest から指し示される）</td>
+<td><code>.mcp.json</code>（root で自動検出）</td>
+<td>別個の設定</td>
+<td>任意の <code>.mcp.json</code></td>
+</tr>
+<tr>
+<td><strong>パスのルール</strong></td>
+<td><code>./</code> で始まり、<code>..</code> 無し</td>
+<td><code>./</code> で始まり、<code>..</code> 無し</td>
+<td>N/A</td>
+<td>標準の node 解決</td>
+</tr>
+<tr>
+<td><strong>前方互換</strong></td>
+<td><code>extra</code> map が未知を保持する</td>
+<td>認識されないフィールドは検証に失敗する</td>
+<td>N/A</td>
+<td>標準 JSON</td>
+</tr>
+<tr>
+<td><strong>検証</strong></td>
+<td>SDK (Elixir) — 寛容、extra を保持</td>
+<td>厳格なスキーマ — 未知を拒否</td>
+<td>N/A</td>
+<td>npm 検証</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="component-types-supported">サポートされるコンポーネント型</h2>
+<table>
+<thead>
+<tr>
+<th>コンポーネント</th>
+<th align="center">Codex</th>
+<th align="center">Claude Code</th>
+<th align="center">OpenCode</th>
+<th align="center">Cursor</th>
+<th align="center">Pi</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Skills (SKILL.md)</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">❌（代わりに hooks）</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>MCP Servers</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">❌（別個）</td>
+<td align="center">✅（consumer）</td>
+<td align="center">✅（アダプタ経由）</td>
+</tr>
+<tr>
+<td>App Connectors</td>
+<td align="center">✅ (.app.json)</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td>Lifecycle Hooks</td>
+<td align="center">✅</td>
+<td align="center">✅（30+ イベント）</td>
+<td align="center">✅（25+ イベント）</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td>Agents/Subagents</td>
+<td align="center">❌</td>
+<td align="center">✅ (agents/)</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td>LSP Servers</td>
+<td align="center">❌</td>
+<td align="center">✅ (.lsp.json)</td>
+<td align="center">❌</td>
+<td align="center">❌（VS Code ネイティブ）</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td>Monitors</td>
+<td align="center">❌</td>
+<td align="center">✅（experimental）</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+</tr>
+<tr>
+<td>Themes</td>
+<td align="center">❌</td>
+<td align="center">✅（experimental）</td>
+<td align="center">❌</td>
+<td align="center">❌（VS Code ネイティブ）</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td>Custom Tools</td>
+<td align="center">❌（MCP 経由）</td>
+<td align="center">❌（MCP 経由）</td>
+<td align="center">✅（コード内）</td>
+<td align="center">❌</td>
+<td align="center">✅（extension 内）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="distribution-models">配布モデル</h2>
+<table>
+<thead>
+<tr>
+<th>次元</th>
+<th>Codex</th>
+<th>Claude Code</th>
+<th>OpenCode</th>
+<th>Cursor</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>主な配布</strong></td>
+<td>Git repo</td>
+<td>Git repo</td>
+<td>npm + ローカルファイル</td>
+<td>VS Code Marketplace (OpenVSX)</td>
+</tr>
+<tr>
+<td><strong>Marketplace 形式</strong></td>
+<td><code>marketplace.json</code>（JSON カタログ）</td>
+<td><code>marketplace.json</code>（JSON カタログ）</td>
+<td><code>opencode.json</code> 配列</td>
+<td><code>.vsix</code> パッケージ</td>
+</tr>
+<tr>
+<td><strong>スコープ</strong></td>
+<td>Official, Repo, Personal</td>
+<td>User, Project, Local, Managed</td>
+<td>プロジェクトローカル</td>
+<td>Global</td>
+</tr>
+<tr>
+<td><strong>インストール cache</strong></td>
+<td><code>~/.codex/plugins/cache/</code></td>
+<td><code>~/.claude/plugins/</code></td>
+<td><code>node_modules</code></td>
+<td><code>~/.vscode/extensions/</code></td>
+</tr>
+<tr>
+<td><strong>オフラインサポート</strong></td>
+<td>✅（cache が残る）</td>
+<td>✅（cache が残る）</td>
+<td>✅（npm cache）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>バージョン固定</strong></td>
+<td>marketplace エントリ内の <code>ref</code>/<code>sha</code></td>
+<td>git SHA または明示的なバージョン</td>
+<td>npm semver</td>
+<td>Extension バージョン</td>
+</tr>
+<tr>
+<td><strong>CLI インストール</strong></td>
+<td><code>codex plugin install</code></td>
+<td><code>claude plugin install</code></td>
+<td>npm install</td>
+<td>ext install</td>
+</tr>
+<tr>
+<td><strong>Marketplace CLI</strong></td>
+<td><code>codex plugin marketplace add</code></td>
+<td>（marketplace.json ファイル）</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td><strong>Policy 制御</strong></td>
+<td><code>AVAILABLE</code>/<code>PREINSTALLED</code>/<code>HIDDEN</code></td>
+<td>スコープ付き設定</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="hookevent-systems">Hook/イベントシステム</h2>
+<table>
+<thead>
+<tr>
+<th>側面</th>
+<th>Codex</th>
+<th>Claude Code</th>
+<th>OpenCode</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>イベント数</strong></td>
+<td>~5-6（SessionStart, Turn*, ToolCall*）</td>
+<td>30+ イベント</td>
+<td>25+ イベント</td>
+</tr>
+<tr>
+<td><strong>Hook タイプ</strong></td>
+<td><code>command</code> のみ</td>
+<td><code>command</code>, <code>http</code>, <code>mcp_tool</code>, <code>prompt</code>, <code>agent</code></td>
+<td>JS/TS ハンドラ関数</td>
+</tr>
+<tr>
+<td><strong>信頼モデル</strong></td>
+<td>Non-managed（明示的な user の信頼が必要）</td>
+<td>Non-managed（明示的な信頼）</td>
+<td>自動ロード（プロジェクト内のコード）</td>
+</tr>
+<tr>
+<td><strong>環境変数</strong></td>
+<td><code>PLUGIN_ROOT</code>, <code>PLUGIN_DATA</code></td>
+<td><code>CLAUDE_PLUGIN_ROOT</code>, <code>CLAUDE_PLUGIN_DATA</code>, <code>CLAUDE_PROJECT_DIR</code></td>
+<td>コード内の context オブジェクト</td>
+</tr>
+<tr>
+<td><strong>イベントマッチャ</strong></td>
+<td>N/A</td>
+<td>正規表現パターン（例: `&quot;Write</td>
+<td>Edit&quot;`）</td>
+</tr>
+<tr>
+<td><strong>ブロッキング</strong></td>
+<td>No</td>
+<td>Yes（PreToolUse はブロックできる）</td>
+<td>Yes（before hook はブロックできる）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="key-architectural-differences">主要なアーキテクチャの違い</h2>
+<h3 id="1-explicit-pointers-vs-convention-discovery">1. 明示的ポインタ vs 規約による発見</h3>
+<p><strong>Codex</strong> は明示的な manifest ポインタを要求する:</p>
+<pre><code class="language-json">{ &quot;skills&quot;: &quot;./skills/&quot;, &quot;mcpServers&quot;: &quot;./.mcp.json&quot; }
+</code></pre>
+<p><strong>Claude Code</strong> はディレクトリの存在によって自動発見する — <code>skills/</code> が plugin root に存在すれば、skills がロードされる。manifest は <code>name</code> だけを必要とする。これは Claude Code の plugin を作りやすくするが、推論しにくくする（暗黙の振る舞い）。</p>
+<h3 id="2-interface-metadata-codex-only">2. Interface メタデータ: Codex のみ</h3>
+<p>Codex は marketplace 表示のためのリッチな <code>interface</code> オブジェクトを持つ（ブランドカラー、ロゴ、スクリーンショット、スターター prompt）。Claude Code は manifest に <strong>同等物を持たない</strong> — すべての表示メタデータは plugin 自身ではなく marketplace エントリに住む。</p>
+<p><strong>なぜ重要か</strong>: Codex の plugin は marketplace 目的で自己記述的である。Claude Code の plugin は発見性を marketplace エントリに依存する。</p>
+<h3 id="3-app-connectors-codex-exclusive">3. App Connectors: Codex 専用</h3>
+<p>サードパーティサービス認証（OAuth、API キー）のための <code>.app.json</code> を持つのは Codex だけである。Claude Code、OpenCode、Cursor は plugin システムに認証 connector を同梱せず — 外部サービス統合は MCP server が扱うことを期待する。</p>
+<p><strong>なぜ重要か</strong>: Codex は「Slack/GitHub/Figma への接続」を第一級の plugin の関心事として扱う。他はこれを完全に MCP へ委ねる。</p>
+<h3 id="4-subagents-claude-code-exclusive">4. Subagents: Claude Code 専用</h3>
+<p>agent 定義（モデル選択、ツール制限、分離）を持つ <code>agents/</code> ディレクトリをサポートするのは Claude Code だけである。Codex には agent の同梱が無い — その「subagent」の概念は plugin システムの外で動く。</p>
+<h3 id="5-lsp-monitors-themes-claude-codes-breadth">5. LSP + Monitors + Themes: Claude Code の幅広さ</h3>
+<p>Claude Code は最も豊かなコンポーネントサーフェスを持つ: LSP servers（リアルタイムのコードインテリジェンス）、monitors（バックグラウンドの stdout 監視）、themes。これらは Claude Code の plugin を完全な IDE extension に近づける。Codex はより狭いが、よりクリーンである。</p>
+<h3 id="6-validation-philosophy">6. 検証の哲学</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Codex</th>
+<th>Claude Code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>未知のキー</td>
+<td><code>extra</code> map に <strong>保持される</strong></td>
+<td><strong>拒否される</strong> — 検証が失敗する</td>
+</tr>
+<tr>
+<td>前方互換</td>
+<td>✅ ラウンドトリップを生き延びる</td>
+<td>❌ 未知を除去せねばならない</td>
+</tr>
+<tr>
+<td>厳格さ</td>
+<td>寛容（name のみ必須）</td>
+<td>厳格（スキーマ強制）</td>
+</tr>
+</tbody></table>
+<p>これは重要な分岐である: Codex の plugin は前方互換な実験的フィールドを持ち運べる。Claude Code の厳格な検証は、古いツールが新しい manifest の機能で壊れることを意味する。</p>
+<h3 id="7-cross-tool-portability">7. クロスツールのポータビリティ</h3>
+<table>
+<thead>
+<tr>
+<th>レイヤー</th>
+<th>ポータブル？</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MCP servers</td>
+<td>✅ 普遍的</td>
+<td>同じ <code>.mcp.json</code> が Codex, Claude Code, Cursor をまたいで動く</td>
+</tr>
+<tr>
+<td>Skills (SKILL.md)</td>
+<td>🟡 ほぼポータブル</td>
+<td>同じ形式、異なる自動発見/起動</td>
+</tr>
+<tr>
+<td>Hooks</td>
+<td>❌ ツール固有</td>
+<td>異なるイベント、異なるスキーマ</td>
+</tr>
+<tr>
+<td>Manifest</td>
+<td>❌ ツール固有</td>
+<td><code>.codex-plugin/</code> ≠ <code>.claude-plugin/</code></td>
+</tr>
+<tr>
+<td>Marketplace</td>
+<td>🟡 ほぼポータブル</td>
+<td>同じ JSON 形式、異なるパス</td>
+</tr>
+</tbody></table>
+<p><strong>MCP は普遍的な相互運用レイヤーである。</strong> よく作られた MCP server はすべてのツールをまたいで動く。MCP の上のすべて（skills、hooks、marketplace メタデータ）はツール固有だが — 機能的なロジック（MCP server のコード）は write-once, run-anywhere である。</p>
+<hr>
+<h2 id="summary-when-to-use-which-model">まとめ: どのモデルをいつ使うか</h2>
+<table>
+<thead>
+<tr>
+<th>欲しいもの...</th>
+<th>最適なプラットフォームモデル</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>宣言的で検査可能な plugin</td>
+<td>Codex または Claude Code（manifest-first）</td>
+</tr>
+<tr>
+<td>リッチな marketplace 表示</td>
+<td>Codex（interface オブジェクト）</td>
+</tr>
+<tr>
+<td>最大限のコンポーネントの多様性</td>
+<td>Claude Code（agents, LSP, monitors, themes）</td>
+</tr>
+<tr>
+<td>チーム横断の配布</td>
+<td>Codex または Claude Code（Git marketplace）</td>
+</tr>
+<tr>
+<td>コードレベルの hook 制御</td>
+<td>OpenCode（プログラム的な hook）</td>
+</tr>
+<tr>
+<td>IDE ネイティブな extension</td>
+<td>Cursor（VS Code モデル）</td>
+</tr>
+<tr>
+<td>MCP のポータビリティ</td>
+<td>すべて（MCP は普遍的）</td>
+</tr>
+<tr>
+<td>前方互換なスキーマ</td>
+<td>Codex（extra map）</td>
+</tr>
+<tr>
+<td>厳格な検証の安全性</td>
+<td>Claude Code（未知を拒否）</td>
+</tr>
+<tr>
+<td>サードパーティサービス認証</td>
+<td>Codex（.app.json connector）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="the-convergence-thesis">収束の論題</h2>
+<p>表面的な違いにもかかわらず、エコシステムは収束しつつある:</p>
+<ol>
+<li><strong>普遍的な接着剤としての MCP</strong> — すべてのツールが MCP server を消費する。これが write-once のレイヤーである。</li>
+<li><strong>共有概念としての Skills</strong> — YAML frontmatter 付きの SKILL.md は Codex、Claude Code、Pi に現れる。形式はほぼ同一である。</li>
+<li><strong>Git ネイティブな配布</strong> — Codex と Claude Code はどちらも、Git repo を指す <code>marketplace.json</code> カタログを使う。コンパイルステップ無し、ビルドシステム無し。</li>
+<li><strong>Plugin = ディレクトリ</strong> — manifest-first の両プラットフォームは同じ物理パターンを共有する: <code>plugin.json</code> を持つ隠し設定ディレクトリ（<code>.codex-plugin/</code> または <code>.claude-plugin/</code>）と、plugin root にあるすべてのコンポーネント。</li>
+</ol>
+<p>重要な違いは <strong>野心の範囲</strong> である: Codex は Skills + MCP + Apps に集中する（クリーンでポータブル）。Claude Code はコンポーネントの多様性を最大化する（agents, LSP, monitors, themes）。OpenCode はプログラム的に進む（完全な JS/TS 制御）。しかし下層の MCP は、どのラッパーを選んでも機能的なツールがポータブルであることを意味する。</p>
+<hr>
+<p><em>出典: <a href="https://developers.openai.com/codex/plugins/build">OpenAI Codex Plugins</a>, <a href="https://code.claude.com/docs/en/plugins-reference">Claude Code Plugins Reference</a>, <a href="https://pyshine.com/Cursor-Plugins-AI-Code-Editor-Plugin-Specification/">Cursor Plugin Ecosystem</a>, <a href="http://opencode.ai/docs/plugins">OpenCode Plugins</a>, <a href="https://huggingface.co/learn/context-course/unit3/anatomy.md">HuggingFace Context Course Unit 3</a></em></p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/research/Cross-Tool%20Plugin%20Comparison.md"><code>docs/reference/research/Cross-Tool Plugin Comparison.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

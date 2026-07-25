@@ -11,15 +11,17 @@
 <script type="module" src="../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/06-agents</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../index.html">総合索引</a>
   <a href="../../index.html">Atlas トップ</a>
@@ -154,7 +156,7 @@ flowchart TD
 <hr>
 <h2 id="the-11-domain-agents">11 のドメインエージェント</h2>
 <blockquote>
-<p><strong>同梱エージェントの知識をカスタマイズしたい？</strong> <code>.claude/agents/*.md</code> にある 14 の同梱エージェントファイルを編集しないこと — フレームワークのファイルであり、アップグレードで上書きされる。会社の標準は代わりに space レベルの <code>aidlc/knowledge/&lt;agent-name&gt;/</code> に追加する。完全なワークフローは <a href="08-knowledge.html">ナレッジ</a> を参照。<em>新しい</em>エージェントが欲しいチームは、必須の frontmatter を持つファイルを <code>.claude/agents/&lt;slug&gt;.md</code> に置ける — そのファイルはユーザー所有である。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md#adding-an-agent">コントリビューション: エージェントの追加</a> を参照。</p>
+<p><strong>同梱エージェントの知識をカスタマイズしたい？</strong> <code>.claude/agents/*.md</code> にある 14 の同梱エージェントファイルを編集しないこと — フレームワークのファイルであり、アップグレードで上書きされる。会社の標準は代わりに space レベルの <code>aidlc/knowledge/&lt;agent-name&gt;/</code> に追加する。完全なワークフローは <a href="08-knowledge.html">ナレッジ</a> を参照。<em>新しい</em>エージェントが欲しいチームは、必須の frontmatter を持つファイルを <code>.claude/agents/&lt;slug&gt;.md</code> に置ける — そのファイルはユーザー所有である。<a href="../reference/11-contributing.html#adding-an-agent">コントリビューション: エージェントの追加</a> を参照。</p>
 </blockquote>
 <p>以下の各エージェントには<strong>深掘りページ</strong>がある — 完全な責務、リード / 支援する stage、読み込む知識。<a href="agents/README.html">エージェント深掘り索引</a> が 11 体すべてを一覧し、エージェント別リンクは各見出しの下にインラインで置いてある。</p>
 <h3 id="aidlc-product-agent"><a href="agents/product-agent.html">aidlc-product-agent</a></h3>
@@ -387,7 +389,7 @@ flowchart TD
 <p>ペルソナを本当に絞るには、frontmatter に任意の <code>tools:</code> 許可リストを足す — ただし完全修飾の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id も併記しない限り、継承していた MCP アクセスが落ちる。この実装は今日、そのような制限を同梱していない。</p>
 <h3 id="mcp-servers-are-shared-not-per-agent">MCP サーバーは共有であり、エージェント別ではない</h3>
 <p>上の表は各ペルソナが使うと期待される組み込みツールを示すが、実際にはすべてのエージェントが全部を継承する。MCP サーバーも同じ全継承モデルに従う: この実装はプロジェクトルート（<code>.claude/</code> の隣）の <code>.mcp.json</code> で一度だけ宣言し、Claude Code がセッションにプロビジョニングし、すべてのエージェントがその全部を継承する — エージェント別の許可は存在しない。14 エージェントのそれぞれが、追加設定なしに宣言済みの全サーバー（<code>context7</code> と 4 つの AWS サーバー）へ到達でき、認証情報の無いサーバーはブロッカーではなく単に利用不可になる。特定のエージェントからサーバーへの到達を止めるには、そのエージェントの <code>tools:</code> 許可リストを、保持すべき完全修飾の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id（例えば <code>mcp__context7__&lt;tool&gt;</code>）に絞る。この実装は今日、そのような制限を同梱していない。</p>
-<p>サーバーの一覧と認証情報は <a href="01-getting-started.html">はじめかた</a>、MCP が Claude Code のネイティブなツールモデルにどう写像されるかは <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/14-claude-features.md#mcp-servers">Harness プリミティブの対応</a> を参照。</p>
+<p>サーバーの一覧と認証情報は <a href="01-getting-started.html">はじめかた</a>、MCP が Claude Code のネイティブなツールモデルにどう写像されるかは <a href="../reference/14-claude-features.html#mcp-servers">Harness プリミティブの対応</a> を参照。</p>
 <hr>
 <h2 id="reviewer-agents">レビュアーエージェント</h2>
 <p>11 のドメインエキスパートに加えて、AI-DLC は <strong>2 つの品質 gate レビュアー
@@ -438,7 +440,7 @@ stage 定義・Q&amp;A・成果物を読み（ビルダーの <code>memory.md</c
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/06-agents.md"><code>docs/guide/06-agents.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/06-agents.md"><code>docs/guide/06-agents.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

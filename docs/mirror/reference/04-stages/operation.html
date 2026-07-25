@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operation phase — stage リファレンス (4.1-4.7) — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/04-stages/operation</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../reference/01-architecture.html">Architecture</a>
+  <a href="../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../reference/09-testing.html">テスト</a>
+  <a href="../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../reference/04-stages/operation.html" class="here">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#phase-overview">phase の概要</a>
+  <a href="#stage-summary-table">stage サマリテーブル</a>
+  <a href="#stage-41-deployment-pipeline-configuration">Stage 4.1: Deployment Pipeline Configuration</a>
+  <a href="#stage-42-environment-provisioning">Stage 4.2: Environment Provisioning</a>
+  <a href="#stage-43-deployment-execution">Stage 4.3: Deployment Execution</a>
+  <a href="#stage-44-observability-setup">Stage 4.4: Observability Setup</a>
+  <a href="#stage-45-incident-response-runbook-generation">Stage 4.5: Incident Response &amp; Runbook Generation</a>
+  <a href="#stage-46-performance-validation-load-testing">Stage 4.6: Performance Validation &amp; Load Testing</a>
+  <a href="#stage-47-continuous-feedback-optimization">Stage 4.7: Continuous Feedback &amp; Optimization</a>
+  <a href="#phase-summary">phase のサマリ</a>
+  <a href="#cross-references">関連</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="operation-phase-stage-reference-41-47">Operation phase — stage リファレンス (4.1-4.7)</h1>
+<h2 id="phase-overview">phase の概要</h2>
+<p>Operation phase は AI-DLC ライフサイクルの 5 つの phase のうち 5 番目である。Construction
+からのビルド・テスト済みソフトウェアを受け取り、デプロイ・モニタリング・インシデントへの
+備え・パフォーマンス検証・継続的な最適化へと進める。pipeline の設定、環境のプロビジョニング、
+デプロイの実行、observability、インシデント対応、パフォーマンス検証、フィードバック収集に
+またがる 7 つの stage（4.1 から 4.7）を扱う。</p>
+<p>7 つの Operation stage はすべて <strong>CONDITIONAL</strong> である — scope と実行計画に基づいて実行される。
+例えば mvp・poc・bugfix・refactor scope は Operation を完全にスキップする。infra と
+security-patch scope はサブセット（デプロイと環境の stage）を実行する。</p>
+<p>すべての stage は <strong>inline</strong> で実行される（Operation phase に subagent は無い）。すべての stage
+は承認 gate・質問フォーマット・完了メッセージ・state トラッキングについて <code>stage-protocol.md</code>
+に従う。</p>
+<hr>
+<h2 id="stage-summary-table">stage サマリテーブル</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>名称</th>
+<th>実行</th>
+<th>条件</th>
+<th>リード agent</th>
+<th>サポート agent</th>
+<th>モード</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4.1</td>
+<td>Deployment Pipeline</td>
+<td>CONDITIONAL</td>
+<td>CD pipeline の作成や大幅な変更が必要なときに実行</td>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>(なし)</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>Environment Provisioning</td>
+<td>CONDITIONAL</td>
+<td>AWS 環境のプロビジョニングや検証が必要なときに実行</td>
+<td>aidlc-aws-platform-agent</td>
+<td>aidlc-devsecops-agent, aidlc-compliance-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>Deployment Execution</td>
+<td>CONDITIONAL</td>
+<td>deployment pipeline と環境の準備が整った後に実行</td>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>aidlc-developer-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.4</td>
+<td>Observability Setup</td>
+<td>CONDITIONAL</td>
+<td>モニタリング・ダッシュボード・アラーム・トレーシングの設定が必要なときに実行</td>
+<td>aidlc-operations-agent</td>
+<td>(なし)</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.5</td>
+<td>Incident Response</td>
+<td>CONDITIONAL</td>
+<td>運用 runbook とインシデント対応手順が必要なときに実行</td>
+<td>aidlc-operations-agent</td>
+<td>(なし)</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.6</td>
+<td>Performance Validation</td>
+<td>CONDITIONAL</td>
+<td>NFR のパフォーマンス目標を負荷下で検証する必要があるときに実行</td>
+<td>aidlc-quality-agent</td>
+<td>(なし)</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>4.7</td>
+<td>Feedback &amp; Optimization</td>
+<td>CONDITIONAL</td>
+<td>継続的な運用モニタリングと最適化が必要なときに実行</td>
+<td>aidlc-operations-agent</td>
+<td>aidlc-aws-platform-agent</td>
+<td>inline</td>
+</tr>
+</tbody></table>
+<h3 id="multi-agent-stages">マルチエージェント stage</h3>
+<p>3 つの Operation stage が複数の agent を巻き込む:</p>
+<ul>
+<li><strong>4.2 Environment Provisioning</strong>: aidlc-aws-platform-agent（lead）+ aidlc-devsecops-agent（セキュリティ態勢の検証）+ aidlc-compliance-agent（データレジデンシー、規制コントロール）</li>
+<li><strong>4.3 Deployment Execution</strong>: aidlc-pipeline-deploy-agent（lead）+ aidlc-developer-agent（データベースマイグレーション）</li>
+<li><strong>4.7 Feedback &amp; Optimization</strong>: aidlc-operations-agent（lead）+ aidlc-aws-platform-agent（コスト最適化、ドリフト検出）</li>
+</ul>
+<p>いずれの場合も、conductor はまず lead agent を呼び出し、続いて lead の出力をコンテキストと
+して support agent を呼び出す。conductor がすべての委譲を行う; agent が互いを呼び出すことは
+決して無い。</p>
+<hr>
+<h2 id="stage-41-deployment-pipeline-configuration">Stage 4.1: Deployment Pipeline Configuration</h2>
+<h3 id="metadata">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>4.1</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Operation</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（deployment pipeline が既に存在し十分な場合はスキップ）</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-pipeline-deploy-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>(なし)</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>Stage 3.7 からの CI pipeline 設定、Stage 3.4 からの infrastructure design</td>
+</tr>
+</tbody></table>
+<h3 id="purpose">目的</h3>
+<p>CD pipeline、デプロイ戦略、ロールバック手順、環境の promotion gate を設定する。</p>
+<h3 id="outputs">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cd-config.md</td>
+<td>CD pipeline の設定</td>
+</tr>
+<tr>
+<td>deployment-strategy.md</td>
+<td>デプロイ戦略（blue/green、canary、rolling）、promotion gate</td>
+</tr>
+<tr>
+<td>rollback-runbook.md</td>
+<td>ロールバック手順と runbook</td>
+</tr>
+<tr>
+<td>deployment-pipeline-questions.md</td>
+<td>回答付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<hr>
+<h2 id="stage-42-environment-provisioning">Stage 4.2: Environment Provisioning</h2>
+<h3 id="metadata-1">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>4.2</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Operation</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（環境が既にプロビジョニング済みの場合はスキップ）</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-aws-platform-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>aidlc-devsecops-agent（セキュリティ態勢の検証）、aidlc-compliance-agent（データレジデンシー、規制コントロール）</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>Stage 3.4 からの infrastructure design、Stage 4.1 からの CD pipeline 設定</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-1">目的</h3>
+<p>Construction からの Infrastructure as Code を用いて、対象の AWS 環境をプロビジョニングし検証する。aidlc-devsecops-agent はセキュリティ態勢を検証し、aidlc-compliance-agent はデータレジデンシーと規制コントロールを確認する。</p>
+<h3 id="outputs-1">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>environment-inventory.md</td>
+<td>プロビジョニングされた環境のインベントリ</td>
+</tr>
+<tr>
+<td>validation-report.md</td>
+<td>インフラの検証レポート、ヘルスチェック</td>
+</tr>
+<tr>
+<td>environment-provisioning-questions.md</td>
+<td>回答付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-1">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<hr>
+<h2 id="stage-43-deployment-execution">Stage 4.3: Deployment Execution</h2>
+<h3 id="metadata-2">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>4.3</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Operation</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（deployment pipeline と環境の準備が整った後に実行; 既にデプロイ済みの場合はスキップ）</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-pipeline-deploy-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>aidlc-developer-agent（データベースマイグレーション）</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>Stage 4.1 からの CD pipeline 設定、Stage 4.2 からのプロビジョニング済み環境</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-2">目的</h3>
+<p>実際のデプロイを実行する: 成果物を pipeline に通し、smoke test を実行し、ヘルスチェックを検証し、データベースマイグレーションを実行する。</p>
+<h3 id="outputs-2">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>deployment-log.md</td>
+<td>デプロイ実行ログ</td>
+</tr>
+<tr>
+<td>smoke-test-results.md</td>
+<td>デプロイ後の smoke test 結果</td>
+</tr>
+<tr>
+<td>health-check-report.md</td>
+<td>ヘルスチェック検証レポート</td>
+</tr>
+<tr>
+<td>deployment-execution-questions.md</td>
+<td>回答付きのデプロイ前チェック質問</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-2">承認 gate</h3>
+<p>厳密に 2 択: Approve / Request Changes。</p>
+<hr>
+<h2 id="stage-44-observability-setup">Stage 4.4: Observability Setup</h2>
+<h3 id="metadata-3">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>4.4</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Operation</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（observability が既に設定済みの場合はスキップ）</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-operations-agent</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>Stage 3.3 からの NFR design、Stage 3.4 からの infrastructure design、デプロイ済みアプリケーション</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-3">目的</h3>
+<p>モニタリング、ダッシュボード、アラーム、SLO/SLI トラッキング、ログクエリ、分散トレーシング、異常検出を設定する。</p>
+<h3 id="outputs-3">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dashboards.md</td>
+<td>CloudWatch ダッシュボードの設定</td>
+</tr>
+<tr>
+<td>alarms.md</td>
+<td>severity・SNS ルーティング・エスカレーションを伴うアラーム定義</td>
+</tr>
+<tr>
+<td>slo-config.md</td>
+<td>SLO/SLI トラッキングの設定</td>
+</tr>
+<tr>
+<td>log-queries.md</td>
+<td>CloudWatch Logs Insights の保存済みクエリ</td>
+</tr>
+<tr>
+<td>tracing-config.md</td>
+<td>X-Ray トレーシングの設定</td>
+</tr>
+<tr>
+<td>anomaly-config.md</td>
+<td>異常検出の設定</td>
+</tr>
+<tr>
+<td>observability-setup-questions.md</td>
+<td>回答付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="notes">補足</h3>
+<ul>
+<li>Operation のどの stage よりも多くの成果物を生成する（6 つのコンテンツファイル + 質問）。</li>
+<li>AWS 固有（CloudWatch、X-Ray、SNS）だが、パターンは転用可能である。</li>
+</ul>
+<hr>
+<h2 id="stage-45-incident-response-runbook-generation">Stage 4.5: Incident Response &amp; Runbook Generation</h2>
+<h3 id="metadata-4">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>4.5</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Operation</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（POC や非本番デプロイではスキップ）</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-operations-agent</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>Stage 4.4 からの observability setup、Stage 3.3 からの NFR design、Stage 3.4 からの infrastructure design</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-4">目的</h3>
+<p>運用 runbook、インシデント対応計画、エスカレーション手順を生成する。</p>
+<h3 id="outputs-4">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>runbooks.md</td>
+<td>SSM Automation の runbook ライブラリ</td>
+</tr>
+<tr>
+<td>incident-plan.md</td>
+<td>インシデント対応計画（AWS Incident Manager 連携）</td>
+</tr>
+<tr>
+<td>escalation-matrix.md</td>
+<td>エスカレーション経路、オンコールローテーション、コミュニケーション手順</td>
+</tr>
+<tr>
+<td>incident-response-questions.md</td>
+<td>回答付きの明確化質問</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-46-performance-validation-load-testing">Stage 4.6: Performance Validation &amp; Load Testing</h2>
+<h3 id="metadata-5">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>4.6</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Operation</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（POC やパフォーマンスが重要でないアプリケーションではスキップ）</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-quality-agent</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>Stage 3.2 からの NFR requirements、Stage 3.3 からの NFR design、Stage 4.4 からの observability データ</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-5">目的</h3>
+<p>デプロイ済みアプリケーションに対して NFR のパフォーマンス目標を検証するため、負荷テストを設計・実行する。</p>
+<h3 id="outputs-5">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>load-test-plan.md</td>
+<td>シナリオ・ツール・設定を含む負荷テスト計画</td>
+</tr>
+<tr>
+<td>test-results.md</td>
+<td>パフォーマンステストの結果（レイテンシ、スループット、エラー率）</td>
+</tr>
+<tr>
+<td>nfr-validation-matrix.md</td>
+<td>NFR 目標 対 実測の検証マトリクス</td>
+</tr>
+<tr>
+<td>performance-validation-questions.md</td>
+<td>回答付きの明確化質問</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-47-continuous-feedback-optimization">Stage 4.7: Continuous Feedback &amp; Optimization</h2>
+<h3 id="metadata-6">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>プロパティ</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage</td>
+<td>4.7</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Operation</td>
+</tr>
+<tr>
+<td>実行</td>
+<td>CONDITIONAL（一度きりのデプロイではスキップ）</td>
+</tr>
+<tr>
+<td>リード agent</td>
+<td>aidlc-operations-agent</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>aidlc-aws-platform-agent（コスト最適化、ドリフト検出）</td>
+</tr>
+<tr>
+<td>入力</td>
+<td>すべての Operation phase 成果物、本番モニタリングデータ</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-6">目的</h3>
+<p>SLO 遵守のレビュー、コスト最適化の分析、インフラのドリフト検出、運用インサイトの収集。これは AI-DLC ワークフロー全体の <strong>最後の stage</strong> である。</p>
+<h3 id="outputs-6">出力</h3>
+<table>
+<thead>
+<tr>
+<th>成果物</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>slo-report.md</td>
+<td>SLO 遵守レポート、エラーバジェットのバーンレート</td>
+</tr>
+<tr>
+<td>cost-analysis.md</td>
+<td>AWS Cost Explorer の分析、最適化の推奨</td>
+</tr>
+<tr>
+<td>drift-report.md</td>
+<td>AWS Config のドリフト検出レポート、Trusted Advisor のレビュー</td>
+</tr>
+<tr>
+<td>feedback-loop.md</td>
+<td>運用インサイト、改善提案、次の Ideation サイクルへの入力</td>
+</tr>
+<tr>
+<td>feedback-optimization-questions.md</td>
+<td>回答付きの明確化質問</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-three-option-unique">承認 gate — 3 択（特有）</h3>
+<p>Stage 4.7 は <strong>特有の 3 択の承認 gate</strong> を持つ:</p>
+<ol>
+<li><strong>Approve</strong> — ワークフロー完了。AI-DLC ライフサイクル全体が終了する。</li>
+<li><strong>Request Changes</strong> — 修正のフィードバックを与える。</li>
+<li><strong>Start New Ideation Cycle</strong> — feedback-loop.md のインサイトを新しい Stage 1.1 へ還流する。</li>
+</ol>
+<p>これは AI-DLC ライフサイクルの循環的な性質を反映している。</p>
+<hr>
+<h2 id="phase-summary">phase のサマリ</h2>
+<p><strong>デプロイの stage（4.1-4.3）:</strong></p>
+<ul>
+<li>4.1 Deployment Pipeline — CD pipeline 設定、デプロイ戦略、ロールバック runbook</li>
+<li>4.2 Environment Provisioning — セキュリティ態勢のレビューを伴う AWS 環境のプロビジョニングと検証</li>
+<li>4.3 Deployment Execution — 成果物のデプロイ、smoke test、ヘルスチェック、データベースマイグレーション</li>
+</ul>
+<p><strong>運用準備の stage（4.4-4.6）:</strong></p>
+<ul>
+<li>4.4 Observability Setup — ダッシュボード、アラーム、SLO、ログクエリ、トレーシング、異常検出</li>
+<li>4.5 Incident Response — runbook、インシデント計画、エスカレーションマトリクス</li>
+<li>4.6 Performance Validation — 負荷テスト、NFR 目標の検証、キャパシティプランニング</li>
+</ul>
+<p><strong>継続的改善（4.7）:</strong></p>
+<ul>
+<li>4.7 Feedback &amp; Optimization — SLO 遵守、コスト分析、ドリフト検出、feedback loop</li>
+</ul>
+<p><strong>Scope の適用可否:</strong></p>
+<ul>
+<li>enterprise / feature / workshop: 全 7 stage</li>
+<li>infra: Stage 4.1-4.4（deployment-pipeline, environment-provisioning, deployment-execution, observability-setup）</li>
+<li>security-patch: Stage 4.1, 4.3（deployment-pipeline, deployment-execution）</li>
+<li>mvp / poc / bugfix / refactor: Operation phase を完全にスキップ</li>
+</ul>
+<h2 id="cross-references">関連</h2>
+<ul>
+<li><a href="../03-orchestrator.html">Orchestrator</a> — ルーティングのロジック、scope マッピング</li>
+<li><a href="../04-stage-protocol.html">Stage Protocol</a> — 承認 gate、state トラッキング</li>
+<li><a href="construction.html">Construction Stages</a> — 前の phase</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/operation.md"><code>docs/reference/04-stages/operation.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

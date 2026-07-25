@@ -11,15 +11,17 @@
 <script type="module" src="../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/09-rules-and-the-learning-loop</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../index.html">総合索引</a>
   <a href="../../index.html">Atlas トップ</a>
@@ -95,7 +97,7 @@
     └── operation.md</code></pre>
 <p>ファイル内に <code>scope:</code> フィールドは無い — scope はファイル名から来る。<code>org.md</code> はフレームワークの既定（トランクベース開発・テスト姿勢・walking-skeleton ポリシー）を運ぶ。<code>team.md</code> はチームが確認した practices を持つ。<code>project.md</code> はこの 1 プロジェクトに固有のものを持つ。4 つの <code>phases/&lt;phase&gt;.md</code> は、ある phase のすべての stage に適用される rule を運ぶ — 例えば inception phase の rule は、すべてのアーキテクチャ決定に少なくとも 2 つの代替案の記録を求める。</p>
 <p>各ファイルはトピック見出し（<code>## Way of Working</code>、<code>## Testing Posture</code>、<code>## Deployment</code>、<code>## Code Style</code> 等）の下の素の散文である。あなたが読み、手で編集でき、フレームワークは学習ループを通じて書き込む。</p>
-<p>スキーマ、ファイル名と scope の対応表、リゾルバの機構は、開発者リファレンスの <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/08-rule-system.md">Rule システム</a> に文書化されている。</p>
+<p>スキーマ、ファイル名と scope の対応表、リゾルバの機構は、開発者リファレンスの <a href="../reference/08-rule-system.html">Rule システム</a> に文書化されている。</p>
 <hr>
 <h2 id="the-five-layer-chain">5 層の連鎖</h2>
 <p>rule はすべてのワークフローの開始時に 5 層の連鎖で解決される:</p>
@@ -192,7 +194,7 @@
 <td>設定済みの型チェッカ（既定は <code>tsc</code>）をラップ</td>
 </tr>
 </tbody></table>
-<p>どの sensor が自分の出力に発火するかは各 stage が宣言する。自分の sensor も追加できる — <code>.claude/sensors/</code> にマニフェストを書き、実行すべき stage にその id を足す。gate で確認すれば、学習ループが sensor をインストールしてくれることもある。マニフェスト形式・stage 別マトリクス・執筆のウォークスルーは <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/07-sensor-system.md">Sensor システム</a> にある。自分のプロジェクトへの追加は <a href="13-customization.html">カスタマイズ</a> を参照。</p>
+<p>どの sensor が自分の出力に発火するかは各 stage が宣言する。自分の sensor も追加できる — <code>.claude/sensors/</code> にマニフェストを書き、実行すべき stage にその id を足す。gate で確認すれば、学習ループが sensor をインストールしてくれることもある。マニフェスト形式・stage 別マトリクス・執筆のウォークスルーは <a href="../reference/07-sensor-system.html">Sensor システム</a> にある。自分のプロジェクトへの追加は <a href="13-customization.html">カスタマイズ</a> を参照。</p>
 <hr>
 <h2 id="planes-how-it-fits-together">Planes: 全体がどう噛み合うか</h2>
 <p>上記のすべては planes を考えずに使える。しかし土台の設計はネットワーキングの規律を借りており、名前を付けると「反映は次のワークフローから」の挙動が腑に落ちる。</p>
@@ -203,7 +205,7 @@
 <li><strong>管理プレーン</strong> — <em>観察と設定</em>のサーフェス。<code>/aidlc --doctor</code>、audit ログ、<code>CLAUDE.md</code>。ここで設定し、ここで照会する。人間のリズムで。</li>
 </ul>
 <p>制御プレーンは rule と sensor を、ワークフロー開始時に<strong>一度だけ</strong>グラフへコンパイルする。データプレーンは実行の残りの間、そのグラフから事前解決済みの答えを読む。ワークフロー途中に捕捉された学びが次のコンパイルを待つのはこのためだ: フレームワークは答えを「トポロジー変更時」（ワークフロー開始）に計算するのであって、「パケット時」（各 stage）ではない。結果は再現可能な実行と、再起動後のクリーンな復旧である。</p>
-<p>ユーザーとしては、たいてい一度に 1 つの水平スライス — ワークフローの実行、学びの捕捉、チーム practices のカスタマイズ、起きたことの監査 — に触れる。各スライスは、planes について考えさせることなく、その下のプレーンに触れる。モデルの全体、コンパイル境界、復旧の性質は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/02-plane-architecture.md">Plane アーキテクチャ</a> に、それが生む遠隔測定の成果物は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/13-runtime-graph.md">Runtime グラフ</a> にある。</p>
+<p>ユーザーとしては、たいてい一度に 1 つの水平スライス — ワークフローの実行、学びの捕捉、チーム practices のカスタマイズ、起きたことの監査 — に触れる。各スライスは、planes について考えさせることなく、その下のプレーンに触れる。モデルの全体、コンパイル境界、復旧の性質は <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a> に、それが生む遠隔測定の成果物は <a href="../reference/13-runtime-graph.html">Runtime グラフ</a> にある。</p>
 <hr>
 <h2 id="next-steps">次のステップ</h2>
 <ul>
@@ -212,12 +214,12 @@
 <li><a href="07-interaction-modes.html">対話モード</a> — stage 中に修正がどう起きるか</li>
 <li><a href="10-state-and-audit.html">状態と audit</a> — 学習ループのイベントがどう記録されるか</li>
 <li><a href="12-cli-commands.html">CLI コマンド</a> — doctor の rule ドリフトとペアカバレッジの advisory 行</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/08-rule-system.md">Rule システム</a> · <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/07-sensor-system.md">Sensor システム</a> · <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/02-plane-architecture.md">Plane アーキテクチャ</a> — スキーマ・設計レベルのリファレンス</li>
+<li><a href="../reference/08-rule-system.html">Rule システム</a> · <a href="../reference/07-sensor-system.html">Sensor システム</a> · <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a> — スキーマ・設計レベルのリファレンス</li>
 <li><a href="glossary.html">用語集</a> — 用語リファレンス</li>
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/09-rules-and-the-learning-loop.md"><code>docs/guide/09-rules-and-the-learning-loop.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/09-rules-and-the-learning-loop.md"><code>docs/guide/09-rules-and-the-learning-loop.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

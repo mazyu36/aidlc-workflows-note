@@ -11,15 +11,17 @@
 <script type="module" src="../../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/harnesses/kiro-cli</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../../index.html">総合索引</a>
   <a href="../../../index.html">Atlas トップ</a>
@@ -202,7 +204,7 @@ CI（t145）で走る。authored な Kiro のサーフェスは <code>harness/ki
 orchestrator のスキル（<code>skills/aidlc/</code>）、エージェントの JSON（<code>agents/</code>）、
 hook アダプタ（<code>hooks/aidlc-kiro-adapter.ts</code>）、<code>settings/cli.json</code>、<code>AGENTS.md</code> —
 編集するのはそれら（または <code>core/</code>）であり、生成された <code>dist/kiro</code> では決してない。
-<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/09-porting-to-a-new-harness.md">新しい harness への移植</a> を参照。</p>
+<a href="../../harness-engineering/09-porting-to-a-new-harness.html">新しい harness への移植</a> を参照。</p>
 <p>Claude の双子と並ぶライブの TUI ジャーニーテストが存在する:
 <code>tests/e2e/t-tui-kiro-intent-capture.serial.test.ts</code> は、同梱ツリーに対して
 <code>kiro-cli chat</code> をキーストロークで駆動する（番号付き散文の gate に「1」= 推奨の選択肢で
@@ -220,7 +222,7 @@ tmux・<code>kiro-cli</code>・ログイン済み Kiro セッションが無け�
 <p>他の harness: <a href="codex-cli.html">Codex CLI 上の AI-DLC</a> · <a href="README.html">harness ファミリーの索引</a>。</p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-cli.md"><code>docs/guide/harnesses/kiro-cli.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-cli.md"><code>docs/guide/harnesses/kiro-cli.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

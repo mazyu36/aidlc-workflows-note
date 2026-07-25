@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rule System — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/08-rule-system</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html" class="here">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#layout">Layout</a>
+  <a href="#filename-derived-scope">ファイル名由来の scope</a>
+  <a href="#five-layer-inheritance">5 レイヤー継承</a>
+  <a href="#strict-additive-runtime-model">Strict-additive なランタイムモデル</a>
+  <a href="#pairing-field">pairing: フィールド</a>
+  <a href="#rule-drift-detection">Rule-drift 検出</a>
+  <a href="#forward-compat-policy">Forward-compat ポリシー</a>
+  <a href="#next-steps">Next Steps</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="rule-system">Rule System</h1>
+<blockquote>
+<p>対象読者: Tier 2/3（team adopter、framework contributor）。</p>
+</blockquote>
+<p>この章は、v0.5.0 の rule システムのスキーマレベルのリファレンスである: rule ファイルがどこに住むか、scope がどう導出されるか、継承チェーンがどう解決するか、そしてどの frontmatter フィールドが有効か。resolver（<code>aidlc-graph.ts compile</code>）と doctor の rule-drift チェックが照合して読む仕様である。rule は制御ループのフィードフォワードの半分である; <a href="07-sensor-system.html">Sensor System</a> はそれがペアになる決定論的検証の半分を扱う。ユーザー向けのウォークスルー — learning-loop 儀式、ANZ の実例、確認された learning がどう rule ファイルに着地するか — は、User Guide の <a href="../guide/09-rules-and-the-learning-loop.html">Rules and the Learning Loop</a> を参照。</p>
+<h2 id="layout">Layout</h2>
+<p>rule は、アクティブな space の memory レイヤー <code>aidlc/spaces/&lt;active-space&gt;/memory/</code>（workspace ルートの手編集可能な 1 セットで、各 harness がそのネイティブ include 経由で読む — Claude の <code>@</code>-import スタブ、Kiro CLI と Kiro IDE の resources glob、Codex の <code>AIDLC_RULES_DIR</code>）に、scope 名の中立的なファイルとして住む:</p>
+<pre class="term"><code>aidlc/spaces/&lt;active-space&gt;/memory/
+├── org.md
+├── team.md
+├── project.md
+└── phases/
+    ├── ideation.md
+    ├── inception.md
+    ├── construction.md
+    └── operation.md</code></pre>
+<p>このレイアウトは、team が著述する harness 設定（かつては別の practices 名前空間にあった）と自己学習の guardrail（かつては 2 階層深かった）を、<code>aidlc/spaces/&lt;active-space&gt;/memory/</code> の単一のアクティブ space memory ディレクトリに統合する。</p>
+<h2 id="filename-derived-scope">ファイル名由来の scope</h2>
+<p>rule ファイルは <code>scope:</code> frontmatter フィールドを <strong>運ばない</strong>。scope はファイル名から導出される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル名パターン</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>org.md</code></td>
+<td><code>org</code></td>
+</tr>
+<tr>
+<td><code>team.md</code></td>
+<td><code>team</code></td>
+</tr>
+<tr>
+<td><code>project.md</code></td>
+<td><code>project</code></td>
+</tr>
+<tr>
+<td><code>phases/&lt;phase&gt;.md</code></td>
+<td><code>phase</code>（phase 値 = ファイル名）</td>
+</tr>
+</tbody></table>
+<p>org、team、project、phase の rule は path-scoping の frontmatter を運ばない — pull 著述が関係を stage 側に置く。org / team / project は普遍的な既定としてすべての stage に適用される（ファイル名由来）; 合致する phase rule が付くのは、stage の frontmatter の <code>phase: &lt;name&gt;</code> フィールドが <code>phases/&lt;name&gt;.md</code> の pull import だからである。</p>
+<h2 id="five-layer-inheritance">5 レイヤー継承</h2>
+<p>rule はワークフロー開始時に 5 レイヤーのチェーンを通して解決する:</p>
+<pre class="term"><code>org → team → project → phase → stage</code></pre>
+<p>org はフレームワークの既定を運ぶ; team と project のレイヤーは team が肯定し project が特化した内容で拡張する。phase は直交する — 合致する <code>phases/&lt;name&gt;.md</code> rule を付けるのは、stage が既に frontmatter で <code>phase: &lt;name&gt;</code> を宣言しているからである（<code>requires_stage</code> や <code>consumes</code> と同じ著述の方向）。stage rule は将来のための予約である; 著述されたとき、各 <code>aidlc-stage-&lt;slug&gt;.md</code> は stage の <code>slug:</code> 宣言経由で付く。このチェーンが具体化する、より広い 2 軸構成モデルへは <a href="01-architecture.html">01-architecture.md § Configuration layers</a> をクロスリンクせよ。</p>
+<p>コンパイル出力（<code>stage-graph.json</code> の stage ごとの <code>rules_in_context</code> フィールド）は、解決済みのチェーンを各 stage ノードに焼き込む。ランタイムはチェーンを決して歩かない — コンパイルが解決を所有する。</p>
+<h2 id="strict-additive-runtime-model">Strict-additive なランタイムモデル</h2>
+<p>適用可能なすべての rule が <code>rules_in_context</code> に現れる。org、team、project の rule は連結される; ランタイムで何も落ちない。phase rule は、rule のファイル名が stage の <code>phase:</code> 宣言に合致するとき付く — glob フィルタも、具体パスの合成も無い。agent はセッション開始時にフルチェーンを読む。</p>
+<p>conflict（より狭い scope がより広いポリシーに矛盾すること）は、learning が resolver に届く前に memory gate — §13 Learnings Ritual の admission チェック — で拒否される。チェックはセクションレベルである: 提案された日付付き learning エントリが <code>memory/project.md</code>（または <code>memory/team.md</code>）に書かれようとするとき、orchestrator はそれを <code>memory/org.md</code> の合致する見出しと LLM チェックで比較する; conflict が見つかれば、ユーザーは <strong>revise、skip、または escalate</strong> する（override 経路は無い）。Practices-discovery の affirmation gate はもう 1 つの admission gate だが、その promotion は決定論的なセクション置換（<code>aidlc-state.ts practices-promote</code>）でユーザーの affirmation によって正当化される — 自動の org-conflict チェックは走らせない。org と team/project の内容の書き込み後のドリフトは、doctor の rule-drift 行（下）で別途表面化される。</p>
+<p>この設計は、以前の <code>enforcement: enforced</code> キーワードと <code>overrides:</code> ブロックモデルを置き換える。両キーワードはスキーマから除かれた。frontmatter パースは下の unknown-key 許容ポリシー経由でそれらを拒否する — throw するのではなく静かに通り抜けるが、resolver は無視する。</p>
+<p>doctor の rule-drift チェックは、書き込み後のドリフトをオンデマンドで表面化する: org rule が team や project の内容が既にディスクに着地した後に変わったとき、doctor は決定論的に、team/project の practice ファイル（<code>memory/team.md</code>、<code>memory/project.md</code>）が <em>populated</em> な org 見出しと共有する <code>##</code> 見出しを見つけ、各オーバーラップを advisory 候補 — ファイル、セクション、引用された org の文 — として表面化し、<code>Rule drift: N team/project rule(s) overlap org policy (review for contradiction)</code> とレンダーする。doctor 自身は LLM を走らせない: 検出はバイト再現可能な見出し/文字列の仕事である。contradiction の判定 — admission gate が走らせるのと同じセクションレベルの LLM チェック — は、観察時の、消費側 orchestrator のもので、非ブロッキングである。人間はそれから、表面化されたドリフトを revise、escalate、または accept する。</p>
+<h2 id="pairing-field"><code>pairing:</code> フィールド</h2>
+<p>rule は <code>.claude/sensors/aidlc-*.md</code> の決定論的な sensor と MAY ペアになる:</p>
+<pre><code class="language-yaml">---
+pairing: aidlc-required-sections
+---
+# or
+pairing: feedforward-only
+---
+</code></pre>
+<p>有効な値:</p>
+<ul>
+<li><code>feedforward-only</code> — rule に sensor の伴侶が無い（フレームワークがそれを決定論的に検証できない）という明示的な宣言。</li>
+<li><code>&lt;sensor-id&gt;</code> — 既存の <code>.claude/sensors/aidlc-&lt;id&gt;.md</code> の <code>id:</code> フィールドに合致せねばならない。</li>
+</ul>
+<p>doctor の paired-coverage 行は、paired 対 feedforward-only の rule を数え、unpaired な rule を coverage ギャップとして表面化する（<a href="#rule-drift-detection">Rule-drift detection</a> を参照）。</p>
+<h2 id="rule-drift-detection">Rule-drift 検出</h2>
+<p><code>/aidlc --doctor</code> は、rule/sensor の状態を観察する 2 つの advisory 行を出荷する。両方とも読み取り専用で常に pass する — どちらもヘルスチェックの exit code を変えない。（v0.6.10 時点で <code>--doctor</code> は cold-safe である: paired-coverage チェックが発する <code>GUARDRAIL_LOADED</code> audit 行は、アクティブな intent の <code>audit/</code> シャードが既に存在するときだけ書かれる。まだ intent の無い fresh なシェルでは、doctor は行を表示するが何も発せず、ファイルを作らない。）</p>
+<ul>
+<li><strong>Rule drift</strong> — 各 team/project practice ファイル（<code>memory/team.md</code>、<code>memory/project.md</code>）について、doctor は <code>memory/org.md</code> の <em>populated</em> な見出しの下にも現れる <code>##</code> 見出しを見つけ、各オーバーラップを候補ペア — ファイル、セクション、逐語で引用された最初の org の文 — として表面化する。org のボディが空の見出し（例: フレームワーク既定の <code>## Forbidden</code>、<code>## Mandated</code>、<code>## Corrections</code>、これらは HTML コメントのみを保持する）は数えない — オーバーラップは両側に内容を運ばねばならない。数 N は <em>構造的な</em> 候補ペアの数であり、LLM 確認済みの contradiction ではない: doctor は決定論的に検出する; contradiction の判定は観察時の orchestrator-LLM のものである（<a href="#strict-additive-runtime-model">strict-additive section</a> を参照）。</li>
+<li><strong>Paired sensor coverage</strong> — <code>pairing: &lt;sensor-id&gt;</code> を運ぶ各 rule について、doctor は <code>aidlc-</code> プレフィックスを剥ぎ、名指された sensor が少なくとも 1 つの stage の解決済み sensor 集合（<code>sensors_applicable</code>）に存在することを確認する。行は <code>Paired sensor coverage: P/(M-X) guardrails paired (X feedforward-only)</code> と読める、ここで M は <code>pairing:</code> 値を運ぶ rule、X は feedforward-only の rule（sensor を決して必要としない）、P は名指された sensor が解決する rule である; unpaired な rule（sensor id は名指されるがどの stage にも束縛されない）はインラインで列挙される。これは <strong>file-existence チェックであり、semantic なものではない</strong> — 束縛が解決することを確認するのであって、sensor が rule に合うことではない。行は初期化済みプロジェクトで実行ごとに 1 回 <code>GUARDRAIL_LOADED</code> audit イベントを発する（発行は <code>audit.md</code> の無い pristine なプロジェクトでは抑制される — 上の cold-safe ノートを参照）。</li>
+</ul>
+<h2 id="forward-compat-policy">Forward-compat ポリシー</h2>
+<p>rule frontmatter は additive な拡張によって forward-compatible である:</p>
+<ul>
+<li>新しいフィールドは additive に着地する — 既存の rule 行は決して書き直しを要さない。</li>
+<li>消費者は未知の frontmatter キーを MUST 許容する（無視 + 通り抜け）。これがレガシーの <code>enforcement:</code> / <code>overrides:</code> キー（ユーザー拡張オーバーレイに在れば）がエラー無しでロードされる仕組みである。</li>
+<li>rule ボディの規約（<code>## Forbidden</code>、<code>## Mandated</code> のようなセクション）は既存の guardrail 規約に従う。</li>
+<li>Learnings Ritual（memory gate）は、確認された各 learning を practice として直接 space memory ファイル — <code>memory/project.md</code>（既定）と <code>memory/team.md</code>（ワンクリック promote; org-scope 書き込みは無し）— に、その diary-heading トピックの下の日付付きエントリとして書く。確認された learning <em>は</em> practice である: これらは practices-discovery が肯定するのと同じファイルであり、別の <code>*-learnings.md</code> サーフェスではない。resolver はそれらを清い整数チェーン <code>SCOPE_PRIORITY</code>（org:0、team:1、project:2、phase:3）でソートする — 分数の 1.5 / 2.5 tier は無い。<code>aidlc-learnings.ts</code> の memory gate は、上の <code>## Strict-additive runtime model</code> で述べた admission conflict-check のライブな実装者である（単一の提案された日付付きエントリ 対 <code>memory/org.md</code> の合致するセクション; revise / skip / escalate、override 経路無し）。</li>
+</ul>
+<p>v0.5.0 より前の rule ファイルは、rename + flatten の着地後も変更なしでロードされる; 移行はパスのみである。</p>
+<h2 id="next-steps">Next Steps</h2>
+<ul>
+<li><strong>Sensors</strong> — rule が <code>pairing:</code> 経由でペアになれる決定論的な半分。
+<a href="07-sensor-system.html">Sensor System</a> を参照。</li>
+<li><strong>The compile boundary</strong> — <code>rules_in_context</code> がワークフロー開始時に一度
+解決され、ワークフロー全体を通してグラフノードから読まれる仕組み。
+<a href="02-plane-architecture.html">Plane Architecture</a> を参照。</li>
+<li><strong>The learning loop in practice</strong> — <code>memory.md</code> diary、承認 gate の儀式、
+そして ANZ の実例。User Guide の <a href="../guide/09-rules-and-the-learning-loop.html">Rules and the
+Learning Loop</a> を参照。</li>
+<li><strong>The two-axis configuration model</strong> — この 5 レイヤーチェーンが具体化する
+より広いルーティング原則。
+<a href="01-architecture.html">Architecture § Configuration layers</a> を参照。</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/08-rule-system.md"><code>docs/reference/08-rule-system.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

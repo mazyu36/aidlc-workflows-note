@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ステージ定義 — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/15-stage-definition</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html" class="here">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#two-audiences-one-file">2 つの読み手、1 つのファイル</a>
+  <a href="#why-variant-a3">なぜ Variant A3 か</a>
+  <a href="#authoring-flow">著述フロー</a>
+  <a href="#field-reference-when-to-use">フィールドリファレンス — いつ使うか</a>
+  <a href="#relationship-to-agent-frontmatter">agent frontmatter との関係</a>
+  <a href="#worked-example">実例</a>
+  <a href="#three-compartment-body-model">3 区画のボディモデル</a>
+  <a href="#yaml-migration-shipped">YAML 移行 — 出荷済み</a>
+  <a href="#known-limits-in-v030">v0.3.0 での既知の限界</a>
+  <a href="#future-extensions-reserved-namespace">将来の拡張 — 予約済み名前空間</a>
+  <a href="#cross-references">クロスリファレンス</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="stage-definition">ステージ定義</h1>
+<p>この章は AI-DLC のステージ定義の <strong>ファイル形式</strong> を文書化する — YAML frontmatter の
+契約、3 区画のボディモデル、そしてそれらのソースを <code>stage-graph.json</code> に変える compile
+pipeline である。<a href="04-stage-protocol.html">Stage Protocol</a> を補完するもので、そちらはランタイム
+の振る舞いの契約（承認 gate、質問フロー、状態追跡）を扱う。この章は stage ファイルが
+<em>何を含むか</em> についてであり、Stage Protocol の章は stage が <em>何をするか</em> についてである。</p>
+<p>コントリビューターはこの形式を理解するためにこれを読む。stage ファイルを書くか編集する
+ときは、<code>dist/claude/.claude/aidlc-common/protocols/stage-definition.md</code> にある正典の契約を
+参照すること。そのファイルが正典の spec であり — この章はナラティブと「いつ使うか」の
+ガイダンスを足す。</p>
+<hr>
+<h2 id="two-audiences-one-file">2 つの読み手、1 つのファイル</h2>
+<p>すべての stage の <code>.md</code> ファイルは 2 人の読み手に仕える:</p>
+<ul>
+<li><strong>parser</strong>（<code>lib.ts</code> の <code>parseStageFrontmatter</code>、マイルストーン 7 で出荷）。YAML
+frontmatter を読み、構造化された <code>StageEntry</code> を生む。ボディには触れない。</li>
+<li><strong>LLM agent</strong>（stage を実行する）。ボディを読み、散文の指示に従い、成果物を生成する。
+frontmatter には触れない。</li>
+</ul>
+<p>両方を 1 つのファイルに保つことは、コントリビューターがグラフのエッジと実行ステップを
+並べて見ることを意味する。それらを別々のファイル（グラフ用に 1 つの YAML、agent 用に 1 つの
+散文）に分割することは、stage をレビュー可能にする inline の可視性を壊すだろう。</p>
+<hr>
+<h2 id="why-variant-a3">なぜ Variant A3 か</h2>
+<p>この形式は &quot;Variant A3&quot; と呼ばれる — v0.3.0 の計画中に検討された 3 つの著述バリアントの
+うちの 3 番目である:</p>
+<ul>
+<li><strong>1 つのファイルは分割されたファイルに勝る。</strong> 1 つの <code>.md</code> の中の frontmatter と散文は、
+グラフ構造と実行ステップを一緒に保つ。stage を読む reviewer は両方を見る。</li>
+<li><strong>Grep に優しい。</strong> プレーンテキストである。バイナリ形式は無く、著述時の YAML 対 JSON の
+変換も無い。</li>
+<li><strong>Diff に優しい。</strong> フィールドの追加、リネーム、ボディの編集は、すべてコードレビューで
+綺麗に現れる。</li>
+</ul>
+<p>却下された代替案は、散文のみの stage を伴う中央のグラフファイル（手で編集する
+<code>stage-graph.json</code>）だった。stage の散文を編集しながら、その stage がどの成果物を生成するかを
+知る inline の可視性を失う。</p>
+<hr>
+<h2 id="authoring-flow">著述フロー</h2>
+<pre class="term"><code>┌─────────┐         ┌──────────────────┐         ┌──────────────────┐         ┌──────────────────┐
+│ Edit    │  ───→   │ Pre-commit hook  │  ───→   │ stage-graph.json │  ───→   │ loadStageGraph() │
+│ stage   │         │ aidlc-graph      │         │ (build artifact, │         │ (runtime,        │
+│ .md YAML│         │ compile          │         │  checked in)     │         │  unchanged)      │
+└─────────┘         └──────────────────┘         └──────────────────┘         └──────────────────┘
+     │                                                                                 ▲
+     │                              ┌──────────────────┐                               │
+     └────────────────────────────→ │ CI drift check   │ ──── blocks merge on drift ───┘
+                                    │ compile --check  │
+                                    └──────────────────┘</code></pre>
+<p>YAML が正典である。JSON はビルド成果物である。CI がその関係を強制する。</p>
+<p><code>aidlc-graph compile</code> と <code>compile --check</code> は CLI サブコマンドとして出荷される（マイルストーン
+9）; stage の YAML を編集した後は手で compile を走らせ、CI は drift を捕らえるために
+<code>compile --check</code> を強制する。これを自動化する pre-commit hook は後の PR に先送りされている。
+<code>stage-graph.json</code> はコンパイル済みの成果物である — 手で編集しないこと; YAML を編集して
+再コンパイルすること。</p>
+<hr>
+<h2 id="field-reference-when-to-use">フィールドリファレンス — いつ使うか</h2>
+<p>正典の spec は、型と制約を伴う完全なフィールド表を持つ。この節は、判断を要するフィールドに
+ついてのナラティブを足す。</p>
+<h3 id="requires_stage"><code>requires_stage</code></h3>
+<p>依存エッジを符号化する。2 つの役割がある:</p>
+<ol>
+<li><strong>意味的なデータ依存。</strong> 「私は成果物 X を消費し、それは stage Y が生成する」 → <code>Y</code> を
+<code>requires_stage</code> に足す。</li>
+<li><strong>提示順のエッジ。</strong> 意味的な依存は無いが固定の順序を持つ、同じ phase の 2 つの stage
+（例: Ideation で <code>feasibility</code> の前の <code>market-research</code>）。計算される <code>display_order</code> が
+安定して落ち着くように、弱いエッジを足す。</li>
+</ol>
+<p>compile ステップの slug のアルファベット順のタイブレークはセーフティネットである。特定の
+順序に落ち着かねばならない stage については、アルファベット順の偶然に頼るのではなく、
+エッジを明示的に著述すること。</p>
+<h3 id="for_each"><code>for_each</code></h3>
+<p>インスタンスがイテレーションを駆動する成果物を名指す。stage はインスタンスごとに 1 回走る。</p>
+<p>今日のユースケース: 5 つの Construction stage（<code>functional-design</code>、<code>nfr-requirements</code>、
+<code>nfr-design</code>、<code>infrastructure-design</code>、<code>code-generation</code>）が Unit ごとに 1 回走る — それらは
+それぞれ <code>for_each: unit-of-work</code>（<code>units-generation</code> が生成する成果物）を宣言する。</p>
+<p>明日のユースケース: 環境ごと、テナントごと、リージョンごと、コンプライアンス管轄ごとに走る
+stage。このプリミティブは workflow-engine として汎用であり; Construction がたまたま最初に
+それを行使する。</p>
+<p><strong>集約は宣言されるのではなく推論される。</strong> <code>for_each</code> stage が生成する成果物を消費し、自身の
+<code>for_each</code> を宣言しない stage は、定義により集約ステップである。<code>build-and-test</code> が正典の例で
+ある — それは 5 つの Construction <code>for_each</code> stage すべてが Unit を跨いでイテレートし終えた
+後に 1 回走り、それらの集約された出力を消費する。明示的な <code>fan_in</code> や集約フィールドは無い —
+グラフ走査がそれを解き明かす。</p>
+<h3 id="workspace_requires"><code>workspace_requires</code></h3>
+<p>ブール値、既定 <code>false</code>。intent ごとの record dir の下の計画文書だけでなく、<strong>ソースコードを
+workspace ルートに</strong> 書かねばならない stage に <code>true</code> を設定する。</p>
+<p>なぜ存在するか: stage の <code>produces[]</code> 成果物は常に record dir の下の markdown に解決される
+（path resolver がそれらを書く唯一の場所である）。だから「produces は存在するか？」チェックは、
+<code>code-generation-plan.md</code> と <code>code-summary.md</code> を書いたが実際のコードを 1 行も出さなかった
+<code>code-generation</code> stage によって満たされてしまう（issue #366）。<code>workspace_requires: true</code> は
+そのギャップを閉じる: stage 完了の成果物 guard（<code>aidlc-state.ts</code> の approve/advance/finalize/
+complete-workflow）は、stage が完了できる前に、<code>aidlc/</code> workspace ツリーと harness ディレクトリ
+の外の本物のソース作業の証拠を追加で要求する。</p>
+<p>「ソース作業」がどう検出されるかは workspace に依存する:</p>
+<ul>
+<li><strong>Git workspace</strong> - guard は git に尋ねるので、このセッションのコードを brownfield リポジトリ
+の既存の <code>src/</code> と区別できる。コミットされていないか追跡されていない非ドキュメントの変更が
+ある（<code>git status --porcelain</code>）か、最後のコミットが非ドキュメントのパスに触れた
+（<code>git diff --name-only HEAD~1 HEAD</code>）ときに通過する。2 番目の節は、commit してから approve
+すること（クリーンな作業ツリー、最後のコミットにコード）でも通過することを意味し、#366
+Update 3 のクリーンツリーの誤ブロックを閉じる。</li>
+<li><strong>Non-git workspace</strong>（または任意の git エラー） - guard は shell を使わないファイルシステム
+存在チェックにフォールバックする: 少なくとも 1 つのファイルが <code>aidlc/</code> workspace ツリーと
+harness ディレクトリの外に存在せねばならない。</li>
+</ul>
+<p>今日それを宣言するのは <code>code-generation</code> だけである（それは、そのボディがアプリケーション
+コードを workspace ルートに書く唯一の stage である）。自身のコードや config を出す stage
+（コントラクトジェネレータ、IaC エグゼキュータ）を足すチームは、同じ guard が適用されるよう、
+それに <code>workspace_requires: true</code> を設定すべきである。CI 用には <code>AIDLC_SKIP_ARTIFACT_GUARD=1</code>
+でそれをバイパスする。</p>
+<h3 id="produces_kinds"><code>produces_kinds</code></h3>
+<p><code>for_each: unit-of-work</code> stage の任意のマップ: 各キーは stage の <code>produces</code> または
+<code>optional_produces</code> 成果物名の 1 つ、各値はその成果物が適用される Unit の <strong>kind</strong> のリストで
+ある。kind は units-generation のエッジブロックで Unit ごとに宣言され（<a href="13-runtime-graph.html">Runtime
+graph</a> の <code>bolt_dag.units[].kind</code> を参照）、
+<code>service | spec | ui | packaging | library</code> の 1 つである。</p>
+<pre><code class="language-yaml">produces:
+  - performance-requirements
+  - security-requirements
+  - scalability-requirements
+produces_kinds:
+  performance-requirements: [service, ui]
+  scalability-requirements: [service]
+</code></pre>
+<p>なぜ存在するか: 4 つの construction 設計 stage は、すべての Unit に同一に適用される固定の
+produces リストで走っていたので、spec Unit は scalability ドキュメントを、packaging Unit は
+business-logic モデルを負っていた - 人間が書かねばならない N/A スタブである。<code>produces_kinds</code>
+はエンジンが Unit ごとにマトリクスを刈り込むことを可能にする: Unit が <code>kind</code> を運ぶとき、
+エンジンは、その kind をその kind リストに含む produces エントリだけを保つ。マップに
+<strong>載っていない</strong> 成果物はすべての kind に適用される（kind 固有のものだけを注記する）。kind を
+<strong>持たない</strong> Unit、または <code>produces_kinds</code> マップをまったく持たない stage は、完全なマトリクス
+を保つ - だからこれは既存のあらゆるワークフローに対して不活性である。</p>
+<p>刈り込みは対称である: それは <code>run-stage</code> ディレクティブの <code>produces</code> パス（conductor が書く
+もの）と per-unit のカバレッジチェック（approve 経路の guard が要求するもの）の両方をフィルタ
+する。それは <code>optional_produces</code> と組み合わさる: ディレクティブのパスは両リストの kind で
+フィルタされた和集合であり、一方カバレッジは必須の <code>produces</code> だけをキーに保つ（任意の成果物
+は、適用されない kind についてはディレクティブから刈り込まれ、いずれにせよカバレッジ免除の
+ままである）。必須集合が <strong>空</strong> に刈り込まれる Unit は定義によりカバーされ - stage はそれに
+適用されない - そして <em>すべての</em> Unit が空に刈り込まれる per-unit stage は、artifact guard で
+デッドロックするのではなく no-op として approve する。4 つの stage の既定 kind マトリクスは
+stage frontmatter のデータであり、エントリごとにレビュー可能・差し戻し可能である; 誤った
+エントリを除くと、その成果物の完全なマトリクスが復元される。</p>
+<p>1 つの信頼上の注記: <code>kind:</code> 値は units-generation の gate で enum チェックされる
+（<code>required-sections</code> sensor がタイポに対して大きな音で失敗する）が、コンパイル済みの
+ランタイムグラフはその後は信頼される - エンジンは <code>bolt_dag.units[].kind</code> を読むときに kind を
+形状チェックするだけである（コンパイル済みバッチを信頼するのと同じやり方）。コンパイル済み
+グラフの中で有効だが誤った kind に手で編集された unit は、静かにその誤った kind の集合に
+刈り込まれる。</p>
+<h3 id="consumesrequired"><code>consumes[].required</code></h3>
+<p>consume エントリごとのブール値。意味的には <strong>アクティブな plan にスコープされる</strong> もので、
+その成果物が常にどこかに存在するというグローバルな主張ではない:</p>
+<blockquote>
+<p><code>required: true</code> は <em>「生成する stage がアクティブな plan で走るなら、この consume は満たされ
+ねばならない」</em> を意味する。それは「producer が常に走る」ことを <strong>意味しない</strong>。scope が
+producer を除外するとき（例: <code>bugfix</code> は <code>units-generation</code> をスキップする）、その producer の
+成果物の <code>required: true</code> consume はすべて意味を失う — 要求すべきものが何も無い。</p>
+</blockquote>
+<p><strong>なぜスコープされた読みか。</strong> <code>all</code> 実行のもの（<code>enterprise</code>、<code>feature</code>、<code>workshop</code>）を除く
+すべての scope は、上流の stage を意図的にスキップする。フラットでグローバルな
+<code>required: true</code> は、それらの scope を構造的に無効にしてしまうが、それは誤りである — それらは
+正当な運用モードである。本当の契約は条件付きである: 「上流が走るなら、下流に私を供給せよ」。
+stage のボディは既に不在のケースを優雅に扱う（「利用可能なら」のような散文の指示や、
+コンテキストからのフォールバック）。</p>
+<p><strong>これが doctor の lint にとって意味すること。</strong> lint は各アクティブな scope を歩き、「stage X
+の成果物 Y に対する <code>required: true</code> consume は、Y の producer がこの scope で SKIP なので意味を
+失う」と報告する。それは助言的であり、ブロックしない — user は scope を選ぶことで既にその
+切り詰めを選択済みである。</p>
+<p><strong>v0.10.0 が足すもの。</strong> 予約された <code>when:</code> プリミティブ（下の「予約済み」の節を参照）は、
+著者がより豊かな述語を表現することを可能にする — <code>when: producer-in-plan</code>、
+<code>when: mode == brownfield</code>、<code>when: scope != poc</code>。今日の <code>required: true</code> +
+<code>conditional_on: brownfield|greenfield</code> のペアは v0.3.0 が必要とする 2 つの次元をカバーする;
+<code>when:</code> はそれを一般化する。</p>
+<h3 id="consumesconditional_on"><code>consumes[].conditional_on</code></h3>
+<p>brownfield/greenfield の分岐を捉える。例: <code>reverse-engineering</code> は brownfield モードでのみ
+成果物を生成する; それらの成果物を消費する stage は、scope resolver に「この consume は
+brownfield のときにのみ必須である」と伝えるために、consume を <code>conditional_on: brownfield</code> と
+マークする。</p>
+<p>無条件の consume については、<strong>フィールドを完全に省く</strong>。<code>always</code> 値は無い — 無条件の consume
+は単に <code>conditional_on</code> キーを持たない。</p>
+<h3 id="optional_produces"><code>optional_produces</code></h3>
+<p><code>produces:</code> と並行な、プレーンな kebab-case の文字列リスト。それは、stage が unit ごとに書く
+<strong>かもしれない</strong> が、書くことを <strong>要求されない</strong> 成果物を名指す。不在は無しを意味する; それを
+必要とする 2 つの stage だけがそれを宣言するので、コンパイル済みの <code>stage-graph.json</code> は最小の
+ままである。</p>
+<p>なぜ存在するか: per-unit の Construction stage（<code>for_each: unit-of-work</code>）は、すべての
+<code>produces[]</code> 成果物がその unit の record dir の下でディスク上に存在するときにのみ、その unit に
+ついて COVERED である（<code>aidlc-orchestrate.ts</code> の per-unit カバレッジチェック）。いくつかの成果物
+は本当に unit に条件付きである - <code>functional-design</code> は unit が UI を持つときにのみ
+<code>frontend-components</code> を書く; <code>infrastructure-design</code> は unit がインフラを共有するときにのみ
+<code>shared-infrastructure</code> を書く。それらを <code>produces:</code> の下に列挙すると、backend のみの unit が
+カバレッジを満たすためだけに N/A スタブを書くことを強いられ、そうするまで stage の gate に
+到達できないままだった。それらを <code>optional_produces:</code> に移すと、それらは免除される:</p>
+<ul>
+<li><strong>カバレッジ免除。</strong> <code>optional_produces</code> エントリは per-unit のカバレッジループに無視される。
+unit は、その <strong>必須の</strong> <code>produces[]</code> 成果物が存在すればカバーされる; 任意のものは、<code>next</code> が
+進むことも <code>approve</code> がコミットすることも決してブロックしない。</li>
+<li><strong>なお conductor 用に解決される。</strong> <code>run-stage</code> ディレクティブの <code>produces</code> パスは
+<code>produces</code> + <code>optional_produces</code> を和集合するので、unit が条件付きの成果物を実際に書くとき、
+conductor はそれがどこに落ちるかをなお知る。stage が <code>produces_kinds</code> も宣言するとき、その
+和集合は解決される前に kind でフィルタされる（上の <code>produces_kinds</code> を参照）ので、任意の
+成果物が適用されない kind は、そのパスを決して見ない。</li>
+<li><strong>なお語彙の中にある。</strong> <code>artifactsRegistry()</code> と <code>producersOf()</code> は両リストを和集合するので、
+成果物名とその producer stage は登録されたままである。</li>
+</ul>
+<p><strong>ペアリングの規約。</strong> すべての <code>optional_produces</code> エントリは、それをいつ書くかを agent に
+伝える <code>(CONDITIONAL - ...)</code> マーカーを stage のボディの散文（と <code>outputs:</code> 文字列）に持たね
+ばならない。frontmatter のキーはエンジンのカバレッジのビューである; 散文は agent の指示で
+ある。それらを同期させておくこと。</p>
+<p><strong>警告。</strong> <code>optional_produces</code> とマークされた成果物は、per-unit のカバレッジ台帳に不可視で
+ある - エンジンは unit がそれを生成したことを証明できない。それは、正当に unit に条件付きで
+ある成果物にのみ使い、stage が unit ごとに常に書くべき成果物のカバレッジを静かに緩めるために
+使ってはならない。</p>
+<h3 id="mode"><code>mode</code></h3>
+<p>stage の <strong>通信トポロジ</strong> — ボディが走る間、誰が誰に話すか。5 つの値、4 つがアクティブ:</p>
+<ul>
+<li><code>inline</code> — conductor は自身のコンテキストで stage を走らせる; support agent はそれが採用する
+視点（声）である。dispatch はゼロ。短い stage、実行が速い、コンテキスト圧力が無い。</li>
+<li><code>subagent</code> — ハブアンドスポーク。lead は新鮮な subagent コンテキストに dispatch される
+（conductor のコンテキストを吹き飛ばすであろう長い stage、例: Construction のコード生成）。
+stage が <code>support_agents</code> も宣言するとき、各々は lead が返したドラフトに対して本物のスポーク
+として dispatch され — 相互に盲目で、パスのみのブリーフ — そして lead は統合のためにもう 1 回
+dispatch される。</li>
+<li><code>pipeline</code> — チェーン。lead がドラフトする; 各 support agent が宣言された順序で肉付けし、各
+リンクはドラフトとそれ以前のすべての貢献を見る。順序が要点である。空でない <code>support_agents</code>
+を要求する。</li>
+<li><code>mob</code> — メッシュ、境界のあるラウンドとして走る: すべての support agent が lead のドラフトに
+対して並行に貢献し（相互に盲目）、lead が統合し、未解決の反対者は他の参加者の立場とともに
+1 回の confirm-or-maintain ラウンドを得る。維持された異議は gate で逐語的に引用される。空で
+ない <code>support_agents</code> を要求する。出荷されたショーケースは <code>user-stories</code> である（Product
+Manager が lead; Design、Developer、Quality が協働者; Product Lead が reviewer — mob
+エラボレーションの儀式）。</li>
+<li><code>agent-team</code> — <strong>予約済み</strong>。メッシュ協働のための将来のネイティブバス transport: Anthropic の
+実験的な <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</code> プリミティブが安定すると、ライブのピア
+メッセージングルームが、conductor が運ぶラウンド無しに <code>mob</code> の意味論を運べる。<code>mob</code> は
+ポータブルなモードである; どの stage も <code>agent-team</code> を宣言しない。</li>
+</ul>
+<p>あらゆるトポロジで conductor がバスである: agent は互いを決して呼び出さない — conductor だけが
+委譲する。この書き込みモデルは本物の作業セッションを鏡写しにする: 各人が自分の作業を書き、
+オーナーが照合して編集する。dispatch された各 support agent は貢献ファイル
+（<code>contributions/&lt;agent-slug&gt;.md</code>、identity マーカーを最初の行に持つ stage-protocol §11 の
+形状）を書く; lead だけが stage の <code>produces[]</code> 成果物を編集する; pipeline のリンクは代わりに
+成果物を直接進める。mob と subagent-with-supports の stage では、貢献ファイルが完了の証拠で
+ある — エンジンは 1 つでも欠けている間は承認を拒む。review ループはモードでは無い: <code>reviewer</code></p>
+<ul>
+<li><code>reviewer_max_iterations</code> は任意のモードの上に two-party の批評トポロジを届け、NOT-READY は
+lead だけを再び呼び出す。</li>
+</ul>
+<p><strong>消費者の契約。</strong> <code>mode</code> フィールドを読む orchestrator のコードは <code>agent-team</code> を明示的に扱わ
+ねばならない — 最低でも「mode agent-team not yet implemented」を投げる。既定の実行経路に
+フォールスルーしないこと。enum の拡張での静かなフォールスルーは既知の foot-gun である。</p>
+<p><strong>Swarm トリガの結合。</strong> 自律的な Construction swarm は <code>for_each: unit-of-work</code> +
+<code>mode: subagent</code> で発火する。per-unit のビルド stage を re-mode すると、静かにそれを swarm 経路
+から外す; <code>aidlc-graph compile</code> はその形状を見ると stderr の助言を出す。</p>
+<h3 id="lead_agent-and-support_agents"><code>lead_agent</code> と <code>support_agents</code></h3>
+<p>lead agent が stage を所有する。lead のペルソナ（skills、knowledge、ツールの allowlist）は
+stage の開始時にロードされる。support agent は視点を足す — stage は要件作業のために
+<code>aidlc-product-agent</code> で lead する一方、キャパシティの現実性チェックのために
+<code>aidlc-delivery-agent</code> を support としてロードするかもしれない。</p>
+<p>両フィールドは <code>loadAgents()</code>（マイルストーン 3 で導入）を介して <code>.claude/agents/*.md</code> に対して
+動的に検証される — <code>aidlc-graph.ts compile</code> は発見した agent の slug を
+<code>validateStageFrontmatter</code> に渡すので、合致するファイルの無い agent を名指す <code>lead_agent</code> または
+<code>support_agents</code> 値は、未登録 subagent の <code>Task</code> エラーとしてランタイムに表出するのではなく、
+compile を大きな音で失敗させる（<code>lead_agent &quot;&lt;name&gt;&quot; has no matching .claude/agents/*.md</code>）。
+唯一の免除は予約された <code>orchestrator</code> 擬似 agent（conductor 自身、bootstrap の initialization
+stage で <code>lead_agent</code> として名指される）である; それは設計上 agent ファイルを持たない。スキーマ
+にハードコードされた enum は無い — agent を足すことは、必須の frontmatter を伴う <code>.md</code> ファイル
+を <code>.claude/agents/</code> に落とすことを意味する。<a href="11-contributing.html#adding-an-agent">Contributing: Adding an
+Agent</a> を参照。</p>
+<h3 id="reviewer-and-reviewer_max_iterations"><code>reviewer</code> と <code>reviewer_max_iterations</code></h3>
+<p>任意。<code>reviewer</code> は、stage のボディがその成果物を生成した後、承認 gate の前に呼び出される
+quality-gate agent を名指す（<a href="04-stage-protocol.html">Stage Protocol</a> を参照）。今日 2 つの
+reviewer が出荷される — <code>aidlc-product-lead-agent</code> と <code>aidlc-architecture-reviewer-agent</code> —
+そして compile は、<code>lead_agent</code> が検証されるのと同じやり方で、発見された agent の名簿に対して
+値を検証する。</p>
+<p><code>reviewer_max_iterations</code> は、ワークフローが未解決の指摘とともに gate へ進む前の review/revise
+ループに上限を設ける。<code>reviewer</code> が宣言されているが上限が与えられていないとき、それは <strong>既定で
+2</strong> になる; コンパイラは欠けているか非正の値を 2 に強制する。<code>reviewer</code> を宣言しない stage では
+フィールドを省くこと: コンパイラは <code>reviewer</code> 無しで宣言された <code>reviewer_max_iterations</code> を拒む
+（スキーマエラー <code>reviewer_max_iterations requires a reviewer</code> がグラフの compile を失敗させる）
+ので、それは決して静かに無視されない。</p>
+<hr>
+<h2 id="relationship-to-agent-frontmatter">agent frontmatter との関係</h2>
+<p>stage と agent は同じ YAML 優先の規律に従う。agent frontmatter（<a href="05-agent-system.html#frontmatter-contract">Agent
+System</a> を参照）は <em>誰</em> を宣言する — agent の名前、
+許可されたツール、tier。stage frontmatter は <em>何</em> を宣言する — stage がどの成果物を生成・消費
+するか、どの agent に委譲するか、どう実行するか。</p>
+<p>両方の形式は:</p>
+<ul>
+<li>それらのドメインの正典のソースである（並行するハードコードされたマップは無い）。</li>
+<li>型付きの構造を返す <code>loadX()</code> ヘルパーとともに出荷される。</li>
+<li>ハードコードされた enum に対してではなく、ファイルシステムに対して動的に検証する。</li>
+</ul>
+<p>新しい stage を足すことは、新しい agent を足すことと同じ形状である: <code>.md</code> ファイルを落とし、
+必須の frontmatter を足すと、ヘルパーがランタイムでそれを拾う。</p>
+<hr>
+<h2 id="worked-example">実例</h2>
+<p>正典の例は <code>scope-definition</code> である。規範的な YAML ブロックは
+<code>dist/claude/.claude/aidlc-common/protocols/stage-definition.md</code> に住む — ここで複製するので
+はなく、そちらを参照すること。</p>
+<p>この例は、今日の散文が記述するものを、構造化された形で符号化する:</p>
+<ul>
+<li><code>requires_stage: [intent-capture]</code> は散文の指示「intent の <code>ideation/intent-capture/</code>
+（その record dir の下）から intent statement を読む」を符号化する。parser は散文を気にしない
+— グラフのエッジを見るだけである — が、人間の読み手はそれらを同期させておくべきである。</li>
+<li><code>consumes: [{artifact: intent-statement, required: true}]</code> は、この stage が
+<code>intent-statement</code> が存在するまでブロックされると言う。scope の resolver が <code>intent-statement</code>
+の producer を見つけられないなら、doctor の missing-producer チェックが失敗する。</li>
+<li><code>produces: [scope-document, intent-backlog, scope-definition-questions]</code> は前向きのエッジで
+ある — 「誰が <code>scope-document</code> を生成するか？」を探す他の stage は、<code>aidlc-graph.ts producersOf()</code> を介してこれを見つける。</li>
+<li><code>for_each</code> フィールドは無い — <code>scope-definition</code> はワークフローごとに 1 回走る。</li>
+</ul>
+<hr>
+<h2 id="three-compartment-body-model">3 区画のボディモデル</h2>
+<p>stage ファイルのボディは 3 つの区画を持ち、この順序で宣言される。v0.3.0 で populate されるのは
+<code>## Steps</code> だけである。</p>
+<table>
+<thead>
+<tr>
+<th>区画</th>
+<th>v0.3.0</th>
+<th>v0.5.0</th>
+<th>ここに入るもの</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>## Steps</code></td>
+<td>必須・populate 済み</td>
+<td>不変</td>
+<td>agent が従う命令形の散文</td>
+</tr>
+<tr>
+<td><code>## Sensors</code></td>
+<td>予約済み・不在</td>
+<td>populate 済み</td>
+<td>決定論的な sensor 束縛（フラットな <code>.claude/sensors/</code> レジストリの ID）</td>
+</tr>
+<tr>
+<td><code>## Learn</code></td>
+<td>予約済み・不在</td>
+<td>populate 済み</td>
+<td>ループドライバの束縛と observer rule</td>
+</tr>
+</tbody></table>
+<p>v0.3.0 で 3 つの区画を事前宣言したことは、v0.5.0 の追加がボディの再構築ではなくスロットイン
+変更であることを意味した。<code>## Sensors</code> の束縛の意味論と pull-import モデルについては <a href="07-sensor-system.html">Sensor
+System</a> を参照。</p>
+<p><strong>マイルストーン 8 の移行ルール:</strong> 既存のボディを <code>## Steps</code> の下に包む、それだけである。
+ほとんどの stage ファイルは既に <code>## Steps</code> を最初のボディ見出しとして使っている。</p>
+<hr>
+<h2 id="yaml-migration-shipped">YAML 移行 — 出荷済み</h2>
+<p>マイルストーン 7 は <code>lib.ts</code> に <code>parseStageFrontmatter</code> と <code>emitStageFrontmatter</code> を出荷した —
+YAML のみで、散文の後方互換経路は無い。マイルストーン 8 は 31 個すべての stage ファイルを、
+1 つのアトミックな変更で YAML frontmatter に移行した。マイルストーン 9 は <code>aidlc-graph.ts</code> を
+拡張して YAML を <code>stage-graph.json</code> に compile し、CI の drift guard として <code>compile --check</code> を
+足した。クリーンなツリーで <code>bun aidlc-graph.ts compile --check</code> を走らせると 0 で終了する;
+JSON を再コンパイルせずに任意の stage の YAML を編集すると、明確なメッセージとともに 1 で終了
+する。</p>
+<hr>
+<h2 id="known-limits-in-v030">v0.3.0 での既知の限界</h2>
+<ul>
+<li><strong><code>for_each</code> は新しい。</strong> <code>**Per-Unit**: Yes</code> を持つ 5 つの Construction stage は
+<code>for_each: unit-of-work</code> に移行する; 他の 26 の stage はフィールドを完全に省く。</li>
+<li><strong>Sensors / Learn 区画は宣言されるが空。</strong> parser はそれらの不在を許容する; v0.5.0 はそれらを
+populate した（<a href="07-sensor-system.html">Sensor System</a> を参照）。</li>
+<li><strong>drift チェックを超えるランタイム検証は無い。</strong> parser は有効な <code>StageEntry</code> を生む任意の
+YAML を受理する; doctor の後の拡張が、その上に助言的な rule/sensor チェックを足す。</li>
+</ul>
+<hr>
+<h2 id="future-extensions-reserved-namespace">将来の拡張 — 予約済み名前空間</h2>
+<p>spec は、AI-DLC が後のリリースでおそらく足すであろうプリミティブのために名前を予約する。
+スキーマは未知のキーを拒む — ここで名前を予約することは、将来のコントリビューションがその場
+しのぎの追加と衝突するのを防ぐ。</p>
+<table>
+<thead>
+<tr>
+<th>キー</th>
+<th>見込みリリース</th>
+<th>何をするか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>when</code></td>
+<td>v0.10.0 fitness compiler</td>
+<td>構造化された条件。<code>condition</code> の散文を機械が強制可能なロジックに compile する。<code>consumes[].conditional_on</code> を置き換え、今日の scope 対応の <code>consumes[].required</code> をより豊かな述語（<code>producer-in-plan</code>、<code>mode == brownfield</code>、<code>scope != poc</code>）で一般化する</td>
+</tr>
+<tr>
+<td><code>on_failure</code></td>
+<td>v0.8.0 Ralph loop</td>
+<td>宣言的なエラー回復 — 「この stage が失敗したら X に戻る」または「調整された入力でリトライする」。修正の意味論を <code>stage-protocol-recovery.md</code> の散文から移す</td>
+</tr>
+<tr>
+<td><code>blocks_on</code></td>
+<td>v0.4.0 Construction（表出すれば）</td>
+<td>データ読み取り無しの完了依存 — 今日の過負荷な <code>requires_stage</code>（「私はあなたの出力を消費する」と「私はあなたの後に走る」を混同する）を分割する</td>
+</tr>
+<tr>
+<td><code>timeout</code></td>
+<td>v0.5.0 sensor binding</td>
+<td>実行予算（デッドライン）。stage frontmatter ではなく sensor 束縛にホームを持つ</td>
+</tr>
+<tr>
+<td><code>retry</code></td>
+<td>v0.8.0 Ralph loop</td>
+<td>失敗時のリトライポリシー。stage frontmatter ではなくループ設定にホームを持つ</td>
+</tr>
+</tbody></table>
+<p>設計の論拠: Claude Code 自身の task プリミティブ（TaskCreate ファミリと <code>/loop</code>、cron）は、依存、
+blocks、リトライ、timeout を省く — すべての多段の orchestration はクライアント側のコードに
+押しやられる。この実装は、実行の振る舞い（リトライ、timeout、失敗の扱い）を stage spec では
+なくループと sensor のサブシステムにホームを持たせることで、その選択を鏡写しにする。上記の
+フィールドは、消費者が現れれば、新しいパラダイムではなく控えめな構造的拡張になるだろう。</p>
+<p>予約済み名前空間のパターンは audit の分類法（<a href="12-state-machine.html">State Machine</a>）に先例を
+持ち、そこはイベント名を <code>Reserved (v0.x PR N)</code> の Emitter セルで事前登録する — 名前は
+レジストリに存在するが、消費者の PR が出荷されるまでどのコードもそれを emit しない、そして
+その時点で同じコミットが <code>Reserved</code> マーカーを本物の emitter パスに置き換える。</p>
+<hr>
+<h2 id="cross-references">クロスリファレンス</h2>
+<ul>
+<li><code>dist/claude/.claude/aidlc-common/protocols/stage-definition.md</code> — この章がナラティブにする
+正典の spec。</li>
+<li><a href="04-stage-protocol.html">Stage Protocol</a> — ランタイムの実行の振る舞い。</li>
+<li><a href="05-agent-system.html">Agent System</a> — agent ファイルのための並行する YAML 優先の契約。</li>
+<li><a href="12-state-machine.html">State Machine</a> — stage の実行が audit イベントを emit する場所。</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/15-stage-definition.md"><code>docs/reference/15-stage-definition.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

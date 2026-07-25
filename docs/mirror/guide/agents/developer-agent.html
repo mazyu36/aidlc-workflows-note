@@ -11,15 +11,17 @@
 <script type="module" src="../../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/agents/developer-agent</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../../index.html">総合索引</a>
   <a href="../../../index.html">Atlas トップ</a>
@@ -78,7 +80,7 @@
 <p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
 <h1 id="developer-agent">Developer Agent</h1>
 <blockquote>
-<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/developer-agent.md">developer-agent</a></p>
+<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="../../reference/agents/developer-agent.html">developer-agent</a></p>
 </blockquote>
 <p>aidlc-developer-agent はあなたのシニアソフトウェア開発者である。アーキテクチャ設計と unit の仕様を、本番品質のコードへ翻訳する。リバースエンジニアリングでは、aidlc-architect-agent が統合する深いコードスキャンを実行する。</p>
 <p>aidlc-developer-agent は Reverse Engineering のコードスキャンと Code Generation をリードし、Inception の両アンサンブルで dispatch される協働者でもある: Practices Discovery の hub-and-spoke ではコードパターンの証拠を検分し、User Stories の mob では実装可能性の声を担う。Code Generation は集中実行の subagent として走る。ビルドツール・パッケージマネージャ・テストコマンドを実行するための Bash アクセスを持つ。</p>
@@ -149,7 +151,7 @@
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/developer-agent.md"><code>docs/guide/agents/developer-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/developer-agent.md"><code>docs/guide/agents/developer-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>テスト — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/09-testing</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html" class="here">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#overview">概要</a>
+  <a href="#layer-1-protocol-every-change-no-llm-seconds">Layer 1: Protocol（変更ごと・LLM 不使用・秒単位）</a>
+  <a href="#layer-2-stage-ci-push-llm-minutes">Layer 2: Stage（CI push・LLM 使用・分単位）</a>
+  <a href="#layer-3-acceptance-release-llm-hours">Layer 3: Acceptance（release・LLM 使用・時間単位）</a>
+  <a href="#cross-platform-coverage">クロスプラットフォームのカバレッジ</a>
+  <a href="#preflight-validation">Preflight 検証</a>
+  <a href="#test-registry">Test Registry</a>
+  <a href="#trigger-points">トリガーポイント</a>
+  <a href="#stubs">スタブ</a>
+  <a href="#state-fixtures">State Fixtures</a>
+  <a href="#how-to-add-a-stage-test">Stage テストの追加方法</a>
+  <a href="#how-to-add-acceptance-assertions">Acceptance アサーションの追加方法</a>
+  <a href="#assertion-design-principles">アサーション設計の原則</a>
+  <a href="#environment-variables">環境変数</a>
+  <a href="#cli-reference">CLI リファレンス</a>
+  <a href="#parallel-execution">並列実行</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="testing">テスト</h1>
+<h2 id="overview">概要</h2>
+<p>AI-DLC のテストスイートは <strong>完全に TypeScript</strong> である — すべてのテストは <code>bun</code> の下で実行される
+<code>t*.test.ts</code> ファイルであり、shell（<code>.sh</code>）のテストファイルは 1 つも無い。これは構成による
+platform 不変性の保証である: 同じファイルが macOS・Linux・ネイティブ Windows で同一に実行される。</p>
+<p>スイートは <strong>4 つの level</strong> に編成される — <code>smoke</code>・<code>unit</code>・<code>integration</code>・<code>e2e</code> — それぞれ
+<code>tests/</code> 配下に 1 ディレクトリずつ。4 つの level は、速度 対 網羅性のバランスを取る古典的な
+3 層のテストピラミッドに対応する:</p>
+<pre class="term"><code>            /\
+           /  \    ACCEPTANCE — full workflows, artifact + experience verification
+          / L3 \   Level: e2e  ·  When: before releases (--release / --all)
+         /------\
+        /        \
+       /   L2     \  STAGE — individual stages with stub input, verify artifacts
+      /------------\ Level: integration  ·  When: CI push (--ci, every PR)
+     /              \
+    /      L1        \  PROTOCOL — contracts, structure, cross-references
+   /------------------\ Levels: smoke + unit  ·  When: every local change</code></pre>
+<p><code>--ci</code> プロファイルとフラグ無しの既定はどちらも <strong>smoke + unit + integration</strong> を実行する
+（そのため integration level はローカルの <code>bun tests/run-tests.ts</code> ごとに便乗する）; <code>--release</code>
+/ <code>--all</code> は <code>e2e</code> を加える。上のピラミッドは各 level が概念的にどこに位置するかを示す — 実際に
+それらを選択する方法は下のプロファイルフラグである。</p>
+<p><strong>ファイル名の規約。</strong> テストのファイル名は <code>t&lt;NN&gt;[-description].test.ts</code> である — それが属する
+level ディレクトリと、任意の人間向けの説明だけ。名前に <strong>mechanism のセグメントは無い</strong>: テストの
+mechanism（CLI を spawn するか、SDK を駆動するか、ライブ TUI を描画するか）は、ファイル名で宣言
+されるのではなく、その本体が実際に呼び出す driver から計算される <em>導出された集合</em> である。各テストが
+何をカバーするかの機械チェック済みインデックスは、ここの手作業のテーブルではなく
+<code>tests/.coverage-registry.json</code> に住む（ディスク上の <code>covers:</code> ヘッダから
+<code>tests/gen-coverage-registry.ts</code> が生成する） — 下の <a href="#test-registry">Test Registry</a> を参照。</p>
+<h2 id="layer-1-protocol-every-change-no-llm-seconds">Layer 1: Protocol（変更ごと・LLM 不使用・秒単位）</h2>
+<p>LLM を呼び出さずに orchestrator の構造的な正しさを検証する。これらが通れば protocol は内部的に一貫している — stage は有効なファイルを参照し、入力/出力は正しく連鎖し、routing テーブルは stage ファイルと一致する。</p>
+<p><strong>Level:</strong> smoke, unit, integration</p>
+<p><strong>テスト対象:</strong></p>
+<ul>
+<li>ファイルの存在、パーミッション、命名規約（smoke）</li>
+<li>hook スクリプト（bun 経由の 11 の TypeScript）、stage frontmatter、knowledge インベントリ（unit）</li>
+<li>scope-stage マッピング、グラフの一貫性、stage I/O 契約チェーン、protocol 準拠（integration）</li>
+<li>stage の output-to-step 検証: 宣言されたすべての output が instruction のステップで参照される（integration、<code>aidlc-validate.ts</code> CLI ツール経由で決定論的）</li>
+</ul>
+<p><strong>実行:</strong> <code>bun tests/run-tests.ts</code>（既定、フラグ不要）。<code>bash tests/run-tests.sh</code> は既存の POSIX コマンド向けの互換ラッパーである。</p>
+<h2 id="layer-2-stage-ci-push-llm-minutes">Layer 2: Stage（CI push・LLM 使用・分単位）</h2>
+<p>既知の workspace + state fixture とともに個々の stage を分離して実行する。決定論的な入力を与えられたとき各 stage が正しい成果物を生成することを検証する。</p>
+<p><strong>Level:</strong> integration</p>
+<p><strong>テスト対象:</strong></p>
+<ul>
+<li>Preflight ヘルス gate: Claude CLI が PATH 上にある、AWS 認証情報が有効、Claude が応答する（exit 0）、応答が空でない（preflight）</li>
+<li>CLI ツールのユーティリティハンドラ: intent-birth, --doctor, --status, --stage, --phase（integration）</li>
+<li>greenfield/brownfield スタブを用いた個々の stage、成果物の検証（integration）</li>
+</ul>
+<p><strong>実行:</strong> <code>bun tests/run-tests.ts --ci</code></p>
+<h2 id="layer-3-acceptance-release-llm-hours">Layer 3: Acceptance（release・LLM 使用・時間単位）</h2>
+<p>完全なワークフローを実行し、体験を検証する: state 遷移を超えて、成果物の内容、stage をまたぐ整合性、ドメインの正しさを確認する。</p>
+<p><strong>Level:</strong> e2e</p>
+<p><strong>テスト対象:</strong></p>
+<ul>
+<li>brownfield スタブ + 成果物アサーションを用いた完全な bugfix ライフサイクル</li>
+<li>greenfield スタブ + 成果物アサーションを用いた完全な POC ライフサイクル</li>
+<li>state の進行、scope routing、audit の完全性、jump の仕組み</li>
+<li>stage instruction の品質の LLM による意味的レビュー（明快さ、論理の流れ、曖昧さの検出）</li>
+</ul>
+<p><strong>実行:</strong> <code>bun tests/run-tests.ts --release</code></p>
+<h2 id="cross-platform-coverage">クロスプラットフォームのカバレッジ</h2>
+<p>テストスイートはネイティブの Bun runner を通じて macOS・Linux・Windows で実行される:</p>
+<pre><code class="language-bash">bun tests/run-tests.ts [--ci | --all --debug -P 8]
+</code></pre>
+<p><code>bash tests/run-tests.sh ...</code> は POSIX 互換ラッパーとして残り、同じ TypeScript runner に委譲する。実行時、この実装の hook・CLI ツール・テスト runner は <code>bun</code> を要求する; Bash はもはや主要な runner の基盤ではない。</p>
+<p><strong>スイートに焼き込まれた移植性の制約:</strong></p>
+<ul>
+<li><strong>Paths</strong>: <code>tests/harness/fixtures.ts</code> の <code>createTestProject</code> は一時的なプロジェクトパスを正規化し、JSON とネイティブ <code>bun</code> を通じてクリーンにラウンドトリップさせる。</li>
+<li><strong>In-place edits</strong>: テストでは TypeScript のファイル書き込みを優先する。shell ヘルパーが避けられない場合は、BSD/GNU 固有の <code>sed -i</code> 形式を避ける。</li>
+<li><strong><code>grep -qiF</code></strong>: Git Bash には <code>-i</code> と <code>-F</code> を組み合わせた既知のバグがある。パターンに正規表現メタ文字が無ければ <code>-i</code> 単独を使う。修正前は t16 でこれに当たっていた。</li>
+<li><strong><code>tar</code> アーカイブ</strong>: macOS の <code>tar</code> は既定で <code>._*</code> の AppleDouble サイドカーファイルを注入する。クロスプラットフォームのテスト実行向けにソースをバンドルするときは、<code>COPYFILE_DISABLE=1 tar …</code> または <code>git archive</code> を使う。</li>
+<li><strong>Windows での LLM タイミング</strong>: Windows EC2 からの Bedrock 呼び出しは macOS からより有意に遅くなりうる（初回呼び出しのコールドスタート、MSYS のプロセス fork オーバーヘッド）。SDK/tui テストは driver の結果サーフェスでアサートし、基盤の欠如と実際の失敗との切り分けは runner の preflight/ファイルごとの Claude gate に任せるべきである。</li>
+</ul>
+<p><strong>Windows でスイートを手動実行する:</strong></p>
+<ol>
+<li><code>bun</code>・Node.js・Claude Code CLI をインストールする。</li>
+<li>完全なスイートまたは POSIX ラッパー互換の smoke を実行する場合は Git for Windows をインストールする; ネイティブ runner の経路自体は Bash を要求しない。</li>
+<li>e2e の TUI テストでは、node が <code>node-pty</code> と <code>@xterm/headless</code> を解決できるよう、npm で開発依存をインストールする。</li>
+<li><code>AIDLC_NODE_BIN</code> を具体的な <code>node.exe</code> のパスに設定し、完全な acceptance 実行のため <code>AIDLC_TUI_LIVE=1</code> を設定する。</li>
+<li><code>bun tests/run-tests.ts --all --debug -P 8</code> を実行する。</li>
+</ol>
+<p>WSL や Docker は不要である; サポートされる検証基盤はネイティブ Windows である。</p>
+<p><strong>再現可能な MR10 Windows EC2 runbook:</strong></p>
+<ol>
+<li><p>SSM アクセスを持つ使い捨ての Windows Server 2022 ホストを立ち上げる:</p>
+<pre><code class="language-bash">aws cloudformation deploy \
+  --stack-name aidlc-windows-test \
+  --template-file tests/harness/windows/windows-test.cfn.yaml \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides VpcId=vpc-... SubnetId=subnet-...
+</code></pre>
+</li>
+<li><p>テスト対象のコミット済み git ツリーを同期する:</p>
+<pre><code class="language-bash">bun tests/harness/windows/sync.ts --stack-name aidlc-windows-test HEAD
+</code></pre>
+</li>
+<li><p>そのマシンにリポジトリの開発依存をインストールする:</p>
+<pre><code class="language-bash">bun tests/harness/windows/ssm-run.ts --stack-name aidlc-windows-test -- \
+  powershell -ExecutionPolicy Bypass -File C:\aidlc\tests\harness\windows\setup.ps1 -ProjectDir C:\aidlc
+</code></pre>
+</li>
+<li><p>ライブ TUI を有効にして Windows の <code>--all</code> gate を実行する:</p>
+<pre><code class="language-bash">bun tests/harness/windows/ssm-run.ts --stack-name aidlc-windows-test -- \
+  powershell -ExecutionPolicy Bypass -File C:\aidlc\tests\harness\windows\run-all.ps1 -ProjectDir C:\aidlc -Parallel 8
+</code></pre>
+</li>
+<li><p>ホストを撤去する:</p>
+<pre><code class="language-bash">aws cloudformation delete-stack --stack-name aidlc-windows-test
+</code></pre>
+</li>
+</ol>
+<p><code>run-all.ps1</code> は <code>bun tests/run-tests.ts --all --debug -P &lt;N&gt;</code> を呼び出す前に <code>AIDLC_NODE_BIN</code> と <code>AIDLC_TUI_LIVE=1</code> をエクスポートするので、green の結果がライブ TUI のジャーニーを静かにスキップして得られることはありえない。ネイティブインストーラが <code>claude.exe</code> を CloudFormation の UserData ブートストラップを実行したユーザー（EC2Launch v2 では Administrator）の下に置くため、claude バイナリを <code>C:\Users\Administrator\.local\bin</code> と systemprofile のホームにわたって探索する。</p>
+<p>スタックは既定で <strong><code>c5.4xlarge</code></strong> である — 完全な <code>--all -P 8</code> のライブ実行で実証済みのサイズ。e2e tier はテストごとの <code>bun:test</code> タイムアウトを持ち（Bolt-worktree ライフサイクルテストは c5.4xlarge で 5s の予算に対して約 5.5s に達する）、より小さいマシン（例: <code>t3.large</code>）は並列負荷下で決定論的な Bolt/ランタイムのテストを見せかけのタイムアウトへ傾ける。より軽い tier の選択を実行するときだけ <code>InstanceType</code> パラメータを縮小する。</p>
+<h2 id="preflight-validation">Preflight 検証</h2>
+<p>フィルタ無しでライブ可能な level（integration または e2e）を実行する前に、runner は gate として <code>tests/integration/t19.test.ts</code> を実行する。これは <strong>Claude Agent SDK</strong> を通じて小さな実ターンを駆動し（integration tier が使うのと同じライブ経路）、決定論的なサーフェスにだけアサートする。preflight が失敗した場合でも決定論的なファイルは実行され、Claude 依存のファイルはファイルごとの <code>SKIP</code> エントリとともにスキップされる。</p>
+<table>
+<thead>
+<tr>
+<th>アサーション</th>
+<th>サーフェス</th>
+<th>失敗時</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AWS 認証情報が有効</td>
+<td><code>aws sts get-caller-identity</code> が exit 0（<code>aws</code> CLI が無い場合は PASS-by-skip）</td>
+<td>bail — Bedrock は IAM 認証を必要とする</td>
+</tr>
+<tr>
+<td>ライブターンが終端の結果に到達する</td>
+<td>SDK 実行が非 <code>undefined</code> の <code>resultEvent</code> を生成する（tier が必要とするバイナリが存在し到達可能）</td>
+<td>bail — 基盤/API に到達不能</td>
+</tr>
+<tr>
+<td>ターンがエラー無く完了する</td>
+<td><code>resultEvent.is_error === false</code>（<code>claude -p</code> の exit 0 に相当する決定論的な等価; 124/137 のハングでは undefined のまま）</td>
+<td>bail — API が無応答</td>
+</tr>
+<tr>
+<td>応答が空でない</td>
+<td>実行が <em>何らかの</em> 出力を捕捉した — <code>tool_result</code> または assistant のテキスト（存在のみ、内容は問わない）</td>
+<td>bail — API が何も生成しなかった</td>
+</tr>
+</tbody></table>
+<p>ここでの red は本物の環境上の発見（<code>claude</code> の欠如、期限切れの認証情報）であり、和らげるべき flake では決してない — 下流の LLM tier を速やかに bail するという、まさに gate の仕事である。</p>
+<h2 id="test-registry">Test Registry</h2>
+<p>スイートは <strong>登録ではなく発見される</strong>: <code>bun tests/run-tests.ts</code> は 4 つの level ディレクトリ
+（<code>tests/{smoke,unit,integration,e2e}/</code>）を歩き、見つけた <code>t*.test.ts</code> をすべて実行する。同期を
+保つべき手作業のテストごとのテーブルは無い — テストファイルを足すだけで runner がそれを拾い上げる。</p>
+<p>各テストが <em>何をカバーするか</em> は <strong><code>tests/.coverage-registry.json</code></strong> に機械的に追跡され、テスト
+ファイルの先頭コメントブロックの <code>covers:</code> ヘッダ（通常は 1 行目; いくつかのファイルは正当に何も
+宣言せず、単にカバレッジの主張に寄与しない）から <code>bun tests/gen-coverage-registry.ts</code> が生成する。
+ジェネレータはフレームワークの unit を 7 つのクラス（<code>function</code>・<code>audit</code>・<code>scope</code>・<code>stage</code>・<code>hook</code>・
+<code>subcommand</code>・<code>render-surface</code>）にわたって列挙し、各 <code>covers:</code> の主張を列挙された unit に対応づけ、
+カバレッジ数に加えて ratchet の下限を出力する。再生成と drift の検証は次で行う:</p>
+<pre><code class="language-bash">bun tests/gen-coverage-registry.ts          # rewrite the registry from disk
+bun tests/gen-coverage-registry.ts --check  # fail if the committed registry is stale
+</code></pre>
+<p><code>tests/.coverage-registry.json</code> は権威ある機械チェック済みのインデックスである — 特定の function・
+audit イベント・scope・stage・hook・subcommand・render surface をどのテストが動かすかを見つけるには、
+それを参照する（または <code>covers:</code> ヘッダを直接 grep する）。<code>--check</code> モードはスイートに組み込まれて
+おり、ディスクから drift したレジストリは gate を red にする。</p>
+<blockquote>
+<p><strong>Note:</strong> t19 は unit（<code>tests/unit/t19.test.ts</code>、jump CLI ツール）と integration
+（<code>tests/integration/t19.test.ts</code>、ライブ preflight gate）の両方に現れる — 素の ID
+ではなく level/ファイルパスが、こうした衝突を曖昧さなく区別する。</p>
+</blockquote>
+<h2 id="trigger-points">トリガーポイント</h2>
+<table>
+<thead>
+<tr>
+<th>トリガー</th>
+<th>Layer</th>
+<th>コマンド</th>
+<th>場所</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>git commit</code></td>
+<td>L1</td>
+<td><code>bun tests/run-tests.ts</code></td>
+<td>ローカル（pre-commit hook）</td>
+</tr>
+<tr>
+<td>CI pipeline</td>
+<td>L2</td>
+<td><code>bun tests/run-tests.ts --ci</code></td>
+<td>CI/CD pipeline</td>
+</tr>
+<tr>
+<td>main への Release / merge</td>
+<td>L3</td>
+<td><code>bun tests/run-tests.ts --release</code></td>
+<td>CI/CD pipeline</td>
+</tr>
+</tbody></table>
+<p>L1 は git の pre-commit hook で強制できる: <code>bun tests/run-tests.ts || exit 1</code>。</p>
+<h2 id="stubs">スタブ</h2>
+<h3 id="greenfield-stub-testsfixturesgreenfield-todo">Greenfield スタブ: <code>tests/fixtures/greenfield-todo/</code></h3>
+<p>ソースコードの無いプロジェクト記述。Workspace-detection は greenfield に分類する。ideation stage 向けに、LLM へ決定論的な intent コンテキストを与える。</p>
+<p>内容: TypeScript と Vite の React Todo App を記述する <code>README.md</code> のみ。</p>
+<h3 id="brownfield-stub-testsfixturesbrownfield-todo">Brownfield スタブ: <code>tests/fixtures/brownfield-todo/</code></h3>
+<p>最小限の React+TypeScript+Vite ソース（約 10 ファイル、約 200 LOC）。Workspace-detection は brownfield に分類する。RE・requirements・design の stage が分析する具体的なコードを持つ。</p>
+<p>内容:</p>
+<ul>
+<li><code>package.json</code> — react, react-dom, typescript, vite, vitest</li>
+<li><code>tsconfig.json</code>, <code>vite.config.ts</code>, <code>index.html</code></li>
+<li><code>src/main.tsx</code>, <code>src/App.tsx</code></li>
+<li><code>src/types/todo.ts</code> — Todo interface（id, title, completed）</li>
+<li><code>src/components/TodoList.tsx</code> — リスト + 追加フォーム（約 40 行）</li>
+<li><code>src/components/TodoItem.tsx</code> — チェックボックス + タイトル + 削除ボタン</li>
+<li><code>src/hooks/useTodos.ts</code> — addTodo, toggleTodo, deleteTodo</li>
+</ul>
+<h3 id="re-artifacts-fixture-testsfixturesre-artifacts">RE 成果物 Fixture: <code>tests/fixtures/re-artifacts/</code></h3>
+<p>下流の stage テスト向けに事前投入された reverse-engineering の出力。セットアップ中に、テストプロジェクトの space レベルのリポジトリストア <code>$PROJ/aidlc/spaces/default/codekb/&lt;repo&gt;/</code> にコピーされる。</p>
+<p>内容: brownfield-todo アプリを記述する 4 つの最小限の .md ファイル（architecture-overview, technology-stack, codebase-analysis, integration-points）。</p>
+<h3 id="inception-artifacts-fixture-testsfixturesinception-artifacts">Inception 成果物 Fixture: <code>tests/fixtures/inception-artifacts/</code></h3>
+<p>construction へ jump するテスト向けに事前投入された inception phase の出力。セットアップ中に <code>$PROJ/aidlc/spaces/default/intents/&lt;record&gt;/inception/{requirements-analysis,application-design,units-generation}/</code> にコピーされる。</p>
+<p>内容: Todo アプリを記述する 7 つの最小限の .md ファイル（requirements, components, component-methods, services, component-dependency, unit-of-work, unit-of-work-story-map）。Unit 名: <code>todo-core</code>。</p>
+<h3 id="construction-artifacts-fixture-testsfixturesconstruction-artifacts">Construction 成果物 Fixture: <code>tests/fixtures/construction-artifacts/</code></h3>
+<p>construction 途中の stage（例: code-generation）へ jump するテスト向けに事前投入された construction phase の出力。セットアップ中に <code>$PROJ/aidlc/spaces/default/intents/&lt;record&gt;/construction/todo-core/functional-design/</code> にコピーされる。</p>
+<p>内容: todo-core unit のコンポーネント仕様と state 管理を記述する 1 つの最小限の .md ファイル（functional-design）。</p>
+<h2 id="state-fixtures">State Fixtures</h2>
+<table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>Project Type</th>
+<th>Scope</th>
+<th>State</th>
+<th>Used By</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>state-pre-workspace-detection.md</code></td>
+<td>--</td>
+<td>feature</td>
+<td>Welcome+scaffold 完了、次は workspace-detection</td>
+<td>t70, t71</td>
+</tr>
+<tr>
+<td><code>state-initialization-done.md</code></td>
+<td>Greenfield</td>
+<td>feature</td>
+<td>Init 完了、次は intent-capture</td>
+<td>t73</td>
+</tr>
+<tr>
+<td><code>state-brownfield-init-done.md</code></td>
+<td>Brownfield</td>
+<td>bugfix</td>
+<td>Init 完了、次は RE</td>
+<td>t72</td>
+</tr>
+<tr>
+<td><code>state-mid-inception.md</code></td>
+<td>Brownfield</td>
+<td>bugfix</td>
+<td>RE 完了、次は requirements-analysis</td>
+<td>t74</td>
+</tr>
+<tr>
+<td><code>state-mid-ideation.md</code></td>
+<td>Greenfield</td>
+<td>feature</td>
+<td>Intent+market 完了、次は feasibility</td>
+<td>t08, t10, t11, t12, t20, t22, t24, t25, t37</td>
+</tr>
+<tr>
+<td><code>state-construction.md</code></td>
+<td>--</td>
+<td>--</td>
+<td>Construction phase</td>
+<td>t07, t10, t11, t26, t57</td>
+</tr>
+<tr>
+<td><code>state-operation.md</code></td>
+<td>--</td>
+<td>--</td>
+<td>Operation phase</td>
+<td>t07, t10, t11</td>
+</tr>
+<tr>
+<td><code>state-completed.md</code></td>
+<td>--</td>
+<td>--</td>
+<td>全 stage 完了</td>
+<td>t08, t11</td>
+</tr>
+<tr>
+<td><code>state-jumped.md</code></td>
+<td>Brownfield</td>
+<td>bugfix</td>
+<td>jump 履歴を持つワークフロー途中</td>
+<td>t11, t37, t42</td>
+</tr>
+<tr>
+<td><code>state-corrupted.md</code></td>
+<td>--</td>
+<td>--</td>
+<td>不正/破損した state</td>
+<td>t08, t10</td>
+</tr>
+</tbody></table>
+<h2 id="how-to-add-a-stage-test">Stage テストの追加方法</h2>
+<ol>
+<li>テストする stage を選び、それがどの state fixture を必要とするかを特定する（その state はその stage を現在/次の stage として示していなければならない）</li>
+<li><code>tests/fixtures/</code> に state fixture を作成するか再利用する</li>
+<li><code>tests/integration/tNN-stage-SLUG.test.ts</code> を作成し、shell の TAP ヘルパーではなく共有の TypeScript harness ヘルパー（<code>tests/harness/fixtures.ts</code>、<code>tests/harness/sdk-drive.ts</code>、または <code>tests/harness/tui-drive.ts</code>）を使う。</li>
+<li><code>bun tests/run-tests.ts --integration</code> で実行するか、直接: <code>bun test tests/integration/tNN-stage-SLUG.test.ts</code></li>
+</ol>
+<h2 id="how-to-add-acceptance-assertions">Acceptance アサーションの追加方法</h2>
+<p><code>tests/e2e/</code> 配下の既存の e2e ワークフローテストに成果物アサーションを足すには:</p>
+<ol>
+<li>現在のテストを読み、それが既に何を確認しているかを理解する</li>
+<li>既存の <code>test(...)</code> ブロック内に <code>expect(...)</code> アサーションを足す（bun:test は呼び出し自体から
+アサーションを数える — 同期を保つべき <code>plan</code> 行は無い）</li>
+<li>柔軟なパターンを使う: 厳密な文字列ではなく <code>readFileSync</code> の内容に対して <code>/[Tt]odo/</code> を
+マッチさせる</li>
+<li>非決定論的な LLM の出力形式に依存するアサーションには <code>test.skipIf(...)</code> / 早期 return を使う</li>
+<li>サイズに基づくチェックには <code>expect(statSync(path).size).toBeGreaterThan(minBytes)</code> を使う</li>
+</ol>
+<h2 id="assertion-design-principles">アサーション設計の原則</h2>
+<ul>
+<li><strong>Keyword classes</strong> — 大文字小文字を区別しない正規表現を使う: <code>[Tt]odo</code>, <code>[Rr]eact</code>, <code>[Bb]rownfield</code></li>
+<li><strong>Flexible discovery</strong> — 厳密な名前を確認するのではなく <code>find</code> + <code>wc -l</code> でファイルを数える</li>
+<li><strong>Size bounds</strong> — 最小限の内容には <code>statSync(path).size</code> を <code>toBeGreaterThan()</code> とともに使う</li>
+<li><strong>Graceful degradation</strong> — アサーションが非決定論的な LLM 出力に依存するときは <code>skip</code> を使う</li>
+<li><strong>Structure over content</strong> — 内容を確認する前に markdown 見出し（<code>^#</code>）、ファイルの存在、ディレクトリの作成を確認する</li>
+</ul>
+<h2 id="environment-variables">環境変数</h2>
+<table>
+<thead>
+<tr>
+<th>変数</th>
+<th>既定</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AIDLC_TEST_TIMEOUT</code></td>
+<td><code>1800</code></td>
+<td><code>claude -p</code> 呼び出しごとのタイムアウト（秒）。無効化するには <code>0</code> に設定する。</td>
+</tr>
+<tr>
+<td><code>AIDLC_TUI_SETTING_SOURCES</code></td>
+<td><code>project</code></td>
+<td>ライブの <code>claude</code> TUI 起動に注入される設定ソース。user/local の Claude 設定を意図的に含める焦点を絞ったキャリブレーションのときだけ <code>default</code> または空値を使う。</td>
+</tr>
+<tr>
+<td><code>AIDLC_TUI_TRACE_POLL_MS</code></td>
+<td><code>10000</code></td>
+<td>長いジャーニーが次のメニューまたはディスクのターミネータを待つ間の、TUI NDJSON トレースにおける <code>answer_gate_poll</code> スナップショット間の最小間隔。</td>
+</tr>
+</tbody></table>
+<h2 id="cli-reference">CLI リファレンス</h2>
+<pre><code class="language-bash"># Entrypoints
+bun tests/run-tests.ts        # Native cross-platform runner
+bash tests/run-tests.sh       # POSIX compatibility wrapper
+
+# Level flags (combinable)
+--smoke         # Structural validation
+--unit          # Single-component isolation
+--integration   # Cross-component contracts and stage/CLI utilities
+--e2e           # Full lifecycle, worktree, and rendered terminal journeys
+
+# Profile flags (shortcuts)
+(default)       # smoke + unit + integration
+--ci            # smoke + unit + integration
+--release       # smoke + unit + integration + e2e
+--all           # Same as --release
+
+# Output modifiers
+--verbose       # Write per-test logs to tests/logs/
+--debug         # Implies --verbose; streams per-test output and writes SDK/TUI
+                # driver traces to tests/logs/
+--filter PAT    # Only run tests whose filename matches extended regex PAT
+--parallel N    # Run up to N test files concurrently within a tier (alias: -P N).
+                # Default: 1 (serial). Smoke and unit tiers are always serial.
+</code></pre>
+<p>ライブの SDK と TUI harness の driver は、既定で project のみの Claude 設定ソースを用いる。つまり、
+コピーされたテストの <code>.claude/</code> プロジェクト設定と hook をロードし、開発者の user レベルの hook/設定を
+除外する。これはインストールされたフレームワークのサーフェスをミラーし、ローカルの対話的な好みが
+テストの振る舞いを変えるのを防ぐ; 明示的な driver オプションまたは <code>AIDLC_TUI_SETTING_SOURCES</code> が
+キャリブレーションのための escape hatch として残る。</p>
+<p><code>--all --debug</code>（および <code>--release --debug</code>）は、環境が既に設定していない限り <code>AIDLC_TUI_LIVE=1</code> を
+既定にする。これにより「トレース付きですべて」のプロファイルは、既定でライブでトークンを消費する TUI
+ジャーニーを実行する; それらのファイルをテスト内の SKIP 経路に留めるには <code>AIDLC_TUI_LIVE=0</code> を明示的に
+設定する。</p>
+<h2 id="parallel-execution">並列実行</h2>
+<p><code>--parallel N</code>（または <code>-P N</code>）は tier 内で最大 N 個のテストファイルを同時に実行する。既定はシリアル（<code>1</code>）である。</p>
+<p><strong>効果がある場面。</strong> integration と e2e の level は、それぞれ実時間の大半を <code>claude -p</code> サブプロセスの起動と LLM ターンに費やす。これらのテストは既にファイルシステム的に分離されている — <code>setup_integration_project</code> がテストごとに新鮮な <code>$PROJ</code> をスキャフォールドする — ので、干渉なしに並んで実行できる。</p>
+<p><strong>スパイクの結果（2026-05-06、Bedrock 経由の Opus 4.7）:</strong></p>
+<table>
+<thead>
+<tr>
+<th>シナリオ</th>
+<th>シリアル</th>
+<th><code>--parallel 4</code></th>
+<th><code>--parallel 8</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4 × <code>/aidlc --help</code></td>
+<td>56s</td>
+<td>16s（3.5x）</td>
+<td>—</td>
+</tr>
+<tr>
+<td>8 × <code>/aidlc --help</code></td>
+<td>—</td>
+<td>—</td>
+<td>31s</td>
+</tr>
+</tbody></table>
+<p>8 つの並列呼び出しすべてが <code>cache_read=73789</code> を観測した — Bedrock の prompt caching は同時 worker をまたいで warm を保つ。8-way でスロットリングや破損は観測されなかった。</p>
+<p><strong>シリアルのままのもの。</strong> smoke と unit の tier は <code>--parallel</code> を無視し、いずれにせよシリアルに実行される。それらは既に数秒で完了し、出力が交錯すれば実時間の利得なしにデバッグ性を損なう。preflight gate（<code>tests/integration/t19.test.ts</code>）も、LLM tier がその exit ステータスに依存するためシリアルに実行される。</p>
+<p><strong>並列下での出力。</strong> <code>START</code> マーカーはライブでストリームされる（最初の <code>DONE</code> の前に複数が立て続けに現れうる — それが worker が並行しているという可視のシグナルである）。normal/verbose モードでは、各 worker の TAP 本体はバッファされ、ディレクトリ mutex（<code>mkdir $LOG_DIR/.stdout.lock</code>、POSIX でアトミック — <code>flock</code> なしで macOS の bash 3.2 でも動く）の下で 1 つの連続したブロックとして stdout にフラッシュされる。そのため異なるファイルの <code>ok</code>/<code>not ok</code> 行が交錯することは決してない; stdout はシリアル実行のように上から下へ読め、ファイルの完了順序だけがディスパッチ順ではなく各テストにかかった時間で決まる。<code>--debug</code> モードでは、Bun の stdout/stderr がライブでストリームされつつ、なおテストごとのログにも書き込まれる; 並列の debug 出力はファイルの basename が接頭辞として付くので、重なり合うライブ worker も帰属可能なままである。SDK/TUI/Kiro-ACP の driver トレースは、ログの傍らに <code>$LOG_DIR/sdk-drive-*.ndjson</code>・<code>$LOG_DIR/tui-drive-*.ndjson</code>・<code>$LOG_DIR/kiro-acp-drive-*.ndjson</code> として書き込まれる; それらの正確なファイル名はプロセス ID と TUI セッション名に依存するので、runner は起動時と各テスト開始時に glob を出力する。Kiro-ACP トレースはライブの <code>kiro-cli acp</code> ターンをイベントごとに記録し（spawn、prompt 開始、逐語の出力プレビュー付きの各 <code>tool_call</code>/<code>tool_call_update</code>、パーミッションの回答、spawn されたプロセスの stderr、終端の <code>result</code>/<code>timeout</code>/<code>end</code>）、そのため <code>session/prompt</code> のタイムアウトを事後に診断できる — 進行していたターン（実際の tool 呼び出しが発火している）を、停滞したターンから区別する。</p>
+<p><strong>Worker の協調。</strong> 親は <code>run_bun_test_file</code> を <code>&amp;</code> でバックグラウンド化し、<code>jobs -rp | wc -l</code> 経由でスロット gate を保持する。各 worker はアトミックな <code>.meta</code> サイドカーを <code>$LOG_DIR/_results/</code> に書き込む; 親は <code>wait</code> の後にそれらを読み、サマリテーブルを埋める。macOS は bash 3.2.57 を同梱する（<code>wait -n</code> は無い）ので、gate は 200ms ごとにポーリングする — 分単位の LLM 呼び出しの隣では無視できる。</p>
+<p><strong>ガイダンス。</strong> <code>--parallel 4</code> から始める。Bedrock のキャパシティと請求が許すなら <code>8</code> に上げる。単一の失敗するテストをデバッグするときはシリアルに戻す — または <code>--filter</code> でそれを分離する。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/09-testing.md"><code>docs/reference/09-testing.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

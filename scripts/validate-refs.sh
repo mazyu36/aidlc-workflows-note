@@ -18,6 +18,8 @@ while IFS= read -r url; do
   path="${rest#*/}"
   path="${path%%#*}"                          # #Lnn アンカーを除去
   [ "$path" = "$sha" ] && path=""             # リポジトリルートへの tree リンク
+  # URL エンコード（%20 等）を git オブジェクト名に合わせてデコードする
+  [ -n "$path" ] && path=$(printf '%b' "${path//%/\\x}")
 
   d="$GHQ_ROOT/github.com/awslabs/$repo"
   if [ ! -d "$d/.git" ]; then

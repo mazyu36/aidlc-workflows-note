@@ -1,0 +1,1690 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inception Phase -- Stage リファレンス (2.1--2.8) — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/04-stages/inception</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../reference/01-architecture.html">Architecture</a>
+  <a href="../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../reference/09-testing.html">テスト</a>
+  <a href="../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../reference/04-stages/inception.html" class="here">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#phase-overview">Phase 概観</a>
+  <a href="#stage-summary-table">Stage サマリ表</a>
+  <a href="#stage-21-reverse-engineering">Stage 2.1: Reverse Engineering</a>
+  <a href="#stage-22-practices-discovery">Stage 2.2: Practices Discovery</a>
+  <a href="#stage-23-requirements-analysis">Stage 2.3: Requirements Analysis</a>
+  <a href="#stage-24-user-stories">Stage 2.4: User Stories</a>
+  <a href="#stage-25-refined-mockups-ux-design">Stage 2.5: Refined Mockups &amp; UX Design</a>
+  <a href="#stage-26-application-design">Stage 2.6: Application Design</a>
+  <a href="#stage-27-units-generation">Stage 2.7: Units Generation</a>
+  <a href="#stage-28-delivery-planning">Stage 2.8: Delivery Planning</a>
+  <a href="#phase-summary">Phase サマリ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="inception-phase-stage-reference-21-28">Inception Phase -- Stage リファレンス (2.1--2.8)</h1>
+<h2 id="phase-overview">Phase 概観</h2>
+<p>Inception phase は、AI-DLC 方法論における 5 つの phase のうち 3 番目である。Ideation
+phase のビジネス intent と scope を、具体的な技術成果物へと変換する: リバースエンジニアリング
+されたコードベース理解（brownfield プロジェクト向け）、チームの practices と運用 rule、
+形式的な要件、user story、refined mockup、アプリケーションアーキテクチャ、unit-of-work への
+分解、そして Construction phase を統べる delivery plan である。</p>
+<p>Inception は stage 2.1 から 2.8（8 stage）を走らせ、Construction へ引き継ぐ前に、Stage 2.8
+（Delivery Planning）で phase 境界の verification チェックをもって締めくくる。</p>
+<blockquote>
+<p><strong>パス規約.</strong> 各ワークフローの成果物は、その <strong>intent record dir</strong> — 
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> の下に住む（ここで <code>&lt;space&gt;</code> は、
+非デフォルトの space が関与しない限り <code>default</code> であり、<code>&lt;YYMMDD&gt;</code> は record が時系列で
+ソートされるようにするコンパクトな UTC 日付プレフィックスであり、<code>&lt;label&gt;</code> はリクエストの
+本質を短い kebab-case で表したものである; 同日の衝突には数値カウンタが付く）。正規で衝突
+しない id は、<code>intents.json</code> レジストリ行に記録された UUIDv7 である — ディレクトリ名は
+人間が読めるラベルにすぎない。以下では、<code>&lt;record&gt;/</code> はそのディレクトリの略記である; 例えば
+<code>&lt;record&gt;/inception/requirements-analysis/requirements.md</code> は
+<code>aidlc/spaces/default/intents/&lt;YYMMDD&gt;-&lt;label&gt;/inception/requirements-analysis/requirements.md</code>
+に展開される。Reverse Engineering の出力は例外である: それらは intent record の外、
+永続的なリポジトリごとのストア
+<code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> に住む。
+（per-intent レイアウト以前に作られたプロジェクトはフラットなツリーを使っていた; engine は
+初回実行時にそれらを移行する。）</p>
+</blockquote>
+<p>この phase は、dispatch される 3 つのトポロジを含む: Stage 2.1 の 2-link の Reverse
+Engineering pipeline、Stage 2.2 の Practices Discovery の hub-and-spoke、そして Stage 2.4 の
+User Stories の mob である。</p>
+<p><strong>Inception phase の主な特徴:</strong></p>
+<ul>
+<li>この phase は、2-link の pipeline を使う技術的な discovery stage（2.1 Reverse
+Engineering）で始まり、続いて subagent の hub-and-spoke を使う方法論 discovery stage
+（2.2 Practices Discovery）、その後 inline の要件 stage、mob の story stage、そして
+4 つの inline の設計/計画 stage が続く。</li>
+<li>Stage 2.1 は 2-link の pipeline を使う: aidlc-developer-agent がコードをスキャンし、続いて
+aidlc-architect-agent がスキャンを 9 個の構造化された成果物へと統合する。brownfield
+プロジェクトに対する always-rerun ポリシーを持つ。</li>
+<li>Stage 2.2 は greenfield と brownfield の作業で同じトポロジを走らせる:
+pipeline-deploy の lead draft、相互に盲目な quality/developer/devsecops の spoke、
+human interview、続いて lead integration である。affirmation されると、コンテンツは
+<code>&lt;record&gt;/inception/practices-discovery/</code> から space の memory 層 —
+<code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> と <code>project.md</code> — へ昇格される。
+これは、この stage を他のあらゆる stage と構造的に異なるものにしている行をまたぐ昇格である。</li>
+<li>Stage 2.7 は <code>unit-of-work.md</code> を生成し、これは Construction phase の phased
+construction フローを駆動する unit を定義する。</li>
+<li>Stage 2.8 は、各 unit についてどの Construction stage がどの順序で走るかを決める実行計画を
+生成する。チームの Way of Working、Walking Skeleton の姿勢、Deployment のセクションを求めて
+<code>aidlc/spaces/&lt;active-space&gt;/memory/{org,team,project}.md</code> を読む。</li>
+<li>Stage 2.8 の phase 境界 verification は、Requirements から Stories、Architecture への整合を
+検証する。</li>
+</ul>
+<p><strong>Scope 駆動の stage 包含:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>含まれる Stage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enterprise</td>
+<td>2.1--2.8 すべて</td>
+</tr>
+<tr>
+<td>feature</td>
+<td>2.1--2.8 すべて</td>
+</tr>
+<tr>
+<td>mvp</td>
+<td>2.1（brownfield の場合）, 2.2, 2.3, 2.4, 2.5（UI の場合）, 2.6, 2.7, 2.8</td>
+</tr>
+<tr>
+<td>poc</td>
+<td>2.1（brownfield の場合）, 2.3（最小限）</td>
+</tr>
+<tr>
+<td>bugfix</td>
+<td>2.1（常時 -- バグを見つける）, 2.3（最小限 -- バグの説明）</td>
+</tr>
+<tr>
+<td>refactor</td>
+<td>2.1（常時 -- 現行コードを理解する）, 2.3（最小限）</td>
+</tr>
+<tr>
+<td>infra</td>
+<td>2.2, 2.3（infra 要件）</td>
+</tr>
+<tr>
+<td>security-patch</td>
+<td>2.1（脆弱性の文脈を見つける）, 2.3（最小限）</td>
+</tr>
+<tr>
+<td>workshop</td>
+<td>2.1--2.8</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-summary-table">Stage サマリ表</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>名前</th>
+<th>条件</th>
+<th>Lead Agent</th>
+<th>Support Agents</th>
+<th>モード</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2.1</td>
+<td>Reverse Engineering</td>
+<td>CONDITIONAL</td>
+<td>aidlc-developer-agent</td>
+<td>aidlc-architect-agent</td>
+<td>pipeline（aidlc-developer-agent → aidlc-architect-agent、2-link チェーン）</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>Practices Discovery</td>
+<td>CONDITIONAL</td>
+<td>aidlc-pipeline-deploy-agent</td>
+<td>aidlc-quality-agent, aidlc-developer-agent, aidlc-devsecops-agent</td>
+<td>subagent（greenfield と brownfield での hub-and-spoke）</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>Requirements Analysis</td>
+<td>ALWAYS</td>
+<td>aidlc-product-agent</td>
+<td>--</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td>User Stories</td>
+<td>CONDITIONAL</td>
+<td>aidlc-product-agent</td>
+<td>aidlc-design-agent, aidlc-developer-agent, aidlc-quality-agent</td>
+<td>mob</td>
+</tr>
+<tr>
+<td>2.5</td>
+<td>Refined Mockups</td>
+<td>CONDITIONAL</td>
+<td>aidlc-design-agent</td>
+<td>aidlc-product-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.6</td>
+<td>Application Design</td>
+<td>CONDITIONAL</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-aws-platform-agent, aidlc-design-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.7</td>
+<td>Units Generation</td>
+<td>ALWAYS</td>
+<td>aidlc-architect-agent</td>
+<td>aidlc-delivery-agent</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>2.8</td>
+<td>Delivery Planning</td>
+<td>ALWAYS</td>
+<td>aidlc-delivery-agent</td>
+<td>aidlc-architect-agent</td>
+<td>inline</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-21-reverse-engineering">Stage 2.1: Reverse Engineering</h2>
+<h3 id="metadata">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Inception</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>2.1</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL -- brownfield が検出された; freshness のため常に再実行</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>aidlc-developer-agent</td>
+</tr>
+<tr>
+<td>Support Agents</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>pipeline（2-link チェーン: aidlc-developer-agent がスキャンし、aidlc-architect-agent が統合して書き出す）</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>（stage-protocol.md の完了テンプレートを使う）</td>
+</tr>
+</tbody></table>
+<h3 id="purpose">目的</h3>
+<p>Reverse Engineering は、brownfield プロジェクトの既存コードベースに対する包括的な分析を
+行う。2-link の pipeline（<code>mode: pipeline</code>）として走る: まず aidlc-developer-agent が
+コードベース全体をスキャンし、続いて aidlc-architect-agent がスキャン結果を 9 個の構造化
+された成果物へと統合して書き出す。これらの成果物は、後続のすべての Inception および
+Construction stage が土台とする技術的基盤を提供する。</p>
+<p><strong>Always-rerun ポリシー:</strong> Reverse Engineering は、以前の成果物が存在する場合でも
+brownfield プロジェクトに対して常に再実行される。これにより、成果物が古いスナップショットで
+はなくコードベースの現在の状態を反映することが保証される。</p>
+<h3 id="inputs">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/aidlc-state.md</code>（プロジェクトタイプの確認）</li>
+</ul>
+<h3 id="steps">ステップ</h3>
+<ol>
+<li><p><strong>条件をチェックする</strong> -- <code>&lt;record&gt;/aidlc-state.md</code> を読み、プロジェクトタイプが
+brownfield であることを確認する。プロジェクトが brownfield でない場合、
+<code>aidlc-orchestrate.ts report --stage reverse-engineering --result skipped --reason &quot;greenfield workspace has no existing codebase to reverse engineer&quot;</code> でこの stage をスキップする。engine は <code>[S]</code> を記録し、
+アトミックに先へルーティングする。</p>
+</li>
+<li><p><strong>Developer によるコードスキャン</strong> -- aidlc-developer-agent subagent
+（<code>subagent_type=&quot;aidlc-developer-agent&quot;</code>）で Task tool に委譲する。委譲プロンプトに、
+<code>agents/aidlc-developer-agent.md</code> からの aidlc-developer-agent persona と、
+<code>.claude/knowledge/aidlc-developer-agent/</code> からの knowledge を含める。
+コンテキストとして <code>aidlc-state.md</code> からの workspace 状態を含める。</p>
+<p>developer は次を求めてコードベース全体をスキャンする:</p>
+<ul>
+<li>すべてのパッケージ、モジュール、およびそれらの目的</li>
+<li>ビルドシステム、設定、依存関係</li>
+<li>外部および内部の API（エンドポイント、コントラクト、メソッド）</li>
+<li>フレームワーク、ライブラリ、およびそれらのバージョン</li>
+<li>テストディレクトリ、テストフレームワーク、カバレッジ設定</li>
+<li>コード品質の指標（lint、CI/CD、ドキュメント）</li>
+<li>技術的負債のシグナル</li>
+</ul>
+<p>developer は、<code>{{HARNESS_DIR}}/knowledge/aidlc-developer-agent/re-artifacts.md</code> の
+Developer Code Scan Template に従って、構造化されたスキャン結果を返す。</p>
+</li>
+<li><p><strong>Architect による統合</strong> -- aidlc-architect-agent subagent
+（<code>subagent_type=&quot;aidlc-architect-agent&quot;</code>）で Task tool に委譲する。委譲プロンプトに、
+<code>agents/aidlc-architect-agent.md</code> からの aidlc-architect-agent persona と、
+<code>.claude/knowledge/aidlc-architect-agent/</code> からの knowledge を含める。完全な developer の
+スキャン結果をコンテキストとして渡す。<code>aidlc-state.md</code> からの workspace 状態を含める。
+リポジトリの出力ディレクトリを
+<code>bun {{HARNESS_DIR}}/tools/aidlc-utility.ts codekb-path --repo &lt;repo&gt;</code> で解決し、
+その正確なパスを architect に渡す。</p>
+<p>architect はスキャン結果を、解決された space レベルの codekb ディレクトリ内の 9 個の出力
+成果物（下記の出力を参照）へと統合する。</p>
+</li>
+<li><p><strong>完了の準備</strong> -- 9 個すべての成果物が存在することを検証する。<code>aidlc-state.md</code> を編集
+しない; ライフサイクルの完了は、gate の後の report に属する。</p>
+</li>
+<li><p><strong>完了の提示と承認の要求</strong> -- <code>aidlc-orchestrate.ts report --stage reverse-engineering --result awaiting-approval</code> で gate を開き、9 個すべての成果物を表示し、続いて同じ engine コマンドを
+通じて human の approved/rejected の結果を report する。</p>
+</li>
+</ol>
+<h3 id="outputs">出力</h3>
+<p>各リポジトリの 9 個の成果物すべては、<code>aidlc-utility.ts codekb-path --repo &lt;repo&gt;</code> が印字する
+正確なディレクトリを使って <code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> に書き出される:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>business-overview.md</code></td>
+<td>ビジネスドメイン、目的、主要な機能</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>architecture.md</code></td>
+<td>システムアーキテクチャ、パターン、コンポーネント関係（Mermaid ダイアグラム付き）。ビジネストランザクションがコンポーネントをまたいでどう実装されるかを描く Interaction Diagrams セクションを必ず含める（シーケンス図またはフロー図）。</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>code-structure.md</code></td>
+<td>パッケージ/モジュール構成、ファイル分類、コードパターン</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>api-documentation.md</code></td>
+<td>外部および内部の API サーフェス、エンドポイント、コントラクト</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>component-inventory.md</code></td>
+<td>責務と依存を伴う完全なコンポーネント一覧</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>technology-stack.md</code></td>
+<td>言語、フレームワーク、バージョン付きライブラリ</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>dependencies.md</code></td>
+<td>外部依存、パッケージをまたぐ内部依存</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>code-quality-assessment.md</code></td>
+<td>テストカバレッジ、lint、CI/CD、ドキュメント品質、技術的負債</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>reverse-engineering-timestamp.md</code></td>
+<td>RE が実行された時点（日付、可能ならコミットハッシュ、分析の scope）</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate">承認 gate</h3>
+<p>標準の 2 択 gate: <strong>Approve</strong>（Requirements Analysis へ続く）/ <strong>Request Changes</strong>。</p>
+<h3 id="notes">注記</h3>
+<ul>
+<li><strong>Always-rerun ポリシー:</strong> この stage は、以前の成果物が存在する場合でも brownfield
+プロジェクトに対して常に再実行される。これは upstream リファレンスからの意図的な逸脱で
+あり、SKILL.md の &quot;Deliberate Deviations&quot; セクションに文書化されている。</li>
+<li><strong>2-link pipeline:</strong> aidlc-developer-agent が生のコードスキャンを行い（link 1、lead）、
+続いて aidlc-architect-agent がスキャンを構造化された成果物へと統合して書き出す（link 2、
+最終 link）。この分離により、スキャンが徹底的（developer の視点）であり、統合が
+アーキテクチャ的に情報を得たもの（architect の視点）であることが保証される。</li>
+<li>bugfix と refactor の scope では、既存コードの理解が不可欠であるため、この stage は
+（境界的に greenfield と見なせるものでも）常に実行される。</li>
+<li>security-patch scope では、この stage は脆弱性の文脈を見つけるために実行される。</li>
+<li>ここで生成される 9 個の成果物は、Requirements Analysis（2.3）、User Stories（2.4）、
+Application Design（2.6）、Units Generation（2.7）によって消費される。</li>
+<li><code>architecture.md</code> 成果物は、ビジネストランザクションがコンポーネントをまたいでどう実装
+されるかを、シーケンス図またはフロー図を使って示す Interaction Diagrams を含めねばならない。</li>
+</ul>
+<hr>
+<h2 id="stage-22-practices-discovery">Stage 2.2: Practices Discovery</h2>
+<h3 id="metadata-1">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Inception</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL -- EXECUTE scope では freshness のため常に再実行</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>aidlc-pipeline-deploy-agent</td>
+</tr>
+<tr>
+<td>Support Agents</td>
+<td>aidlc-quality-agent, aidlc-developer-agent, aidlc-devsecops-agent</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>subagent（lead draft → 相互に盲目な 3 つの spoke → human interview → lead integration）</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>（stage-protocol.md の完了テンプレートを使う）</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-1">目的</h3>
+<p>Practices Discovery は、AI-DLC において 2 軸の設定モデルの両方の行に書き込む唯一の stage で
+ある。チームの way of working、walking-skeleton の姿勢、testing の姿勢、deployment のリズム、
+code-style の rule を discover する。brownfield の実行はリポジトリと Reverse Engineering の
+エビデンスを使う; greenfield の実行は active-space の <code>org.md</code> から lead draft を種付けする。
+どちらも同じ subagent の hub-and-spoke を使う: pipeline-deploy の lead draft、相互に盲目な
+quality/developer/devsecops の contribution、human interview、続いて lead integration である。
+human が affirmation gate で承認した後、コンテンツは stage が承認を report する前に
+<code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> と <code>project.md</code> へ昇格される。</p>
+<h3 id="inputs-1">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/aidlc-state.md</code>（プロジェクトタイプ）</li>
+<li>brownfield のみ: <code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> からの
+reverse-engineering の 9 個の成果物（business-overview,
+architecture, code-structure, api-documentation, component-inventory,
+technology-stack, dependencies, code-quality-assessment,
+reverse-engineering-timestamp）</li>
+<li><code>aidlc/spaces/&lt;active-space&gt;/memory/{org,team,project}.md</code>（デフォルトと以前の affirmation）</li>
+<li><code>.claude/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md</code>（lead-agent の KB）</li>
+</ul>
+<h3 id="outputs-1">出力</h3>
+<p>4 つの lead 成果物と 3 つの spoke contribution が
+<code>&lt;record&gt;/inception/practices-discovery/</code> に書き出される:</p>
+<ul>
+<li><code>team-practices.md</code> -- 記述的な、チームの声の散文。<code>team.md</code> の見出しに一致する
+5 つのセクション: Way of Working, Walking Skeleton, Testing Posture, Deployment,
+Code Style。</li>
+<li><code>discovered-rules.md</code> -- 是正的で、agent 向け。2 つのセクション: Mandated
+（<code>ALWAYS …</code> rule）と Forbidden（<code>NEVER …</code> rule）。</li>
+<li><code>evidence.md</code> -- agent ごとの発見サマリ; 再実行のための freshness の跡。</li>
+<li><code>practices-discovery-timestamp.md</code> -- 実行タイムスタンプ + コミットハッシュ。</li>
+<li><code>contributions/aidlc-{quality,developer,devsecops}-agent.md</code> -- 相互に盲目な各 spoke
+からの、identity でマークされた 1 つの contribution; これらのファイルは engine が
+チェックする完了エビデンスである。</li>
+</ul>
+<p>affirmation されると、コンテンツは次へ昇格される:</p>
+<ul>
+<li><code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> -- <code>replaceSection</code> による section 置換
+（再実行は section の内容を蓄積せず上書きする）。</li>
+<li><code>aidlc/spaces/&lt;active-space&gt;/memory/project.md</code> -- <code>appendUnderHeading</code> による
+見出し下への追記（rule は蓄積する; 日付スタンプがそれらを区別する）。</li>
+</ul>
+<h3 id="steps-1">ステップ</h3>
+<ol>
+<li><strong>入力を分類する</strong> -- <code>aidlc-state.md</code> を読んで greenfield か brownfield かを分類し、
+active space を解決する。brownfield は Reverse Engineering の成果物とリポジトリの
+エビデンスをロードする。greenfield は <code>memory/org.md</code> からデフォルトをロードする。
+再実行では、以前の <code>team.md</code> と <code>project.md</code> もロードする。</li>
+<li><strong>Lead による draft</strong> -- <code>aidlc-pipeline-deploy-agent</code> を dispatch する。それは初期の
+<code>team-practices.md</code>、<code>discovered-rules.md</code>、<code>evidence.md</code> を書く。brownfield は
+観測されたエビデンスから draft する; greenfield は org のデフォルトから draft し、
+未確認の前提をすべて明確にマークする。</li>
+<li><strong>相互に盲目な 3 つの spoke</strong> -- 1 つの並列バッチで、lead draft に対して
+<code>aidlc-quality-agent</code>、<code>aidlc-developer-agent</code>、<code>aidlc-devsecops-agent</code> を dispatch
+する。ブリーフには draft のパスが含まれるが、他の spoke の出力は含まれない。各々は
+<code>contributions/</code> の下に自身の identity でマークされた contribution ファイルを書く;
+lead の成果物は編集しない。</li>
+<li><strong>human interview</strong> -- 3 つの spoke がすべて返った後、構造化された質問を提示する。
+brownfield はエビデンスのギャップとポリシー判断を尋ねる; greenfield は 5 つの practice
+領域すべてを、org のデフォルトを提案として尋ねる。再実行は以前に affirm された記述を
+事前入力する。すべての質問と正確な回答をログに残す。</li>
+<li><strong>Lead integration</strong> -- draft、3 つの contribution パスすべて、そして interview の回答を
+伴って、pipeline-deploy の lead を再度 dispatch する。lead だけが最終成果物を統合し、
+<code>PRACTICES_DISCOVERED</code> を発する。</li>
+<li><strong>affirmation gate を開く</strong> -- 尋ねる前に <code>aidlc-orchestrate.ts report --stage practices-discovery --result awaiting-approval</code> を呼ぶ。draft を、ちょうど 2 つの
+オプションで提示する: <strong>Approve</strong> / <strong>Request Changes</strong>。Request Changes の応答は
+<code>--result rejected</code> を通じて report される; 昇格は起きない。</li>
+<li><strong>human 承認後に昇格する</strong> -- human が Approve を選んだ後にのみ、active-space の
+<code>team.md</code> と <code>project.md</code> への決定論的な昇格を走らせる。それは <code>project.md</code> を先に、
+<code>team.md</code> を後に書き、<code>PRACTICES_AFFIRMED</code> を発する。昇格が失敗した場合は
+<code>PRACTICES_OVERRIDE</code> を発し、stage を <code>[?]</code> のまま gate を開いたままにし、承認を
+report しない。</li>
+<li><strong>受領を検証し、それから report する</strong> -- 昇格が成功すると、<code>Practices Affirmed Timestamp</code> と、対応する <code>PRACTICES_AFFIRMED</code> の audit 受領が、アトミックに記録される。
+それから <code>aidlc-orchestrate.ts report --stage practices-discovery --result approved --user-input &quot;Approve&quot;</code> を呼ぶ。engine は完了とルーティングの前に、3 つの
+contribution ファイルすべてと現在の試行の受領を検証する。</li>
+</ol>
+<h3 id="approval-gate-1">承認 gate</h3>
+<p>標準の 2 択 gate: <strong>Approve</strong> / <strong>Request Changes</strong>。Approve は昇格が走る間、開いたまま
+保持される; 昇格と affirm タイムスタンプが成功した後にのみ、conductor は
+<code>--result approved --user-input &quot;&lt;exact choice&gt;&quot;</code> を report できる。昇格の失敗は、gate を
+開いたまま、stage を未完了のままにする。</p>
+<h3 id="notes-1">注記</h3>
+<ul>
+<li><code>.claude/tools/aidlc-lib.ts</code> の <code>replaceSection</code> ヘルパーは、team.md の行をまたぐ昇格を
+サポートするために、milestone 8 で特別に追加された（既存の <code>appendUnderHeading</code> は
+再実行をまたいで重複を蓄積する）。</li>
+<li><code>org.md</code> と <code>team.md</code> は 1 つの Title Case 見出しセット
+（<code>## Way of Working</code>、<code>## Walking Skeleton</code>、<code>## Testing Posture</code>、
+<code>## Deployment</code>、<code>## Code Style</code>）を共有する。stage は <code>org.md</code> の各 section を、
+対応する Title Case 見出しで <code>extractMarkdownSection</code> を通じて読み、<code>team.md</code> の
+同じ見出しを section 置換する。</li>
+<li>resume 時には、lead draft と既存の contribution ファイルをすべて保つ。欠けている
+spoke だけを dispatch し、それから interview と lead integration へ続く。完了済みの
+support 作業を繰り返さない。</li>
+<li>contribution のエビデンスは必須である。quality、developer、devsecops の contribution の
+いずれかが欠けているか、間違った identity マーカーを持つ場合、承認は拒否される。</li>
+</ul>
+<hr>
+<h2 id="stage-23-requirements-analysis">Stage 2.3: Requirements Analysis</h2>
+<h3 id="metadata-2">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Inception</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>2.3</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>ALWAYS -- depth は複雑さに応じて適応する</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>Support Agents</td>
+<td>（なし）</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:mag:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-2">目的</h3>
+<p>Requirements Analysis は、user の intent とリバースエンジニアリングされたコードベース理解を、
+形式的で構造化された要件へと変換する。リクエストを明確さ、タイプ、scope、複雑さについて
+評価する; 適切な depth を決める; 既に分かっていることを抽出する; 6 つの次元にわたる完全性
+分析を走らせる; 明確化のための質問を生成する; そして形式的な要件ドキュメントを生成する。</p>
+<p>この stage は常に実行されるが、プロジェクトの複雑さに基づいて depth を適応させる: 明確で
+狭い scope には minimal、中程度の scope には standard、著しい未知を伴う大きな scope には
+comprehensive である。</p>
+<h3 id="inputs-2">入力</h3>
+<ul>
+<li>Stage 2.1 からの Reverse Engineering 成果物
+（<code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code>）、brownfield の場合</li>
+<li>intent の <code>audit/</code> シャードからの user のプロジェクト説明</li>
+</ul>
+<h3 id="steps-2">ステップ</h3>
+<ol>
+<li><p><strong>agent persona をロードする</strong> -- <code>agents/aidlc-product-agent.md</code> からの
+aidlc-product-agent persona と、<code>.claude/knowledge/aidlc-product-agent/</code> からの
+knowledge をロードする。</p>
+</li>
+<li><p><strong>以前のコンテキストをロードする</strong> -- brownfield の場合:
+<code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> から RE 成果物を読む。intent の <code>audit/</code>
+シャードから user のプロジェクト説明を読む。</p>
+</li>
+<li><p><strong>user のリクエストを分析する</strong> -- 次についてリクエストを評価する:</p>
+<ul>
+<li><strong>明確さ</strong>: リクエストはどれだけよく定義されているか？</li>
+<li><strong>タイプ</strong>: 新機能、拡張、リファクタリング、バグ修正、マイグレーション</li>
+<li><strong>Scope</strong>: 単一コンポーネント、複数コンポーネント、システム全体</li>
+<li><strong>複雑さ</strong>: シンプル、標準、複雑</li>
+</ul>
+</li>
+<li><p><strong>depth を決める</strong> -- 複雑さの評価に基づく:</p>
+<ul>
+<li><strong>Minimal</strong>: 明確なリクエスト、狭い scope、よく理解されたドメイン</li>
+<li><strong>Standard</strong>: 中程度の scope、いくらかの未知、複数のステークホルダー</li>
+<li><strong>Comprehensive</strong>: 大きな scope、著しい未知、複雑なドメイン</li>
+</ul>
+</li>
+<li><p><strong>現在の要件を評価する</strong> -- user の入力から既に分かっていることを抽出し整理する:
+明示的な機能要件、暗黙の非機能要件、制約と前提、ビジネスの文脈と目標。</p>
+</li>
+<li><p><strong>完全性分析</strong> -- 6 つの次元にわたるカバレッジを評価する:</p>
+<ol>
+<li>機能要件 -- 中核となる振る舞い、機能、ユースケース</li>
+<li>非機能要件 -- パフォーマンス、セキュリティ、スケーラビリティ、
+信頼性</li>
+<li>user シナリオ -- user のワークフロー、エッジケース、エラーシナリオ</li>
+<li>ビジネスの文脈 -- 目標、成功指標、ステークホルダー、制約</li>
+<li>技術的な文脈 -- 統合ポイント、プラットフォーム要件、
+テクノロジ制約</li>
+<li>品質属性 -- 保守性、テスト容易性、アクセシビリティ、
+ユーザビリティ</li>
+</ol>
+<p>各次元のギャップを特定する。</p>
+</li>
+<li><p><strong>明確化のための質問を生成する</strong> -- PROACTIVE: 要件が 6 つの次元すべてにわたって
+例外的に明確かつ完全でない限り、常に明確化のための質問を生成する。
+<code>[Answer]:</code> タグ形式を使って
+<code>&lt;record&gt;/inception/requirements-analysis/requirements-analysis-questions.md</code>
+を作成する。A〜E のオプションを伴う、文脈に応じた質問を含める。すべての質問は
+最終オプションとして <code>X. Other (please specify)</code> で終わらねばならない。すべての
+<code>[Answer]:</code> タグは空白のままにする。</p>
+<p>3 モードの質問フローを提供する: Guide Me / Edit File / Chat。</p>
+</li>
+<li><p><strong>回答を収集し分析する</strong> -- 質問ファイルを読み、すべての <code>[Answer]:</code> タグが埋まって
+いることを確認する。いずれかが空白なら、未回答の質問を AskUserQuestion 経由で提示し、
+回答を書き戻す。部分的な回答で先へ進んではならない。次を走らせる:</p>
+<ul>
+<li>MANDATORY な曖昧さ検出: すべての応答を曖昧な言葉遣い
+（&quot;mix of&quot;、&quot;not sure&quot;、&quot;depends&quot;、&quot;probably&quot;、&quot;maybe&quot;）についてスキャンする</li>
+<li>回答間の矛盾チェック</li>
+<li>欠けている詳細の特定</li>
+</ul>
+</li>
+<li><p><strong>フォローアップの質問</strong> -- 何らかの曖昧さ、あいまいさ、または矛盾が見つかった場合、
+その具体的な問題を狙ったフォローアップの質問を作成する。先へ進む前にすべての曖昧さを
+解決する。「疑わしいときは、尋ねる。」</p>
+</li>
+<li><p><strong>要件を生成する</strong> -- 次を含む
+<code>&lt;record&gt;/inception/requirements-analysis/requirements.md</code> を作成する:</p>
+<ul>
+<li>intent 分析 -- user が達成しようとしていること（機能だけでなく目標）</li>
+<li>機能要件 -- 機能領域またはドメインごとに整理</li>
+<li>非機能要件 -- パフォーマンス、セキュリティ、スケーラビリティの目標</li>
+<li>制約 -- 技術的、ビジネス的、組織的</li>
+<li>前提 -- 根拠とともに文書化</li>
+<li>スコープ外 -- 明示的に除外された項目</li>
+<li>オープンな質問 -- 後続 stage のために残る不確実性</li>
+</ul>
+</li>
+<li><p><strong>完了の準備</strong> -- 要件成果物を検証する。<code>&lt;record&gt;/aidlc-state.md</code> を編集しない;
+完了とルーティングは engine が所有する。</p>
+</li>
+<li><p><strong>完了の提示と承認の要求</strong> -- :mag: emoji とレビューパスを伴う完了メッセージを表示する。
+承認 gate には 2 つのバリアントがある:</p>
+<p><strong>実行状態で User Stories が SKIP に設定されている場合:</strong> 3 択 gate:
+Approve / Request Changes / Add User Stories（現在スキップされている User Stories
+stage を含める）。「Add User Stories」が選択された場合、
+<code>bun {{HARNESS_DIR}}/tools/aidlc-utility.ts recompose --add user-stories</code> を走らせる;
+チェックボックスを直接編集しない。</p>
+<p><strong>User Stories が SKIP に設定されて <em>いない</em> 場合:</strong> 標準の 2 択 gate: Approve /
+Request Changes。</p>
+</li>
+</ol>
+<h3 id="outputs-2">出力</h3>
+<p>すべての成果物は <code>&lt;record&gt;/inception/requirements-analysis/</code> に書き出される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>requirements.md</code></td>
+<td>形式的な要件: intent 分析、機能/非機能要件、制約、前提、スコープ外、オープンな質問</td>
+</tr>
+<tr>
+<td><code>requirements-analysis-questions.md</code></td>
+<td><code>[Answer]:</code> タグを伴う明確化のための質問（入力成果物）</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-2">承認 gate</h3>
+<p>条件付き gate 形式:</p>
+<ul>
+<li><strong>User Stories がスキップされる場合:</strong> 3 択 gate -- <strong>Approve</strong> / <strong>Request
+Changes</strong> / <strong>Add User Stories</strong></li>
+<li><strong>User Stories がスキップされない場合:</strong> 標準の 2 択 gate -- <strong>Approve</strong> /
+<strong>Request Changes</strong></li>
+</ul>
+<h3 id="notes-2">注記</h3>
+<ul>
+<li>これはワークフローで最も詳細な質疑応答 stage である。MANDATORY な曖昧さ検出を強制し、
+部分的またはあいまいな回答では先へ進まない。</li>
+<li>depth は複雑さに応じてスケールする: bugfix/poc には minimal、feature には standard、
+enterprise には comprehensive。</li>
+<li>bugfix scope では、この stage は minimal depth でバグの説明を捉える。</li>
+<li>infra scope では、この stage はインフラ要件を捉える。</li>
+<li>ここで生成される要件ドキュメントは、User Stories（2.4）、Refined Mockups（2.5）、
+Application Design（2.6）、Units Generation（2.7）、Delivery Planning（2.8）によって
+消費される。</li>
+</ul>
+<hr>
+<h2 id="stage-24-user-stories">Stage 2.4: User Stories</h2>
+<h3 id="metadata-3">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Inception</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>2.4</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL -- ユーザー向け機能、複数のペルソナ、複雑なビジネスロジック、またはチームをまたぐ作業の場合に実行する</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>aidlc-product-agent</td>
+</tr>
+<tr>
+<td>Support Agents</td>
+<td>aidlc-design-agent, aidlc-developer-agent, aidlc-quality-agent</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>mob（2.5.0 の mob-elaboration ショーケース）</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:books:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-3">目的</h3>
+<p>User Stories は、形式的な要件を、各機能の「誰が、何を、なぜ」を定義するユーザー中心の
+story へと変換する。この stage は 2 部構成に従う: PART 1 は明確化のための質問を伴う story
+plan を作成し、PART 2 は実際の story とペルソナを生成する。plan と story は、統合された
+レビューのために完了 gate で一緒に提示される。</p>
+<p>この stage は mob-elaboration のショーケース（mode: mob）である: Product Manager が主導し、
+design、developer、quality の agent が lead の draft に対して独立した協力者として dispatch
+される — 盲目ラウンド、統合、1 回の限定された異議ラウンド — その後 Product Leader がレビュー
+する。aidlc-design-agent のユーザーエクスペリエンスの視点は、upstream リファレンスには無い
+意図的な追加であり、SKILL.md の &quot;Deliberate Deviations&quot; セクションに文書化されている。</p>
+<h3 id="inputs-3">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/inception/requirements-analysis/requirements.md</code></li>
+<li>Stage 2.1 からの RE 成果物
+（<code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code>）、
+brownfield の場合</li>
+</ul>
+<h3 id="steps-3">ステップ</h3>
+<ol>
+<li><p><strong>lead persona をロードする</strong> -- <code>agents/aidlc-product-agent.md</code> からの
+aidlc-product-agent persona と、<code>.claude/knowledge/aidlc-product-agent/</code> からの
+knowledge をロードする。support agent（design、developer、quality）は inline では
+ロードされない — これは mob stage である; それらは生成中に独立した協力者として
+dispatch される。</p>
+</li>
+<li><p><strong>User Stories が必要かを検証する</strong> -- このプロジェクトで user story が価値を加えるかを
+評価する:</p>
+<ul>
+<li><strong>実行する条件</strong>: ユーザー向け機能、複数のユーザーペルソナ、複雑な
+ビジネスロジック、チームをまたぐ調整が必要</li>
+<li><strong>スキップする条件</strong>: 純粋なリファクタリング、孤立したバグ修正、インフラのみ、
+開発者向けツーリング</li>
+</ul>
+<p>決定（Execute か Skip）、根拠、考慮した要因、主要な価値領域（実行する場合）または
+代替のカバレッジ（スキップする場合）を文書化する
+<code>&lt;record&gt;/inception/user-stories/user-stories-assessment.md</code> を作成する。</p>
+<p>スキップする場合、<code>aidlc-orchestrate.ts report --stage user-stories --result skipped --reason &quot;&lt;reason from the assessment&gt;&quot;</code> を呼ぶ。engine は成果物や
+ensemble エビデンスのチェックの前に <code>[S]</code> を記録しルーティングする。</p>
+</li>
+<li><p><strong>以前のコンテキストをロードする</strong> -- 
+<code>&lt;record&gt;/inception/requirements-analysis/requirements.md</code> を読む。brownfield の場合、
+<code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> から関連する RE 成果物を読む。</p>
+</li>
+</ol>
+<p><strong>PART 1: 計画</strong></p>
+<ol start="4">
+<li><p><strong>質問を伴う story plan を作成する</strong> -- 次を含む
+<code>&lt;record&gt;/inception/user-stories/user-stories-questions.md</code> を作成する:</p>
+<ul>
+<li>ペルソナ開発のアプローチ（ユーザーは誰で、その目標は何か）</li>
+<li>INVEST 基準（Independent、Negotiable、Valuable、Estimable、Small、Testable）を
+使った story 形式</li>
+<li>MoSCoW 優先度（Must Have / Should Have / Could Have / Won&#39;t Have）を使った story の
+優先順位付け。MVP 境界は Delivery Planning の間に正式に決定される; story の優先度が
+その決定に情報を与える。</li>
+<li>分解アプローチのオプション（機能別、ペルソナ別、ワークフロー別、ドメイン領域別、
+または epic 別）</li>
+<li>ペルソナと story 粒度についての user 入力のための、<code>[Answer]:</code> タグ形式を使った
+埋め込み質問</li>
+</ul>
+</li>
+<li><p><strong>回答を収集する</strong> -- stage-protocol.md セクション 3 の質問フロー（インタラクション
+モードの選択を提供し、回答を収集し、ファイルへ書き戻す）に従って回答を収集する。</p>
+</li>
+<li><p><strong>回答を分析する</strong> -- MANDATORY な曖昧さ分析: すべての応答を曖昧な言葉遣い
+（&quot;mix of&quot;、&quot;not sure&quot;、&quot;depends&quot;、&quot;probably&quot;）についてスキャンする。矛盾をチェック
+する。欠けている詳細を特定する。何らかの曖昧さが見つかった場合、フォローアップの質問を
+作成する。</p>
+</li>
+<li><p><strong>plan を提示し生成する</strong> -- story plan のサマリ（ペルソナ数、story 数、分解アプローチ）
+を inline で提示する。それから即座に PART 2 へ進む。user は完了 gate で、統合された出力
+（plan + 生成された story）をレビューし承認する。</p>
+<p>生成が完了する前に user がフィードバックで割り込んだ場合、それを修正リクエストとして
+扱い、生成を続ける前に plan を更新する。</p>
+</li>
+</ol>
+<p><strong>PART 2: 生成</strong></p>
+<ol start="8">
+<li><p><strong>plan を実行する -- mob 経由で story とペルソナを生成する</strong>:</p>
+<p><strong>Lead の draft。</strong> aidlc-product-agent はまず
+<code>&lt;record&gt;/inception/user-stories/personas.md</code> を draft する:</p>
+<ul>
+<li>ユーザーペルソナの定義（名前、役割、目標、ペインポイント、文脈）</li>
+<li>ペルソナの関係と優先度ランキング</li>
+</ul>
+<p>そして <code>&lt;record&gt;/inception/user-stories/stories.md</code>:</p>
+<ul>
+<li>標準形式の user story: 「As a [persona], I want [goal], so that
+[benefit]」</li>
+<li>各 story の受け入れ基準</li>
+<li>story の優先度（Must Have / Should Have / Could Have / Won&#39;t Have）</li>
+<li>story の依存と関係</li>
+<li>INVEST 準拠のノート</li>
+</ul>
+<p><strong>相互に盲目な support contribution。</strong> aidlc-design-agent、
+aidlc-developer-agent、aidlc-quality-agent を、lead draft に対して 1 回の並列ラウンドで
+dispatch する。各ブリーフには draft、Q&amp;A、要件のパスが含まれるが、兄弟の contribution は
+含まれない。各 support agent は
+<code>&lt;record&gt;/inception/user-stories/contributions/&lt;agent-slug&gt;.md</code> の下に、自身の
+identity でマークされたファイルを書く。</p>
+<p><strong>Lead の integration。</strong> aidlc-product-agent は完了 gate の前に、3 つの contribution
+すべてを <code>personas.md</code> と <code>stories.md</code> へ統合する。判断を要する事項は stage の途中で
+human へ回される; knowledge の争いは 1 回の限定された異議ラウンドを得る。維持された
+反対意見は gate で引用される。</p>
+</li>
+<li><p><strong>完了の準備</strong> -- mob 成果物と 3 つの協力者 contribution ファイルすべてを検証する。
+state を編集しない; gate の結果を <code>aidlc-orchestrate.ts</code> を通じて report する。</p>
+</li>
+<li><p><strong>完了の提示と承認の要求</strong> -- :books: emoji、生成されたペルソナと story のサマリ、
+レビューパスを伴う完了メッセージを表示する。標準の 2 択承認 gate: Approve（次の stage
+へ続く）/ Request Changes。</p>
+</li>
+</ol>
+<h3 id="outputs-3">出力</h3>
+<p>すべての成果物は <code>&lt;record&gt;/inception/user-stories/</code> に書き出される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>stories.md</code></td>
+<td>受け入れ基準、優先度、依存、INVEST ノートを伴う user story</td>
+</tr>
+<tr>
+<td><code>personas.md</code></td>
+<td>ユーザーペルソナの定義、関係、優先度ランキング</td>
+</tr>
+<tr>
+<td><code>user-stories-assessment.md</code></td>
+<td>根拠と考慮した要因を伴う Execute/skip の決定</td>
+</tr>
+<tr>
+<td><code>user-stories-questions.md</code></td>
+<td><code>[Answer]:</code> タグを使った明確化のための質問を伴う story plan（入力成果物）</td>
+</tr>
+<tr>
+<td><code>contributions/aidlc-{design,developer,quality}-agent.md</code></td>
+<td>gate の前に lead が統合する、相互に盲目な support contribution</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-3">承認 gate</h3>
+<p>標準の 2 択 gate: <strong>Approve</strong>（次の stage へ続く）/ <strong>Request Changes</strong>。</p>
+<h3 id="notes-3">注記</h3>
+<ul>
+<li>スキップ条件: 純粋なリファクタリング、孤立したバグ修正、インフラのみ、開発者向け
+ツーリング。</li>
+<li>2 部構成（plan してから生成）により、user は story が書かれる前に story の分解アプローチに
+影響を与えられる。</li>
+<li>user story の優先度（MoSCoW）は MVP 境界に情報を与えるが、それを決定はしない。正式な
+MVP 境界は Delivery Planning（Stage 2.8）の間に設定される。</li>
+<li><code>user-stories-assessment.md</code> 成果物は、stage がスキップされる場合でも、根拠を文書化する
+ために常に生成される。</li>
+<li>3 つの identity でマークされた contribution ファイルは必須の ensemble エビデンスである;
+lead が 3 つすべてを統合するまで承認は拒否される。</li>
+<li>ここで生成される story は、Refined Mockups（2.5）、Application Design（2.6）、
+Units Generation（2.7）、Delivery Planning（2.8）によって消費される。</li>
+<li>aidlc-design-agent の support は UX に情報を得た開発のための意図的な追加であり、
+SKILL.md の Deliberate Deviations セクションに記されている。</li>
+</ul>
+<hr>
+<h2 id="stage-25-refined-mockups-ux-design">Stage 2.5: Refined Mockups &amp; UX Design</h2>
+<h3 id="metadata-4">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Inception</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>2.5</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL -- 非 UI、API のみ、またはインフラのみの取り組みではスキップする</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>aidlc-design-agent</td>
+</tr>
+<tr>
+<td>Support Agents</td>
+<td>aidlc-product-agent（stories に照らして検証する）</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:art:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-4">目的</h3>
+<p>Refined Mockups は、Ideation Stage 1.6 の粗いコンセプトワイヤーフレームを、形式的な要件と
+user story に情報を得た中〜高忠実度のモックアップへと進化させる。詳細なインタラクション仕様、
+デザインシステムのマッピング、レスポンシブな振る舞いの定義、アクセシビリティ準拠の
+チェックリストを生成する。</p>
+<p>非 UI の取り組み（API のみ、バックエンド）では、この stage はインタラクション図を API の
+開発者エクスペリエンス仕様へと洗練する。</p>
+<p>この stage は、Stage 1.6（Rough Mockups）もスキップされた場合、通常はスキップされる。</p>
+<h3 id="inputs-4">入力</h3>
+<ul>
+<li>Stage 1.6 からの rough mockup（<code>&lt;record&gt;/ideation/rough-mockups/</code>）、
+存在する場合</li>
+<li>Stage 2.4 からの user story（<code>&lt;record&gt;/inception/user-stories/</code>）</li>
+<li>Stage 2.3 からの要件
+（<code>&lt;record&gt;/inception/requirements-analysis/</code>）</li>
+</ul>
+<h3 id="steps-4">ステップ</h3>
+<ol>
+<li><p><strong>agent persona をロードする</strong> -- <code>agents/aidlc-design-agent.md</code> からの
+aidlc-design-agent persona と、<code>.claude/knowledge/aidlc-design-agent/</code> からの
+knowledge をロードする。</p>
+</li>
+<li><p><strong>以前のコンテキストをロードする</strong> -- <code>&lt;record&gt;/ideation/rough-mockups/</code> から
+rough mockup を読む（存在する場合）。<code>&lt;record&gt;/inception/user-stories/</code> から user story
+を読む。<code>&lt;record&gt;/inception/requirements-analysis/</code> から要件を読む。</p>
+</li>
+<li><p><strong>明確化のための質問を生成する</strong> -- 次をカバーする質問を伴う
+<code>&lt;record&gt;/inception/refined-mockups/refined-mockups-questions.md</code> を作成する:</p>
+<ul>
+<li>各 user story を UI でどう表現すべきか</li>
+<li>必要なインタラクションパターン（モーダル、インライン編集、ウィザード、
+プログレッシブディスクロージャー）</li>
+<li>各画面が扱わねばならない状態（ローディング、空、エラー、成功、部分的）</li>
+<li>既存のデザインシステム / コンポーネントライブラリとの整合</li>
+<li>アクセシビリティ要件（WCAG レベル）</li>
+<li>必要なレスポンシブブレークポイント</li>
+<li>API の場合: 開発者エクスペリエンス要件</li>
+</ul>
+<p>stage-protocol.md の質問フローに従う。</p>
+</li>
+<li><p><strong>回答を収集し分析する</strong> -- 一貫性のために、デザインの決定を user story と要件に照らして
+検証する。</p>
+</li>
+<li><p><strong>成果物を生成する</strong> -- 中〜高忠実度のモックアップ（user story/画面ごと）、
+インタラクション仕様ドキュメント、デザインシステムのマッピング、レスポンシブな振る舞いの
+仕様、アクセシビリティ準拠のチェックリストを作成する。非 UI の取り組みでは、API の
+開発者エクスペリエンス仕様を作成する。</p>
+</li>
+<li><p><strong>完了の準備</strong> -- refined-mockup 成果物を検証する。state を編集しない; gate の結果を
+<code>aidlc-orchestrate.ts</code> を通じて report する。</p>
+</li>
+<li><p><strong>完了の提示と承認の要求</strong> -- :art: emoji を伴う完了メッセージを表示する。標準の
+承認 gate（Approve / Request Changes）。</p>
+</li>
+</ol>
+<h3 id="outputs-4">出力</h3>
+<p>すべての成果物は <code>&lt;record&gt;/inception/refined-mockups/</code> に書き出される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>mockups.md</code></td>
+<td>user story/画面ごとの中〜高忠実度のモックアップ</td>
+</tr>
+<tr>
+<td><code>interaction-spec.md</code></td>
+<td>インタラクションパターン、状態管理、遷移</td>
+</tr>
+<tr>
+<td><code>design-system-mapping.md</code></td>
+<td>デザインシステム / コンポーネントライブラリへのコンポーネントマッピング</td>
+</tr>
+<tr>
+<td><code>accessibility-checklist.md</code></td>
+<td>WCAG 準拠チェックリストと要件</td>
+</tr>
+<tr>
+<td><code>refined-mockups-questions.md</code></td>
+<td><code>[Answer]:</code> タグを伴う明確化のための質問（入力成果物）</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-4">承認 gate</h3>
+<p>標準の 2 択 gate: <strong>Approve</strong> / <strong>Request Changes</strong>。</p>
+<h3 id="notes-4">注記</h3>
+<ul>
+<li>スキップ条件: 非 UI、API のみ、またはインフラのみの取り組み。また、Stage 1.6
+（Rough Mockups）がスキップされた場合も通常はスキップされる。</li>
+<li>mvp scope では、この stage はプロジェクトが UI を持つ場合にのみ実行される。</li>
+<li>ここで生成されるモックアップは Application Design（2.6）へ供給され、最終的に UI
+コンポーネントのための Construction の Code Generation（3.5）へ供給される。</li>
+<li>アクセシビリティチェックリストは、Build and Test（3.6）へ供給されるテスト可能な基準を
+提供する。</li>
+</ul>
+<hr>
+<h2 id="stage-26-application-design">Stage 2.6: Application Design</h2>
+<h3 id="metadata-5">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Inception</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>2.6</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>CONDITIONAL -- 新しいコンポーネントやサービスが必要なときに実行する; 既存コンポーネントの修正のみの場合はスキップする</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>Support Agents</td>
+<td>aidlc-aws-platform-agent, aidlc-design-agent</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:building_construction:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-5">目的</h3>
+<p>Application Design は、プロジェクトのシステムアーキテクチャを定義する: コンポーネント境界、
+インターフェース、サービス定義、通信パターン、依存関係、そして architecture decision record
+（ADR）である。要件と user story を、Construction を導く具体的な技術設計へと変換する。</p>
+<p>aidlc-aws-platform-agent は AWS サービスマッピングについての補助的な視点を提供する。
+aidlc-design-agent の support も、UX に情報を得たアーキテクチャのために SKILL.md の
+Deliberate Deviations セクションに記されている。</p>
+<p><code>decisions.md</code> 成果物（ADR）は upstream リファレンスには存在しない意図的な追加であり、
+SKILL.md の &quot;Deliberate Deviations&quot; セクションに文書化されている。</p>
+<h3 id="inputs-5">入力</h3>
+<ul>
+<li><code>&lt;record&gt;/inception/requirements-analysis/requirements.md</code></li>
+<li><code>&lt;record&gt;/inception/user-stories/stories.md</code>（生成された場合）</li>
+<li>Stage 2.1 からの RE 成果物（特に <code>architecture.md</code>、
+<code>component-inventory.md</code>、<code>dependencies.md</code>）、brownfield の場合</li>
+</ul>
+<h3 id="steps-5">ステップ</h3>
+<ol>
+<li><p><strong>agent persona をロードする</strong> -- <code>agents/aidlc-architect-agent.md</code> からの
+aidlc-architect-agent persona と、<code>.claude/knowledge/aidlc-architect-agent/</code> からの
+knowledge をロードする。AWS サービスマッピングのために、<code>agents/aidlc-aws-platform-agent.md</code>
+からの aidlc-aws-platform-agent persona と、<code>.claude/knowledge/aidlc-aws-platform-agent/</code>
+からの knowledge をロードする。</p>
+</li>
+<li><p><strong>以前のコンテキストをロードする</strong> -- 要件、user story（生成された場合）、RE 成果物
+（brownfield の場合、特に architecture.md、component-inventory.md、dependencies.md）を
+読む。scope の文脈は <code>&lt;record&gt;/aidlc-state.md</code> から来る。</p>
+</li>
+<li><p><strong>質問を伴う design plan を作成する</strong> -- 次をカバーする、<code>[Answer]:</code> タグ形式を使った
+文脈に応じた質問を伴う
+<code>&lt;record&gt;/inception/application-design/application-design-questions.md</code> を作成する:</p>
+<ul>
+<li>コンポーネント境界の決定</li>
+<li>アーキテクチャスタイルの好み（まだ決まっていない場合）</li>
+<li>サービス通信パターン（sync vs. async、REST vs. gRPC vs.
+events）</li>
+<li>データの所有権とストレージ戦略</li>
+<li>既存コンポーネントとの統合アプローチ（brownfield）</li>
+<li>UI コンポーネント構造（ユーザー向けの場合、UX デザイナーの視点に情報を得たもの）</li>
+</ul>
+</li>
+<li><p><strong>回答を収集し分析する</strong> -- stage-protocol.md セクション 3 の質問フローに従って回答を
+収集する。MANDATORY な曖昧さ分析: 曖昧な言葉遣い、矛盾、欠けている詳細をスキャンする。
+何らかの曖昧さが見つかった場合、フォローアップの質問を作成する。先へ進む前にすべての
+曖昧さを解決する。</p>
+</li>
+<li><p><strong>design 成果物を生成する</strong> -- 5 個の design 成果物を作成する（下記の出力を参照）。</p>
+</li>
+<li><p><strong>完了の準備</strong> -- design 成果物を検証する。state を編集しない; gate の結果を
+<code>aidlc-orchestrate.ts</code> を通じて report する。</p>
+</li>
+<li><p><strong>完了の提示と承認の要求</strong> -- :building_construction: emoji、design 成果物のサマリ、
+強調された主要なアーキテクチャ決定、レビューパスを伴う完了メッセージを表示する。3 択の
+承認 gate: Approve / Request Changes / Add Units Generation（実行計画でスキップされて
+いた場合）。Add Units Generation を選択すると
+<code>bun {{HARNESS_DIR}}/tools/aidlc-utility.ts recompose --add units-generation</code> を走らせる;
+state のチェックボックスを直接編集することは決してない。</p>
+</li>
+</ol>
+<h3 id="outputs-5">出力</h3>
+<p>5 個すべての成果物は <code>&lt;record&gt;/inception/application-design/</code> に書き出される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>components.md</code></td>
+<td>コンポーネントの名前、目的、責務、インターフェース、境界、所有権</td>
+</tr>
+<tr>
+<td><code>component-methods.md</code></td>
+<td>各コンポーネントの公開インターフェースのメソッドシグネチャ、入出力の型、エラー処理のアプローチ（詳細なビジネスルールは Functional Design に属する）</td>
+</tr>
+<tr>
+<td><code>services.md</code></td>
+<td>サービス定義、責務、オーケストレーションパターン（choreography vs. orchestration）、通信コントラクト、ライフサイクルとスケーリングの特性</td>
+</tr>
+<tr>
+<td><code>component-dependency.md</code></td>
+<td>依存マトリクス、通信パターン（sync/async/event-driven）、コンポーネント間のデータフロー、共有リソースの特定</td>
+</tr>
+<tr>
+<td><code>decisions.md</code></td>
+<td>Context、Decision、Consequences、Alternatives Considered を伴う Architecture Decision Records（ADR）; トレードオフ分析; 可逆性の評価</td>
+</tr>
+</tbody></table>
+<p>加えて、質問ファイルが入力として作成される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>application-design-questions.md</code></td>
+<td><code>[Answer]:</code> タグを伴う design の質問</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-5">承認 gate</h3>
+<p>特別な 3 択 gate:</p>
+<ul>
+<li><strong>Approve</strong> -- 次の stage へ続く</li>
+<li><strong>Request Changes</strong> -- 修正のフィードバックを提供する</li>
+<li><strong>Add Units Generation</strong> -- 現在スキップされている Units Generation stage を含める
+（実行計画でスキップされていた場合）;
+<code>aidlc-utility.ts recompose --add units-generation</code> 経由</li>
+</ul>
+<h3 id="notes-5">注記</h3>
+<ul>
+<li>スキップ条件: 変更が既存コンポーネントの修正のみで、新しいコンポーネントやサービスが
+必要ない。</li>
+<li><code>decisions.md</code> 成果物（ADR）は upstream リファレンスからの意図的な逸脱である。各 ADR は
+Context、Decision、Consequences、Alternatives Considered、そしてトレードオフ分析と
+可逆性の評価を含む。</li>
+<li>ここで生成される design 成果物は、Units Generation（2.7）の主要な入力であり、Construction
+stage（Functional Design 3.1、Code Generation 3.5）に直接情報を与える。</li>
+<li>brownfield プロジェクトでは、design は RE 成果物に文書化された既存コンポーネントとの統合を
+考慮せねばならない。</li>
+</ul>
+<hr>
+<h2 id="stage-27-units-generation">Stage 2.7: Units Generation</h2>
+<h3 id="metadata-6">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Inception</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>2.7</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>ALWAYS -- Stage 2.8 が Bolt sequencing のために消費する依存 DAG を生成する; コンパイル済み scope グリッドで 2.8 と一緒に移動する</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>aidlc-architect-agent</td>
+</tr>
+<tr>
+<td>Support Agents</td>
+<td>aidlc-delivery-agent</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:wrench:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-6">目的</h3>
+<p>Units Generation は、application design を、Construction phase の phased construction
+フローを駆動する個別の Unit of Work へと分解する。各 Unit は、システムの独立して実装可能な
+一片（サービス、モジュール、またはデプロイ可能なコンポーネント）を表す。この stage は、
+Construction が何をビルドするかを決めるために使う <code>unit-of-work.md</code> ファイル、Stage 2.8 が
+Bolt sequencing のために消費する依存 DAG（<code>unit-of-work-dependency.md</code>）、そしてすべての
+user story が Unit に割り当てられることを保証する story map を生成する。</p>
+<p><strong>Stage 2.7 は依存 DAG（トポロジ）を生成する。Stage 2.8 はその中を通る経済的な経路
+（Bolt シーケンス）を選ぶ。</strong> 2.7 は実装順序を推奨したりクリティカルパスを特定したりして
+はならない — それらは 2.8 の経済的 sequencing の決定である。</p>
+<p>これは、Inception の設計作業と Construction の実装作業の間の、重要な橋渡し stage である。
+ここで生成される unit の定義、依存、story マッピングは、Construction phase がどう実行される
+かを直接制御する。</p>
+<p>この stage は 2 部構成に従う: PART 1 は明確化のための質問を伴う分解 plan を作成し plan の
+承認を得る、そして PART 2 は実際の unit 成果物を生成する。</p>
+<h3 id="inputs-6">入力</h3>
+<ul>
+<li>Stage 2.6 からのすべての design 成果物
+（<code>&lt;record&gt;/inception/application-design/</code>: components.md,
+component-methods.md, services.md, component-dependency.md, decisions.md）</li>
+<li><code>&lt;record&gt;/inception/requirements-analysis/requirements.md</code></li>
+<li><code>&lt;record&gt;/inception/user-stories/stories.md</code>（生成された場合）</li>
+</ul>
+<h3 id="steps-6">ステップ</h3>
+<p><strong>PART 1: 計画</strong></p>
+<ol>
+<li><p><strong>agent persona をロードする</strong> -- <code>agents/aidlc-architect-agent.md</code> からの
+aidlc-architect-agent persona と、<code>.claude/knowledge/aidlc-architect-agent/</code> からの
+knowledge をロードする。実現可能性の検証と優先順位付けのために、
+<code>agents/aidlc-delivery-agent.md</code> からの aidlc-delivery-agent persona と、
+<code>.claude/knowledge/aidlc-delivery-agent/</code> からの knowledge をロードする。</p>
+</li>
+<li><p><strong>以前のコンテキストをロードする</strong> -- <code>&lt;record&gt;/inception/application-design/</code> から
+すべての成果物（5 ファイルすべて）を読む。要件を読む。user story を読む（生成された
+場合）。scope の文脈は <code>&lt;record&gt;/aidlc-state.md</code> から来る。</p>
+</li>
+<li><p><strong>質問を伴う分解 plan を作成する</strong> -- 次をカバーする、<code>[Answer]:</code> タグ形式を使った質問を
+伴う <code>&lt;record&gt;/inception/units-generation/units-generation-questions.md</code> を作成する:</p>
+<ul>
+<li>Unit 境界の戦略（サービス別、機能別、ドメイン別、デプロイターゲット別）</li>
+<li>Unit 粒度の好み（粗粒度 vs. 細粒度）</li>
+<li>依存順序の好み（厳密なトポロジカルのみ、または独立した Unit 間の並列性を許す）</li>
+<li>Unit 間の統合ポイントとコントラクト（API、共有データ、events）</li>
+<li>デプロイモデル（モノリシックデプロイ、独立デプロイ、ハイブリッド）</li>
+</ul>
+<p>NOTE: 実装順序の優先度（value-first、risk-first、walking-skeleton-first）については
+尋ねてはならない。それらは Stage 2.8 Delivery Planning に属する経済的 sequencing の
+決定である。</p>
+</li>
+<li><p><strong>回答を収集し分析する</strong> -- stage-protocol.md セクション 3 の質問フローに従って回答を
+収集する。MANDATORY な曖昧さ分析: 曖昧な言葉遣い、矛盾、欠けている詳細をスキャンする。
+何らかの曖昧さが見つかった場合、フォローアップの質問を作成する。先へ進む前にすべての
+曖昧さを解決する。</p>
+</li>
+<li><p><strong>plan の承認を得る</strong> -- AskUserQuestion 経由で分解 plan を user へ提示する:
+アプローチ（Unit 境界の戦略、推定 unit 数、依存構造）を要約する。オプション:
+Approve Plan / Revise Plan。</p>
+</li>
+</ol>
+<p><strong>PART 2: 生成</strong></p>
+<ol start="6">
+<li><p><strong>plan を実行する -- unit 成果物を生成する</strong> -- 承認された plan に基づいて、3 個の出力
+成果物を生成する（下記の出力を参照）。</p>
+</li>
+<li><p><strong>完了の準備</strong> -- unit 成果物を検証し、Construction のための unit リストを記録する。
+state を編集しない; gate の結果を <code>aidlc-orchestrate.ts</code> を通じて report する。</p>
+</li>
+<li><p><strong>完了の提示と承認の要求</strong> -- :wrench: emoji、定義された unit のサマリ、マップされた依存、
+割り当てられた story、レビューパスを伴う完了メッセージを表示する。標準の 2 択承認 gate:
+Approve（Construction phase へ続く）/ Request Changes。</p>
+</li>
+</ol>
+<h3 id="outputs-6">出力</h3>
+<p>3 個すべての成果物は <code>&lt;record&gt;/inception/units-generation/</code> に書き出される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>unit-of-work.md</code></td>
+<td>Unit の定義（名前、説明、境界）、責務、Unit ごとのデプロイモデル（standalone/shared/embedded）、相対的な複雑さの見積もり（S/M/L/XL）、unit の種別（<code>service</code>/<code>spec</code>/<code>ui</code>/<code>packaging</code>/<code>library</code>、どの construction design 成果物が適用されるかを駆動する）、実装ノートと制約</td>
+</tr>
+<tr>
+<td><code>unit-of-work-dependency.md</code></td>
+<td>Unit 間の依存 DAG（有向エッジ、サイクルなし）、統合ポイント（API/共有データ/events）、並列開発の機会（互いに依存の無い Unit の集合）。トポロジのみで、経済的な経路選択（推奨順序、クリティカルパス）は 2.8 の仕事である。フェンスされた <code>yaml</code> エッジブロックは DAG を反映し、各 unit に任意の <code>kind:</code> をタグ付けできる（<a href="../13-runtime-graph.html">Runtime グラフ</a> <code>bolt_dag.units[].kind</code> を参照）</td>
+</tr>
+<tr>
+<td><code>unit-of-work-story-map.md</code></td>
+<td>各 user story を実装する Unit へマップ、複数の Unit にまたがる横断的な story、各 Unit 内での story 実装順序、カバレッジの検証（すべての story が割り当てられ、すべての Unit が story を持つ）</td>
+</tr>
+</tbody></table>
+<p>加えて、質問ファイルが入力として作成される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>units-generation-questions.md</code></td>
+<td><code>[Answer]:</code> タグを伴う分解の質問</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-6">承認 gate</h3>
+<p>標準の 2 択 gate: <strong>Approve</strong>（Construction phase へ続く）/ <strong>Request Changes</strong>。</p>
+<h3 id="notes-6">注記</h3>
+<ul>
+<li><strong>この stage の出力が Construction を駆動する。</strong> <code>unit-of-work.md</code> ファイルは、
+Construction phase がその Unit ごとのループで反復する Unit を定義する。各 Unit は、次の
+Unit が始まる前に、適用可能な Construction stage（Functional Design、NFR Requirements、
+NFR Design、Infrastructure Design、Code Generation）を通過する。</li>
+<li><strong>2.7 は scope に入っているとき ALWAYS。</strong> コンパイル済み scope グリッドでは、2.7 と 2.8 は
+一緒に移動する（scope ごとに両方 EXECUTE か両方 SKIP）。この stage には単一 unit の
+スキップ条件は無い — 単一 Unit のフローでも自明な DAG を生成する。</li>
+<li>2 部構成（plan してから生成）により、user は Unit が定義される前に分解戦略を承認できる。
+ステップ 5 には、最終の完了 gate とは別の中間承認 gate（Approve Plan / Revise Plan）が
+ある。</li>
+<li>依存 DAG は 2.8 の経済的な Bolt sequencing へ供給される。2.8 は、リスク、価値、学習で
+重み付けされた経路を DAG の中から選ぶ。</li>
+<li>story map はトレーサビリティを提供する: すべての user story は少なくとも 1 つの Unit に
+割り当てられねばならず、すべての Unit は少なくとも 1 つの story を持たねばならない。</li>
+<li>aidlc-delivery-agent は実現可能性の検証と優先順位付けの入力を提供し、分解が delivery の
+視点から実践的であることを保証する。</li>
+</ul>
+<hr>
+<h2 id="stage-28-delivery-planning">Stage 2.8: Delivery Planning</h2>
+<h3 id="metadata-7">メタデータ</h3>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Phase</td>
+<td>Inception</td>
+</tr>
+<tr>
+<td>Stage #</td>
+<td>2.8</td>
+</tr>
+<tr>
+<td>条件</td>
+<td>ALWAYS -- Inception の総仕上げ stage</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>aidlc-delivery-agent</td>
+</tr>
+<tr>
+<td>Support Agents</td>
+<td>aidlc-architect-agent（アーキテクチャ依存に照らしてビルド順序を検証する）</td>
+</tr>
+<tr>
+<td>モード</td>
+<td>inline</td>
+</tr>
+<tr>
+<td>完了 Emoji</td>
+<td>:calendar:</td>
+</tr>
+</tbody></table>
+<h3 id="purpose-7">目的</h3>
+<p>Delivery Planning は Inception phase の総仕上げである。Bolt シーケンス — Stage 2.7 が生成した
+Unit of Work が Construction を通じて実行される順序 — を計画する。Stage 2.7 が分析的
+（依存 DAG）であるのに対し、Stage 2.8 は経済的である: リスク、価値、チームのキャパシティ、
+学習で重み付けされた経路を DAG の中から選ぶ。</p>
+<p><code>stage-protocol.md</code> の正規の Glossary によると、<strong>Bolt</strong> とは「Construction 内のデプロイ可能な
+unit of work — stage 3.1〜3.5 を通る 1 回のパス」である。Bolt は 1 つ以上の Unit of Work に
+対する Construction の 1 回のパスであり、MMF や sprint とは異なる。（stage 3.6 build-and-test
+と 3.7 ci-pipeline は Bolt ごとではなく、すべての Bolt をまたいで最後に 1 回走る。）</p>
+<p>経済的価値は DAG から導けない — AI agent はトポロジカルにソートできるが、どの Bolt が最も速く
+市場仮説を検証するか、あるいはどれがコミットメントが積み重なる前に最も恐ろしい未知を露わに
+するかは決められない。それはこの stage で捉えられる人間の価値判断である。</p>
+<p>この stage はまた、Construction へ遷移する前にすべての Inception 成果物の完全性を検証する、
+phase 境界 verification チェックを走らせる。</p>
+<p><strong>重要な区別:</strong> この stage は Bolt sequencing を計画する。どの AI-DLC stage をどの depth で
+走らせるかは決めない — それは <code>/aidlc</code> skill の scope 選択によって扱われる。</p>
+<h3 id="inputs-7">入力</h3>
+<p>すべての Inception phase 成果物:</p>
+<ul>
+<li>Stage 2.3 からの要件（<code>&lt;record&gt;/inception/requirements-analysis/</code>）</li>
+<li>Stage 2.4 からの user story（<code>&lt;record&gt;/inception/user-stories/</code>）</li>
+<li>Stage 2.6 からの application design
+（<code>&lt;record&gt;/inception/application-design/</code>）</li>
+<li>Stage 2.7 からの unit（<code>&lt;record&gt;/inception/units-generation/</code>）</li>
+<li>Stage 1.5 からの team formation
+（<code>&lt;record&gt;/ideation/team-formation/</code>）、存在する場合</li>
+</ul>
+<h3 id="steps-7">ステップ</h3>
+<ol>
+<li><p><strong>agent persona をロードする</strong> -- <code>agents/aidlc-delivery-agent.md</code> からの
+aidlc-delivery-agent persona と、<code>.claude/knowledge/aidlc-delivery-agent/</code> からの
+knowledge をロードする。ビルド順序の検証のために aidlc-architect-agent をロードする。</p>
+</li>
+<li><p><strong>以前のコンテキストをロードする</strong> -- すべての Inception phase 成果物を読む: 要件、
+user story、application design、unit、そして team formation（存在する場合）。</p>
+</li>
+<li><p><strong>明確化のための質問を生成する</strong> -- 次をカバーする質問を伴う
+<code>&lt;record&gt;/inception/delivery-planning/delivery-planning-questions.md</code> を作成する:</p>
+<ul>
+<li>sequencing ヒューリスティック: risk-first、value-first、walking-skeleton-first、
+またはハイブリッド</li>
+<li>使う場合は WSJF（Weighted Shortest Job First）のスコアリングモデルと重み</li>
+<li>最初の Bolt: スケールする前にアプローチを証明する walking skeleton（Cockburn）
+または確信を築くスライス</li>
+<li>Unit of Work の Bolt へのバンドリング</li>
+<li>各 Bolt の Definition of Done</li>
+<li>Bolt ごとの確信仮説 — それを出荷することで何が証明されるか</li>
+<li>Mob-to-Bolt の割り当て（利用可能なとき 1.5 からのチームを参照する;
+それが走らなかったときは AI のみ）</li>
+<li>特定の Bolt をゲートする外部依存（API、データ、承認）</li>
+<li>最も早く取り組むべき主要なリスク項目</li>
+</ul>
+<p>stage-protocol.md の質問フローに従う。</p>
+</li>
+<li><p><strong>回答を収集し分析する</strong> -- 選ばれた Bolt シーケンスが 2.7 の依存 DAG を尊重することを
+（aidlc-architect-agent の入力とともに）検証する。トポロジカル順序からの逸脱は、rationale
+成果物で正当化できるようにフラグを立てる。</p>
+</li>
+<li><p><strong>成果物を生成する</strong> -- <code>&lt;record&gt;/inception/delivery-planning/</code> に 4 個の成果物を
+作成する:</p>
+<ul>
+<li><code>bolt-plan.md</code> — Bolt の順序付きシーケンス; Bolt ごとの Unit of Work、
+walking-skeleton マーカー、Definition of Done、確信仮説、期待されるデモ。</li>
+<li><code>team-allocation.md</code> — Bolt-to-mob の割り当て; チーム数 &gt; 1 のときは Program Board
+相当。</li>
+<li><code>risk-and-sequencing-rationale.md</code> — Bolt 順序の背後にある理由:
+WSJF スコア、risk-first の論拠、walking-skeleton-first の論拠、または
+value-first の論拠。</li>
+<li><code>external-dependency-map.md</code> — ゲートされた項目を消費する Bolt へマップ
+（完全に AI で完結するときは軽量または空）。</li>
+</ul>
+</li>
+<li><p><strong>phase 境界 verification</strong> -- Inception-to-Construction の verification チェックを
+走らせる:</p>
+<ul>
+<li>Requirements から Stories、Architecture への整合</li>
+<li>すべての story が要件へトレースする</li>
+<li>アーキテクチャがすべての story をカバーする</li>
+<li>結果を <code>&lt;record&gt;/verification/phase-check-inception.md</code> へ書く</li>
+</ul>
+</li>
+<li><p><strong>完了の準備</strong> -- delivery と境界 verification の成果物を検証する。phase または stage の
+state を書かない; 承認 report が Inception-to-Construction のアトミックな遷移を所有する。</p>
+</li>
+<li><p><strong>完了の提示と承認の要求</strong> -- :calendar: emoji を伴う完了メッセージを表示する。承認 gate:
+Approve（Construction へ進む）/ Request Changes。user はこの gate で stage の
+包含/除外を上書きできる。</p>
+</li>
+</ol>
+<h3 id="outputs-7">出力</h3>
+<p>すべての成果物は <code>&lt;record&gt;/inception/delivery-planning/</code> に書き出される:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bolt-plan.md</code></td>
+<td>順序付きの Bolt シーケンス; Bolt ごとの Unit of Work、walking-skeleton マーカー、Definition of Done、確信仮説、期待されるデモ</td>
+</tr>
+<tr>
+<td><code>team-allocation.md</code></td>
+<td>Bolt-to-mob の割り当て; チーム数 &gt; 1 のときは Program Board 相当; 1.5 が走らなかったときは AI のみの割り当て</td>
+</tr>
+<tr>
+<td><code>risk-and-sequencing-rationale.md</code></td>
+<td>Bolt 順序についての WSJF / risk-first / walking-skeleton-first / value-first の正当化</td>
+</tr>
+<tr>
+<td><code>external-dependency-map.md</code></td>
+<td>ゲートされた項目（外部 API、データの可用性、承認のリードタイム、外部チームへの引き継ぎ）を消費する Bolt へマップ</td>
+</tr>
+<tr>
+<td><code>delivery-planning-questions.md</code></td>
+<td><code>[Answer]:</code> タグを伴う明確化のための質問（入力成果物）</td>
+</tr>
+</tbody></table>
+<p>phase 境界 verification の出力:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&lt;record&gt;/verification/phase-check-inception.md</code></td>
+<td>Inception-to-Construction のトレーサビリティチェック結果</td>
+</tr>
+</tbody></table>
+<h3 id="approval-gate-7">承認 gate</h3>
+<p>標準の 2 択 gate: <strong>Approve</strong>（Construction へ進む）/ <strong>Request Changes</strong>。user はこの gate で
+stage の包含/除外を上書きできる。</p>
+<h3 id="notes-7">注記</h3>
+<ul>
+<li><strong>phase 境界 stage。</strong> これは 3 つの phase 境界 stage のうち 2 番目である（1.7 の後、
+3.7 の前）。verification チェックは Requirements-to-Stories-to-Architecture の整合を
+検証する。</li>
+<li><strong>経済的 vs トポロジカルな sequencing。</strong> Stage 2.7 は依存 DAG を生成する（トポロジカル
+順序は記述的な幾何として得られる）。Stage 2.8 は、人間の価値判断で重み付けされた経路を
+その DAG の中から選ぶ。risk-first または walking-skeleton-first の論拠がそれを正当化する
+とき、Bolt 順序はトポロジカル順序から逸脱してよい — その逸脱は
+<code>risk-and-sequencing-rationale.md</code> に捉えられる。</li>
+<li><strong>Bolt ≠ sprint ≠ MMF。</strong> 正規の Glossary によると、Bolt は Construction stage 3.1〜3.5 を
+通る 1 回のパスである（3.6 Build and Test と 3.7 CI Pipeline はすべての Bolt の後に 1 回
+走る）。sequencing のヒューリスティック（walking skeleton、WSJF）は Bolt 内に適用される;
+それらは Bolt が何であるかを再定義しない。</li>
+<li><strong>upstream からの意図的な逸脱。</strong> upstream リファレンスはこの stage を「Workflow Planning」
+と呼び、それを純粋な stage セレクタとして扱う。この実装（「Delivery Planning」に改名）は
+Bolt sequencing、team allocation、リスクの rationale を加える。</li>
+<li>bolt plan は確信を築くシーケンスを定義する。各 Bolt は定義された Unit of Work、
+Definition of Done、確信仮説を持つ。</li>
+<li>aidlc-architect-agent は、提案された Bolt シーケンスが component-dependency と
+unit-of-work-dependency の成果物で定義された依存を尊重することを検証する。</li>
+<li>team allocation は、存在すれば Team Formation の成果物（Stage 1.5）から引く; 1.5 が SKIP
+（mvp、workshop）のときは、すべての Bolt が aidlc-developer-agent（AI）によって実行される。</li>
+</ul>
+<hr>
+<h2 id="phase-summary">Phase サマリ</h2>
+<h3 id="key-outputs">主要な出力</h3>
+<p>Inception phase は、Construction と Operation へ引き継がれる次の主要な出力を生成する:</p>
+<ol>
+<li><strong>Reverse Engineering 成果物</strong>（2.1） -- <code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code>
+にあるリポジトリごとの 9 個の成果物で、既存コードベースを文書化する: ビジネス概観、
+アーキテクチャ、コード構造、API ドキュメント、コンポーネントインベントリ、テクノロジ
+スタック、依存、コード品質評価、タイムスタンプ。（brownfield プロジェクトのみ。）</li>
+<li><strong>要件ドキュメント</strong>（2.3） -- 形式的な要件: 機能、非機能、制約、前提、スコープ外、
+オープンな質問。</li>
+<li><strong>User Stories とペルソナ</strong>（2.4） -- 受け入れ基準、優先度、依存を伴う user story;
+ユーザーペルソナの定義。（該当する場合。）</li>
+<li><strong>Refined Mockups</strong>（2.5） -- 中〜高忠実度のモックアップ、インタラクション仕様、
+デザインシステムのマッピング、アクセシビリティチェックリスト。（該当する場合。）</li>
+<li><strong>Application Design</strong>（2.6） -- コンポーネント定義、メソッドシグネチャ、サービス定義、
+依存マトリクス、architecture decision record。（該当する場合。）</li>
+<li><strong>Units of Work</strong>（2.7） -- 境界と複雑さの見積もりを伴う unit 定義、ビルド順序を伴う
+unit 依存マトリクス、story-to-unit マッピング。（該当する場合。）これは Construction の
+phased construction フローを駆動する成果物である。</li>
+<li><strong>Delivery Plan</strong>（2.8） -- bolt plan、ビルド順序、依存マトリクス、team allocation。
+これは Construction と Operation を統べる実行計画である。</li>
+<li><strong>Phase 境界 verification</strong>（2.8） -- Inception-to-Construction のトレーサビリティ
+チェックで、<code>&lt;record&gt;/verification/phase-check-inception.md</code> へ書かれる。</li>
+</ol>
+<h3 id="handoff-to-construction">Construction への引き継ぎ</h3>
+<p>Stage 2.8 での承認をもって、フレームワークは Construction phase へ遷移する。Construction は
+Delivery Planning からの実行計画に基づいて stage レベルのタスクを作成し、phased construction
+フローを実行する:</p>
+<p>Construction は <code>bolt-plan.md</code> に従って Bolt ごとに走り、bolt plan に従って並列バッチが
+許される。各 Bolt は 1 つ以上の Unit の一貫したスライスをカバーする
+（<code>unit-of-work.md</code> と <code>unit-of-work-dependency.md</code> に従う）:</p>
+<p>各 Bolt について:</p>
+<ol>
+<li><strong>3.1 Functional Design</strong>（実行計画に応じて条件付き）</li>
+<li><strong>3.2 NFR Requirements</strong>（実行計画に応じて条件付き）</li>
+<li><strong>3.3 NFR Design</strong>（実行計画に応じて条件付き）</li>
+<li><strong>3.4 Infrastructure Design</strong>（実行計画に応じて条件付き）</li>
+<li><strong>3.5 Code Generation</strong>（常時、Bolt 内の unit ごと）</li>
+</ol>
+<p>最後の Bolt が完了した後:
+6. <strong>3.6 Build and Test</strong>（常時）
+7. <strong>3.7 CI Pipeline</strong>（条件付き）</p>
+<p>Bolt は依存グラフが許す限り並列バッチで走れる; walking-skeleton の Bolt は、並列バッチが
+始動する前に end-to-end の形を検証するため、常に単一 Bolt のバッチとして最初に走る。
+完全な Bolt ごとのナラティブは <code>docs/guide/04-phases-and-stages.md:263-293</code> を参照。</p>
+<h3 id="cross-references">相互参照</h3>
+<ul>
+<li><strong>Orchestrator</strong>: <code>dist/claude/.claude/skills/aidlc/SKILL.md</code> --
+ルーティングロジック、scope-to-stage マッピング、stage グラフ、Construction フローの定義</li>
+<li><strong>Stage Protocol</strong>: <code>dist/claude/.claude/aidlc-common/protocols/stage-protocol.md</code>
+-- 承認 gate、質問形式、完了メッセージ、そして §13 の Learnings Ritual。phase 境界
+verification は <code>stage-protocol-governance.md</code> §13 に住む。</li>
+<li><strong>Ideation Phase</strong>: <code>docs/reference/04-stages/ideation.md</code> -- 前の phase の
+ドキュメント</li>
+<li><strong>Construction Phase</strong>: Construction stage は、Stage 2.8 が生成した delivery plan に
+従って実行される</li>
+<li><strong>Deliberate Deviations</strong>: SKILL.md は、always-rerun の RE ポリシー、aidlc-design-agent の
+support 追加、ADR 成果物、Delivery Planning の拡張を含む、upstream リファレンスからの
+意図的な差異を文書化している</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/inception.md"><code>docs/reference/04-stages/inception.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

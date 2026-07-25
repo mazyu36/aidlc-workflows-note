@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knowledge System — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/10-knowledge-system</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html" class="here">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#two-tier-architecture">Two-Tier Architecture</a>
+  <a href="#6-step-knowledge-loading-order">6-Step Knowledge Loading Order</a>
+  <a href="#template-system">Template System</a>
+  <a href="#adding-team-knowledge">Adding Team Knowledge</a>
+  <a href="#cross-references">Cross-References</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="knowledge-system">Knowledge System</h1>
+<p>この章は 2 tier の knowledge アーキテクチャを文書化する: 方法論の knowledge がどう framework とともに同梱されるか、チーム knowledge がどうプロジェクトごとに管理されるか、6 ステップのロード順、テンプレートシステム、そして knowledge をどう拡張するか。</p>
+<hr>
+<h2 id="two-tier-architecture">Two-Tier Architecture</h2>
+<p>AI-DLC は、framework の方法論をチームのカスタマイズから分離する 2 tier の knowledge システムを用いる:</p>
+<p><strong>Tier 1: Methodology knowledge</strong>（<code>.claude/knowledge/</code>）-- framework とともに同梱される。共有原則と agent ごとの方法論リファレンスを含む。framework のアップグレード時に更新される。ワークフロー実行中は読み取り専用。</p>
+<p><strong>Tier 2: Team knowledge</strong>（active space — <code>aidlc/knowledge/</code>、<code>aidlc/spaces/&lt;space&gt;/knowledge/</code> の短縮形）-- ユーザー管理。会社固有の標準、ポリシー、規約を含む。space の <code>memory/</code>、<code>codekb/</code>、<code>intents/</code> の兄弟であり、space 内のすべての intent をまたいで蓄積される。自由形式で bootstrap 時は空: engine は最初の <code>/aidlc</code> で空の <code>aidlc/knowledge/</code> ディレクトリを作成し、その中に何も seed しない。固定のファイルセットは無い。</p>
+<h3 id="tier-1-structure">Tier 1 Structure</h3>
+<pre class="term"><code>.claude/knowledge/
++-- aidlc-shared/
+|   +-- ai-dlc-principles.md<span class="t-comment">       # Core methodology principles</span>
+|   +-- verification.md<span class="t-comment">            # Phase boundary verification rules</span>
+|   +-- brownfield.md<span class="t-comment">              # Brownfield safeguards</span>
+|   +-- audit-format.md<span class="t-comment">            # 74-event audit taxonomy</span>
+|   +-- knowledge-readme-template.md<span class="t-comment">  # Optional README template a team can copy into Tier 2</span>
+|   +-- state-template.md<span class="t-comment">          # State file contract</span>
++-- aidlc-product-agent/
+|   +-- requirements-guide.md
+|   +-- product-guide.md
+|   +-- functional-design-guide.md
+|   +-- requirements-elicitation.md
+|   +-- prioritization-frameworks.md
+|   +-- user-story-patterns.md
+|   +-- market-research-methods.md
++-- aidlc-architect-agent/
+|   +-- architecture-guide.md
+|   +-- nfr-design-guide.md
+|   +-- ddd-patterns.md
+|   +-- architecture-patterns.md
+|   +-- nfr-design-patterns.md
+|   +-- adr-template.md
++-- aidlc-developer-agent/
+|   +-- code-analysis-guide.md
+|   +-- code-generation-guide.md
+|   +-- code-generation-patterns.md
+|   +-- api-design-guide.md
+|   +-- data-modelling-patterns.md
+|   +-- re-artifacts.md
++-- [... 8 more agent knowledge dirs]</code></pre>
+<h3 id="tier-2-structure">Tier 2 Structure</h3>
+<p>bootstrap 時は空。engine は素の <code>aidlc/knowledge/</code> ディレクトリを作成し、その中には何も作らない — README も、agent ごとのサブディレクトリも無い。下の <code>aidlc-shared/</code> と agent ごとのディレクトリは、agent persona が探す規約である; チームは内容を持つものを作成する。</p>
+<pre class="term"><code>aidlc/knowledge/<span class="t-comment">                    # empty at bootstrap; team-created subdirs</span>
++-- aidlc-shared/<span class="t-comment">                   # optional — loaded by every agent if present</span>
+|   +-- (user-added files)
++-- aidlc-product-agent/<span class="t-comment">            # optional — loaded when that agent is active</span>
+|   +-- (user-added files)
++-- [... a directory per agent the team chooses to populate]</code></pre>
+<hr>
+<h2 id="6-step-knowledge-loading-order">6-Step Knowledge Loading Order</h2>
+<p>各 stage は厳密な 6 ステップのシーケンスで knowledge をロードする: まず解決された rule セット、次に共有方法論、次に agent 固有の方法論、次にチームのカスタマイズ、そして最後に先行 stage の artifact。</p>
+<pre class="mermaid">
+sequenceDiagram
+    participant O as Orchestrator
+    participant G as Rules
+    participant SM as Shared Methodology
+    participant AM as Agent Methodology
+    participant TK as Team Knowledge
+    participant TAK as Team Agent Knowledge
+    participant PA as Prior Artifacts
+
+    O-&gt;&gt;G: Step 1: Load aidlc/spaces/&lt;active-space&gt;/memory/
+    Note over G: org.md + team.md + project.md + phases/&lt;phase&gt;.md
+    G--&gt;&gt;O: Rules loaded (strict-additive — all layers present)
+
+    O-&gt;&gt;SM: Step 2: Load .claude/knowledge/aidlc-shared/
+    Note over SM: Shared methodology principles
+    SM--&gt;&gt;O: Shared knowledge loaded
+
+    O-&gt;&gt;AM: Step 3: Load .claude/knowledge/[agent-name]/
+    Note over AM: Agent-specific methodology
+    AM--&gt;&gt;O: Agent methodology loaded
+
+    O-&gt;&gt;TK: Step 4: Load aidlc/knowledge/aidlc-shared/
+    Note over TK: Team shared knowledge (if exists)
+    TK--&gt;&gt;O: Team knowledge loaded
+
+    O-&gt;&gt;TAK: Step 5: Load aidlc/knowledge/[agent-name]/
+    Note over TAK: Team agent-specific knowledge (if exists)
+    TAK--&gt;&gt;O: Team agent knowledge loaded
+
+    O-&gt;&gt;PA: Step 6: Load prior stage artifacts
+    Note over PA: As required by current stage inputs
+    PA--&gt;&gt;O: Prior artifacts loaded
+
+    Note over O: Stage execution begins with full context
+</pre>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Source</th>
+<th>Tier</th>
+<th>Managed By</th>
+<th>Loaded</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/memory/</code></td>
+<td>--</td>
+<td>Framework + 自己学習</td>
+<td>最初</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>.claude/knowledge/aidlc-shared/</code></td>
+<td>1</td>
+<td>Framework</td>
+<td>早期</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>.claude/knowledge/[agent]/</code></td>
+<td>1</td>
+<td>Framework</td>
+<td>早期</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>aidlc/knowledge/aidlc-shared/</code></td>
+<td>2</td>
+<td>チーム</td>
+<td>中盤</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>aidlc/knowledge/[agent]/</code></td>
+<td>2</td>
+<td>チーム</td>
+<td>中盤</td>
+</tr>
+<tr>
+<td>6</td>
+<td>先行 stage の artifact</td>
+<td>--</td>
+<td>動的</td>
+<td>最後</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Note:</strong> ステップ 1-5 は agent の knowledge ロードである（各 agent ファイルで定義される）。ステップ 6（先行 stage の artifact）は、ファイルのロードステップではなく、orchestrator がランタイムに追加するコンテキストである。</p>
+</blockquote>
+<h3 id="what-each-layer-contributes">What Each Layer Contributes</h3>
+<ul>
+<li>Rule（ステップ 1）は最初にロードされ、strict-additive な 5 層チェーン（org → team → project → phase → stage）を通じて解決される — 適用可能なすべての rule がコンテキストに存在する; より広いレイヤーが上書きされることは決してなく、追加されるだけである。<a href="08-rule-system.html">Rule System</a> を参照。</li>
+<li>Framework の方法論（ステップ 2-3）はベースラインの振る舞いを提供する。</li>
+<li>チーム knowledge（ステップ 4-5）は組織固有のコンテキストを追加する。</li>
+<li>先行 artifact（ステップ 6）はワークフロー固有のコンテキストを提供する。</li>
+</ul>
+<hr>
+<h2 id="template-system">Template System</h2>
+<h3 id="knowledge-readme-template">Knowledge README Template</h3>
+<p><code>.claude/knowledge/aidlc-shared/knowledge-readme-template.md</code> は、チームが自身の Tier 2 ディレクトリを文書化するためにそこへコピーできる任意の README テンプレートを同梱する。engine はそれをスキャフォールドも seed もしない — space レベルの <code>aidlc/knowledge/</code> ディレクトリは空で作成され、チームが望むものを何でも足す。テンプレートは次を説明する:</p>
+<ul>
+<li>その agent のためにどんな種類のファイルを足すか</li>
+<li>一般的なカスタマイズファイルの例</li>
+<li>ファイルがどうロードされるか（agent がアクティブになると自動的に）</li>
+<li>特別な命名規約は不要であること -- 任意の <code>.md</code> ファイルがロードされる</li>
+</ul>
+<h3 id="state-template">State Template</h3>
+<p>engine は <code>.claude/knowledge/aidlc-shared/state-template.md</code> の契約に従って <code>aidlc-state.md</code> を生成する。テンプレートは必須のセクションとフィールドを定義する; 具体的な Stage Progress の行は、テンプレートで手で列挙されるのではなく、コンパイルされた stage graph と scope grid から発行される。</p>
+<hr>
+<h2 id="adding-team-knowledge">Adding Team Knowledge</h2>
+<p>会社固有のファイルをチーム knowledge ディレクトリに足す:</p>
+<pre><code class="language-bash"># Team-wide standards (loaded by all agents)
+aidlc/knowledge/aidlc-shared/company-coding-standards.md
+aidlc/knowledge/aidlc-shared/company-architecture-principles.md
+
+# Agent-specific standards (loaded only when that agent is active)
+aidlc/knowledge/aidlc-architect-agent/company-architecture-patterns.md
+aidlc/knowledge/aidlc-devsecops-agent/company-security-policy.md
+aidlc/knowledge/aidlc-developer-agent/company-coding-conventions.md
+aidlc/knowledge/aidlc-quality-agent/company-testing-standards.md
+</code></pre>
+<p>ファイルは agent がアクティブになると自動的にロードされる（ロード順のステップ 4-5）。configuration の変更は不要。ディレクトリに置かれた任意の <code>.md</code> ファイルがロードされる。</p>
+<h3 id="knowledge-by-agent">Knowledge by Agent</h3>
+<blockquote>
+<p>この表はスナップショットである。各 agent の権威ある <code>display_name</code> + <code>examples</code> は、<code>core/agents/&lt;slug&gt;-agent.md</code> の agent の frontmatter に住み、<code>core/tools/aidlc-lib.ts</code> の <code>loadAgents()</code> を通じてプログラム的に表面化される。まずそこに新しい agent を足す; 同じ PR でこの表を更新する。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Directory</th>
+<th>Purpose</th>
+<th>Example Files</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>aidlc-shared/</code></td>
+<td>チーム全体の標準</td>
+<td><code>coding-standards.md</code>, <code>api-conventions.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-product-agent/</code></td>
+<td>プロダクトのコンテキスト</td>
+<td><code>roadmap.md</code>, <code>personas.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-design-agent/</code></td>
+<td>UX/UI ガイドライン</td>
+<td><code>design-system.md</code>, <code>accessibility.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-delivery-agent/</code></td>
+<td>PM の規約</td>
+<td><code>sprint-cadence.md</code>, <code>definition-of-done.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-architect-agent/</code></td>
+<td>アーキテクチャの決定</td>
+<td><code>tech-stack.md</code>, <code>infrastructure-preferences.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-developer-agent/</code></td>
+<td>コーディングパターン</td>
+<td><code>db-conventions.md</code>, <code>error-handling.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-quality-agent/</code></td>
+<td>テストの標準</td>
+<td><code>test-strategy.md</code>, <code>coverage-requirements.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-devsecops-agent/</code></td>
+<td>セキュリティポリシー</td>
+<td><code>security-baseline.md</code>, <code>compliance-rules.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-aws-platform-agent/</code></td>
+<td>クラウドのコンテキスト</td>
+<td><code>account-structure.md</code>, <code>service-limits.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-compliance-agent/</code></td>
+<td>コンプライアンス rule</td>
+<td><code>data-governance.md</code>, <code>audit-requirements.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-pipeline-deploy-agent/</code></td>
+<td>CI/CD の標準</td>
+<td><code>pipeline-standards.md</code>, <code>deployment-gates.md</code></td>
+</tr>
+<tr>
+<td><code>aidlc-operations-agent/</code></td>
+<td>Ops の runbook</td>
+<td><code>monitoring.md</code>, <code>incident-response.md</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="01-architecture.html">Architecture</a> -- 5 層モデルの knowledge レイヤー</li>
+<li><a href="05-agent-system.html">Agent System</a> -- agent の frontmatter と設定</li>
+<li><a href="04-stage-protocol.html">Stage Protocol</a> -- agent persona のロードのセクション</li>
+<li><a href="06-hooks-and-tools.html">Hooks and Tools</a> -- audit-format.md の分類（共有 knowledge に同梱される）</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/10-knowledge-system.md"><code>docs/reference/10-knowledge-system.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

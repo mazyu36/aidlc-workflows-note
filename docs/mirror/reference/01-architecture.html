@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/01-architecture</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html" class="here">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#overview">Overview</a>
+  <a href="#five-layers">Five Layers</a>
+  <a href="#configuration-layers">Configuration Layers</a>
+  <a href="#execution-models">Execution Models</a>
+  <a href="#source-vs-distribution-one-core-many-harnesses">Source vs distribution (one core, many harnesses)</a>
+  <a href="#directory-structure">Directory Structure</a>
+  <a href="#key-design-decisions">Key Design Decisions</a>
+  <a href="#directory-structure-tests">Directory Structure: Tests</a>
+  <a href="#testing">Testing</a>
+  <a href="#cross-references-1">Cross-References</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="architecture">Architecture</h1>
+<blockquote>
+<p><strong>Source</strong>: engine と conductor（<code>.claude/tools/aidlc-orchestrate.ts</code> と <code>.claude/skills/aidlc/SKILL.md</code>）および周辺ファイルから導出。</p>
+</blockquote>
+<h2 id="overview">Overview</h2>
+<p>AI-DLC はハイブリッドな実行モデルを用いる: 一部の stage は inline で走り（conductor が agent persona をロードし、会話の中で直接実行する）、他の stage は Claude Code の Task tool 経由で subagent へ委譲する。inline の stage はユーザー対話（質問、明確化、承認）をサポートする。subagent の stage は自律的に走り、構造化されたサマリを返す。</p>
+<pre class="mermaid">
+graph LR
+    subgraph INITIALIZATION["INITIALIZATION (0.1-0.3)"]
+        Z1["Workspace Scaffold"]
+        Z4["State Init"]
+        Z1 -.-&gt;|"3 stages"| Z4
+    end
+
+    subgraph IDEATION["IDEATION (1.1-1.7)"]
+        I1["Intent Capture"]
+        I7["Approval &amp; Handoff"]
+        I1 -.-&gt;|"7 stages"| I7
+    end
+
+    subgraph INCEPTION["INCEPTION (2.1-2.8)"]
+        N1["Reverse Engineering"]
+        N7["Delivery Planning"]
+        N1 -.-&gt;|"8 stages"| N7
+    end
+
+    subgraph CONSTRUCTION["CONSTRUCTION (3.1-3.7)"]
+        C1["Functional Design"]
+        C7["CI Pipeline"]
+        C1 -.-&gt;|"7 stages per unit"| C7
+    end
+
+    subgraph OPERATION["OPERATION (4.1-4.7)"]
+        O1["Deployment Pipeline"]
+        O7["Feedback &amp; Optimization"]
+        O1 -.-&gt;|"7 stages"| O7
+    end
+
+    Z4 --&gt;|"auto-proceed"| I1
+    I7 --&gt;|"Verification Gate 1"| N1
+    N7 --&gt;|"Verification Gate 2"| C1
+    C7 --&gt;|"Verification Gate 3"| O1
+    O7 -.-&gt;|"Feedback Loop"| I1
+
+    style INITIALIZATION fill:#2a2440,stroke:#b895ff
+    style IDEATION fill:#1d332b,stroke:#57d9a9
+    style INCEPTION fill:#1b2c47,stroke:#6db3ff
+    style CONSTRUCTION fill:#38291a,stroke:#f2b35c
+    style OPERATION fill:#3a1f27,stroke:#ff8f8f
+</pre>
+<h2 id="five-layers">Five Layers</h2>
+<p><strong>Rules</strong>（<code>rules/</code>）-- 組織とプロジェクトのガードレール。自己学習する: 人間による訂正が永続的な振る舞いの rule になる。合計でわずか ~35 行 -- 非 AI-DLC の会話でのコンテキスト肥大を避けるため最小限に保たれる。</p>
+<p><strong>Agents</strong>（<code>agents/*.md</code>）-- 14 個のフラットな agent ファイル: 11 のドメインエキスパート persona、2 つのレビュー専用 agent、そして adaptive-workflows composer。各々が自身の役割、責務、コラボレーションパターン、tools、knowledge のロード順を定義する。すべてが <code>disallowedTools: Task</code> を持つ -- conductor だけが委譲する。</p>
+<p><strong>Knowledge</strong>（<code>knowledge/</code>）-- 2 tier の方法論リファレンス:</p>
+<ul>
+<li><code>aidlc-shared/</code> -- 原則、verification、brownfield セーフガード、<strong>audit イベント分類</strong>（正規のイベントレジストリ）、state テンプレート</li>
+<li><code>aidlc-&lt;agent&gt;-agent/</code> -- agent ごとの方法論ファイル（アーキテクチャパターン、テスト戦略など）</li>
+</ul>
+<p><strong>Skills</strong>（<code>skills/aidlc/</code>）-- orchestrator のエントリポイント（<code>SKILL.md</code>）、stage protocol ファイル（<code>stage-protocol.md</code>、<code>stage-protocol-recovery.md</code>、<code>stage-protocol-governance.md</code>）、そして 5 つの phase ディレクトリ（<code>stages/initialization/</code>、<code>stages/ideation/</code>、<code>stages/inception/</code>、<code>stages/construction/</code>、<code>stages/operation/</code>）にまたがる 32 の stage ファイル。</p>
+<p><strong>Hooks</strong>（<code>hooks/</code>）-- audit 発行（Write/Edit での PostToolUse）、セッションライフサイクル（SessionStart、SessionEnd）、state 同期（TaskUpdate での PostToolUse）、state 検証（PreCompact）、subagent トラッキング（SubagentStop）、statusline レンダリングのための framework hook。すべての framework ファイルは <code>aidlc-*.ts</code> プレフィックスを持つ。</p>
+<h2 id="configuration-layers">Configuration Layers</h2>
+<blockquote>
+<p><strong>Audience</strong>: 新しい関心事（rule、方法論の一片、sensor の束縛、ドメイン knowledge の事実）がどこに属すかを決める貢献者。
+<strong>Source-of-truth status</strong>: これはルーティングの原則である。コードとこの節が食い違うとき、この節が勝つ; コードのほうが誤分類されている。</p>
+</blockquote>
+<p>このリポジトリの configuration は、1 つではなく <strong>2 つの直交する軸</strong> に沿って分割される。</p>
+<h3 id="axis-1-who-authors-it">Axis 1 — who authors it?</h3>
+<ul>
+<li><strong>Framework-authored</strong> — AI-DLC ディストリビューションに同梱される。すべてのプロジェクトで同じ内容。framework がリリースするときに更新される。ユーザーが自身の workspace で編集することは決してない。</li>
+<li><strong>Team-authored</strong> — 人間によって（あるいはこの workspace で走る stage によって書かれ、その後に人間が是認して）書かれる。このプロジェクトに固有。この workspace のワークフローをまたいで永続する。編集可能。</li>
+</ul>
+<h3 id="axis-2-when-is-it-consumed">Axis 2 — when is it consumed?</h3>
+<ul>
+<li><strong>継続的にロードされる（harness configuration）</strong> — セッション開始時に読まれる; この workspace のすべてのワークフロー実行のすべての stage で利用可能。<code>.claude/</code> の下に住む。</li>
+<li><strong>Per-workflow artefact</strong> — 特定の stage が出力として生産し、後段の stage が入力として読む。intent の record dir（<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>、以下では <code>&lt;record&gt;/</code> と記す）の下に住む。各ワークフロー実行で再生産される。</li>
+</ul>
+<h3 id="the-four-quadrants">The four quadrants</h3>
+<p>2 つの軸を交差させると 4 つの象限ができる。3 つは埋まっており; 1 つは意図的に空である。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Framework-authored</th>
+<th>Team-authored</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>継続的にロードされる</strong> (harness config)</td>
+<td><code>.claude/skills/</code>, <code>.claude/agents/</code>, <code>.claude/knowledge/</code>, <code>aidlc/spaces/&lt;active-space&gt;/memory/org.md</code>, <code>aidlc/spaces/&lt;active-space&gt;/memory/phases/*.md</code>, <code>.claude/scopes/</code>, <code>.claude/tools/data/scope-grid.json</code>, <code>.claude/tools/data/stage-graph.json</code></td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code>, <code>aidlc/spaces/&lt;active-space&gt;/memory/project.md</code></td>
+</tr>
+<tr>
+<td><strong>Per-workflow artefact</strong></td>
+<td><em>(設計上、空)</em></td>
+<td><code>&lt;record&gt;/aidlc-state.md</code>, <code>&lt;record&gt;/audit/*.md</code> (per-clone シャード), <code>&lt;record&gt;/&lt;phase&gt;/&lt;stage&gt;/*.md</code>, <code>.aidlc/worktrees/bolt-*/</code></td>
+</tr>
+</tbody></table>
+<p>framework が per-workflow artefact を生産しないのは、そうした出力がディストリビューションに同梱されねばならず — それは per-workflow output ではなく framework-authored な harness config になってしまうからである。空のセルはルーティングルールの署名であり、欠落ではない。</p>
+<blockquote>
+<p><strong>Framework-authored = upstream から同梱される; プロジェクトでは不変として扱う。</strong> git やファイルシステムはこれを強制しない — <code>.claude/</code> は編集可能な領域であり、望むなら <code>org.md</code> や <code>phases/*.md</code> ファイルを編集できる。しかし規約はこうである: framework のデフォルトを変異させる代わりに、<code>team.md</code> / <code>project.md</code>（右手のセル）で上書きする。それによって上書きがレビュー時に可視のままになり、framework がクリーンにアップグレードでき、同じ framework バージョンを共有するプロジェクト間の drift を防ぐ。</p>
+</blockquote>
+<h3 id="boundary-tests-for-placing-a-new-concern">Boundary tests for placing a new concern</h3>
+<p>新しい関心事が到来したとき、2 つの問いが行き先を解決する:</p>
+<ol>
+<li><strong>すべてのプロジェクトで同じ内容か、プロジェクト固有か？</strong> Framework-authored 対 team-authored。</li>
+<li><strong>毎セッション agent のコンテキストにロードされるか、特定の stage だけが読むか？</strong> Harness config 対 per-workflow artefact。</li>
+</ol>
+<p>具体例:</p>
+<ul>
+<li><em>&quot;We always squash-merge to main&quot;</em> — プロジェクト固有（他のチームは rebase を使う）かつ継続的にロードされる（conductor が Bolt のマージのたびに読む）。<code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> へ行く。</li>
+<li><em>&quot;ALWAYS use Result&lt;T,E&gt; in service layer; NEVER throw&quot;</em> — プロジェクト固有かつ継続的にロードされる（agent が code-gen のたびに読む）。<code>aidlc/spaces/&lt;active-space&gt;/memory/project.md</code> へ行く。</li>
+<li><em>&quot;Trunk-based development is the recommended branching strategy&quot;</em> — すべてのプロジェクトで同じ（framework の見解）かつ継続的にロードされる（delivery-planning で読まれる）。<code>aidlc/spaces/&lt;active-space&gt;/memory/org.md</code> へ行く。</li>
+<li><em>&quot;The 5 common branching strategies and their trade-offs&quot;</em> — すべてのプロジェクトで同じ（framework リファレンス）かつ継続的にロードされる（aidlc-pipeline-deploy-agent が branching strategy を discovery するときに読む）。<code>.claude/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md</code> へ行く。</li>
+<li><em>&quot;This run&#39;s requirements analysis&quot;</em> — プロジェクト固有かつ per-workflow（各実行が新鮮な分析を生産する）。<code>&lt;record&gt;/inception/requirements-analysis/</code> へ行く。</li>
+<li><em>&quot;Bolt-1&#39;s worktree state mid-Construction&quot;</em> — プロジェクト固有かつ per-workflow（Bolt ごとに再生成される）。record dir の Bolt worktree のコピー、<code>.aidlc/worktrees/bolt-1/&lt;record&gt;/aidlc-state.md</code> へ行く。</li>
+</ul>
+<h3 id="sub-categories-of-harness-config-top-row">Sub-categories of harness config (top row)</h3>
+<p>上段は <strong>内容の形式</strong> によってさらに分割される:</p>
+<ul>
+<li><strong>Framework harness mechanics</strong> → frontmatter / JSON。ワークフローの順序、stage 定義、artifact の生産、gate のセマンティクス。tool が決定論的に読む。<code>.claude/skills/</code>、<code>.claude/tools/data/</code> に住む。</li>
+<li><strong>Framework domain reference</strong> → <code>.claude/knowledge/aidlc-&lt;agent&gt;-agent/</code> の下の agent KB 散文。あるドメインのための選択肢のメニュー（5 つの branching strategy、デプロイパターン、テスト方法論）。所有する agent がメニューを必要とするときに読む。</li>
+<li><strong>Framework methodology defaults</strong> → <code>aidlc/spaces/&lt;active-space&gt;/memory/org.md</code> の散文。チームが別途是認するまで framework が推奨するもの。チームの声で書かれる（なぜなら、チームが上書きしなければ、org のデフォルトが <em>まさに</em> チームの声だからである）。</li>
+<li><strong>Team practices</strong> → <code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> の散文。チームの選択 — 「我々はこう働く」、practices-discovery の是認 gate によって populate される。agent が意思決定のポイントで読む（delivery-planning は branching strategy を読む; conductor は <code>SKILL.md</code> で walking-skeleton の立場を読む）。</li>
+<li><strong>Project overrides</strong> → <code>aidlc/spaces/&lt;active-space&gt;/memory/project.md</code> の散文。team と org のデフォルトを上書きするプロジェクト固有の訂正; これも practices-discovery の是認 gate によって populate される。</li>
+<li><strong>Guardrails</strong>（<code>## Forbidden</code>、<code>## Mandated</code>、<code>## Corrections</code> セクション）— <code>org.md</code>、<code>team.md</code>、<code>project.md</code> に存在する。agent のための訂正 rule — <code>ALWAYS X</code>、<code>NEVER Y</code>。継続的に agent のコンテキストにロードされる。</li>
+</ul>
+<h3 id="what-not-to-put-in-claude-directly">What not to put in <code>.claude/</code> directly</h3>
+<p>configuration に見えるがそうではない 2 つのケース:</p>
+<ul>
+<li><strong>永続的なリポジトリ分析の出力。</strong> Reverse-engineering の 9 個の brownfield artifact（<code>code-structure.md</code>、<code>architecture.md</code> など）は、1 つのリポジトリの最新のスキャンを記述する。それらは <code>.claude/</code> や intent record ではなく <code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> に住む。Reverse Engineering は該当する各ワークフローで再実行され、その共有されたリポジトリごとの knowledge をリフレッシュする。</li>
+<li><strong>Run-state。</strong> <code>aidlc-state.md</code> ファイルは per-workflow の「今」の真実である。それは <code>.claude/</code> ではなく intent の record dir に属する。<code>audit/</code> シャードも同様。</li>
+</ul>
+<h3 id="cross-row-promotion-the-practices-discovery-exception">Cross-row promotion — the practices-discovery exception</h3>
+<p>ほとんどの stage は 1 つの段に書く。いくつかの stage は両方に書き、段をまたぐ書き込みはチームの是認によって gate される。<strong>Practices-discovery（Inception 2.2）はこれを行う唯一の stage である。</strong> その出力は:</p>
+<ul>
+<li><code>&lt;record&gt;/inception/practices-discovery/team-practices.md</code> — per-workflow の audit trail（下段）。</li>
+<li>是認されると、内容は space memory レイヤーへコピーされる — <code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> および <code>memory/project.md</code> — team-authored な harness config（右上のセル）。</li>
+</ul>
+<p>audit-trail のコピーは、この実行で何が是認されたかを証明する; <code>.claude/</code> のコピーは、すべての将来のワークフローがロードするチームの恒常的な configuration になる。</p>
+<p>このパターン（scan → draft → affirm → publish）は reverse-engineering の構造に一致する。違いは <em>帰結</em> にある: reverse-engineering の是認は単に「このスキャンは正確だ」を意味する; practices-discovery の是認は「framework はこれらの言葉を我々の恒常的な config に書き込み、すべての将来のワークフローでロードしてよい」を意味する。</p>
+<p>是認 gate が無ければ、framework はチームの口に言葉を入れることになる — そしてより悪いことに、それらの言葉はワークフローをまたいで永続する。gate があれば、常にチームがそれを書いたことになる。</p>
+<p>このパターンは稀であり、意図的であるべきだ。次の 3 つすべてが真のときにだけ使う:</p>
+<ol>
+<li>stage の出力が、チーム、プロジェクト、または workspace についての構成的な真実である。</li>
+<li>その真実が、この実行の下流の stage だけでなく、すべての将来のワークフロー実行に影響すべきである。</li>
+<li>チームがその真実を著述する意志がある — framework に書かせるだけでなく、gate でレビューし承認する。</li>
+</ol>
+<p>3 つのいずれかが偽なら、per-workflow のみをデフォルトとする。</p>
+<h3 id="cross-references">Cross-references</h3>
+<ul>
+<li><a href="05-agent-system.html">Agent System</a> — agent ファイルの構造（左上のセルのメカニクス）。</li>
+<li><a href="10-knowledge-system.html">Knowledge System</a> — <code>knowledge/</code> の 2 tier の形。</li>
+<li><a href="15-stage-definition.html">Stage Definition</a> — stage frontmatter の仕様（harness mechanics のフォーマット）。</li>
+<li><a href="04-stage-protocol.html">Stage Protocol</a> — stage ごとの実行 rule。</li>
+</ul>
+<h2 id="execution-models">Execution Models</h2>
+<p><strong>Inline stage</strong> -- conductor は persona のフレーミングのために、lead agent のフラットファイル（例: <code>agents/aidlc-architect-agent.md</code>）と <code>knowledge/[agent]/</code> からの knowledge を読み、その後 stage を会話の中で直接実行する。これによりリアルタイムのユーザー対話が可能になる: 質問すること、曖昧さを解決すること、承認の前に artifact をイテレートすること。</p>
+<p>28 の stage が inline 実行を使う。これには 3 つすべての Initialization stage（Workspace Scaffold、Workspace Detection、State Init — すべて <code>aidlc-utility intent-birth</code> の内側で決定論的に走る）、すべての Ideation stage、5 つの Inception stage（Requirements Analysis、Refined Mockups、Application Design、Units Generation、Delivery Planning）、6 つの Construction stage（Functional Design、NFR Requirements、NFR Design、Infrastructure Design、Build and Test、CI Pipeline）、そしてすべての Operation stage が含まれる。注意: Build and Test（3.6）は per-unit ではなく、すべての unit が完了した後に一度だけ走る。</p>
+<p><strong>Subagent stage</strong> -- conductor はコンテキスト（先行の artifact、プロジェクト記述、workspace の発見事項）を準備し、Claude Code の Task tool subagent へ委譲する。subagent は自律的に実行し、構造化されたサマリを返す。これは、実行中のユーザー対話なしに、集中した独立の作業から利益を得る stage で使われる。subagent の呼び出しが失敗した場合、conductor はコンテキストを減らしたプロンプトで一度リトライし、その後 inline 実行または skip-and-revisit をフォールバックの選択肢としてユーザーに提示する。</p>
+<p>4 つの stage が dispatched 実行を使う: Reverse Engineering（2.1、<code>mode: pipeline</code> — developer のスキャン、続けて architect の synthesis-and-write）、Practices Discovery（2.2、<code>mode: subagent</code> — pipeline-deploy の lead ドラフト、相互にブラインドな quality/developer/devsecops のスポーク、人間へのインタビュー、lead の統合）、User Stories（2.4、<code>mode: mob</code> — product lead のドラフトに加え design/developer/quality の貢献ラウンド）、そして Code Generation（3.5、集中した developer subagent）。完全なトポロジは 28 inline / 2 subagent / 1 pipeline / 1 mob である。Workspace Detection（0.2）は subagent としてではなく、<code>aidlc-utility intent-birth</code> の内側で決定論的に走る。</p>
+<pre class="mermaid">
+flowchart LR
+    subgraph INLINE["Mode 1: Inline"]
+        direction TB
+        IN1["Conductor reads\nstage file"]
+        IN2["Load agent persona\n+ knowledge"]
+        IN3["Execute stage steps\ndirectly in conversation"]
+        IN4["User interaction\navailable"]
+        IN5["Approval gate\n(AskUserQuestion)"]
+        IN1 --&gt; IN2 --&gt; IN3 --&gt; IN4 --&gt; IN5
+    end
+
+    subgraph SUBAGENT["Mode 2: Subagent (simple)"]
+        direction TB
+        SA1["Conductor reads\nstage file"]
+        SA2["Prepare context:\nartifacts + persona"]
+        SA3["Task tool call\n(subagent_type specified)"]
+        SA4["Subagent executes\n(no user interaction)"]
+        SA5["Return structured\nsummary to conductor"]
+        SA6["Conductor presents\ncompletion + approval"]
+        SA1 --&gt; SA2 --&gt; SA3 --&gt; SA4 --&gt; SA5 --&gt; SA6
+    end
+
+    subgraph TWOSTEP["Mode 3: Pipeline (2-link RE chain)"]
+        direction TB
+        TS1["Conductor reads\nRE stage file"]
+        TS2["Task: aidlc-developer-agent\ncode scan"]
+        TS3["Developer returns\nscan results"]
+        TS4["Task: aidlc-architect-agent\nsynthesis"]
+        TS5["Architect produces\n9 artifacts"]
+        TS6["Conductor presents\ncompletion + approval"]
+        TS1 --&gt; TS2 --&gt; TS3 --&gt; TS4 --&gt; TS5 --&gt; TS6
+    end
+
+    style INLINE fill:#1d332b,stroke:#57d9a9
+    style SUBAGENT fill:#1b2c47,stroke:#6db3ff
+    style TWOSTEP fill:#38291a,stroke:#f2b35c
+</pre>
+<h3 id="conductor-inline-stage-execution">Conductor Inline Stage Execution</h3>
+<pre class="mermaid">
+sequenceDiagram
+    participant O as Conductor
+    participant S as Stage File
+    participant A as Agent Persona
+    participant U as User
+    participant ST as State File
+
+    O-&gt;&gt;S: Load stage file
+    O-&gt;&gt;A: Load lead agent persona + knowledge
+    O-&gt;&gt;O: Execute stage steps
+    O-&gt;&gt;U: Present questions (tri-mode)
+    U--&gt;&gt;O: Provide answers
+    O-&gt;&gt;O: Generate artifacts
+    O-&gt;&gt;O: Log to audit.md
+    O-&gt;&gt;U: Present completion + approval gate
+    U--&gt;&gt;O: Approve / Request Changes
+    O-&gt;&gt;ST: Report approved — engine marks [x] and routes
+    O-&gt;&gt;O: Advance to next stage
+</pre>
+<h3 id="conductor-subagent-delegation">Conductor Subagent Delegation</h3>
+<pre class="mermaid">
+sequenceDiagram
+    participant O as Conductor
+    participant T as Task Tool
+    participant SA as Subagent
+    participant U as User
+
+    O-&gt;&gt;O: Read stage file + prepare context
+    O-&gt;&gt;T: Launch subagent (type + prompt + context)
+    T-&gt;&gt;SA: Execute autonomously
+    SA-&gt;&gt;SA: Read files, generate artifacts
+    SA--&gt;&gt;T: Return structured summary
+    T--&gt;&gt;O: Summary with produced files + decisions
+    O-&gt;&gt;O: Validate summary, check Issues/Concerns
+    O-&gt;&gt;U: Present completion + approval gate
+    U--&gt;&gt;O: Approve / Request Changes
+    O-&gt;&gt;O: Report outcome — engine completes and advances
+</pre>
+<h2 id="source-vs-distribution-one-core-many-harnesses">Source vs distribution (one core, many harnesses)</h2>
+<p>framework は <strong>一度著述され、harness ごとに生成される</strong> — 今日では Claude
+Code、Kiro CLI、Kiro IDE、Codex CLI、opencode、そして移植した任意の能力を持つ
+CLI。手著述のソースは、harness 中立な <code>core/</code> に加え、CLI ごとの薄い
+<code>harness/&lt;name&gt;/</code> サーフェスである; <code>bun scripts/package.ts</code> が、コミットされ
+drift ガードされた <code>dist/&lt;harness&gt;/</code> ツリーを再生成する:</p>
+<pre class="term"><code>core/<span class="t-comment">                  # hand-authored, harness-neutral (tools, aidlc-common,</span>
+<span class="t-hdr">                       #   agents, rules, scopes, sensors, knowledge, hooks,</span>
+<span class="t-hdr">                       #   3 session skills); prose uses the {{HARNESS_DIR}} token</span>
+harness/&lt;name&gt;/<span class="t-comment">        # per-CLI surface: manifest.ts + orchestrator skill +</span>
+<span class="t-hdr">                       #   harness files (+ emit.ts for codex)</span>
+scripts/package.ts<span class="t-comment">     # the build: copy core (token→.claude/.kiro/.codex) +</span>
+<span class="t-hdr">                       #   harness, compile the graph, generate runners, emit;</span>
+<span class="t-hdr">                       #   `--check` is the byte-parity drift guard</span>
+scripts/build-binaries.ts # release-only binary compiler + smoke gate, writing
+<span class="t-hdr">                       #   per-target executable + runtime/&lt;harness&gt;/ bundles</span>
+<span class="t-hdr">                       #   under ignored build/binaries/</span>
+dist/&lt;harness&gt;/<span class="t-comment">        # GENERATED + committed: claude/.claude, kiro/.kiro,</span>
+<span class="t-hdr">                       #   kiro-ide/.kiro, codex/{.codex,.agents} — never hand-edited</span></code></pre>
+<p><code>core/</code> の <code>.ts</code> は変換なしにバイトコピーされる; ランタイムの <code>harnessDir()</code> シーム
+（<code>core/tools/aidlc-lib.ts</code>）は、実行時に同梱されたレイアウトから harness dir を
+導出する — ハードコードされたリストではなく tool 自身のパスからの open-set なので、
+新しい harness はここでの編集を要さない — そしてその rules-dir のリネームは、
+<code>rulesSubdir()</code> シームが読む生成された <code>tools/data/harness.json</code> にツリーごとに
+同梱される。1 セットの tool ソースがすべての harness で走る。
+<a href="../harness-engineering/09-porting-to-a-new-harness.html">Porting to a New Harness</a> を参照。</p>
+<h2 id="directory-structure">Directory Structure</h2>
+<p>同梱される Claude ディストリビューション（<code>dist/claude/.claude/</code>、<code>core/</code> +
+<code>harness/claude/</code> からバイト単位で再生成される）:</p>
+<pre class="term"><code>dist/claude/.claude/
++-- CLAUDE.md
++-- settings.json
++-- hooks/
+|   +-- aidlc-audit-logger.ts
+|   +-- aidlc-sync-statusline.ts
+|   +-- aidlc-validate-state.ts
+|   +-- aidlc-log-subagent.ts
+|   +-- aidlc-session-start.ts
+|   +-- aidlc-session-end.ts
+|   +-- aidlc-statusline.ts
++-- rules/
+|   +-- aidlc.md<span class="t-comment">                  # @-import stub -&gt; ../../aidlc/spaces/&lt;active-space&gt;/memory/ (NOT a copy; re-pointed in place on `space` switch)</span>
++-- agents/
+|   +-- aidlc-product-agent.md
+|   +-- aidlc-design-agent.md
+|   +-- aidlc-delivery-agent.md
+|   +-- aidlc-architect-agent.md
+|   +-- aidlc-aws-platform-agent.md
+|   +-- aidlc-compliance-agent.md
+|   +-- aidlc-devsecops-agent.md
+|   +-- aidlc-developer-agent.md
+|   +-- aidlc-quality-agent.md
+|   +-- aidlc-pipeline-deploy-agent.md
+|   +-- aidlc-operations-agent.md
++-- knowledge/
+|   +-- aidlc-shared/
+|   |   +-- ai-dlc-principles.md
+|   |   +-- verification.md
+|   |   +-- brownfield.md
+|   |   +-- audit-format.md
+|   |   +-- state-template.md
+|   |   +-- knowledge-readme-template.md
+|   +-- aidlc-product-agent/
+|   |   +-- requirements-guide.md
+|   |   +-- product-guide.md
+|   |   +-- functional-design-guide.md
+|   |   +-- requirements-elicitation.md
+|   |   +-- prioritization-frameworks.md
+|   |   +-- user-story-patterns.md
+|   |   +-- market-research-methods.md
+|   +-- aidlc-architect-agent/
+|   |   +-- architecture-guide.md
+|   |   +-- nfr-design-guide.md
+|   |   +-- ddd-patterns.md
+|   |   +-- architecture-patterns.md
+|   |   +-- nfr-design-patterns.md
+|   |   +-- adr-template.md
+|   +-- aidlc-developer-agent/
+|   |   +-- code-analysis-guide.md
+|   |   +-- code-generation-guide.md
+|   |   +-- code-generation-patterns.md
+|   |   +-- api-design-guide.md
+|   |   +-- data-modelling-patterns.md
+|   |   +-- re-artifacts.md
+|   +-- [... 8 more agent knowledge dirs]
++-- skills/
+    +-- aidlc/
+        +-- SKILL.md
+        +-- stage-protocol.md
+        +-- stage-protocol-recovery.md
+        +-- stage-protocol-governance.md
+        +-- stages/
+            +-- initialization/
+            |   +-- workspace-scaffold.md
+            |   +-- workspace-detection.md
+            |   +-- state-init.md
+            +-- ideation/
+            |   +-- intent-capture.md
+            |   +-- market-research.md
+            |   +-- feasibility.md
+            |   +-- scope-definition.md
+            |   +-- team-formation.md
+            |   +-- rough-mockups.md
+            |   +-- approval-handoff.md
+            +-- inception/
+            |   +-- reverse-engineering.md
+            |   +-- practices-discovery.md
+            |   +-- requirements-analysis.md
+            |   +-- user-stories.md
+            |   +-- refined-mockups.md
+            |   +-- application-design.md
+            |   +-- units-generation.md
+            |   +-- delivery-planning.md
+            +-- construction/
+            |   +-- functional-design.md
+            |   +-- nfr-requirements.md
+            |   +-- nfr-design.md
+            |   +-- infrastructure-design.md
+            |   +-- code-generation.md
+            |   +-- build-and-test.md
+            |   +-- ci-pipeline.md
+            +-- operation/
+                +-- deployment-pipeline.md
+                +-- environment-provisioning.md
+                +-- deployment-execution.md
+                +-- observability-setup.md
+                +-- incident-response.md
+                +-- performance-validation.md
+                +-- feedback-optimization.md</code></pre>
+<h3 id="the-workspace-spaces-and-intents">The workspace: spaces and intents</h3>
+<p>上のツリーは <strong>engine</strong> である — harness 固有で、ユーザーが閲覧することは決してない。
+engine が <em>ランタイムに読み書きする</em> すべては、プロジェクトルートの分離された中立な
+<code>aidlc/</code> ディレクトリに住み、2 レベルのコンテナとして組織される: <strong>space → intent</strong>。
+（エンドユーザー向けのオリエンテーションは、ユーザーガイドの
+<a href="../guide/03-spaces-and-intents.html">Spaces and Intents</a> を参照; この節は engine が
+解決の拠り所とするデータモデルである。）</p>
+<pre class="term"><code>aidlc/<span class="t-comment">                                    # neutral, harness-independent, committed to git</span>
++-- active-space<span class="t-comment">                          # cursor: active space name (gitignored, per-user)</span>
++-- spaces/
+    +-- default/<span class="t-comment">                          # one space per team; "default" is auto-resolved</span>
+        +-- memory/<span class="t-comment">                        # the method — org.md/team.md/project.md, phases/, templates/</span>
+        +-- knowledge/<span class="t-comment">                     # space-level domain knowledge (free-form)</span>
+        +-- codekb/&lt;repo&gt;/<span class="t-comment">                 # per-repo code knowledge base</span>
+        +-- intents/
+            +-- active-intent<span class="t-comment">              # cursor: active intent record dir (gitignored, per-user)</span>
+            +-- intents.json<span class="t-comment">               # the registry: [{ uuid, slug, dirName, scope, repos, status }]</span>
+            +-- &lt;YYMMDD&gt;-&lt;label&gt;/<span class="t-comment">          # one record dir per intent (date-prefixed, short kebab label; UUIDv7 carries identity in intents.json)</span>
+                +-- aidlc-state.md<span class="t-comment">          # per-intent workflow state</span>
+                +-- audit/&lt;host&gt;-&lt;clone&gt;.md # per-clone audit shards (glob-and-merge by timestamp)
+                +-- &lt;phase&gt;/&lt;stage&gt;/*.md<span class="t-comment">    # artifacts + the per-stage memory.md diary</span></code></pre>
+<p><strong>Resolution。</strong> 2 つのユーザーごとの cursor がコンテキストを選択する; どちらも決してエラーにならない（欠けた cursor はデフォルトにフォールバックする）:</p>
+<ul>
+<li><strong>Space</strong> — <code>aidlc/active-space</code>、優先順位は <code>explicit arg &gt; cursor &gt; &quot;default&quot;</code>
+（<code>DEFAULT_SPACE</code>、<code>core/tools/aidlc-lib.ts:285</code>; resolver は <code>activeSpace()</code>、
+<code>aidlc-lib.ts:354-366</code>）。<code>listSpaces()</code> は、ディスク上に何も無くても常に <code>default</code> を報告する（<code>aidlc-lib.ts:713-728</code>）。</li>
+<li><strong>Intent</strong> — <code>aidlc/spaces/&lt;space&gt;/intents/active-intent</code>、優先順位は
+<code>explicit arg &gt; cursor (if it names a real record holding aidlc-state.md) &gt; lone-intent &gt; null</code>（<code>activeIntent</code>、<code>aidlc-lib.ts:411-435</code>）。<code>null</code> の intent
+は「まだ record が無い」を意味する — orchestrator が最初の intent を auto-birth
+するために使うシグナルである。</li>
+</ul>
+<p>パスヘルパー — <code>intentsDir</code>、<code>knowledgeDir</code>、<code>codekbDir</code>（<code>aidlc-lib.ts</code>）、
+そして <code>memoryDirFor</code>（<code>aidlc-graph.ts:234</code>）— はすべて、space 引数を
+<code>activeSpace(projectDir)</code> にデフォルトする。だから AI-DLC 自身の resolver は cursor に従う; <code>/aidlc space &lt;name&gt;</code> で space を切り替えると、各 harness ネイティブの rule include（上で述べた Claude の <code>@</code>-import スタブ、Kiro の resources glob、Codex の rules dir）も、切り替えられた space の <code>memory/</code> に指し直される。<code>default</code> では指し直しはバイト単位で同一の no-op なので、単一チームのコミットされたツリーが churn することは決してない。</p>
+<p><strong>Committed 対 gitignored。</strong> <code>aidlc/</code> は、チームが作業を共有するためにチェックインされる。分割（<code>harness/claude/dot-gitignore:34-54</code>）: 2 つの cursor（<code>active-space</code>、<code>active-intent</code>）、clone ごとのランタイム（<code>.aidlc-clone-id</code>、<code>.aidlc-sessions/</code>）、そして導出された state（<code>runtime-graph.json</code>、record の下の <code>.aidlc-*</code>）は <strong>gitignored</strong>; メソッド（<code>memory/**</code>）、knowledge（<code>knowledge/**</code>、<code>codekb/**</code>）、<code>intents.json</code> レジストリ、各 record の <code>aidlc-state.md</code>、<code>audit/</code> シャード、そして artifact は <strong>committed</strong> である。audit が clone ごとのシャード（<code>audit/&lt;host&gt;-&lt;clone&gt;.md</code>）としてコミットされるのは、まさに git が並行する追記をマージせずに済むようにするためである — 意図的に <code>merge=union</code> 属性は無い。</p>
+<h2 id="key-design-decisions">Key Design Decisions</h2>
+<ol>
+<li><p><strong>ハイブリッド実行モデル（inline + dispatched トポロジ）</strong> -- ユーザー対話（質問、明確化、承認のイテレーション）を要する stage は、conductor が直接の会話アクセスを持つ inline で走る。集中した自律的な作業（コードスキャン、コード生成）または真の multi-agent コラボレーション（mob）を行う stage は、stage の <code>mode</code> トポロジに従って subagent へ dispatch する。純粋な subagent モデルは stage 途中のユーザー対話を妨げる; 純粋な inline モデルは集中した agent の専門化や独立した視点から利益を得られない。</p>
+</li>
+<li><p><strong>inline stage のための agent persona</strong> -- inline stage では、conductor は subagent へ委譲するのではなく、視点をフレーミングするためのコンテキストとして agent のフラットファイルをロードする。これにより、subagent のコンテキスト転送とユーザー対話の喪失というコストなしに、ドメインエキスパートのフレーミング（Application Design の間、conductor は architect のように考える）の利益が得られる。</p>
+</li>
+<li><p><strong>2 リンクの Reverse Engineering pipeline</strong> -- Reverse Engineering（<code>mode: pipeline</code>）は、コードスキャンに developer subagent を、続けて synthesis と artifact の書き込みに architect subagent を使う。conductor はバスとして振る舞い（Claude Code では subagent は subagent を spawn できない）、developer のコードスキャン結果を architect へ渡す - チェーントポロジが設計どおりに働く。</p>
+</li>
+<li><p><strong>aidlc-state.md による state 追跡</strong> -- 単一の markdown の state ファイルが、stage の完了、現在のステータス、workspace のコンテキスト、scope の設定、実行計画、そしてランタイム state（リビジョン数）を追跡する。stage は結果を orchestration engine へ報告する; その内部の state 遷移がファイルを更新し、ライフサイクルの audit 行を発行し、アトミックにルーティングする。stage の散文がライフサイクルのチェックボックスを直接編集することは決してない。PostToolUse hook が各書き込みの後に state ファイルの構造を検証する。stage レベルのタスク ID は、state ファイルに保存されるのではなく、ランタイムに <code>TaskList</code> 経由で解決される（「Inception - Requirements Analysis」のような subject でマッチする）-- これは実際のタスクシステムの state を反映するため、コンテキストの compaction 後もより堅牢である。</p>
+</li>
+<li><p><strong>共有契約としての stage protocol</strong> -- 32 すべての stage が、承認 gate、質問フォーマット（tri-mode: Guide Me / Edit File / Chat）、完了メッセージ、state 追跡、エラーリカバリ、変更処理、§13 Learnings Ritual、そして phase 境界の verification について <code>stage-protocol.md</code> に従う。これにより、各 stage ファイルで指示を繰り返すことなく、すべての stage で一貫した振る舞いが保証される。</p>
+</li>
+<li><p><strong>2 tier の knowledge アーキテクチャ</strong> -- 方法論の knowledge は framework とともに <code>knowledge/</code> に同梱される（共有原則 + agent ごとの方法論）。ユーザー管理のチーム knowledge は、space レベルの <code>aidlc/knowledge/</code>（space の <code>intents/</code> の兄弟）に住み、engine によって空で作成され、チームによって populate される。これは framework のアップグレードをチームのカスタマイズから分離する。</p>
+</li>
+<li><p><strong>フラットな agent ファイル</strong> -- 各 agent は <code>agents/</code> 内の単一の <code>.md</code> ファイルである（<code>agent.md</code> + <code>knowledge/</code> を持つサブディレクトリではない）。これは構造を単純化し、agent を発見可能にする。方法論の knowledge は <code>knowledge/[agent]/</code> に別途住む。</p>
+</li>
+<li><p><strong>scope 駆動の適応的 depth</strong> -- 9 つの名前付き scope（enterprise、feature、mvp、poc、bugfix、refactor、infra、security-patch、workshop）に auto-detect を加えたものが、どの stage がどの depth で実行されるかを決める。各 scope は <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイル（アイデンティティ）である; メンバーシップは stage ごとの <code>scopes:</code> frontmatter タグであり、compile 時に EXECUTE/SKIP グリッド（<code>.claude/tools/data/scope-grid.json</code>、権威）へ転置され、SKILL.md のサマリテーブル（情報提供用）へコンパイルされる。NL キーワード→scope の推論は、各 scope の <code>.md</code> frontmatter からその <code>keywords</code> を読む。ユーザーは任意の承認 gate で上書きできる。</p>
+</li>
+<li><p><strong>最小限の rule</strong> -- ガードレール（合計 ~35 行）だけが active space memory レイヤー（<code>aidlc/spaces/&lt;active-space&gt;/memory/</code>、<code>.claude/rules/aidlc.md</code> @-import スタブ経由で取り込まれる）に住む。それ以外のすべて（verification、brownfield セーフガード、audit フォーマット、適応的パターン）は <code>knowledge/aidlc-shared/</code> に住むか、SKILL.md/stage-protocol.md に埋め込まれる。rule は常にロードされるため、これは非 AI-DLC の会話でのコンテキスト肥大を防ぐ。</p>
+</li>
+<li><p><strong>自己学習ループ</strong> -- 人間が agent の振る舞いを訂正すると、その訂正は永続的な Rule になりうる。§13 Learnings Ritual（tool-as-actor: <code>aidlc-learnings.ts</code> が表面化し永続化する; ユーザーが確認する）は、確認された各 learning を practice として active space memory レイヤー — <code>aidlc/spaces/&lt;active-space&gt;/memory/project.md</code>（デフォルト）、ワンクリックで <code>memory/team.md</code> へ昇格 — に書き込むか、あるいは Sensor をスキャフォールドし、次のワークフローの compile で適用する。<a href="08-rule-system.html">Rule System</a> を参照。</p>
+</li>
+<li><p><strong>phase 境界の verification</strong> -- トレーサビリティチェックが phase 遷移（Initialization-&gt;Ideation の auto-proceed、Ideation-&gt;Inception、Inception-&gt;Construction、Construction-&gt;Operation）で自動的に走る。これは、下流の stage が不完全な基礎の上に構築する前に、欠けた requirements-to-design のリンク、孤立した artifact、そして不整合を捕まえる。</p>
+</li>
+<li><p><strong>hook ベースの audit ロギング</strong> -- Write/Edit 操作の PostToolUse hook が、artifact の作成と変更を intent の <code>audit/</code> シャードへ自動的にログする。PreCompact hook が、コンテキストの compaction の前に state ファイルの構造を検証する。SubagentStop hook が subagent の完了をログする。74 イベントの分類（<code>knowledge/aidlc-shared/audit-format.md</code> で定義される; emitter レジストリについては <a href="12-state-machine.html">State Machine</a> を参照）が事後分析を可能にする -- 主要なイベントには <code>STAGE_STARTED</code>、<code>STAGE_COMPLETED</code>、<code>DECISION_RECORDED</code>、<code>SCOPE_CHANGED</code>、<code>RULE_LEARNED</code> が含まれる。</p>
+</li>
+<li><p><strong>ネストした委譲は無い</strong> -- conductor（SKILL.md）がすべての agent Task 呼び出しを行う。agent が互いを呼び出したり subagent を spawn したりすることは決してない。これは委譲グラフをフラットでデバッグ可能に保つ。</p>
+</li>
+<li><p><strong>4 択のセッション再開</strong> -- チェックポイントからの再開、現在の stage のやり直し、特定の stage へのジャンプ、または新規開始（アーカイブ確認付き）。手動の state ファイル編集なしに、ワークフローのナビゲーションに対するきめ細かな制御をユーザーに与える。</p>
+</li>
+<li><p><strong>Stage/Phase ジャンプコマンド</strong> -- <code>--stage &lt;slug|#&gt;</code> と <code>--phase &lt;name|#&gt;</code> は特定の stage または phase へ直接ジャンプする。<code>--scope &lt;scope&gt;</code> はワークフローの scope を設定または上書きする。前方ジャンプは中間の stage を <code>[S]</code>（skipped）とマークする; 後方ジャンプは下流の stage を <code>[ ]</code> にリセットし、ターゲットから前方へリプレイする。互いにコンポーザブル。</p>
+</li>
+</ol>
+<h2 id="directory-structure-tests">Directory Structure: Tests</h2>
+<pre class="term"><code>tests/
++-- run-tests.ts<span class="t-comment">              # Native Bun test runner (all levels, flag-selectable)</span>
++-- run-tests.sh<span class="t-comment">              # POSIX compatibility wrapper for run-tests.ts</span>
++-- gen-coverage-registry.ts<span class="t-comment">  # Generates .coverage-registry.json from covers: headers</span>
++-- .coverage-registry.json<span class="t-comment">   # Machine-checked coverage index (units x test files)</span>
++-- .coverage-ratchet.json<span class="t-comment">    # Coverage floor the registry --check enforces</span>
++-- README.md<span class="t-comment">                 # Discoverable suite index + quick reference</span>
++-- lib/
+|   +-- bun-junit-to-meta.ts<span class="t-comment">  # Bun JUnit -&gt; runner metadata glue</span>
++-- harness/<span class="t-comment">                  # Shared TS helpers: fixtures, sdk-drive, tui-drive, windows/</span>
++-- fixtures/<span class="t-comment">                 # State files, stub projects, RE artifacts</span>
++-- hooks/
+|   +-- pre-commit<span class="t-comment">            # Git hook: runs the default levels (smoke + unit + integration)</span>
++-- smoke/<span class="t-comment">                    # Level: structural validation (no LLM, seconds)</span>
++-- unit/<span class="t-comment">                     # Level: single-component isolation (no LLM)</span>
++-- integration/<span class="t-comment">              # Level: cross-component contracts + live stage/CLI utilities</span>
++-- e2e/<span class="t-comment">                      # Level: full lifecycle, worktree, rendered terminal journeys</span></code></pre>
+<p>すべてのテストは <code>bun</code> の下で走る <code>t*.test.ts</code> ファイルである — シェルのテストファイルは無い。4 つのディレクトリがスイートの 4 つのレベルである。</p>
+<h2 id="testing">Testing</h2>
+<p>プロジェクトのテストスイートは <strong>完全に TypeScript</strong> であり（<code>.sh</code> テストファイルはゼロ）、4 つのレベル — <code>smoke</code>、<code>unit</code>、<code>integration</code>、<code>e2e</code> — に組織され、それらは古典的な 3 層のピラミッド（smoke + unit = L1 Protocol、integration = L2 Stage、e2e = L3 Acceptance）に対応する。すべて TS であることは、スイートを構成上クロスプラットフォームにする: 同じファイルが macOS、Linux、ネイティブ Windows で同一に走る。テストはファイルの存在からレンダリングされたターミナルの journey まですべてを検証し、hook、agent、stage、または settings への変更がリグレッションを持ち込まないことを保証する。</p>
+<h3 id="test-levels">Test Levels</h3>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Directory</th>
+<th>What It Covers</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Smoke</strong> (L1)</td>
+<td><code>tests/smoke/</code></td>
+<td>ファイルの存在、agent/stage/protocol の構造、SKILL.md グラフの整合性、settings.json スキーマ。欠けた、または名前を誤ったファイルを捕まえる高速な構造チェック。LLM なし。</td>
+</tr>
+<tr>
+<td><strong>Unit</strong> (L1)</td>
+<td><code>tests/unit/</code></td>
+<td>13 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。</td>
+</tr>
+<tr>
+<td><strong>Integration</strong> (L2)</td>
+<td><code>tests/integration/</code></td>
+<td>コンポーネント横断の契約（scope-to-stage のマッピング、stage-agent のクロスチェック、protocol の準拠、audit/runtime-graph の end-to-end）と、<code>claude</code> CLI または SDK を通じて駆動される live な stage/CLI ユーティリティ。live ファイルは <code>claude</code> が無いときクリーンにスキップする。</td>
+</tr>
+<tr>
+<td><strong>E2E</strong> (L3)</td>
+<td><code>tests/e2e/</code></td>
+<td>完全なライフサイクルと worktree のプリミティブ、加えて、実際の AskUserQuestion gate に答えることがディスク state を前進させることを証明するレンダリングされたターミナル（<code>tui-drive.ts</code>）の journey。live な journey は <code>claude</code> + Bedrock creds を要し、<code>AIDLC_TUI_LIVE=1</code> の背後で gate される。</td>
+</tr>
+</tbody></table>
+<p>完全なテスト戦略、カバレッジレジストリ、そしてテストの足し方については、<a href="09-testing.html">Testing</a> を参照。</p>
+<h2 id="cross-references-1">Cross-References</h2>
+<ul>
+<li><a href="03-orchestrator.html">Orchestrator</a> -- SKILL.md の deep-dive</li>
+<li><a href="04-stage-protocol.html">Stage Protocol</a> -- 振る舞いの契約</li>
+<li><a href="05-agent-system.html">Agent System</a> -- agent の構造と設定</li>
+<li><a href="06-hooks-and-tools.html">Hooks and Tools</a> -- hook の実装</li>
+<li><a href="10-knowledge-system.html">Knowledge System</a> -- 2 tier アーキテクチャ</li>
+<li><a href="diagrams.html">Diagrams</a> -- すべての Mermaid 図を 1 箇所に</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/01-architecture.md"><code>docs/reference/01-architecture.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

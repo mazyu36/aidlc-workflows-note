@@ -11,15 +11,17 @@
 <script type="module" src="../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/13-customization</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../index.html">総合索引</a>
   <a href="../../index.html">Atlas トップ</a>
@@ -111,7 +113,7 @@
 </ul>
 <hr>
 <h2 id="agent-models-and-effort-tiers">エージェントのモデルと effort（tier）</h2>
-<p>同梱エージェントは <code>tier:</code>（<code>judgment</code> | <code>balanced</code> | <code>templated</code>）付きで書かれており、ビルドが各 harness ネイティブの model / effort キーへ投影する — judgment のエージェントはセッションのモデルと effort を継承し、balanced のエージェントは中型モデルを固定し（Claude Code・Codex・opencode。Kiro では全 tier がセッションモデルを継承）、templated のエージェントは同じ非 Kiro harness で effort も下げる。完全な投影表は <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/05-agent-system.md">エージェントシステム</a> を参照。</p>
+<p>同梱エージェントは <code>tier:</code>（<code>judgment</code> | <code>balanced</code> | <code>templated</code>）付きで書かれており、ビルドが各 harness ネイティブの model / effort キーへ投影する — judgment のエージェントはセッションのモデルと effort を継承し、balanced のエージェントは中型モデルを固定し（Claude Code・Codex・opencode。Kiro では全 tier がセッションモデルを継承）、templated のエージェントは同じ非 Kiro harness で effort も下げる。完全な投影表は <a href="../reference/05-agent-system.html">エージェントシステム</a> を参照。</p>
 <p>インストール済みコピーで 1 体のエージェントだけ挙動を変えるには、投影された値を直接編集する — 例えば Claude のエージェント <code>.claude/agents/aidlc-*-agent.md</code> の frontmatter に <code>model: opus</code> を設定する。Kiro ではサーフェスが harness に依存する: Kiro CLI ではエージェントの <code>.kiro/agents/aidlc-*-agent.json</code> に <code>&quot;model&quot;</code> フィールドを足し、Kiro IDE ではエージェントの <code>.kiro/agents/aidlc-*-agent.md</code> frontmatter に <code>model:</code> 行を設定する（エージェントの JSON ファイルは CLI 専用 — IDE は spawn 時に <code>.md</code> frontmatter を読む）。どちらの場合もインストールで有効なモデル ID を使うこと。Kiro のエージェントはモデル固定なしで出荷されるため、既定ではセッションモデルを継承する。この編集は <code>dist/&lt;harness&gt;/</code> シェルを再コピーするまで生き残る。ソースから自分のディストリビューションをビルドする際に全エージェントへ上限を掛けるには、<code>core/memory/org.md</code>/<code>project.md</code> の frontmatter に <code>tier_cap:</code> を設定するか、パッケージャを <code>AIDLC_TIER_CAP=&lt;tier&gt;</code> で実行する — どちらも <code>bun scripts/package.ts</code> のパック時のノブであり、ランタイム設定ではない。</p>
 <hr>
 <h2 id="per-project-default-scope">プロジェクト単位の既定 scope</h2>
@@ -133,7 +135,7 @@
 <li><code>.claude/settings.json</code> の <code>AWS_AIDLC_DEFAULT_SCOPE</code> env 変数。</li>
 <li>ハードコードされたフォールバック（intent birth では <code>poc</code>、マッチしない自由記述では <code>feature</code>）。</li>
 </ol>
-<p><strong>有効値:</strong> <code>enterprise</code>、<code>feature</code>、<code>mvp</code>、<code>poc</code>、<code>bugfix</code>、<code>refactor</code>、<code>infra</code>、<code>security-patch</code>、<code>workshop</code>。無効な値は呼び出し時に明確なメッセージでエラーになる。チームは <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイルを置いてメンバー stage の <code>scopes:</code> リストにタグ付けすることで追加の scope を定義できる — <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md#adding-a-scope">コントリビューション: scope の追加</a> を参照。<code>.claude/agents/</code> に追加のエージェントも定義できる — <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md#adding-an-agent">コントリビューション: エージェントの追加</a> を参照。</p>
+<p><strong>有効値:</strong> <code>enterprise</code>、<code>feature</code>、<code>mvp</code>、<code>poc</code>、<code>bugfix</code>、<code>refactor</code>、<code>infra</code>、<code>security-patch</code>、<code>workshop</code>。無効な値は呼び出し時に明確なメッセージでエラーになる。チームは <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイルを置いてメンバー stage の <code>scopes:</code> リストにタグ付けすることで追加の scope を定義できる — <a href="../reference/11-contributing.html#adding-a-scope">コントリビューション: scope の追加</a> を参照。<code>.claude/agents/</code> に追加のエージェントも定義できる — <a href="../reference/11-contributing.html#adding-an-agent">コントリビューション: エージェントの追加</a> を参照。</p>
 <p><strong>設定の検証:</strong> <code>/aidlc --doctor</code> で env 変数が設定済み・有効であることを確認する:</p>
 <pre class="term"><code><span class="t-ok">✓  AWS_AIDLC_DEFAULT_SCOPE=workshop (valid)</span></code></pre>
 <p><strong>初期化時の通知:</strong> env の既定が適用されるとき、orchestrator はワークフロー開始時に 1 行の通知（<code>Using scope=&lt;value&gt; from AWS_AIDLC_DEFAULT_SCOPE (.claude/settings.json)</code>）を表示し、scope の出所が効いた瞬間に見えるようにする。</p>
@@ -228,7 +230,7 @@
 <p>allow リストからツールを外すと、使用のたびに手動承認が要るようになる。<code>Task</code> を外すと、4 つの dispatch される stage（2.1 Reverse Engineering の pipeline、2.2 Practices Discovery の subagent、2.4 User Stories の mob、3.5 Code Generation の subagent）が委譲のたびに許可を求めるようになる点に注意。ワークスペース検出（0.2）は <code>aidlc-utility intent-birth</code> の中で決定論的に実行される — <code>Task</code> は使わない。</p>
 <hr>
 <h2 id="extending-ai-dlc">AI-DLC の拡張</h2>
-<p>上記の settings・scope・depth・stage の編集は、あなたが走らせるワークフローの日々の調整を覆う。フレームワークそのものをチーム向けに作り変えたいとき — stage の追加、エージェントの追加、scope の定義、常設 rule の教示、決定論チェックの束線、ドメイン知識の追加 — それは独自のガイドを持つ別の仕事である: <strong><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md">Harness Engineer ガイド</a></strong>。</p>
+<p>上記の settings・scope・depth・stage の編集は、あなたが走らせるワークフローの日々の調整を覆う。フレームワークそのものをチーム向けに作り変えたいとき — stage の追加、エージェントの追加、scope の定義、常設 rule の教示、決定論チェックの束線、ドメイン知識の追加 — それは独自のガイドを持つ別の仕事である: <strong><a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a></strong>。</p>
 <p>分かれ目はデータ対コードである。そのガイドにあるものはすべて、フレームワークが読む YAML frontmatter 付きの Markdown ファイルか JSON 設定であり、TypeScript の編集は無い。拡張ごとの行き先:</p>
 <table>
 <thead>
@@ -239,30 +241,30 @@
 </thead>
 <tbody><tr>
 <td>stage の動作を編集する、新しい stage を足す</td>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/01-anatomy-of-a-stage.md">Stage の解剖</a>、<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/02-adding-a-stage.md">Stage の追加</a></td>
+<td><a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>、<a href="../harness-engineering/02-adding-a-stage.html">Stage の追加</a></td>
 </tr>
 <tr>
 <td>エージェントの追加・変更</td>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/03-adding-an-agent.md">エージェントの追加</a></td>
+<td><a href="../harness-engineering/03-adding-an-agent.html">エージェントの追加</a></td>
 </tr>
 <tr>
 <td>scope の定義・調整</td>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/04-scopes.md">Scope</a></td>
+<td><a href="../harness-engineering/04-scopes.html">Scope</a></td>
 </tr>
 <tr>
 <td>常設 rule の教示、学習ループの運用</td>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/05-rules-and-the-loop.md">Rule と学習ループ</a></td>
+<td><a href="../harness-engineering/05-rules-and-the-loop.html">Rule と学習ループ</a></td>
 </tr>
 <tr>
 <td>決定論チェック（sensor）を stage に束線する</td>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/06-sensors.md">Sensor</a></td>
+<td><a href="../harness-engineering/06-sensors.html">Sensor</a></td>
 </tr>
 <tr>
 <td>チームのドメイン知識を足す</td>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/07-team-knowledge.md">チームナレッジ</a></td>
+<td><a href="../harness-engineering/07-team-knowledge.html">チームナレッジ</a></td>
 </tr>
 </tbody></table>
-<p>変更がフレームワークの<em>コード</em> — orchestrator・hook・CLI ツール・コンパイルパイプライン — に及ぶなら、それは <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">開発者リファレンス</a> である。</p>
+<p>変更がフレームワークの<em>コード</em> — orchestrator・hook・CLI ツール・コンパイルパイプライン — に及ぶなら、それは <a href="../reference/00-overview.html">開発者リファレンス</a> である。</p>
 <hr>
 <h2 id="knowledge-and-rules">ナレッジと Rule</h2>
 <p>2 層ナレッジシステムと rule / 学習ループの詳細は次を参照:</p>
@@ -280,7 +282,7 @@
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/13-customization.md"><code>docs/guide/13-customization.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/13-customization.md"><code>docs/guide/13-customization.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

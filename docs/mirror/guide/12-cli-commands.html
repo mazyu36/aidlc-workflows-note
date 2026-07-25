@@ -11,15 +11,17 @@
 <script type="module" src="../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/12-cli-commands</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../index.html">総合索引</a>
   <a href="../../index.html">Atlas トップ</a>
@@ -628,7 +630,7 @@ bun .claude/tools/aidlc-utility.ts select-plugins aidlc,test-pro
 <h3 id="aidlc-graph-validate-grid-arbitrary-grid-dependency-check"><code>aidlc-graph validate-grid</code> — 任意グリッドの依存チェック</h3>
 <p><code>bun .claude/tools/aidlc-graph.ts validate-grid --proposal &lt;path&gt; [--strict] [--project-type &lt;t&gt;] [--keywords &lt;csv&gt;]</code> は、任意の <code>{&quot;&lt;stage&gt;&quot;: &quot;EXECUTE&quot;|&quot;SKIP&quot;}</code> JSON グリッドを検証する。lenient モードは <code>validate-scope</code> を映す（経路外の必須プロデューサは助言）。<code>--strict</code> はそれをハード却下する（recompose の姿勢）。<code>--keywords</code> は付与された各キーワードを、既存 scope が既に主張するキーワードと照合する: 衝突は現職の scope を名指すハードエラーである（composer は gate で付与されたキーワードを書く前にこれを走らせる）。無効なときのみ exit 1。JSON 結果は stdout に着地する。</p>
 <h3 id="aidlc-sensor-inspect-and-fire-sensors"><code>aidlc-sensor</code> — Sensor の検査と発火</h3>
-<p>Sensor は、stage 出力への <code>Write</code> または <code>Edit</code> のたびに走る決定論的なチェックである（<a href="09-rules-and-the-learning-loop.html">ルールと学習ループ</a> とリファレンスの <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/07-sensor-system.md">Sensor システム</a> を参照）。PostToolUse hook があなたのために発火する。このツールは一覧、記述、手動発火を可能にする。</p>
+<p>Sensor は、stage 出力への <code>Write</code> または <code>Edit</code> のたびに走る決定論的なチェックである（<a href="09-rules-and-the-learning-loop.html">ルールと学習ループ</a> とリファレンスの <a href="../reference/07-sensor-system.html">Sensor システム</a> を参照）。PostToolUse hook があなたのために発火する。このツールは一覧、記述、手動発火を可能にする。</p>
 <table>
 <thead>
 <tr>
@@ -697,7 +699,7 @@ bun .claude/tools/aidlc-sensor.ts fire required-sections \
 </tr>
 </tbody></table>
 <pre class="term"><code>bun .claude/tools/aidlc-runtime.ts read requirements-analysis</code></pre>
-<p><code>runtime-graph.json</code> は gitignore される。成果物の形は <a href="14-artifacts-reference.html">成果物リファレンス</a> を、完全なスキーマは <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/13-runtime-graph.md">ランタイムグラフ</a> のリファレンス章を参照。</p>
+<p><code>runtime-graph.json</code> は gitignore される。成果物の形は <a href="14-artifacts-reference.html">成果物リファレンス</a> を、完全なスキーマは <a href="../reference/13-runtime-graph.html">ランタイムグラフ</a> のリファレンス章を参照。</p>
 <h3 id="session-skills-report-on-a-workflow">セッションスキル — ワークフローを報告する</h3>
 <p>3 つの読み取り専用スキルが、<code>aidlc-runtime summary</code> が報告する内容を、読みやすい出力に包んで表に出す。コマンドのようにタイプする:</p>
 <table>
@@ -746,7 +748,7 @@ bun .claude/tools/aidlc-sensor.ts fire required-sections \
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md"><code>docs/guide/12-cli-commands.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md"><code>docs/guide/12-cli-commands.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

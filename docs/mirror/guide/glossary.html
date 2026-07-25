@@ -11,15 +11,17 @@
 <script type="module" src="../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/glossary</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../index.html">総合索引</a>
   <a href="../../index.html">Atlas トップ</a>
@@ -128,7 +130,7 @@
 </tr>
 <tr>
 <td><strong>Conductor</strong></td>
-<td><code>/aidlc</code> セッションそのもの（<code>SKILL.md</code>）。薄い forwarding loop を回す: <strong>Engine</strong> に次の一手を尋ね、それを実行し（stage の実行、質問、swarm のファンアウト）、結果を報告し、繰り返す。所有するのは実行品質であってルーティングではない。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine と Skill システム</a> を参照。</td>
+<td><code>/aidlc</code> セッションそのもの（<code>SKILL.md</code>）。薄い forwarding loop を回す: <strong>Engine</strong> に次の一手を尋ね、それを実行し（stage の実行、質問、swarm のファンアウト）、結果を報告し、繰り返す。所有するのは実行品質であってルーティングではない。<a href="../reference/17-skill-system.html">Engine と Skill システム</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Control loop</strong></td>
@@ -144,7 +146,7 @@
 </tr>
 <tr>
 <td><strong>Directive</strong></td>
-<td><strong>Engine</strong> が <code>next</code> のたびに発行する型付きの指示（例: <code>run-stage</code>、<code>ask</code>、<code>print</code>、<code>done</code>、<code>invoke-swarm</code>）。<strong>Conductor</strong> に次に何をするかを正確に伝える。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine と Skill システム</a> を参照。</td>
+<td><strong>Engine</strong> が <code>next</code> のたびに発行する型付きの指示（例: <code>run-stage</code>、<code>ask</code>、<code>print</code>、<code>done</code>、<code>invoke-swarm</code>）。<strong>Conductor</strong> に次に何をするかを正確に伝える。<a href="../reference/17-skill-system.html">Engine と Skill システム</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Distribution</strong></td>
@@ -152,7 +154,7 @@
 </tr>
 <tr>
 <td><strong>Engine</strong></td>
-<td>stage 間のルーティングすべて — scope の解決、stage の順序付け、ジャンプ、再開、gate の状態 — を所有し、<strong>Conductor</strong> が実行する型付き <strong>Directive</strong> を発行する決定論的オーケストレーションツール（<code>aidlc-orchestrate.ts</code>。サブコマンドはちょうど 3 つ: <code>next</code>・<code>report</code>・<code>park</code>）。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine と Skill システム</a> を参照。</td>
+<td>stage 間のルーティングすべて — scope の解決、stage の順序付け、ジャンプ、再開、gate の状態 — を所有し、<strong>Conductor</strong> が実行する型付き <strong>Directive</strong> を発行する決定論的オーケストレーションツール（<code>aidlc-orchestrate.ts</code>。サブコマンドはちょうど 3 つ: <code>next</code>・<code>report</code>・<code>park</code>）。<a href="../reference/17-skill-system.html">Engine と Skill システム</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>External tool</strong></td>
@@ -204,7 +206,7 @@
 </tr>
 <tr>
 <td><strong>MCP server</strong></td>
-<td>プロジェクトルート（<code>.claude/</code> の隣）の <code>.mcp.json</code> で宣言され、Claude Code のセッションにプロビジョニングされる外部ツールサーバー。この実装は 5 つ同梱する: <code>context7</code> と 4 つの AWS サーバー（<code>aws-mcp</code>・<code>aws-pricing</code>・<code>aws-iac</code>・<code>aws-serverless</code>）。すべてのエージェントがセッションの全 MCP サーバーを継承する — エージェント別の許可は無く、あるエージェントに使わせ<em>ない</em>には <code>tools:</code> 許可リストを特定の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id に絞る。認証情報の無いサーバーは単に利用不可となり、ワークフローを決してブロックしない。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/14-claude-features.md#mcp-servers">Harness プリミティブの対応 — MCP サーバー</a> と <a href="01-getting-started.html#mcp-servers-optional">はじめかた</a> を参照。</td>
+<td>プロジェクトルート（<code>.claude/</code> の隣）の <code>.mcp.json</code> で宣言され、Claude Code のセッションにプロビジョニングされる外部ツールサーバー。この実装は 5 つ同梱する: <code>context7</code> と 4 つの AWS サーバー（<code>aws-mcp</code>・<code>aws-pricing</code>・<code>aws-iac</code>・<code>aws-serverless</code>）。すべてのエージェントがセッションの全 MCP サーバーを継承する — エージェント別の許可は無く、あるエージェントに使わせ<em>ない</em>には <code>tools:</code> 許可リストを特定の <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> id に絞る。認証情報の無いサーバーは単に利用不可となり、ワークフローを決してブロックしない。<a href="../reference/14-claude-features.html#mcp-servers">Harness プリミティブの対応 — MCP サーバー</a> と <a href="01-getting-started.html#mcp-servers-optional">はじめかた</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>memory.md</strong></td>
@@ -224,7 +226,7 @@
 </tr>
 <tr>
 <td><strong>Orchestrator</strong></td>
-<td>ワークフローがどう駆動されるかの総称: 次に何が起きるかを決める決定論的な <strong>Engine</strong> と、それを実行する <strong>Conductor</strong>（<code>SKILL.md</code>）。<code>/aidlc</code> で呼び出す。<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Engine と Skill システム</a> を参照。</td>
+<td>ワークフローがどう駆動されるかの総称: 次に何が起きるかを決める決定論的な <strong>Engine</strong> と、それを実行する <strong>Conductor</strong>（<code>SKILL.md</code>）。<code>/aidlc</code> で呼び出す。<a href="../reference/17-skill-system.html">Engine と Skill システム</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Packager</strong></td>
@@ -325,7 +327,7 @@
 </tbody></table>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/glossary.md"><code>docs/guide/glossary.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/glossary.md"><code>docs/guide/glossary.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

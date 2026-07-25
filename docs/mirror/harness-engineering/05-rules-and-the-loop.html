@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rule と学習ループ — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / harness-engineering/05-rules-and-the-loop</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">HARNESS ENGINEERING</div>
+  <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a>
+  <a href="../harness-engineering/01-anatomy-of-a-stage.html">Stage の解剖</a>
+  <a href="../harness-engineering/02-adding-a-stage.html">Stage を足す</a>
+  <a href="../harness-engineering/03-adding-an-agent.html">Agent を足す</a>
+  <a href="../harness-engineering/04-scopes.html">Scope</a>
+  <a href="../harness-engineering/05-rules-and-the-loop.html" class="here">Rule と学習ループ</a>
+  <a href="../harness-engineering/06-sensors.html">Sensor</a>
+  <a href="../harness-engineering/07-team-knowledge.html">チーム Knowledge</a>
+  <a href="../harness-engineering/08-construction-and-swarm.html">Construction と swarm</a>
+  <a href="../harness-engineering/09-porting-to-a-new-harness.html">AI-DLC を新しい harness へ移植する</a>
+  <a href="../harness-engineering/10-authoring-a-plugin.html">Plugin を著述する</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#the-five-layers-and-which-file-you-edit">5 つのレイヤーと、どのファイルを編集するか</a>
+  <a href="#strict-additive-layers-stack-none-silently-overrides">strict-additive: レイヤーは積み重なり、どれも静かに上書きしない</a>
+  <a href="#operating-the-learning-loop">学習ループを運用する</a>
+  <a href="#next">次へ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / HARNESS-ENGINEERING</p>
+<h1 id="rules-and-the-learning-loop">Rule と学習ループ</h1>
+<p>rule は、チームがすべてのワークフローに持ち込む恒常的な決定である — さもなくば各実行の
+開始時に説明し直すことになる「いつもこうやる」。harness engineer として、あなたはそれを
+2 通りで著述する: rule ファイルを直接編集するか、<strong>学習ループ</strong>にワークフロー内の訂正を
+永続的な rule へ昇格させてもらうか。この章は、ユーザーガイドの
+<a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a> の章の著述側の伴走である —
+その章はループを概念的に扱い、ANZ 銀行の例を end to end で歩く。ここでの焦点は運用である:
+何のためにどのファイルを編集するか、rule を積み重ねるとき strict-additive モデルがどう
+振る舞うか、そして一度きりの修正が恒常的な rule になるようループをどう走らせるか。</p>
+<p>rule は制御ループのフィードフォワードの半分である — agent が働く<em>前に</em>読む散文。
+<a href="06-sensors.html">Sensor</a> はフィードバックの半分である — 書き込みの<em>後に</em>発火する決定論的な
+チェック。rule は sensor を伴走者として名指せる; 2 つの半分はペアになるよう設計されている。</p>
+<hr>
+<h2 id="the-five-layers-and-which-file-you-edit">5 つのレイヤーと、どのファイルを編集するか</h2>
+<p>rule は <code>core/memory/</code> の下に Markdown ファイルとして住む（space memory レイヤーの著述された
+ソース）。scope ごとに 1 ファイル。<code>scope:</code> frontmatter フィールドは無い — この実装は
+ファイル名から scope を導くので、あなたが選ぶファイルこそが、あなたが著述する scope<em>である</em>:</p>
+<table>
+<thead>
+<tr>
+<th>こういう rule が欲しい…</th>
+<th>編集</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>組織のすべてのプロジェクト</td>
+<td><code>org.md</code></td>
+<td>org（フレームワーク既定）</td>
+</tr>
+<tr>
+<td>チームが走らせるすべてのプロジェクト</td>
+<td><code>team.md</code></td>
+<td>team</td>
+</tr>
+<tr>
+<td>この 1 つのプロジェクト</td>
+<td><code>project.md</code></td>
+<td>project</td>
+</tr>
+<tr>
+<td>1 つの phase のすべての stage</td>
+<td><code>phases/&lt;phase&gt;.md</code></td>
+<td>phase</td>
+</tr>
+</tbody></table>
+<p>4 つの phase ファイルは <code>phases/ideation.md</code>、<code>phases/inception.md</code>、
+<code>phases/construction.md</code>、<code>phases/operation.md</code> である（initialization は
+ブートストラップ専用で、rule ファイルを同梱しない）。5 つ目のレイヤー — stage ごとの rule
+（<code>aidlc-stage-&lt;slug&gt;.md</code>）— は将来のリリースに予約されている; まだ著述できない。</p>
+<p>どのファイルに手を伸ばすかを、2 つの判断が駆動する:</p>
+<ul>
+<li><strong><code>org.md</code> はフレームワーク同梱である。</strong> それはすべてのプロジェクトが継承する既定を運ぶ
+— trunk-based development、walking-skeleton ポリシー、scope ごとのテスト姿勢。upstream と
+して扱う。ほとんどの harness engineer はそれに触れず、team か project で著述する。</li>
+<li><strong>project scope は恒常的な逸脱のためであり、何にでもではない。</strong> <em>この</em>プロジェクトが
+チーム全体のプラクティスから安定して逸れるとき — チームが squash するところで rebase する
+monorepo、テストの下限を飛ばすレガシープロジェクト — にだけ <code>project.md</code> に手を伸ばす。
+その rule がチームの走らせるすべてのプロジェクトを助けるなら、それは <code>team.md</code> に属す。</li>
+</ul>
+<p>各ファイルはトピック別の見出しの下の素の散文である — <code>## Way of Working</code>、
+<code>## Testing Posture</code>、<code>## Deployment</code>、<code>## Code Style</code>、など。rule を足すには、それが
+属す見出しの下に箇条書きを足す。完全なファイル名-scope テーブルと resolver の仕組みが
+規範的な契約である:
+<a href="../reference/08-rule-system.html#filename-derived-scope">Rule System § ファイル名由来の scope</a>
+と <a href="../reference/08-rule-system.html#layout">§ レイアウト</a>。</p>
+<hr>
+<h2 id="strict-additive-layers-stack-none-silently-overrides">strict-additive: レイヤーは積み重なり、どれも静かに上書きしない</h2>
+<p>チェーンはすべてのワークフローの開始時に 5 つのレイヤーを通して解決する:</p>
+<pre class="term"><code>org → team → project → phase → stage</code></pre>
+<p>モデルは <strong>strict-additive</strong> である。適用可能なすべての rule が一度に agent のコンテキストに
+現れる — 実行時に落とされたり抑制されたりするものは無い。org の既定、team のプラクティス、
+project の特化が連結する; 合致する phase rule が付くのは、stage が既にその <code>phase:</code> を
+frontmatter で宣言しているからである（stage が他のすべてをインポートするのに使うのと同じ
+pull 著述の方向）。解決したチェーンはワークフロー開始時に一度だけ各 stage ノードに焼き込まれる
+— ランタイムはそれを再び歩かない。
+<a href="../reference/08-rule-system.html#strict-additive-runtime-model">Rule System § strict-additive ランタイムモデル</a>
+と <a href="../reference/08-rule-system.html#five-layer-inheritance">§ 5 層の継承</a> を参照。</p>
+<p>これが著述者としてのあなたに意味すること: 設定すべき <code>overrides:</code> ブロックも
+<code>enforcement:</code> キーワードも無い。より狭いレイヤーがより広いものに静かに勝つことはない。
+代わりに、あなたが書くすべてのレイヤーが同時に agent の視界にある。それは著述の仕方を変える
+— rule はそれが適用されるべき scope で肯定的に述べ、上のレイヤーを抑制するスイッチに手を
+伸ばすのではなく、それらと積み重なることを信頼する。</p>
+<h3 id="conflicts-are-rejected-when-you-write-not-resolved-at-runtime">衝突は書くときに拒否され、実行時に解決されるのではない</h3>
+<p>実行時に何も上書きしないので、より広い scope の rule に<em>矛盾する</em> rule は、resolver が
+解きほぐせない問題になってしまう。フレームワークはそれを、実行時ではなく<strong>書き込み時</strong>に
+チェックすることで未然に防ぐ。team scope の rule がある <code>## Heading</code> の下に足されようと
+しているとき、admission gate が提案されたテキストを <code>org.md</code> の同じ見出しと比較する; 矛盾を
+見つけると、gate は書き込みを止めて 3 つの選択肢を提示する — <strong>revise</strong>、<strong>skip</strong>、または
+org-rule のオーナーへの <strong>escalate</strong>。project 層の書き込みは org に対してのみチェックする。
+team 対 project の差異は正当な project の特化であり、ポリシー違反ではないからである。</p>
+<p>このチェックは、フレームワークが所有する 2 つの admission gate — practices-discovery の
+affirmation gate と learning gate（後述）— で走るので、rule が resolver に到達する頃には、
+既に conflict-check を通過している。2 つの読み取り専用の <code>/aidlc --doctor</code> 行が事後に状態を
+提示する: <strong>rule-drift</strong> 行は、team または project の内容が populated な org の見出しに
+重なる見出しを（人間が検証すべき候補の矛盾として）フラグし、<strong>paired-coverage</strong> 行は、実際に
+解決する sensor を名指す rule がいくつあるかを報告する。両者は助言であり、exit code を決して
+変えない。<a href="../reference/08-rule-system.html#rule-drift-detection">Rule System § rule-drift 検出</a> を参照。</p>
+<hr>
+<h2 id="operating-the-learning-loop">学習ループを運用する</h2>
+<p>rule が著述されるもう 1 つの道は、あなたがファイルを決して開かないことである — ワークフロー
+中に agent を訂正し、gate でその訂正を確認すると、フレームワークがあなたのために書く。それが
+学習ループである。ほとんどの stage 実行は何も足さず、それは健全である; ループは stage 中の
+何かが保つに値するときだけ発火する。</p>
+<p>仕組みは <a href="../guide/09-rules-and-the-learning-loop.html">ユーザーガイドの章</a> で扱う。
+harness engineer の視点は、ループが何を生み、それがどこに着地するかである:</p>
+<ol>
+<li><strong>日記が stage 中に記録する。</strong> conductor（アクティブな stage を走らせるライブの
+<code>/aidlc</code> セッション）は <code>&lt;record&gt;/&lt;phase&gt;/&lt;stage&gt;/memory.md</code>（intent の record dir
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> の下）に観察ログを保つ。エントリは
+4 つの見出しの下に置かれる — Interpretations、Deviations、Tradeoffs、Open questions。
+それは自動作成され、あなたのために保守される; 決して手編集しない。日記を書くことは、この
+ループで言語モデルが持つ<em>唯一の</em>仕事である — stage の後のすべて（数える、提示する、経路
+づける、書く）は決定論的なツールか、gate でのあなたの明示的な選択である。</li>
+<li><strong>gate が候補を提示する。</strong> 承認 gate の前に、learning gate が <code>memory.md</code> を読み、
+空でない各日記行を逐語の候補として示す。加えて自由記述の「次回のために足すことは？」
+チャネルがあり、そこで観察をタイプし、それが 4 つの見出しのどれに属すかを選ぶ。</li>
+<li><strong>何を保つかをあなたが確認し、それが書かれる。</strong> 確認された learning は日付付きの
+エントリとして着地する — あなたはファイルパスを決して選ばない; 見出しが行き先を決める。</li>
+</ol>
+<h3 id="where-a-kept-learning-lands">保たれた learning がどこに着地するか</h3>
+<p>確認された learning は practice <em>である</em>: それは practices-discovery が affirm するのと
+同じ space memory ファイル（<code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code> /
+<code>memory/project.md</code>）に着地する — 別個の <code>*-learnings.md</code> サーフェスは無い。gate はそれを
+トピック別の見出しで経路づける:</p>
+<table>
+<thead>
+<tr>
+<th>gate での見出し</th>
+<th>着地先</th>
+<th>Audit イベント</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Interpretation / Deviation / Tradeoff</td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/memory/project.md</code>（既定）</td>
+<td><code>RULE_LEARNED</code></td>
+</tr>
+<tr>
+<td>同上、ワンクリックで昇格</td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/memory/team.md</code></td>
+<td><code>RULE_LEARNED</code></td>
+</tr>
+<tr>
+<td>Open question</td>
+<td>何も無し — research 項目は昇格しない</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<p>既定の scope は最も狭い <strong>project</strong> である。ワンクリックの「team に昇格」アフォーダンスが、
+教訓がこのプロジェクトを越えて適用されるとき learning を <code>memory/team.md</code> へ広げる。org に
+広げる道は無い — org のプラクティスはフレームワーク同梱か、別プロセスで組織が著述するので、
+ループは org scope で決して書かない。既定を狭く保つことは、1 つのプロジェクトの驚きが偶然に
+組織全体の rule になるのを止める。学習ループと practices-discovery は、これらの同じファイルに
+2 つの異なるライフサイクルで書く: ループは日付付きエントリを一度に 1 つ追記し、
+practices-discovery はセクション全体を affirm する。resolver はファイルを清潔な整数チェーン
+org → team → project → phase でソートする。</p>
+<h3 id="when-the-learning-is-a-check-not-a-rule-sensor_proposed">learning が rule ではなくチェックのとき（<code>SENSOR_PROPOSED</code>）</h3>
+<p>保つに値するものが<em>繰り返される手作業のチェック</em>であることがある — あなたは同じギャップを
+求めて stage の出力を見続ける。その種の learning を gate で確認すると、フレームワークはそれを
+rule ではなく sensor の束縛として扱う。それは 2 つの書き込みをアトミックにインストールする:
+<code>.claude/sensors/</code> の下に sensor manifest をスキャフォールドし、新しい sensor の id を発生元の
+stage の <code>sensors:</code> インポートリストに追記し、<code>SENSOR_PROPOSED</code> audit 行を残す。それが、
+フレームワークのリリース外で stage ファイルへの認可された唯一の編集である — インポートリスト
+だけが伸びる; stage 本体は決して触れられない。そこから、<a href="06-sensors.html">Sensor</a> を使って
+manifest を手で肉付けする — ループは束縛をスキャフォールドする; あなたはチェックを著述する。</p>
+<h3 id="learnings-apply-on-the-next-workflow-not-the-one-in-flight">learning は進行中のものではなく、次のワークフローで適用される</h3>
+<p>gate で捕らえた learning は、現在の実行の残りの rule を <strong>変えない</strong>。あなたはこの
+ワークフローについて既に会話で agent を訂正した; rule は次回のためである。新しい行はディスク上
+にあるが、進行中のワークフローは開始時のコンパイル済みビューを保つ。あなたが走らせる<em>次の</em>
+<code>/aidlc</code> が再コンパイルし、ディレクトリの走査が新しいファイルを拾い、rule は stage 1 以降から
+適用される。</p>
+<p>これは手で著述するときにも重要である: ワークフローの途中で <code>team.md</code> を編集しても、進行中の
+実行を遡って変えはしない。rule は次の compile 境界で効力を持つ。変更を即座に効かせる必要が
+あるなら、compile があなたの編集を再び読むように、ワークフローを終えるか再開する。</p>
+<hr>
+<h2 id="next">次へ</h2>
+<p><a href="06-sensors.html">Sensor</a> — 決定論的なチェックを著述し、それを走らせるべき stage に束ねる。
+ループが <code>SENSOR_PROPOSED</code> learning を確認したときにスキャフォールドする manifest も含む。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/05-rules-and-the-loop.md"><code>docs/harness-engineering/05-rules-and-the-loop.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

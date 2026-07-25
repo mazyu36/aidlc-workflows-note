@@ -11,15 +11,17 @@
 <script type="module" src="../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/17-skills</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../index.html">総合索引</a>
   <a href="../../index.html">Atlas トップ</a>
@@ -192,7 +194,7 @@ skill を、ピッカーから先頭 <code>/</code> で打つ — を使う。Ki
 bun .claude/tools/aidlc-runner-gen.ts scopes --check   # scope-runner drift
 </code></pre>
 <p>再生成されないままグラフに足された stage — あるいは消えた stage の孤児ランナー — は diff とともに大きく失敗する。stage ファイルを足して再生成することが執筆経路のすべてであり、ランナーはジェネレータが維持する帰結として付いてくる。</p>
-<p>stage ファイルの書き方の実際は <a href="13-customization.html">カスタマイズ</a> と <a href="04-phases-and-stages.html">Phase と Stage</a> を参照。エンジン・directive の契約・ランナーシェルが内部で <code>next</code>/<code>report</code> をどう駆動するかは、リファレンスの <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/17-skill-system.md">Skill システム</a> の章を参照。</p>
+<p>stage ファイルの書き方の実際は <a href="13-customization.html">カスタマイズ</a> と <a href="04-phases-and-stages.html">Phase と Stage</a> を参照。エンジン・directive の契約・ランナーシェルが内部で <code>next</code>/<code>report</code> をどう駆動するかは、リファレンスの <a href="../reference/17-skill-system.html">Skill システム</a> の章を参照。</p>
 <hr>
 <h2 id="quick-reference">クイックリファレンス</h2>
 <pre class="term"><code><span class="t-hdr"># Full workflow</span>
@@ -214,7 +216,7 @@ bun .claude/tools/aidlc-runner-gen.ts scopes</code></pre>
 <p>参照: <a href="12-cli-commands.html">CLI コマンド</a> · <a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> · <a href="13-customization.html">カスタマイズ</a></p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/17-skills.md"><code>docs/guide/17-skills.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/17-skills.md"><code>docs/guide/17-skills.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

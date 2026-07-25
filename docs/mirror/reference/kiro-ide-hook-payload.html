@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiro IDE hook payload — 実証リファレンス — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/kiro-ide-hook-payload</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html" class="here">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#the-channel-user_prompt-env-var-not-stdin">チャネル: stdin ではなく USER_PROMPT 環境変数</a>
+  <a href="#per-event-captures">イベントごとのキャプチャ</a>
+  <a href="#consequences-for-each-hook">各 hook への帰結</a>
+  <a href="#toolresult-path-extraction-patterns">toolResult パス抽出パターン</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="kiro-ide-hook-payload-empirical-reference">Kiro IDE hook payload — 実証リファレンス</h1>
+<p>Kiro IDE が <code>runCommand</code> hook にどうコンテキストを届けるか。stdin・argv・完全な
+環境をダンプする probe <code>.kiro.hook</code> ファイルを登録し、Kiro IDE 0.12-main 上でライブに
+捕捉した。これは <code>harness/kiro-ide/</code> アダプタの IDE ブランチの証拠ベースである;
+CLI harness（<code>harness/kiro/</code>）は、異なる stdin ベースの機構を使う。</p>
+<h2 id="the-channel-user_prompt-env-var-not-stdin">チャネル: stdin ではなく <code>USER_PROMPT</code> 環境変数</h2>
+<p>Kiro IDE の <code>runCommand</code> hook は、そのイベントコンテキストを stdin ではなく
+<strong><code>USER_PROMPT</code> 環境変数</strong> を通じて受け取る。</p>
+<ul>
+<li><p><strong>stdin</strong> は開かれるが、書き込まれることも閉じられることもないため、<code>Bun.stdin.text()</code> はハングする。旧アダプタの stdin 読み取りは IDE では決して動作し得なかった（2 秒のタイムアウトに落ち、空の payload で進行した）。</p>
+</li>
+<li><p><strong><code>USER_PROMPT</code></strong> は次の形の JSON 文字列である:</p>
+<pre><code class="language-json">{ &quot;toolName&quot;: &quot;fs_write&quot;, &quot;toolArgs&quot;: {}, &quot;toolResult&quot;: &quot;Created the /abs/path/file.md file.&quot;, &quot;toolSuccess&quot;: true }
+</code></pre>
+</li>
+</ul>
+<p><code>VSCODE_IPC_HOOK</code> / <code>VSCODE_PID</code> も IDE には存在する（CLI には無い）が、アダプタは
+コンテキストチャネルとして <code>USER_PROMPT</code> を手がかりにする。</p>
+<h2 id="per-event-captures">イベントごとのキャプチャ</h2>
+<table>
+<thead>
+<tr>
+<th>イベント</th>
+<th><code>toolName</code></th>
+<th><code>toolArgs</code></th>
+<th><code>toolResult</code></th>
+<th>復元可能か？</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>postToolUse(write) — create</td>
+<td><code>fs_write</code></td>
+<td><code>{}</code>（空）</td>
+<td><code>Created the &lt;ABS_PATH&gt; file.</code></td>
+<td>path: <code>toolResult</code> の散文からのみ</td>
+</tr>
+<tr>
+<td>postToolUse(write) — edit</td>
+<td><code>str_replace</code></td>
+<td><code>{}</code>（空）</td>
+<td><code>Replaced text in &lt;ABS_PATH&gt;</code></td>
+<td>path: <code>toolResult</code> の散文からのみ</td>
+</tr>
+<tr>
+<td>postToolUse(write) — append</td>
+<td><code>fs_append</code></td>
+<td><code>{}</code>（空）</td>
+<td><code>Appended the text to the &lt;ABS_PATH&gt; file.</code></td>
+<td>path: <code>toolResult</code> の散文からのみ</td>
+</tr>
+<tr>
+<td>postToolUse(shell)</td>
+<td><code>execute_bash</code></td>
+<td><code>{}</code>（空）</td>
+<td><code>Output:\n&lt;stdout&gt;\n\nExit Code: 0</code></td>
+<td>command: <strong>復元不可</strong>（stdout のみ）</td>
+</tr>
+</tbody></table>
+<h3 id="critical-limitations">重大な制限</h3>
+<ol>
+<li><strong><code>toolArgs</code> は常に <code>{}</code> である。</strong> IDE は tool の入力を決して渡さない。したがって、書き込まれたファイルパスは <code>toolResult</code> の散文から解析せねばならず、shell コマンドはまったく存在しない（stdout と exit code のみ）。</li>
+<li><strong>stdin は死んでいる。</strong> アダプタは <code>process.env.USER_PROMPT</code> を読む。</li>
+<li><strong><code>toolResult</code> 中のパスは workspace 相対である</strong>が、core hook は絶対の record root と比較する — そこでアダプタは、転送する前にそれらを絶対パスに解決する。</li>
+</ol>
+<h2 id="consequences-for-each-hook">各 hook への帰結</h2>
+<ul>
+<li><strong>audit-logger / sensor-fire</strong> — 復元可能: <code>toolResult</code> からファイルパスを掻き取り、絶対パスに解決し、core hook に Claude 形の <code>{tool_input:{file_path}}</code> を渡す。既知のパターンに文言が合致しない write クラスの tool は、可視の hook-drop を記録する（静かな no-op には決してならない）。</li>
+<li><strong>runtime-compile</strong> — shell コマンドは復元不可なので、IDE 経路は command フィルタを落とし、純粋に audit tail でゲートする（mtime の冪等性ガード付きで、残存する遷移 — 例えば <code>WORKFLOW_COMPLETED</code> の後 — が後続のすべての shell コマンドで再コンパイルを起こさないようにする）。</li>
+<li><strong>sync-statusline</strong> — IDE は task payload を与えないので、audit tail 中の最新の <code>STAGE_STARTED</code> から現在の stage を導出する。これは <strong>forward-only</strong> のミラーである: <code>Current Stage</code> を完了済みまたはスキップされた stage に巻き戻すことは決してなく、ワークフローが <code>Running</code> でないときには決して発火しない（完了したワークフローの復活を防ぐ）。<code>shell</code> イベントに配線されている — <code>spec</code> イベントは IDE では決して発火しない。</li>
+<li><strong>session-start / session-end / stop</strong> — payload を必要としない; 変更なし。</li>
+</ul>
+<h2 id="toolresult-path-extraction-patterns">toolResult パス抽出パターン</h2>
+<table>
+<thead>
+<tr>
+<th>toolName</th>
+<th>文言</th>
+<th>正規の tool</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fs_write</code></td>
+<td><code>Created the &lt;PATH&gt; file.</code></td>
+<td>Write</td>
+</tr>
+<tr>
+<td><code>str_replace</code></td>
+<td><code>Replaced text in &lt;PATH&gt;</code>（末尾に <code> (N occurrences)</code> を伴うことがある）</td>
+<td>Edit</td>
+</tr>
+<tr>
+<td><code>fs_append</code></td>
+<td><code>Appended the text to the &lt;PATH&gt; file.</code></td>
+<td>Edit</td>
+</tr>
+</tbody></table>
+<p>extractor はマッチ前に末尾の空白/改行をトリムし、<code>str_replace</code> 形式からは末尾の括弧を剥ぐ。<code>fs_write</code> は <code>Write</code> に対応づけられる; <code>str_replace</code>/<code>fs_append</code> は <code>Edit</code> に対応づけられる（どちらも既存のファイルを対象にする → core audit-logger は <code>ARTIFACT_UPDATED</code> を記録する）。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/kiro-ide-hook-payload.md"><code>docs/reference/kiro-ide-hook-payload.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

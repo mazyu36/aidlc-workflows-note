@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensor システム — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<script defer src="../../assets/mermaid.min.js"></script>
+<script defer src="../../assets/highlight.min.js"></script>
+<script defer src="../../assets/app.js"></script>
+<script type="module" src="../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/07-sensor-system</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../index.html">総合索引</a>
+  <a href="../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../reference/01-architecture.html">Architecture</a>
+  <a href="../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../reference/05-agent-system.html">Agent System</a>
+  <a href="../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../reference/07-sensor-system.html" class="here">Sensor システム</a>
+  <a href="../reference/08-rule-system.html">Rule System</a>
+  <a href="../reference/09-testing.html">テスト</a>
+  <a href="../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../reference/11-contributing.html">コントリビューション</a>
+  <a href="../reference/12-state-machine.html">State Machine</a>
+  <a href="../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../reference/04-stages/initialization.html">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../reference/agents/README.html">Agent Reference</a>
+  <a href="../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#manifest-location-and-filename">Manifest の位置とファイル名</a>
+  <a href="#sensor-manifest-schema">Sensor Manifest スキーマ</a>
+  <a href="#kind-enum">kind enum</a>
+  <a href="#how-stages-import-sensors">stage がどう sensor をインポートするか</a>
+  <a href="#matches-filter">matches フィルタ</a>
+  <a href="#default_severity">default_severity</a>
+  <a href="#command-invocation-contract">command: 起動契約</a>
+  <a href="#gate-ritual-handoff-surface-stdout-selections-file-in">Gate-ritual の受け渡し（surface は stdout、selections-file は in）</a>
+  <a href="#defaults-for-scaffolded-manifests">スキャフォールドされる manifest の既定値</a>
+  <a href="#forward-compat-policy">前方互換ポリシー</a>
+  <a href="#reserved-for-future-releases">将来のリリースへの予約</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="sensor-system">Sensor システム</h1>
+<blockquote>
+<p>対象読者: Tier 2/3（team adopter、framework contributor）。</p>
+</blockquote>
+<p>この章は AI-DLC の sensor manifest の <strong>スキーマリファレンス</strong> である — stage の出力への書き込みで発火する決定論的なチェックのことである。sensor は制御ループのフィードバックの半分であり、rule はフィードフォワードの半分である（次章の <a href="08-rule-system.html">Rule システム</a> を参照）。<a href="02-plane-architecture.html">Plane アーキテクチャ</a> の章は、両者を compile が各 stage ノードへ解決する control-plane の入力として枠づける。</p>
+<p>この章は manifest の <em>ファイル形式</em> を扱う — sensor manifest が何を含むか、stage がどう sensor をインポートするか、同梱される 4 つの manifest がどう設定されるか。ワークフロー中に sensor がどう発火するかのユーザー向けのビューは、ユーザーガイドの <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</p>
+<blockquote>
+<p><strong>パス規約。</strong> 以下の <code>&lt;record&gt;/</code> = アクティブな intent の record dir、
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（コンパクトな UTC 日付プレフィックスと
+短い kebab-case ラベルなので、record dir は時系列でソートされる; 正準の id は
+<code>intents.json</code> レジストリ行に格納される UUIDv7 である）。同梱 manifest 中の 2 つの
+document-shape sensor の <code>matches</code> glob は、なおレガシーの artifact-tree パスを運ぶことに
+注意（スキーマを文書化する下部で逐語引用する）。</p>
+</blockquote>
+<p>ランタイムの振る舞いは <a href="04-stage-protocol.html">Stage プロトコル</a> を参照。stage 定義のファイル形式の対応物は <a href="15-stage-definition.html">Stage 定義</a> にある。</p>
+<hr>
+<h2 id="manifest-location-and-filename">Manifest の位置とファイル名</h2>
+<p>sensor manifest は次に住む:</p>
+<pre class="term"><code>dist/claude/.claude/sensors/aidlc-&lt;id&gt;.md</code></pre>
+<p>すべての framework 同梱の manifest は <code>aidlc-</code> ファイル名プレフィックスを運ぶ（より広い framework ファイルの規約に合致する）。frontmatter の <code>id:</code> フィールドは、<code>aidlc-</code> プレフィックスを除き <code>.md</code> サフィックスを剥いだファイル名の語幹に等しくねばならない:</p>
+<table>
+<thead>
+<tr>
+<th>ファイル名</th>
+<th>必須の <code>id:</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>aidlc-required-sections.md</code></td>
+<td><code>required-sections</code></td>
+</tr>
+<tr>
+<td><code>aidlc-linter.md</code></td>
+<td><code>linter</code></td>
+</tr>
+</tbody></table>
+<p>ファイル名↔id ルールは <code>tests/unit/t86-sensor-manifest-schema.sh</code> が強制する。<code>aidlc-</code> プレフィックスは <strong>カスタムのユーザー同梱のものを含め、すべての sensor に必須である</strong>: compile resolver は <code>SENSOR_FILE_REGEX = /^aidlc-([a-z][a-z0-9-]*)\.md$/</code>（<code>aidlc-graph.ts</code> の <code>loadSensors</code>）で manifest を発見するので、プレフィックスの無いファイルは静かにスキップされ、決して stage に束縛されない。カスタムの sensor は <code>aidlc-&lt;id&gt;.md</code> と名付け、<code>id: &lt;id&gt;</code> を設定する。</p>
+<hr>
+<h2 id="sensor-manifest-schema">Sensor Manifest スキーマ</h2>
+<p>すべての manifest は YAML frontmatter と本体を持つ Markdown ファイルである。frontmatter は構造化された契約 — 純粋な capability descriptor — であり、本体はチェックを文書化する人間の散文である。manifest は <em>sensor が何であるか</em> を述べ、どの stage がそれを使うかは述べない; その関係は stage の frontmatter の <code>sensors:</code> フィールドを介して stage 側に住む（下の <a href="#how-stages-import-sensors">stage がどう sensor をインポートするか</a> を参照）。</p>
+<pre><code class="language-yaml">---
+id: required-sections                       # required
+kind: deterministic                          # required
+command: bun .claude/tools/aidlc-sensor-required-sections.ts   # required
+default_severity: advisory                   # required
+description: Checks that stage output ...    # required
+category: document-shape                     # optional
+matches: &quot;**/{aidlc-docs,intents}/**&quot;                  # optional capability filter
+input_schema:                                # optional
+  output_path: string
+  stage_slug: string
+output_schema:                               # optional
+  pass: boolean
+  missing_headings: string[]
+timeout_seconds: 5                           # optional
+---
+
+# required-sections sensor
+
+&lt;body — prose documenting default mode, override mode, failure mode&gt;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>必須</th>
+<th>型</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>✓</td>
+<td>kebab-case 文字列</td>
+<td><code>aidlc-</code> プレフィックスを除いたファイル名の語幹に等しい; rule ファイルの <code>pairing:</code> フィールドから相互参照される（<a href="08-rule-system.html">Rule システム</a> を参照）。</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>✓</td>
+<td>enum</td>
+<td>今日受理されるのは <code>deterministic</code> のみ; <code>llm</code> は v0.11.0 の LLM-dispatch 章に予約されている。下の <a href="#kind-enum"><code>kind</code> enum</a> を参照。</td>
+</tr>
+<tr>
+<td><code>command</code></td>
+<td>✓</td>
+<td>string</td>
+<td>正準の起動プレフィックス — 各同梱 sensor はそれ自身の sensor ごとのスクリプトを名指す（例: <code>bun .claude/tools/aidlc-sensor-required-sections.ts</code>）。dispatcher（<code>aidlc-sensor.ts</code>）は <code>--stage &lt;slug&gt;</code> に続けて、sensor の入力形状に合致するファイルフラグを追記する: document sensor には <code>--output-path &lt;path&gt;</code>、コード sensor（<code>linter</code>、<code>type-check</code>）には <code>--file-path &lt;path&gt;</code>。</td>
+</tr>
+<tr>
+<td><code>default_severity</code></td>
+<td>✓</td>
+<td>enum</td>
+<td>今日受理されるのは <code>advisory</code> のみ; <code>blocking</code> は将来の ralph-driver 作業に予約されている。</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>✓</td>
+<td>string</td>
+<td>1 行の人間向け説明。</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>optional</td>
+<td>string</td>
+<td>自由形式の記述ラベル（4 つの同梱 manifest は <code>document-shape</code> と <code>code-quality</code> を使う; 閉じた enum ではない）。</td>
+</tr>
+<tr>
+<td><code>matches</code></td>
+<td>optional</td>
+<td>glob string</td>
+<td>発火時に PostToolUse hook が消費する capability filter。下の <a href="#matches-filter"><code>matches</code> フィルタ</a> を参照。</td>
+</tr>
+<tr>
+<td><code>input_schema</code></td>
+<td>optional</td>
+<td>object</td>
+<td>今日は助言的; 将来の LLM dispatch がテンプレート化契約として使う。</td>
+</tr>
+<tr>
+<td><code>output_schema</code></td>
+<td>optional</td>
+<td>object</td>
+<td>今日は助言的; 将来の LLM dispatch がパース契約として使う。</td>
+</tr>
+<tr>
+<td><code>timeout_seconds</code></td>
+<td>optional</td>
+<td>int</td>
+<td>発火ごとの実時間の上限。</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="kind-enum"><code>kind</code> enum</h2>
+<p><code>kind</code> フィールドは dispatch 機構を宣言する。スキーマが今日受理するのは正確に 1 つの値である:</p>
+<ul>
+<li><code>deterministic</code> — manifest の <code>command:</code> は自己完結したシェル起動であり、0（pass）/ 非 0（fail）で終了し、既知のパスに構造化された detail を書く。</li>
+</ul>
+<p><code>llm</code> は <strong>LLM-dispatch 章に予約されている</strong>（v0.11.0+）。その章が出るまで、consumer は parse 時に <code>kind: llm</code> を拒否せねばならない。予約は write 時に強制される: 今日 <code>kind: llm</code> manifest を出すことは、parser が拒否する manifest 著者のエラーである。</p>
+<p><code>kind</code> の未知の値（<code>deterministic</code> 以外の何か）は parse 時に拒否される。前方互換は <em>未知のキー</em> に適用される（<a href="#forward-compat-policy">前方互換ポリシー</a> を参照） — 既知のキーの未知の値には適用されない。</p>
+<hr>
+<h2 id="how-stages-import-sensors">stage がどう sensor をインポートするか</h2>
+<p>pull 著述: 各 stage の frontmatter は、それが使う sensor を宣言する。compile resolver は宣言された各 id を manifest レジストリでルックアップし、<code>sensors_applicable</code> 配列を stage のコンパイル済みグラフノードに焼き込む。著述の方向は参照の局所性である — stage ファイルを開けば、その stage が走るときどのチェックが発火するかが正確に見える。</p>
+<pre><code class="language-yaml"># dist/claude/.claude/aidlc-common/stages/construction/code-generation.md
+---
+slug: code-generation
+phase: construction
+# ...
+requires_stage: [...]
+sensors:
+  - linter
+  - type-check
+inputs: ...
+outputs: ...
+---
+</code></pre>
+<p><code>sensors:</code> は裸の id のリストである — id は各 manifest の frontmatter の <code>id:</code> フィールドに合致し、それは（ファイル名↔id 契約により）<code>aidlc-</code> プレフィックスを除いたファイル名の語幹に等しい。compile resolver は:</p>
+<ol>
+<li><code>dist/claude/.claude/sensors/</code> を歩き、すべての <code>aidlc-&lt;id&gt;.md</code> manifest をパースする。</li>
+<li>解決時の O(1) ルックアップのため manifest を id で索引する。</li>
+<li>各 stage について、宣言された各インポート id をルックアップする; 未知なら投げる（fire 時に静かにではなく、compile 時に大きな音で失敗）。</li>
+<li>manifest の <code>matches</code> filter を逐語で解決済みの <code>sensors_applicable[]</code> エントリにコピーする。</li>
+<li>stage ごとの解決済み配列を正準の <code>data/stage-graph.json</code> に発する（FIELD_ORDER 固定: <code>rules_in_context</code> の後）。</li>
+</ol>
+<p>ランタイムの PostToolUse hook（<code>aidlc-sensor-fire.ts</code>）は <code>sensors_applicable</code> をグラフノードから読む — 決して manifest を開き直さない。<code>matches</code> は compile でスナップショットされる: ワークフロー中の manifest 編集は、進行中のワークフローの書き込みで発火するものを変えない（BGP 安定性の性質 — <a href="02-plane-architecture.html">Plane アーキテクチャ</a> を参照）。</p>
+<h3 id="per-stage-sensor-matrix-32-framework-stages">stage ごとの sensor マトリクス（32 の framework stage）</h3>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th><code>sensors:</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3 つの initialization（workspace-scaffold、workspace-detection、state-init）</td>
+<td><code>[]</code>（決定論的セットアップ、agent が著述する markdown 無し）</td>
+</tr>
+<tr>
+<td>7 つの ideation、8 つの inception、7 つの operation markdown stage + <code>code-generation</code></td>
+<td>markdown stage には <code>[required-sections, upstream-coverage]</code>; <code>code-generation</code> には <code>[linter, type-check]</code>（コードのみ）</td>
+</tr>
+<tr>
+<td><code>build-and-test</code></td>
+<td><code>[required-sections, upstream-coverage, type-check]</code>（linter は意図的に省略 — build が正準の lint を走らせる）</td>
+</tr>
+<tr>
+<td>5 つの construction-design（ci-pipeline、functional-design、infrastructure-design、nfr-design、nfr-requirements）</td>
+<td><code>[required-sections, upstream-coverage, linter, type-check]</code>（コードサンプルを伴う markdown design）</td>
+</tr>
+</tbody></table>
+<p>fork は stage の <code>sensors:</code> リストを直接編集することで stage をカスタマイズする — 束縛はカスタマイズされる対象のすぐ隣に住む。manifest は純粋な capability descriptor である; stage を対象づけるフィールドを運ばない（<code>applies_to:</code> は無い — pull 著述がそれを除いた）。strict-additive ランタイムが適用される: fork が stage に sensor を欲するならインポートし、欲しなければ省く。考えるべき上書きレイヤーは無い。</p>
+<hr>
+<h2 id="matches-filter"><code>matches</code> フィルタ</h2>
+<p><code>matches</code> は manifest 上の任意のトップレベルの capability descriptor である。sensor が分析できるファイルの glob 形状を宣言し — <em>「この sensor はこの glob に合致するファイルを分析する」</em> — resolver が compile 時にではなく、PostToolUse hook が発火時に消費する。</p>
+<table>
+<thead>
+<tr>
+<th>Manifest</th>
+<th><code>matches</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>aidlc-required-sections.md</code></td>
+<td><code>**/{aidlc-docs,intents}/**</code></td>
+</tr>
+<tr>
+<td><code>aidlc-upstream-coverage.md</code></td>
+<td><code>**/{aidlc-docs,intents}/**</code></td>
+</tr>
+<tr>
+<td><code>aidlc-linter.md</code></td>
+<td><code>**/*.{ts,js}</code></td>
+</tr>
+<tr>
+<td><code>aidlc-type-check.md</code></td>
+<td><code>**/*.{ts,tsx}</code></td>
+</tr>
+</tbody></table>
+<p><code>matches</code> <strong>こそが</strong> fire filter である — 実質的に任意ではない。hook は書き込まれるパスを glob と比較し、合致するときだけ発火する; <code>matches</code> glob を <strong>持たない</strong> エントリは一切発火しない（<code>aidlc-sensor-fire.ts</code>: <code>if (!entry.matches) continue</code>）。だから 4 つの同梱 manifest はすべて 1 つを宣言する — 2 つの document-shape sensor は artifact tree にスコープされ（同梱 manifest は上に示した <code>matches</code> 値を運ぶ）、2 つの code-quality sensor はそれぞれの言語 glob にスコープされる。compile resolver は <code>matches</code> を逐語で stage ごとの <code>sensors_applicable[]</code> エントリにコピーする; hook はスナップショットされた値をグラフノードから読む。</p>
+<p>空文字列（<code>matches: &quot;&quot;</code>）は parse 時に拒否される。glob が無いことは sensor が決して発火しないことを意味するので、manifest は自身が適用される glob 形状を宣言せねばならない — 「すべてで発火する」モードは無い。</p>
+<h3 id="cross-references-between-rules-and-sensors">rule と sensor の間の相互参照</h3>
+<p>rule ファイルは sensor へフィードフォワードするのに <code>pairing: aidlc-required-sections</code>（<code>aidlc-</code> プレフィックス付き）を使う; sensor manifest の <code>id:</code> は <code>required-sections</code>（プレフィックス無し）である。doctor のカバレッジチェックは、manifest の <code>id</code> と照合する前に、rule の <code>pairing:</code> 値から <code>aidlc-</code> プレフィックスを剥いで正規化する。</p>
+<hr>
+<h2 id="default_severity"><code>default_severity</code></h2>
+<p><code>advisory</code> は v0.5.0 で唯一の有効な値である。advisory な sensor の失敗は audit 行と detail ファイルを生むが、stage の gate やユーザーのワークフローをブロックしない。</p>
+<p><code>blocking</code> は将来の ralph driver に予約されている。driver が着地するまで、フィールドは構造上は存在するが、意味論上は単一値である。</p>
+<hr>
+<h2 id="command-invocation-contract"><code>command:</code> 起動契約</h2>
+<p>manifest の <code>command:</code> は <strong>正準の起動プレフィックス</strong> であり、完全な argv ではない — 各同梱 sensor はそれ自身の sensor ごとのスクリプトを名指す。dispatcher（<code>aidlc-sensor.ts</code>）は発火時にランタイムのコンテキストを追記する: 常に <code>--stage &lt;stage-slug&gt;</code>、続けて sensor の入力形状に合致するファイルフラグ — document sensor には <code>--output-path &lt;file&gt;</code>、コード sensor（<code>linter</code>、<code>type-check</code>）には <code>--file-path &lt;file&gt;</code>:</p>
+<pre class="term"><code>&lt;command&gt; --stage &lt;stage-slug&gt; --output-path &lt;file-being-written&gt;<span class="t-comment">   # document sensor</span>
+&lt;command&gt; --stage &lt;stage-slug&gt; --file-path   &lt;file-being-written&gt;<span class="t-comment">   # code sensor</span></code></pre>
+<p>だから次を持つ manifest は:</p>
+<pre><code class="language-yaml">command: bun .claude/tools/aidlc-sensor-required-sections.ts
+</code></pre>
+<p>intent の record dir に requirements 成果物を書く <code>requirements-analysis</code> に対して起動されると、次のように dispatch される:</p>
+<pre class="term"><code>bun .claude/tools/aidlc-sensor-required-sections.ts \
+  --stage requirements-analysis \
+  --output-path aidlc/spaces/default/intents/260624-inventory-api/inception/requirements-analysis/requirements.md</code></pre>
+<p>manifest は発火ごとのフラグを符号化しない。dispatcher がそれらを追記する; manifest は純粋な capability descriptor のままである。</p>
+<hr>
+<h2 id="gate-ritual-handoff-surface-stdout-selections-file-in">Gate-ritual の受け渡し（surface は stdout、selections-file は in）</h2>
+<p>§13 の learning gate は tool-as-actor である。決定論的なツール（<code>aidlc-learnings.ts</code>）と conductor（ライブの <code>/aidlc</code> セッション）の間の往復は 2 つのレッグを持ち、その間に knowledge ステップと judgement ステップがある:</p>
+<ol>
+<li><strong><code>surface</code>（stdout）。</strong> <code>bun .claude/tools/aidlc-learnings.ts surface --slug &lt;stage-slug&gt;</code> は stage の <code>memory.md</code> を読み、構造化 JSON を出力する: <code>candidates[]</code>（空でない Interpretation / Deviation / Tradeoff エントリごとに 1 つ、各々が <code>id</code>、<code>source_heading</code>、<code>ts</code>、<code>summary</code>、<code>context</code>、<code>default_scope: &quot;project&quot;</code> を運ぶ）と読み取り専用の <code>parked_open_questions[]</code>。AskUserQuestion のフィールド名は無い — 純粋なドメインデータである。open question は決して candidate にならない（それらはリサーチ項目である）。</li>
+<li><strong>conductor が AskUserQuestion をレンダリングする（knowledge）。</strong> candidate ごとに 1 つのオプション（label = candidate の <code>summary</code> を逐語で; description = 導出された宛先、例 <code>→ memory/project.md (Deviation)</code>、加えて promote-to-team のアフォーダンス）。<code>multiSelect</code> の後、conductor は保持された各 label をその candidate の <code>id</code> + <code>source_heading</code> に相関づける。それから常に &quot;Anything to add for next time?&quot; と尋ねる; 任意の自由テキストは 1 つの heading-pick AUQ（Interpretation / Deviation / Tradeoff / Open question）を得る — heading pick はユーザーの唯一の分類であり、宛先はそこから導出される。</li>
+<li><strong>Admission conflict-check（knowledge → orchestrator-LLM; どの selection が persist に届くかをゲートする）。</strong> 保持された各 learning について、conductor は単一の提案された日付付きエントリを <code>org.md</code> の合致する <code>## &lt;section&gt;</code> と比較する（§5 admission gate の単一行版）。矛盾があると conductor は衝突する org の文をインラインで表面化し、ユーザーが revise / skip / escalate する（judgement → user; user-override の経路は無い）。conflict-clear か user-escalated な selection だけが進む。sensor manifest には org-section の対応物が無く、このチェックをスキップする。</li>
+<li><strong><code>persist</code>（selections-file を in）。</strong> conductor は保持された selection を <code>&lt;record&gt;/.aidlc-learnings/&lt;slug&gt;-selections.json</code>（intent の record dir 内）（gitignore 対象）に書き、<code>bun .claude/tools/aidlc-learnings.ts persist --slug &lt;slug&gt; --selections-json &lt;path&gt;</code> を呼ぶ。ツールは決定論的なライターである — 決して衝突を判断しない; 各 learning を practice として <code>aidlc/spaces/&lt;active-space&gt;/memory/{project,team}.md</code> にルーティングし、sensor selection については 1 つの <code>withAuditLock</code> の中で two-write インストール（manifest + 発生元 stage の <code>sensors:</code> frontmatter）を行い、それから <code>RULE_LEARNED</code> / <code>SENSOR_PROPOSED</code> を発する。</li>
+</ol>
+<p>selections-file は replay 成果物である: クラッシュした persist は人間に再度プロンプトすることなく同じ JSON を replay する（書き込まれた行ごとの `` マーカーによる content-presence の冪等性）。</p>
+<hr>
+<h2 id="defaults-for-scaffolded-manifests">スキャフォールドされる manifest の既定値</h2>
+<p>sensor の提案が gate で確認されると、gate-ritual ツールは新しい <strong>project 層</strong> の manifest を <code>&lt;project&gt;/.claude/sensors/aidlc-&lt;id&gt;.md</code> にスキャフォールドする — 決して同梱の framework ディストリビューションではない（プロジェクトごとの learning loop は framework を変異させてはならない; framework-distribution のパスは拒否される）。フィールドの既定値は:</p>
+<table>
+<thead>
+<tr>
+<th>フィールド</th>
+<th>既定値</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>ユーザーの自由テキストから導出（kebab-case にする）</td>
+<td></td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><code>deterministic</code></td>
+<td>今日唯一受理される値</td>
+</tr>
+<tr>
+<td><code>command</code></td>
+<td><code>bun .claude/tools/aidlc-sensor-&lt;id&gt;.ts</code></td>
+<td>プレースホルダの sensor ごとのスクリプト; ユーザーがチェックを実装するスクリプトに更新する</td>
+</tr>
+<tr>
+<td><code>default_severity</code></td>
+<td><code>advisory</code></td>
+<td>今日唯一受理される値</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>ユーザーの自由テキストから</td>
+<td></td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td><code>&quot;&quot;</code></td>
+<td>望むならユーザーが埋める</td>
+</tr>
+<tr>
+<td><code>matches</code></td>
+<td>発火には glob が必須</td>
+<td>scaffold は sensor が適用される glob 形状（artifact-tree glob か <code>**/*.ts</code> のようなコード glob）を尋ねる; <code>matches</code> の無いエントリは決して発火しない</td>
+</tr>
+<tr>
+<td><code>input_schema</code></td>
+<td><code>{ output_path: string, stage_slug: string }</code></td>
+<td>dispatcher が追記するフラグに合致する</td>
+</tr>
+<tr>
+<td><code>output_schema</code></td>
+<td><code>{ pass: boolean }</code></td>
+<td>dispatcher が依拠する最小の構造</td>
+</tr>
+<tr>
+<td><code>timeout_seconds</code></td>
+<td><code>30</code></td>
+<td>保守的な既定値; 遅い dispatcher 向けに調整する</td>
+</tr>
+</tbody></table>
+<p>manifest をスキャフォールドした後、gate-ritual ツールは — 同じ <code>withAuditLock</code> トランザクションの中で — 新しい id を発生元 stage の <code>sensors:</code> frontmatter リストに追記する（pull 著述の two-write インストール）。sensor は次のワークフローが compile するときに完全に結線される。これは唯一認可された stage-frontmatter の編集である: インポートリストを伸ばす（形状は不変、中身は不変ではない）のであって、<code>## Steps</code> / <code>## Sensors</code> / <code>## Learn</code> の本体は決して伸ばさない。</p>
+<p>4 つの同梱 manifest は、これらの既定値が後に発展する変種を示す: <code>aidlc-required-sections.md</code> と <code>aidlc-upstream-coverage.md</code> は artifact-tree の <code>matches</code> glob（上の <code>matches</code> 表に示した値）とともに <code>timeout_seconds: 5</code> を使う; <code>aidlc-linter.md</code> は <code>matches: &quot;**/*.{ts,js}&quot;</code> とともに <code>30</code> を使う; <code>aidlc-type-check.md</code> は <code>matches: &quot;**/*.{ts,tsx}&quot;</code> とともに <code>60</code> を使う。</p>
+<hr>
+<h2 id="forward-compat-policy">前方互換ポリシー</h2>
+<p>sensor manifest の consumer（compile、dispatcher、gate-ritual のスキャフォールド、doctor）は <strong>未知の manifest キー</strong> を許容せねばならない。将来のリリースが任意の <code>cool_new_field:</code> を足しても、古い consumer は manifest をパースし、そのフィールドを無視して続行する。これはスキーマの加算的な発展を、fork やアップグレード前の workspace を壊すことなく可能にする。</p>
+<p>前方互換は既知のキーの未知の値には適用されない。上の <a href="#kind-enum"><code>kind</code> enum</a> に文書化したとおり、<code>kind</code> の未知の値は parse 時に拒否される。同じ原則が他の enum 形状のフィールド（<code>default_severity</code>）にも適用される。</p>
+<hr>
+<h2 id="reserved-for-future-releases">将来のリリースへの予約</h2>
+<p>いくつかの sensor 能力はスキーマ内で予約されているがまだアクティブではない、ゆえにそれらが着地するときフィールド形状が安定するようにしてある:</p>
+<ul>
+<li><strong><code>kind: llm</code> dispatch</strong> — LLM が評価する sensor（v0.11.0）。スキーマは今日 <code>kind</code> を受理するが、parse 時に <code>deterministic</code> 以外のいかなる値も拒否する。</li>
+<li><strong><code>blocking</code> severity</strong> — advisory テレメトリをログするのではなく gate を停止させる sensor の失敗（v0.10.0 ralph driver）。今日 <code>advisory</code> が唯一受理される値である。</li>
+</ul>
+<p>両方とも write 時に強制される: 今それらを使う manifest を出すことは、parser が拒否する著者のエラーである。</p>
+<h2 id="next-steps">次のステップ</h2>
+<ul>
+<li><strong>Rule</strong> — 制御ループのフィードフォワードの半分は、<code>pairing:</code> フィールドを介してこれらの sensor と対になる。<a href="08-rule-system.html">Rule システム</a> を参照。</li>
+<li><strong>ユーザー向けの learning loop</strong> — sensor の提案がどう gate で表面化・確認され、確認された提案がどう新しい manifest をスキャフォールドするか。ユーザーガイドの <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</li>
+<li><strong>compile 境界</strong> — <code>sensors_applicable</code> がどうワークフロー開始時に一度解決され、発火時にグラフノードから読まれるか。<a href="02-plane-architecture.html">Plane アーキテクチャ</a> を参照。</li>
+</ul>
+<p>上のスキーマと、<code>dist/claude/.claude/sensors/</code> にある 4 つの同梱 manifest が、動く実例である。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/07-sensor-system.md"><code>docs/reference/07-sensor-system.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

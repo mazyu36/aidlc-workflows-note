@@ -11,15 +11,17 @@
 <script type="module" src="../../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/harnesses/README</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../../index.html">総合索引</a>
   <a href="../../../index.html">Atlas トップ</a>
@@ -110,11 +112,11 @@
 </tr>
 </tbody></table>
 <p>Kiro（IDE・CLI）上の AI-DLC は <strong>Claude Opus 4.8</strong> で最もよく動き、これには <strong>Kiro の有償プラン</strong>が必要である。</p>
-<p>この集合はオープンだ: 新しい harness には同じテンプレートからここに専用の章が足される。新しい harness を<em>作る</em>側（ソースの契約 — manifest・hook アダプタ・<code>emit.ts</code>）は、Harness Engineer ガイドの <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/09-porting-to-a-new-harness.md">新しい harness への移植</a> を参照。</p>
+<p>この集合はオープンだ: 新しい harness には同じテンプレートからここに専用の章が足される。新しい harness を<em>作る</em>側（ソースの契約 — manifest・hook アダプタ・<code>emit.ts</code>）は、Harness Engineer ガイドの <a href="../../harness-engineering/09-porting-to-a-new-harness.html">新しい harness への移植</a> を参照。</p>
 <p>どの harness で動かしても方法論は同じである — <a href="../02-your-first-workflow.html">最初のワークフロー</a> と <a href="../04-phases-and-stages.html">Phase と Stage</a> のツアーから始めるとよい。</p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md"><code>docs/guide/harnesses/README.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/README.md"><code>docs/guide/harnesses/README.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

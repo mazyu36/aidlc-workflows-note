@@ -11,15 +11,17 @@
 <script type="module" src="../../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/harnesses/kiro-ide</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../../index.html">総合索引</a>
   <a href="../../../index.html">Atlas トップ</a>
@@ -281,7 +283,7 @@ agent-v1 の JSON ではなく <code>.md</code> frontmatter から解決する�
 ツール無しで走ることになる。frontmatter の許可はスコープ無しである点に注意
 （IDE にはそこに <code>allowedCommands</code>/<code>allowedPaths</code> の同等物が無い）。CLI の JSON サンドボックス
 より広い。
-<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/09-porting-to-a-new-harness.md">新しい harness への移植</a> を参照。</p>
+<a href="../../harness-engineering/09-porting-to-a-new-harness.html">新しい harness への移植</a> を参照。</p>
 <h2 id="next-steps">次のステップ</h2>
 <p>インストールとアクティベーションは済んだ？ 方法論はどの harness でも同じである —
 中立の章で続きを:</p>
@@ -294,7 +296,7 @@ agent-v1 の JSON ではなく <code>.md</code> frontmatter から解決する�
 <p>他の harness: <a href="codex-cli.html">Codex CLI 上の AI-DLC</a> · <a href="README.html">harness ファミリーの索引</a>。</p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-ide.md"><code>docs/guide/harnesses/kiro-ide.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-ide.md"><code>docs/guide/harnesses/kiro-ide.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

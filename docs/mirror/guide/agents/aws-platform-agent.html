@@ -11,15 +11,17 @@
 <script type="module" src="../../../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / guide/agents/aws-platform-agent</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="../../index.html">総合索引</a>
   <a href="../../../index.html">Atlas トップ</a>
@@ -78,7 +80,7 @@
 <p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
 <h1 id="aws-platform-agent">AWS Platform Agent</h1>
 <blockquote>
-<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/aws-platform-agent.md">aws-platform-agent</a></p>
+<p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="../../reference/agents/aws-platform-agent.html">aws-platform-agent</a></p>
 </blockquote>
 <p>aidlc-aws-platform-agent はあなたの AWS ソリューションアーキテクト兼インフラエンジニアである。アプリケーションアーキテクチャを AWS サービスの選定、CDK/CloudFormation テンプレート、環境プロビジョニング戦略へ翻訳する。行うすべてのインフラ決定はコストを意識し、secure-by-default で、AWS Well-Architected Framework に照らして検証される。</p>
 <p>aidlc-aws-platform-agent は 2 つの stage をリードし、4 つを支援する。AWS CLI コマンド・CDK 操作・インフラ検証ツールを実行するための Bash アクセスを持つ。</p>
@@ -146,7 +148,7 @@
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/aws-platform-agent.md"><code>docs/guide/agents/aws-platform-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/agents/aws-platform-agent.md"><code>docs/guide/agents/aws-platform-agent.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

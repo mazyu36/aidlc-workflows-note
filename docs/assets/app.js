@@ -145,3 +145,21 @@ if (tocLinks.length && "IntersectionObserver" in window) {
   );
   document.querySelectorAll("h2[id]").forEach((h) => observer.observe(h));
 }
+
+// 左ナビ (off-canvas ドロワー) の開閉。≤1400px でのみ .nav-toggle が表示される。
+// no-nav ページには .nav-toggle が無いので、その場合は何もしない。
+const navToggle = document.querySelector(".nav-toggle");
+if (navToggle) {
+  const siteNav = document.getElementById("site-nav");
+  const backdrop = document.querySelector(".nav-backdrop");
+  const setNavOpen = (open) => {
+    document.body.classList.toggle("nav-open", open);
+    navToggle.setAttribute("aria-expanded", String(open));
+    navToggle.textContent = open ? "✕" : "☰";
+  };
+  navToggle.addEventListener("click", () => setNavOpen(!document.body.classList.contains("nav-open")));
+  backdrop?.addEventListener("click", () => setNavOpen(false));
+  // ナビ内リンクのクリックで遷移するときはドロワーを閉じる
+  siteNav?.addEventListener("click", (e) => { if (e.target.closest("a")) setNavOpen(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setNavOpen(false); });
+}

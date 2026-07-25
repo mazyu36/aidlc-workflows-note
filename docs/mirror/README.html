@@ -11,15 +11,17 @@
 <script type="module" src="../assets/budoux-init.js"></script>
 </head>
 <body data-repo="aidlc">
+<div class="nav-backdrop"></div>
 <div class="wrap">
 
 <header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../index.html">AI-DLC WORKFLOWS ATLAS</a>
   <span class="here">docs 日本語版 / README</span>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="ページ">
+<nav class="toc" aria-label="ページ" id="site-nav">
   <div class="group">docs 日本語版</div>
   <a href="index.html">総合索引</a>
   <a href="../index.html">Atlas トップ</a>
@@ -56,12 +58,12 @@
 <td>フレームワーク内は何も変更しない — <code>/aidlc</code> を実行し、gate で回答し、成果物をレビューする</td>
 </tr>
 <tr>
-<td><strong><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/00-overview.md">Harness Engineer ガイド</a></strong></td>
+<td><strong><a href="harness-engineering/00-overview.html">Harness Engineer ガイド</a></strong></td>
 <td>AI-DLC がチーム向けに <em>どのように</em> 振る舞うかを作り変える</td>
 <td>フレームワークが読み取る <strong>データ</strong>: stage・agent・scope・rule・sensor・knowledge、そして新しい harness への移植</td>
 </tr>
 <tr>
-<td><strong><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md">開発者リファレンス</a></strong></td>
+<td><strong><a href="reference/00-overview.html">開発者リファレンス</a></strong></td>
 <td>AI-DLC <em>それ自体</em> を変更する</td>
 <td>そのデータを読み取る <strong>コード</strong>: engine・hooks・CLI ツール・コンパイル pipeline・テストスイート</td>
 </tr>
@@ -70,10 +72,10 @@
 <h2 id="running-on-a-specific-harness">特定の harness 上で動かす</h2>
 <p>各ガイドは harness 非依存である。各 harness のインストール手順と、異なるわずかな挙動は <a href="guide/harnesses/README.html">他の harness で動かす</a> にまとめられている（Claude Code はユーザーガイド全体で扱われており、その例は Claude Code 上で動作する）。</p>
 <h2 id="building-and-contributing">ビルドとコントリビュート</h2>
-<p>メンテナは <code>core/</code> で執筆し、<code>bun scripts/package.ts</code> で <code>dist/&lt;harness&gt;/</code> ツリーを再生成する — ビルドとテストの一連のループについては <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/11-contributing.md">コントリビューションガイド</a> を、harness を追加するには <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/09-porting-to-a-new-harness.md">新しい harness への移植</a> を参照。</p>
+<p>メンテナは <code>core/</code> で執筆し、<code>bun scripts/package.ts</code> で <code>dist/&lt;harness&gt;/</code> ツリーを再生成する — ビルドとテストの一連のループについては <a href="reference/11-contributing.html">コントリビューションガイド</a> を、harness を追加するには <a href="harness-engineering/09-porting-to-a-new-harness.html">新しい harness への移植</a> を参照。</p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/README.md"><code>docs/README.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-24
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/README.md"><code>docs/README.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
 </footer>
 </main>
 </div>

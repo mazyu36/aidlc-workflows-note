@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Initialization Phase の Stage（0.1-0.3） — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <span class="here">docs 日本語版 / reference/04-stages/initialization</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">Atlas トップ</a>
+  <div class="group">DEVELOPER REFERENCE</div>
+  <a href="../../reference/00-overview.html">開発者リファレンス概要</a>
+  <a href="../../reference/01-architecture.html">Architecture</a>
+  <a href="../../reference/02-plane-architecture.html">Plane アーキテクチャ</a>
+  <a href="../../reference/03-orchestrator.html">Orchestrator</a>
+  <a href="../../reference/04-stage-protocol.html">Stage Protocol リファレンス</a>
+  <a href="../../reference/05-agent-system.html">Agent System</a>
+  <a href="../../reference/06-hooks-and-tools.html">Hooks and Tools</a>
+  <a href="../../reference/07-sensor-system.html">Sensor システム</a>
+  <a href="../../reference/08-rule-system.html">Rule System</a>
+  <a href="../../reference/09-testing.html">テスト</a>
+  <a href="../../reference/10-knowledge-system.html">Knowledge System</a>
+  <a href="../../reference/11-contributing.html">コントリビューション</a>
+  <a href="../../reference/12-state-machine.html">State Machine</a>
+  <a href="../../reference/13-runtime-graph.html">Runtime Graph</a>
+  <a href="../../reference/14-claude-features.html">Harness プリミティブのマッピング</a>
+  <a href="../../reference/15-stage-definition.html">ステージ定義</a>
+  <a href="../../reference/16-artifact-vocabulary.html">成果物の語彙</a>
+  <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
+  <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
+  <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / 04-stages</div>
+  <a href="../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
+  <a href="../../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
+  <a href="../../reference/04-stages/inception.html">Inception Phase -- Stage リファレンス (2.1--2.8)</a>
+  <a href="../../reference/04-stages/initialization.html" class="here">Initialization Phase の Stage（0.1-0.3）</a>
+  <a href="../../reference/04-stages/operation.html">Operation phase — stage リファレンス (4.1-4.7)</a>
+  <div class="group">DEVELOPER REFERENCE / agents</div>
+  <a href="../../reference/agents/README.html">Agent Reference</a>
+  <a href="../../reference/agents/architect-agent.html">aidlc-architect-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/aws-platform-agent.html">aidlc-aws-platform-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/compliance-agent.html">aidlc-compliance-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/delivery-agent.html">aidlc-delivery-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/design-agent.html">aidlc-design-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/developer-agent.html">aidlc-developer-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/devsecops-agent.html">aidlc-devsecops-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/operations-agent.html">aidlc-operations-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/pipeline-deploy-agent.html">aidlc-pipeline-deploy-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/product-agent.html">aidlc-product-agent -- 技術リファレンス</a>
+  <a href="../../reference/agents/quality-agent.html">aidlc-quality-agent -- 技術リファレンス</a>
+  <div class="group">DEVELOPER REFERENCE / examples/test-pro</div>
+  <a href="../../reference/examples/test-pro/README.html">test-pro — 具体的な config/JSON の例</a>
+  <div class="group">DEVELOPER REFERENCE / research</div>
+  <a href="../../reference/research/Codex%20Manifest%20Shape%20Report.html">Codex Manifest の形: Codex はどう Add-in を管理するか</a>
+  <a href="../../reference/research/Cross-Tool%20Plugin%20Comparison.html">クロスツール Plugin Manifest 比較</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#phase-overview">Phase 概要</a>
+  <a href="#scope-driven-stage-inclusion">Scope 駆動の Stage 包含</a>
+  <a href="#stage-summary">Stage サマリ</a>
+  <a href="#stage-01-workspace-scaffold">Stage 0.1 — Workspace Scaffold</a>
+  <a href="#stage-02-workspace-detection">Stage 0.2 — Workspace Detection</a>
+  <a href="#stage-03-state-initialization">Stage 0.3 — State Initialization</a>
+  <a href="#re-initialization">Re-initialization</a>
+  <a href="#notes-3">Notes</a>
+  <a href="#cross-references">Cross-References</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
+<h1 id="initialization-phase-stages-01-03">Initialization Phase の Stage（0.1-0.3）</h1>
+<h2 id="phase-overview">Phase 概要</h2>
+<p>Initialization phase は AI-DLC ワークフローの 5 つの phase のうちの最初である。stage 0.1 から
+0.3 を走らせ、<strong>intent を誕生させる</strong> — その record dir を
+<code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（以下 <code>&lt;record&gt;/</code> と書く）に、状態ファイル、
+ディレクトリの scaffold、workspace 分類、ルーティング設定とともに鋳造する。別個の scaffold
+コマンドは無い: workspace shell は <code>dist/&lt;harness&gt;/</code> に事前ビルドされて出荷され、エンジンは
+最初の <code>/aidlc</code>（または何をビルドするかを記述したとき）で最初の intent を自動誕生させる。</p>
+<p>この phase の 3 つの stage すべてが、すべての scope に対して実行される — 条件付きの stage は
+無い。すべての stage は承認 gate 無しで auto-proceed する。</p>
+<p>ウェルカムメッセージはセッション開始時に <code>settings.json</code> の <code>companyAnnouncements</code> エントリを
+介してレンダリングされる。それは stage ではない — stage ファイルも、audit イベントも、
+チェックボックスも無い。</p>
+<p>3 つの stage すべては、1 秒を十分に下回って完了する単一の決定論的な
+<code>bun .claude/tools/aidlc-utility.ts intent-birth --scope &lt;scope&gt;</code> 呼び出しの内側で走る。
+conductor は可観測性のためにサイドバーに 3 つの task（Workspace Scaffold、Workspace Detection、
+State Init）を作り、ツールが返ると、それらすべてを completed とマークする。</p>
+<h2 id="scope-driven-stage-inclusion">Scope 駆動の Stage 包含</h2>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>含まれる Stage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enterprise</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+<tr>
+<td>feature</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+<tr>
+<td>mvp</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+<tr>
+<td>poc</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+<tr>
+<td>bugfix</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+<tr>
+<td>refactor</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+<tr>
+<td>infra</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+<tr>
+<td>security-patch</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+<tr>
+<td>workshop</td>
+<td>0.1-0.3 すべて</td>
+</tr>
+</tbody></table>
+<h2 id="stage-summary">Stage サマリ</h2>
+<table>
+<thead>
+<tr>
+<th>Slug</th>
+<th>#</th>
+<th>Stage 名</th>
+<th>条件</th>
+<th>Lead Agent</th>
+<th>Mode</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>workspace-scaffold</td>
+<td>0.1</td>
+<td>Workspace Scaffold</td>
+<td>ALWAYS</td>
+<td>(orchestrator)</td>
+<td>auto-proceed</td>
+</tr>
+<tr>
+<td>workspace-detection</td>
+<td>0.2</td>
+<td>Workspace Detection</td>
+<td>ALWAYS</td>
+<td>(orchestrator)</td>
+<td>auto-proceed</td>
+</tr>
+<tr>
+<td>state-init</td>
+<td>0.3</td>
+<td>State Initialization</td>
+<td>ALWAYS</td>
+<td>(orchestrator)</td>
+<td>auto-proceed</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="stage-01-workspace-scaffold">Stage 0.1 — Workspace Scaffold</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage #</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>Slug</td>
+<td>workspace-scaffold</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Initialization</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>(orchestrator)</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Execution</td>
+<td>ALWAYS</td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Auto-proceed（承認 gate 無し）</td>
+</tr>
+</tbody></table>
+<h3 id="steps">手順</h3>
+<ol>
+<li>必要なら <code>&lt;record&gt;/</code> ディレクトリを作成する</li>
+<li>5 つすべての phase 用の stage 成果物ディレクトリ + <code>&lt;record&gt;/verification/</code> を作成する</li>
+<li>空の space レベルの <code>aidlc/knowledge/</code> ディレクトリを作成する（自由形式; agent ごとの
+サブディレクトリも READMEs も無い）</li>
+<li>intent の <code>audit/</code> シャード dir ヘッダを作成 + <code>WORKFLOW_STARTED</code> を emit する</li>
+<li><code>STAGE_STARTED</code> + <code>WORKSPACE_SCAFFOLDED</code> + <code>STAGE_COMPLETED</code> イベントを追記する</li>
+</ol>
+<h3 id="inputs">入力</h3>
+<ul>
+<li>無し（エントリポイント）</li>
+</ul>
+<h3 id="outputs">出力</h3>
+<ul>
+<li>stage サブディレクトリを伴う <code>&lt;record&gt;/initialization/</code>、<code>ideation/</code>、<code>inception/</code>、
+<code>construction/</code>、<code>operation/</code></li>
+<li><code>&lt;record&gt;/verification/</code></li>
+<li>空の space レベルの <code>aidlc/knowledge/</code> ディレクトリ（space の <code>intents/</code> の兄弟）</li>
+<li>intent の <code>audit/</code> シャード dir（ヘッダ + セッション + scaffold イベント）</li>
+</ul>
+<h3 id="notes">メモ</h3>
+<ul>
+<li>冪等 — 既に存在するディレクトリとファイルをスキップする</li>
+<li>LLM を介さず、<code>aidlc-utility intent-birth</code> の内側で走る</li>
+</ul>
+<hr>
+<h2 id="stage-02-workspace-detection">Stage 0.2 — Workspace Detection</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage #</td>
+<td>0.2</td>
+</tr>
+<tr>
+<td>Slug</td>
+<td>workspace-detection</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Initialization</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>(orchestrator — 決定論的な rule ベースのスキャナ)</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Execution</td>
+<td>ALWAYS</td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Auto-proceed（承認 gate 無し）</td>
+</tr>
+</tbody></table>
+<h3 id="steps-1">手順</h3>
+<ol>
+<li>プロジェクトディレクトリを 1 階層深く歩き、加えて存在するなら既知のソースディレクトリ
+（<code>src/</code>、<code>app/</code>、<code>lib/</code>、<code>pages/</code>、<code>components/</code>、<code>tests/</code>）も歩く。トップレベルのシグナル
+が何も発火しないときは、同じシグナルセットで任意の名前の各サブディレクトリに 1 階層入って
+走査することにフォールバックし、コンテナフォルダ（例: <code>wordbook/</code>）にネストされた
+プロジェクトが greenfield と誤分類される代わりに検出されるようにする</li>
+<li>拡張子ごとにファイルを数えて主要/副次の言語を決定する</li>
+<li>既知の config ファイル名（Next.js、Vite、Angular、Nuxt、Remix、Gatsby、Astro、Svelte、
+NestJS）を介してフレームワークを、<code>package.json</code> の依存関係を介して React を検出する</li>
+<li>manifest + lockfile を介してビルドシステムを検出する
+（npm/yarn/pnpm/bun/poetry/uv/hatch/pip/cargo/go/maven/gradle/composer/bundler）</li>
+<li><code>.gitmodules</code>（存在するなら）を読んで宣言された submodule パスを取得し、各々の初期化を
+探査する</li>
+<li><code>stages/initialization/workspace-detection.md</code> の rule を使って greenfield 対 brownfield を
+分類する</li>
+<li><code>STAGE_STARTED</code> + <code>WORKSPACE_SCANNED</code> + <code>STAGE_COMPLETED</code> イベントを追記する</li>
+</ol>
+<h3 id="inputs-1">入力</h3>
+<ul>
+<li>プロジェクトのファイルシステム（読み取り専用の走査）</li>
+</ul>
+<h3 id="outputs-1">出力</h3>
+<ul>
+<li>Workspace 分類（greenfield/brownfield）</li>
+<li>技術スタック（言語、フレームワーク、ビルドシステム）</li>
+<li>走査結果を捕らえる <code>WORKSPACE_SCANNED</code> audit イベント</li>
+</ul>
+<h3 id="notes-1">メモ</h3>
+<ul>
+<li><code>aidlc-utility intent-birth</code> の内側で決定論的なスキャナとして走る。LLM subagent の dispatch は
+無い。</li>
+<li>シンボリックリンクは辿らない（<code>lstatSync</code> によるサイクル保護）</li>
+<li><code>.claude/</code>、<code>&lt;record&gt;/</code>、<code>node_modules/</code>、<code>.git/</code>、<code>dist/</code>、<code>build/</code>、<code>.next/</code>、<code>target/</code>、
+<code>vendor/</code> を除外する</li>
+<li><code>devDependencies</code> のみの <code>package.json</code> は tooling/scaffolding として扱われ、それ単独では
+brownfield 分類を引き起こさない</li>
+<li>少なくとも 1 つの submodule パスエントリを持つパース可能な <code>.gitmodules</code> は brownfield
+シグナルである（submodule dir が未初期化でも、リポジトリのメタデータがコードを宣言する）。
+submodule パスが未初期化のとき、走査は警告し、<code>git submodule update --init --recursive</code> を
+名指す - <code>WORKSPACE_SCANNED</code> イベント（<code>Submodules</code> フィールド + <code>Details</code> の是正策）と誕生時
+の stdout に表出され、conductor がそれを中継できる; 言語は走査されたままである</li>
+</ul>
+<hr>
+<h2 id="stage-03-state-initialization">Stage 0.3 — State Initialization</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stage #</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>Slug</td>
+<td>state-init</td>
+</tr>
+<tr>
+<td>Phase</td>
+<td>Initialization</td>
+</tr>
+<tr>
+<td>Lead Agent</td>
+<td>(orchestrator)</td>
+</tr>
+<tr>
+<td>support_agents</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Execution</td>
+<td>ALWAYS</td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Auto-proceed（承認 gate 無し）</td>
+</tr>
+</tbody></table>
+<h3 id="steps-2">手順</h3>
+<ol>
+<li>state contract を読む</li>
+<li>scope マッピング + depth + テスト戦略を適用する</li>
+<li>greenfield については <code>reverse-engineering</code> を SKIP とマークする</li>
+<li>最初の post-init stage を <code>[-]</code> に設定して、完全な <code>&lt;record&gt;/aidlc-state.md</code> を書く</li>
+<li><code>STAGE_STARTED</code> + <code>WORKSPACE_INITIALISED</code> + <code>STAGE_COMPLETED</code> イベントを追記する</li>
+</ol>
+<h3 id="inputs-2">入力</h3>
+<ul>
+<li>workspace-detection からの Workspace 分類（同じツール呼び出し）</li>
+<li>Scope 設定（<code>--scope</code> フラグまたは <code>poc</code> の既定から）</li>
+<li>渡された場合の depth / テスト戦略の上書き</li>
+<li><code>.claude/knowledge/aidlc-shared/state-template.md</code> からの state contract</li>
+<li>コンパイル済みの <code>tools/data/stage-graph.json</code> と <code>tools/data/scope-grid.json</code></li>
+</ul>
+<h3 id="outputs-2">出力</h3>
+<ul>
+<li><code>&lt;record&gt;/aidlc-state.md</code>（完全に populate された）</li>
+<li><code>WORKSPACE_INITIALISED</code> audit イベント</li>
+</ul>
+<h3 id="notes-2">メモ</h3>
+<ul>
+<li>Brownfield のプロジェクトは reverse-engineering（Stage 2.1）にルーティングされる</li>
+<li>Greenfield のプロジェクトは最初の非 initialization stage にルーティングされる（feature/poc は
+intent-capture; bugfix/refactor は requirements-analysis; workshop は practices-discovery、
+workshop は Ideation のすべてをスキップし、reverse-engineering は greenfield では SKIP に
+降格されるため）</li>
+<li><code>/aidlc-init</code>（明示的な誕生パッケージング）から呼び出されたとき、orchestrator はこの stage の
+後に停止する</li>
+<li>ワークフロー開始（<code>/aidlc &lt;scope&gt;</code> または何をビルドするかの記述）から呼び出されたとき、
+orchestrator は最初の post-init stage へ続く</li>
+</ul>
+<hr>
+<h2 id="re-initialization">Re-initialization</h2>
+<p>re-init フラグは無い。最初の intent を誕生させることは intent ごとに 1 回走る; workspace shell
+それ自体は事前ビルドされて出荷され、決して再 scaffold されない。やり直すには、新しい intent を
+誕生させる（各々が自身の <code>&lt;record&gt;/</code> を得る）か、あるいは — まっさらな状態のためには —
+アクティブな intent の record dir を <code>aidlc/spaces/&lt;space&gt;/intents/</code> の下にアーカイブし、
+エンジンに新鮮なものを誕生させる。既存の intent に対する 2 回目の <code>/aidlc</code> は、再初期化するの
+ではなくそれを再開する。</p>
+<h2 id="notes-3">Notes</h2>
+<ul>
+<li>3 つの stage すべてが auto-proceed する — Initialization phase に承認 gate は無い</li>
+<li>決定論的な initialization ツールは完了した各 stage を報告する; エンジンは <code>Current Stage</code>、
+状態のチェックボックス、audit イベントをアトミックに更新する</li>
+<li>Conductor は initialization のライフサイクル状態を決して直接編集しない</li>
+<li>Initialization → Ideation の phase 遷移にはガバナンス境界チェックが無い</li>
+</ul>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="../01-architecture.html">Architecture</a> — 実行モデルの概要</li>
+<li><a href="../03-orchestrator.html">Orchestrator</a> — ルーティングロジック</li>
+<li><a href="../04-stage-protocol.html">Stage Protocol</a> — 状態追跡の rule</li>
+<li><a href="ideation.html">Ideation Stages</a> — 次の phase</li>
+</ul>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/initialization.md"><code>docs/reference/04-stages/initialization.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-25
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>
