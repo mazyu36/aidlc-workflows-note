@@ -32,10 +32,10 @@
 <main>
 <p class="eyebrow">AI-DLC WORKFLOWS ATLAS</p>
 <h1>AI-DLC Workflows v2　コードベースアトラス</h1>
-<p class="lede">awslabs/aidlc-workflows の v2 ブランチを「1 クリックで実コードに届く」形で解説するノート。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論で、このリポジトリはその公式実装であり、単一の core/ から Claude Code / Kiro CLI / Kiro IDE / Codex CLI / opencode の 5 配布物を生成する。</p>
+<p class="lede">awslabs/aidlc-workflows の v2 ブランチを「1 クリックで実コードに届く」形で解説するノート。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論である。このリポジトリはその公式実装にあたる。単一の core/ から Claude Code / Kiro CLI / Kiro IDE / Codex CLI / opencode の 5 配布物を生成する。</p>
 
 <h2 id="tldr">TL;DR</h2>
-<p>設計の要は 3 つの分離。第一に方法論と実装の分離。5 フェーズ・32 ステージの方法論は Markdown で記述され、routing は決定論エンジン（TypeScript / bun）が、実行品質は LLM（conductor）が担う。第二にソースと配布の分離。手書きの正は core/ の 1 箇所で、5 ハーネス向け dist/ はすべて生成物としてコミットされる。第三に判断と記録の分離。承認できるのは人間だけ、状態を書けるのは専用ツールだけで、この壁はフックが機械的に強制する。</p>
+<p>設計の要は 3 つの分離にある。第一に方法論と実装の分離。5 フェーズ・32 ステージの方法論は Markdown で記述する。routing は決定論エンジン（TypeScript / bun）が担い、実行品質は LLM（conductor）が担う。第二にソースと配布の分離。手書きの正は core/ の 1 箇所で、5 ハーネス向け dist/ はすべて生成物としてコミットされる。第三に判断と記録の分離。承認できるのは人間だけ、状態を書けるのは専用ツールだけである。この壁はフックが機械的に強制する。</p>
 <div class="stat-grid">
   <div class="stat"><div class="stat-label">ライフサイクル</div><div class="stat-value">5 / 32</div><div class="stat-detail">フェーズ / ステージ</div></div>
   <div class="stat"><div class="stat-label">エージェント</div><div class="stat-value">14</div><div class="stat-detail">専門家 11 + レビュアー 2 + composer 1</div></div>
@@ -68,7 +68,7 @@
   </a>
   <a class="card" href="aidlc-workflows/concepts.html">
     <div class="card-head"><span class="card-name">方法論モデル</span></div>
-    <p><span class="card-role">AI-DLC という方法論。</span>5 フェーズ・32 ステージのライフサイクル全体図、Bolt と walking skeleton、用語モデル、9 スコープと深度、対話モードと承認ゲート。</p>
+    <p><span class="card-role">5 フェーズ 32 ステージの方法論。</span>ライフサイクル全体図、Bolt と walking skeleton、用語モデル、9 スコープと深度、対話モードと承認ゲート。</p>
   </a>
   <a class="card" href="aidlc-workflows/architecture.html">
     <div class="card-head"><span class="card-name">リポジトリ構成</span></div>
