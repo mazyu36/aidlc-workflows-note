@@ -1,0 +1,158 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="spec-autonomy" name="spec-autonomy">
+    <mxGraphModel dx="1300" dy="700" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="470" math="0" shadow="0" background="#161d29">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="axis" value="" style="html=0;strokeColor=#2c3850;strokeWidth=1;endArrow=none" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="60" y="330" as="sourcePoint" /><mxPoint x="1190" y="330" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="axist" value="区画 2 の事後条件が育つ" style="text;html=0;align=left;fontColor=#b895ff;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="336" width="240" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="axisar" value="" style="html=0;strokeColor=#b895ff;strokeWidth=2;endArrow=block" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1120" y="345" as="sourcePoint" /><mxPoint x="1186" y="345" as="targetPoint" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="c1" value="" style="rounded=1;html=0;arcSize=8;fillColor=#10141d;strokeColor=#2c3850;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="330" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="" style="rounded=1;html=0;arcSize=8;fillColor=#10141d;strokeColor=#2c3850;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="450" y="60" width="330" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="" style="rounded=1;html=0;arcSize=8;fillColor=#10141d;strokeColor=#2c3850;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="840" y="60" width="350" height="250" as="geometry" />
+        </mxCell>
+
+        <mxCell id="h1" value="いま" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=13;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="78" y="72" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="h2" value="蒸留を進めた後" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=13;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="468" y="72" width="180" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="h3" value="ライブラリが成熟した後" style="text;html=0;align=left;fontColor=#aab6cc;fontSize=13;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="858" y="72" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1a" value="" style="rounded=1;html=0;arcSize=20;fillColor=#1e2736;strokeColor=#8492ac" vertex="1" parent="1">
+          <mxGeometry x="80" y="108" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s1at" value="stage" style="text;html=0;align=center;fontColor=#e8ecf4;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="80" y="118" width="120" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="s1b" value="" style="rounded=1;html=0;arcSize=20;fillColor=#1e2736;strokeColor=#8492ac" vertex="1" parent="1">
+          <mxGeometry x="80" y="160" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s1bt" value="stage" style="text;html=0;align=center;fontColor=#e8ecf4;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="80" y="170" width="120" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="s1c" value="" style="rounded=1;html=0;arcSize=20;fillColor=#1e2736;strokeColor=#8492ac" vertex="1" parent="1">
+          <mxGeometry x="80" y="212" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s1ct" value="stage" style="text;html=0;align=center;fontColor=#e8ecf4;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="80" y="222" width="120" height="16" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g1a" value="" style="shape=mxgraph.gmdl.users;html=0;fillColor=#f2b35c;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="232" y="110" width="40" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="g1b" value="" style="shape=mxgraph.gmdl.users;html=0;fillColor=#f2b35c;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="232" y="162" width="40" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="g1c" value="" style="shape=mxgraph.gmdl.users;html=0;fillColor=#f2b35c;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="232" y="214" width="40" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="g1t" value="全 stage で&#10;人間の承認" style="text;html=0;align=left;fontColor=#f7d9a3;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="284" y="160" width="96" height="36" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2a" value="" style="rounded=1;html=0;arcSize=20;fillColor=#0f2b22;strokeColor=#57d9a9" vertex="1" parent="1">
+          <mxGeometry x="470" y="108" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s2at" value="stage" style="text;html=0;align=center;fontColor=#c8f0e0;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="470" y="118" width="120" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="s2b" value="" style="rounded=1;html=0;arcSize=20;fillColor=#1e2736;strokeColor=#8492ac" vertex="1" parent="1">
+          <mxGeometry x="470" y="160" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s2bt" value="stage" style="text;html=0;align=center;fontColor=#e8ecf4;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="470" y="170" width="120" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="s2c" value="" style="rounded=1;html=0;arcSize=20;fillColor=#0f2b22;strokeColor=#57d9a9" vertex="1" parent="1">
+          <mxGeometry x="470" y="212" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s2ct" value="stage" style="text;html=0;align=center;fontColor=#c8f0e0;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="470" y="222" width="120" height="16" as="geometry" />
+        </mxCell>
+
+        <mxCell id="k2a" value="" style="shape=mxgraph.basic.tick;html=0;fillColor=#57d9a9;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="622" y="114" width="24" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="g2b" value="" style="shape=mxgraph.gmdl.users;html=0;fillColor=#f2b35c;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="616" y="162" width="40" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="k2c" value="" style="shape=mxgraph.basic.tick;html=0;fillColor=#57d9a9;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="622" y="218" width="24" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="g2t" value="機械が検査した&#10;stage は無人で通る" style="text;html=0;align=left;fontColor=#c8f0e0;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="666" y="108" width="110" height="36" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3a" value="" style="rounded=1;html=0;arcSize=20;fillColor=#0f2b22;strokeColor=#57d9a9" vertex="1" parent="1">
+          <mxGeometry x="860" y="108" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s3at" value="stage" style="text;html=0;align=center;fontColor=#c8f0e0;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="860" y="118" width="120" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="s3b" value="" style="rounded=1;html=0;arcSize=20;fillColor=#0f2b22;strokeColor=#57d9a9" vertex="1" parent="1">
+          <mxGeometry x="860" y="160" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s3bt" value="stage" style="text;html=0;align=center;fontColor=#c8f0e0;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="860" y="170" width="120" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="s3c" value="" style="rounded=1;html=0;arcSize=20;fillColor=#0f2b22;strokeColor=#57d9a9" vertex="1" parent="1">
+          <mxGeometry x="860" y="212" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="s3ct" value="stage" style="text;html=0;align=center;fontColor=#c8f0e0;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="860" y="222" width="120" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="s3span" value="" style="rounded=1;html=0;arcSize=10;fillColor=none;strokeColor=#57d9a9;strokeWidth=2;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="848" y="98" width="144" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="k3" value="" style="shape=mxgraph.basic.tick;html=0;fillColor=#57d9a9;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="1014" y="118" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="k3t" value="複数 stage を&#10;跨いで無人で進む" style="text;html=0;align=left;fontColor=#c8f0e0;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1054" y="116" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="g3" value="" style="shape=mxgraph.gmdl.users;html=0;fillColor=#f2b35c;strokeColor=none" vertex="1" parent="1">
+          <mxGeometry x="1016" y="214" width="26" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="g3t" value="残る承認は&#10;判断が要る所だけ" style="text;html=0;align=left;fontColor=#f7d9a3;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="1054" y="206" width="120" height="36" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1" value="" style="shape=mxgraph.flowchart.database;html=0;fillColor=#1e2736;strokeColor=#b895ff;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="80" y="374" width="44" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="d1t" value="事後条件は手持ちだけ" style="text;html=0;align=left;fontColor=#dbc9ff;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="132" y="382" width="200" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" value="" style="shape=mxgraph.flowchart.database;html=0;fillColor=#1e2736;strokeColor=#b895ff;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="470" y="368" width="56" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="d2t" value="guardrail を蒸留" style="text;html=0;align=left;fontColor=#dbc9ff;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="534" y="382" width="180" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" value="" style="shape=mxgraph.flowchart.database;html=0;fillColor=#241d33;strokeColor=#b895ff;strokeWidth=2" vertex="1" parent="1">
+          <mxGeometry x="860" y="362" width="72" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="d3t" value="規制・標準まで機械検査できる" style="text;html=0;align=left;fontColor=#dbc9ff;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="940" y="382" width="240" height="18" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
