@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI-DLC Workflows Atlas</title>
+<title>AI-DLC Workflows v2 ノート</title>
 <link rel="stylesheet" href="assets/style.css">
 <script defer src="assets/mermaid.min.js"></script>
 <script defer src="assets/highlight.min.js"></script>
@@ -14,7 +14,7 @@
 <div class="wrap">
 
 <header class="masthead">
-  <a class="site" href="index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <a class="site" href="index.html">AI-DLC WORKFLOWS NOTE</a>
   <span class="here">トップ</span>
   <a class="gh-link" href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46" title="分析基点: awslabs/aidlc-workflows @ ccf284b"><svg class="gh-mark" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-hash">ccf284b</span></a>
 </header>
@@ -30,9 +30,9 @@
 </nav>
 
 <main>
-<p class="eyebrow">AI-DLC WORKFLOWS ATLAS</p>
-<h1>AI-DLC Workflows v2　コードベースアトラス</h1>
-<p class="lede">awslabs/aidlc-workflows の v2 ブランチを「1 クリックで実コードに届く」形で解説するノート。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論である。このリポジトリはその公式実装にあたる。単一の core/ から Claude Code / Kiro CLI / Kiro IDE / Codex CLI / opencode の 5 配布物を生成する。</p>
+<p class="eyebrow">AI-DLC WORKFLOWS NOTE</p>
+<h1>AI-DLC Workflows v2　コードベースノート</h1>
+<p class="lede">awslabs/aidlc-workflows の v2 ブランチを読んで書いた日本語ノート。記述はすべて基点コミットに固定した参照リンクを持つ。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論である。このリポジトリはその公式実装にあたり、単一の core/ から Claude Code / Kiro CLI / Kiro IDE / Codex CLI / opencode の 5 配布物を生成する。</p>
 
 <h2 id="tldr">TL;DR</h2>
 <p>設計の要は 3 つの分離にある。第一に方法論と実装の分離。5 フェーズ・32 ステージの方法論は Markdown で記述する。routing は決定論エンジン（TypeScript / bun）が担い、実行品質は LLM（conductor）が担う。第二にソースと配布の分離。手書きの正は core/ の 1 箇所で、5 ハーネス向け dist/ はすべて生成物としてコミットされる。第三に判断と記録の分離。承認できるのは人間だけ、状態を書けるのは専用ツールだけである。この壁はフックが機械的に強制する。</p>

@@ -1,4 +1,4 @@
-// mirror-src/（逐語日本語訳 md）→ docs/mirror/（Atlas スタイル HTML）の決定論コンバータ。
+// mirror-src/（逐語日本語訳 md）→ docs/mirror/（ノート本体と同じスタイルの HTML）の決定論コンバータ。
 // 前提: 訳文は原文と見出し数・順序・フェンス数が 1:1（TRANSLATION.md の規約）。
 // 見出し id は原文（英語）テキストから GitHub 互換 slug を計算し、位置対応で訳文に振る。
 // 使い方: node scripts/mirror-build/build-mirror.mjs
@@ -226,7 +226,7 @@ function pageHtml({ rel, title, body, pagetoc, files, titles }) {
   const relHref = (f) => mirrorRoot + f.replace(/\.md$/, ".html").split("/").map(encodeURIComponent).join("/");
   let toc = `  <div class="group">docs 日本語版</div>\n`;
   toc += `  <a href="${mirrorRoot}index.html">総合索引</a>\n`;
-  toc += `  <a href="${up}index.html">Atlas トップ</a>\n`;
+  toc += `  <a href="${up}index.html">ノートのトップ</a>\n`;
   for (const [sub, fl] of navGroups(files, section)) {
     const secLabel = SECTIONS.find((s) => s.key === section).label;
     toc += `  <div class="group">${esc(sub ? `${secLabel} / ${sub}` : secLabel)}</div>\n`;
@@ -256,7 +256,7 @@ function pageHtml({ rel, title, body, pagetoc, files, titles }) {
 
 <header class="masthead">
   <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
-  <a class="site" href="${up}index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <a class="site" href="${up}index.html">AI-DLC WORKFLOWS NOTE</a>
   <span class="here">docs 日本語版 / ${esc(rel.replace(/\.md$/, ""))}</span>
 </header>
 
@@ -410,7 +410,7 @@ ${secBlock("その他", "top", topFiles)}`;
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>公式 docs 日本語版 — AI-DLC Workflows Atlas</title>
+<title>公式 docs 日本語版 — AI-DLC Workflows v2 ノート</title>
 <link rel="stylesheet" href="../assets/style.css">
 <script defer src="../assets/mermaid.min.js"></script>
 <script defer src="../assets/highlight.min.js"></script>
@@ -421,7 +421,7 @@ ${secBlock("その他", "top", topFiles)}`;
 <div class="wrap">
 
 <header class="masthead">
-  <a class="site" href="../index.html">AI-DLC WORKFLOWS ATLAS</a>
+  <a class="site" href="../index.html">AI-DLC WORKFLOWS NOTE</a>
   <span class="here">docs 日本語版 / 総合索引</span>
 </header>
 

@@ -1,4 +1,4 @@
-/* AI-DLC Workflows Atlas — 共通スタイル
+/* AI-DLC Workflows v2 ノート — 共通スタイル
    設計ルール:
    - 色は AI-DLC のフェーズ識別にのみ使う (ideation=青 / inception=紫 /
      construction=琥珀 / operation=緑)。装飾目的の色は追加しない。
@@ -387,7 +387,7 @@ pre.term .t-comment { color: var(--faint); }
 .legend .key.dashed { border-top-style: dashed; }
 .legend .key.dotted { border-top-style: dotted; }
 
-/* ---- カード (Atlas トップ) ---- */
+/* ---- カード (トップページ) ---- */
 
 .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 20px 0; }
 @media (max-width: 760px) { .cards { grid-template-columns: 1fr; } }

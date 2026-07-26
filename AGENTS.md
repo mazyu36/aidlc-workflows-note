@@ -1,6 +1,6 @@
 # aidlc-workflows-note 運用規約（エージェント向け）
 
-このリポジトリは [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) の `v2` ブランチを解説するコードベースノート。kiro-notes の Codebase Atlas 形式（SHA 固定のコード参照つき自己完結 HTML）を移植したもので、ここに書かれた規約はこのリポジトリで作業するすべてのコーディングエージェントに適用される。
+このリポジトリは [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) の `v2` ブランチを解説するコードベースノート。サイト名は「AI-DLC Workflows v2 ノート」（masthead は `AI-DLC WORKFLOWS NOTE`）で、アトラスという呼称は使わない。kiro-notes 由来の形式（SHA 固定のコード参照つき自己完結 HTML）を移植したもので、ここに書かれた規約はこのリポジトリで作業するすべてのコーディングエージェントに適用される。
 
 ページの作成・更新・移植の実行手順は codebase-atlas-html スキル（`~/.claude/skills/codebase-atlas-html/SKILL.md`）にある。規約を変えたら同じコミットでスキル側の追従要否も確認すること。
 
@@ -24,12 +24,12 @@ git -C "$(ghq root)/github.com/awslabs/aidlc-workflows" worktree add --detach /t
 
 | ページ | 内容 |
 |---|---|
-| `docs/index.html` | Atlas トップ。TL;DR・リポジトリ全体図・ページ索引・一次資料 |
+| `docs/index.html` | トップ。TL;DR・リポジトリ全体図・ページ索引・一次資料 |
 | `docs/aidlc-workflows/spec.html` | 方法論仕様: 同梱 Specification PDF の 9 原則・三区画モデル・orchestrator 5 機能・仕様 → v2 実装の対応表 |
-| `docs/aidlc-workflows/concepts.html` | 概念: AI-DLC 方法論、フェーズ / ステージ / スコープ / ユニット / ボルトの概念モデル |
-| `docs/aidlc-workflows/architecture.html` | つくり: core → harness → dist の三層、パッケージングパイプライン、プレーンアーキテクチャ |
-| `docs/aidlc-workflows/runtime.html` | 仕組み: セッションの流れ、conductor、ステージプロトコル、状態機械、フック |
-| `docs/aidlc-workflows/quality.html` | エージェントと品質: 14 エージェント、knowledge、センサー、swarm、学習ループ |
+| `docs/aidlc-workflows/concepts.html` | 方法論モデル: 5 フェーズ 32 ステージ、スコープ / ユニット / ボルトの概念モデル |
+| `docs/aidlc-workflows/architecture.html` | リポジトリ構成: core → harness → dist の三層、パッケージングパイプライン、プレーンアーキテクチャ |
+| `docs/aidlc-workflows/runtime.html` | 実行モデル: セッションの流れ、conductor、ステージプロトコル、状態機械、フック |
+| `docs/aidlc-workflows/quality.html` | エージェントと検証: 14 エージェント、knowledge、センサー、swarm、学習ループ |
 | `docs/mirror/**` | 公式 docs 全 91 ファイルの逐語日本語版（生成物。手で編集しない） |
 
 ## docs ミラー（逐語日本語版）の規約
@@ -39,12 +39,12 @@ git -C "$(ghq root)/github.com/awslabs/aidlc-workflows" worktree add --detach /t
 - ビルド前提: `/tmp/aidlc-v2` に基点コミットの worktree があること（原文パリティ検証・アンカー計算に使う）、`scripts/mirror-build/` で `npm install` 済みであること
 - 忠実性: 構造（見出し・フェンス・表）は原文と 1:1。ビルドが見出し・フェンスのパリティを検証し、不一致はビルド失敗。見出しアンカー id は原文英語から GitHub 互換 slug を計算して位置対応で付与
 - 唯一の内容改変は Mermaid のセミコロン 5 行の修正（upstream PR #651 相当。build-mirror.mjs の MERMAID_FIXES が正）
-- Atlas 本文の文章規約（bold 禁止・ウィーゼルワード禁止）は逐語ミラーには適用しない — 原文の構造・強調を忠実に写す方が優先
+- ノート本文の文章規約（bold 禁止・ウィーゼルワード禁止）は逐語ミラーには適用しない — 原文の構造・強調を忠実に写す方が優先
 - update_mode では: 新基点で `git diff 旧..新 -- docs` を取り、変更のあった原文だけ mirror-src を再翻訳 → 全体を再ビルド → validate-refs.sh
 
 - ページ単体で「動き」と「実装の大枠」が掴めることをゴールにする。主要フローには図（draw.io / Mermaid シーケンス図）を付け、本文で主張した仕組みには実コード抜粋（`figure.excerpt`）で実体を見せる。目安: 各ページに抜粋 2〜4 個
 - コンテンツはページ内に完結させる。リポジトリ内 .md への外部リンクで内容を代替しない（引用・出典表示としてのみ可）
-- 基点の提示は masthead 右端の GitHub バッジ（`a.gh-link`: GitHub アイコン + 短縮ハッシュ、href は基点 tree URL、title に分析基点の説明）。Atlas ページは `footer.meta` を置かない。例外は spec.html の原典（PDF）footer と、生成物であるミラーの footer（原文リンク + 生成日）
+- 基点の提示は masthead 右端の GitHub バッジ（`a.gh-link`: GitHub アイコン + 短縮ハッシュ、href は基点 tree URL、title に分析基点の説明）。ノートのページは `footer.meta` を置かない。例外は spec.html の原典（PDF）footer と、生成物であるミラーの footer（原文リンク + 生成日）
 - 生成後に `bash scripts/validate-refs.sh` を実行し、missing: 0 を確認してから完了とする
 
 ## コード参照の規約
@@ -92,4 +92,4 @@ git -C "$(ghq root)/github.com/awslabs/aidlc-workflows" worktree add --detach /t
 4. `git log --stat <旧基点>..<新基点>` で変更領域を把握し、影響のあるセクションだけ書き換える
 5. ページ内の全参照 URL の SHA を新基点に張り替え、`scripts/validate-refs.sh` で検証する
 6. コード抜粋は行番号固定なので全数再検証: 新基点 worktree で `nl -ba <path> | sed -n '<開始>,<終了>p'` を再実行し、(a) 同一なら据え置き、(b) 行ズレなら href アンカー・表示・data-copy の行番号を更新、(c) コード変更なら抜粋本文と note を書き直す
-7. `meta.json` の `analyzedCommit`、Atlas 全ページの masthead `gh-link`（href の 40 桁 SHA・表示の短縮ハッシュ・title）、`build-mirror.mjs` の基点定数（`GH` / `GH_TREE`）を更新し、ミラーを再ビルドする
+7. `meta.json` の `analyzedCommit`、ノート全ページの masthead `gh-link`（href の 40 桁 SHA・表示の短縮ハッシュ・title）、`build-mirror.mjs` の基点定数（`GH` / `GH_TREE`）を更新し、ミラーを再ビルドする
