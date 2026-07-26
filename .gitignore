@@ -1,0 +1,8 @@
+# Claude Code のローカル設定（環境固有。リポジトリの成果物ではない）
+.claude/
+
+# 依存パッケージ
+node_modules/
+
+# 図の書き出し中間物（正は docs/diagrams/*.drawio）
+*.png.tmp
