@@ -141,6 +141,14 @@ AI-DLC は、利用する harness 向けのディストリビューションを�
 [opencode 上の AI-DLC](harnesses/opencode.md) を参照。Claude Code 実装は
 プロジェクトにコピーする `.claude/` ディレクトリとして出荷される。
 
+以下の `cp` コマンドは、本リポジトリを `v2` ブランチで clone した場所で実行する:
+
+```bash
+git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+```
+
 ### 手順 1: 実装をコピーする
 
 ```bash
@@ -280,6 +288,7 @@ init コマンドを実行することはない。
 command -v claude >/dev/null && echo "✓ Claude Code" || echo "✗ Claude Code"
 command -v bun    >/dev/null && echo "✓ bun"          || echo "✗ bun"
 
+# From your aidlc-workflows clone (v2 branch) - see Installation above
 # Install (engine + the workspace shell sibling)
 cp -r dist/claude/.claude/ your-project/.claude/
 cp -r dist/claude/aidlc/   your-project/aidlc/

@@ -42,7 +42,7 @@
 <nav class="pagetoc" aria-label="このページの目次">
   <div class="group">このページの目次</div>
   <a href="#what-a-sensor-is">sensor とは何か</a>
-  <a href="#the-four-sensors-that-ship">同梱される 4 つの sensor</a>
+  <a href="#the-five-sensors-that-ship">同梱される 5 つの sensor</a>
   <a href="#how-binding-works-pull-authoring">束縛がどう働くか: pull 著述</a>
   <a href="#authoring-a-new-sensor">新しい sensor を著述する</a>
   <a href="#judgment-calls-matches-and-default_severity">判断のポイント: matches と default_severity</a>
@@ -58,7 +58,7 @@
 対し、sensor は走るコードである — rule のフィードフォワードに対する、制御ループのフィード
 バックの半分。rule は「user story は Given/When/Then に従う」と言う; sensor は、agent が
 たった今書いたファイルに必須の見出しが在ることをバイト単位で検証する。</p>
-<p>この章は、harness engineer が sensor で実際に行う仕事を語る: 同梱される 4 つを理解し、
+<p>この章は、harness engineer が sensor で実際に行う仕事を語る: 同梱される 5 つを理解し、
 新しい manifest を著述し、それを走らせるべき stage に束ねる。完全なフィールドごとの契約は、
 開発者リファレンスの <a href="../reference/07-sensor-system.html">Sensor System</a> に住む — この章は
 それを言い直すのではなく、各スキーマの判断のたびにそこへ指し降ろす。</p>
@@ -90,8 +90,8 @@
 エラー。実行中にこれがどう見えるかのユーザー向けのツアーは、ユーザーガイドの
 <a href="../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a> にある。</p>
 <hr>
-<h2 id="the-four-sensors-that-ship">同梱される 4 つの sensor</h2>
-<p>4 つの manifest が <code>.claude/sensors/</code> の下に同梱され、各々が <code>aidlc-</code> プレフィックスを持つ:</p>
+<h2 id="the-five-sensors-that-ship">同梱される 5 つの sensor</h2>
+<p>5 つの manifest が <code>.claude/sensors/</code> の下に同梱され、各々が <code>aidlc-</code> プレフィックスを持つ:</p>
 <table>
 <thead>
 <tr>
@@ -101,6 +101,11 @@
 </tr>
 </thead>
 <tbody><tr>
+<td><code>aidlc-claim-sources.md</code></td>
+<td>Intent Capture の record-dir 出力</td>
+<td>Intent Capture のすべての主張が解決可能な source タグを運ぶ; 登録された記述・scope・memory の値が正式な入力と一致する; 残存する assumption が明示的な人間の確認と厳密に一致する</td>
+</tr>
+<tr>
 <td><code>aidlc-required-sections.md</code></td>
 <td>record-dir の markdown 出力</td>
 <td>出力が必須の H2 見出しを運ぶ — 汎用のコンテンツ形状チェック</td>
@@ -121,12 +126,12 @@
 <td>設定済みの type-checker（既定は <code>tsc</code>）をラップする</td>
 </tr>
 </tbody></table>
-<p>4 つすべてが <code>matches:</code> glob でゲートされる（下で詳述）: 最初の 2 つのドキュメント形状
-チェックは成果物ツリーにスコープされ（同梱の manifest は <code>**/{aidlc-docs,intents}/**</code> を運ぶ
+<p>5 つすべてが <code>matches:</code> glob でゲートされる（下で詳述）: provenance のチェックと 2 つの
+ドキュメント形状チェックは成果物ツリーにスコープされ（同梱の manifest は <code>**/{aidlc-docs,intents}/**</code> を運ぶ
 — intent ごとの record ツリー。移行前のプロジェクト用にレガシーの <code>aidlc-docs/</code> アームを
 保っている）、2 つのコード品質チェックはそれぞれの言語 glob（<code>**/*.{ts,js}</code>、
 <code>**/*.{ts,tsx}</code>）にスコープされる。自分のものを著述する前に <code>aidlc-required-sections.md</code> を
-end to end で読むこと — それは 4 つのうち最小で、形状全体、frontmatter と散文の本体を示す。</p>
+end to end で読むこと — それは 5 つのうち最小で、形状全体、frontmatter と散文の本体を示す。</p>
 <hr>
 <h2 id="how-binding-works-pull-authoring">束縛がどう働くか: pull 著述</h2>
 <p>manifest は <strong>stage を対象づけるフィールドを運ばない</strong>。<code>applies_to:</code> は無い —
@@ -268,7 +273,7 @@ glob に設定し（<code>aidlc-linter.md</code> は <code>**/*.{ts,js}</code>�
 コンテキストを与える。harness engineer が形作る最後のデータサーフェスである。</p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/harness-engineering/06-sensors.md"><code>docs/harness-engineering/06-sensors.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-23
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/harness-engineering/06-sensors.md"><code>docs/harness-engineering/06-sensors.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-27
 </footer>
 </main>
 </div>

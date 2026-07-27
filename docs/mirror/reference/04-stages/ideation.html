@@ -46,7 +46,7 @@
   <a href="../../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
   <a href="../../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
   <a href="../../reference/diagrams.html">AI-DLC ワークフロー図</a>
-  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <a href="../../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload - 実証リファレンス</a>
   <div class="group">DEVELOPER REFERENCE / 04-stages</div>
   <a href="../../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
   <a href="../../reference/04-stages/ideation.html" class="here">Ideation phase — stage リファレンス (1.1-1.7)</a>
@@ -254,6 +254,10 @@ phase への移行を制御する go/no-go gate で締めくくる。</p>
 <td>aidlc-architect-agent（技術的コンテキスト）</td>
 </tr>
 <tr>
+<td>レビュアー</td>
+<td>aidlc-product-lead-agent（source の裏付けとプロダクト品質のレビュー）</td>
+</tr>
+<tr>
 <td>モード</td>
 <td>inline</td>
 </tr>
@@ -279,10 +283,11 @@ stage が積み上げる土台となる。</p>
 <ol>
 <li><strong>agent persona のロード</strong> — aidlc-product-agent の persona と knowledge をロードする。技術的コンテキストの視点のため aidlc-architect-agent の persona をロードする。</li>
 <li><strong>先行コンテキストのロード</strong> — ユーザーのプロジェクト記述を読む。既存の成果物を確認する。guardrails をロードする。</li>
-<li><strong>明確化のための質問の生成</strong> — ビジネス上の問題・顧客・成功指標・イニシアチブの契機・プロジェクトタイプを網羅する質問とともに <code>&lt;record&gt;/ideation/intent-capture/intent-capture-questions.md</code> を作成する。A-E の選択肢に X（Other）を加えた <code>[Answer]:</code> タグ形式を用いる。tri-mode の質問フローを提供する。</li>
+<li><strong>明確化のための質問の生成</strong> — 最初の記述・ワークフローが選んだ scope・使用したアクティブ memory の rule のための <code>## Sources</code> register とともに <code>&lt;record&gt;/ideation/intent-capture/intent-capture-questions.md</code> を作成する。ビジネス上の問題・顧客・成功指標・イニシアチブの契機・ステークホルダー・決定権限・コミュニケーション要求、そしてワークフローが選んだ scope が意図するプロダクト境界と合致するかを尋ねる。A-E の選択肢に X（Other）を加えた <code>[Answer]:</code> タグ形式を用いる。tri-mode の質問フローを提供する。</li>
 <li><strong>回答の収集と分析</strong> — すべてのタグが埋まっていることを確認する。曖昧さ・矛盾の分析を実行する。</li>
-<li><strong>成果物の生成</strong> — intent statement と stakeholder map を生成する。</li>
-<li><strong>完了の準備</strong> — 両方の成果物を検証する。state を編集しない; gate の結果を
+<li><strong>裏付けのある成果物の生成</strong> — intent statement と stakeholder map を生成する。実質的な段落・リスト項目・表のデータ行はすべて、インラインの <code>[desc]</code>・<code>[scope]</code>・<code>[Q&lt;n&gt;]</code>・<code>[memory:&lt;id&gt;]</code>・<code>[assumption]</code> のいずれかのタグを運ぶ。両方のファイルは <code>## Assumptions &amp; Open Questions</code> を含む。</li>
+<li><strong>assumption の解決</strong> — いずれかの成果物が assumption を残す場合、それを受諾するか、フォローアップの質問に変換するようユーザーに求める。受諾は assumption のラベルを保つ; 主張を事実へ昇格させない。</li>
+<li><strong>完了の準備</strong> — Product Lead のレビューを実行し、両方の成果物を検証し、gate の結果を
 <code>aidlc-orchestrate.ts</code> 経由で報告する。</li>
 <li><strong>完了の提示と承認の要求</strong> — 標準の 2 択 gate。</li>
 </ol>
@@ -296,21 +301,23 @@ stage が積み上げる土台となる。</p>
 </thead>
 <tbody><tr>
 <td><code>intent-statement.md</code></td>
-<td>問題の記述、対象顧客、成功指標、イニシアチブの契機、プロジェクトタイプ、初期の scope シグナル</td>
+<td>source タグ付きの問題の記述・対象顧客・成功指標・イニシアチブの契機、およびワークフローが選んだ scope 対ユーザーが確認した初期の scope シグナル; 必須の assumption セクション</td>
 </tr>
 <tr>
 <td><code>stakeholder-map.md</code></td>
-<td>主要なステークホルダーと関心事、意思決定者 対 影響者、コミュニケーション要件</td>
+<td>source タグ付きのステークホルダーと関心事、意思決定者 対 影響者、コミュニケーション要件; 必須の assumption セクション</td>
 </tr>
 <tr>
 <td><code>intent-capture-questions.md</code></td>
-<td><code>[Answer]:</code> タグ付きの明確化質問（入力成果物）</td>
+<td>許可された source の register、<code>[Answer]:</code> タグ付きの明確化質問、必要な場合の assumption の確認</td>
 </tr>
 </tbody></table>
 <h3 id="notes">補足</h3>
 <ul>
 <li>全ワークフローの最初の stage。ユーザー入力以外に先行成果物は無い。</li>
 <li><code>$ARGUMENTS</code> 内の自由記述の intent は seed コンテキストとして用いられる。</li>
+<li>選ばれなかった選択肢は除外でも要件でもない。裏付けの無い内容は省略されるか、
+フォローアップで引き出されるか、明示的な assumption としてのみ保持される。</li>
 <li>intent statement は後続のすべての Ideation stage に供給され、Inception へと引き継がれる。</li>
 </ul>
 <hr>
@@ -807,7 +814,7 @@ Analysis（greenfield プロジェクトの場合）で始まる。</p>
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/ideation.md"><code>docs/reference/04-stages/ideation.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-23
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/04-stages/ideation.md"><code>docs/reference/04-stages/ideation.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-27
 </footer>
 </main>
 </div>

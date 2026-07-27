@@ -110,10 +110,21 @@ bun は<em>非対話</em>シェルが見る PATH に載っていなければな�
 場合は、<code>BUN_INSTALL</code>/<code>PATH</code> の export を <code>~/.zshenv</code>（または <code>~/.bashrc</code>）へ写す。</p>
 </blockquote>
 <h2 id="install">インストール</h2>
-<pre><code class="language-bash">cp -r dist/kiro-ide/.kiro your-project/.kiro
-cp -r dist/kiro-ide/aidlc your-project/aidlc        # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
+<p>以下のコピーは、<a href="https://github.com/awslabs/aidlc-workflows">aidlc-workflows</a>
+リポジトリを <code>v2</code> ブランチで clone した場所から行う:</p>
+<pre><code class="language-bash">git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+</code></pre>
+<pre><code class="language-bash">mkdir -p your-project/.kiro your-project/aidlc
+cp -R dist/kiro-ide/.kiro/. your-project/.kiro/
+cp -R dist/kiro-ide/aidlc/. your-project/aidlc/     # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
 cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have one
 </code></pre>
+<p><code>cp -R &lt;src&gt;/. &lt;dst&gt;/</code> の形はツリーの<strong>中身</strong>をコピーする — <code>your-project/.kiro</code> が
+既にある場合（アップグレード）も無い場合（新規インストール）も同じに動く。素の
+<code>cp -r dist/kiro-ide/.kiro your-project/.kiro</code> は既存の <code>.kiro/</code> の中に 2 つ目の
+<code>.kiro</code> を入れ子にし、IDE は新しいファイルを決して見ない。</p>
 <p><code>aidlc/</code> ディレクトリはワークスペースシェルである — エンジンが読む構築済みの
 <code>aidlc/spaces/default/memory/</code> メソッドツリーを同梱する。<code>.kiro/</code> の<strong>兄弟</strong>なので
 別にコピーする（もしくは <code>dist/kiro-ide/</code> ツリー全体を一度にコピーする）。
@@ -123,8 +134,10 @@ cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have 
 <li><code>.kiro/skills/aidlc/SKILL.md</code> — <code>/aidlc</code> の呼び出しで読み込まれる conductor。
 同梱の <code>.kiro/settings/cli.json</code> と agent-v1 の JSON ファイルは CLI 専用の
 互換サーフェスであり、IDE の既定エージェントを選択しない。</li>
-<li><code>.kiro/hooks/*.kiro.hook</code> — IDE ネイティブの hook 形式で登録されたフレームワークの
-hook。IDE の Agent Hooks パネルに現れる。</li>
+<li><code>.kiro/hooks/aidlc-*.json</code> — IDE ネイティブの v2 hook 形式で登録されたフレームワークの
+hook。IDE の Agent Hooks パネルに現れる。（Kiro IDE 1.x は、harness が以前同梱していた
+レガシーの <code>.kiro.hook</code> 形式をもう実行しない。それらのビルドではレガシー hook は
+黙って不活性になる。）</li>
 </ul>
 <p>チャットパネルで <code>/aidlc --doctor</code> を実行してセットアップを検証し、
 <code>/aidlc &lt;description&gt;</code> でワークフローを開始する。</p>
@@ -136,12 +149,17 @@ hook。IDE の Agent Hooks パネルに現れる。</li>
 同梱のシェルがワークスペースをスキャフォールドし、最初の <code>/aidlc</code> で最初の intent が
 自動 birth する。</p>
 <h2 id="how-hooks-work-on-kiro-ide">Kiro IDE での hook の動き方</h2>
-<p>Kiro IDE は <code>.kiro/hooks/</code> 配下の <code>.kiro.hook</code> ファイルで hook を登録する（エージェント
-JSON 内の <code>hooks</code> ブロックを読む Kiro CLI とは別の機構）。各 <code>.kiro.hook</code> は共有の
-<code>aidlc-kiro-adapter.ts</code> シムを経由するコマンドを実行し、シムが IDE の hook イベントを
-バイト共有の core hook が期待する形に正規化する。</p>
-<p>IDE は hook のコンテキストを <strong><code>USER_PROMPT</code> 環境変数</strong>で渡す（stdin ではない — IDE は
-stdin を開くが決して書かない）。<code>USER_PROMPT</code> は JSON 文字列
+<p>Kiro IDE は <code>.kiro/hooks/</code> 配下の v2 hook JSON ファイル
+（<code>{&quot;version&quot;:&quot;v1&quot;,&quot;hooks&quot;:[{name,trigger,matcher,action}]}</code>、PascalCase の
+trigger）で hook を登録する（エージェント JSON 内の <code>hooks</code> ブロックを読む Kiro CLI
+とは別の機構）。各 hook は共有の <code>aidlc-kiro-adapter.ts</code> シムを経由するコマンドを
+実行し、シムが IDE の hook イベントをバイト共有の core hook が期待する形に正規化する。</p>
+<p>アダプタは hook のコンテキストを <strong><code>USER_PROMPT</code> 環境変数</strong>（1.0 以前のチャネル）から
+読む。コンテキストが stdin で届き <code>USER_PROMPT</code> が空になる IDE 1.x では、ペイロードに
+依存する 2 つのターゲット（<code>audit-and-sensors</code>・<code>log-subagent</code>）は発火するが、見える形の
+hook drop を伴って no-op になる。残りの hook はペイロードに依存せず、どちらの IDE 世代でも
+動く。stdin のコンテキストチャネルは後続の強化として計画されている。</p>
+<p>1.0 以前のビルドでは、<code>USER_PROMPT</code> は JSON 文字列
 <code>{ toolName, toolArgs, toolResult, toolSuccess }</code> である。IDE は <code>toolArgs</code> を空のままに
 するため、アダプタは書かれたファイルのパスを <code>toolResult</code> のテキストから復元し、
 ペイロードの無い hook（<code>runtime-compile</code>・<code>sync-statusline</code>）をツールのペイロードではなく
@@ -150,56 +168,56 @@ audit トレイルから駆動する。</p>
 <thead>
 <tr>
 <th>Hook</th>
-<th>IDE イベント</th>
+<th>trigger（matcher）</th>
 <th>目的</th>
 </tr>
 </thead>
 <tbody><tr>
 <td><code>aidlc-session-start</code></td>
-<td><code>promptSubmit</code></td>
-<td>ワークフローの再開文脈を注入</td>
+<td><code>SessionStart</code></td>
+<td>セッションごとに 1 度、ワークフローの再開文脈を注入（レガシーの 1.0 以前のファイルはプロンプトごとの <code>promptSubmit</code> に配線されたまま — その世代には session-start の trigger が無い）</td>
 </tr>
 <tr>
 <td><code>aidlc-mint</code></td>
-<td><code>promptSubmit</code></td>
+<td><code>UserPromptSubmit</code></td>
 <td>すべてのプロンプトで human-turn イベントを記録（human-presence gate）</td>
 </tr>
 <tr>
-<td><code>aidlc-session-end</code></td>
-<td><code>agentStop</code></td>
-<td><code>SESSION_ENDED</code> を発行（可観測性）</td>
-</tr>
-<tr>
 <td><code>aidlc-stop</code></td>
-<td><code>agentStop</code></td>
-<td>forwarding loop の継続</td>
+<td><code>Stop</code></td>
+<td>forwarding loop の audit（助言のみ。IDE では Stop の trigger はブロックできない — 強制は conductor 自身の Stop プロトコルに依る）</td>
 </tr>
 <tr>
 <td><code>aidlc-block</code></td>
-<td><code>preToolUse</code></td>
+<td><code>PreToolUse</code></td>
 <td>承認 gate が開いていて以降に人間が行動していない間、ツール呼び出しをハードブロック（human-presence の床）</td>
 </tr>
 <tr>
 <td><code>aidlc-audit-logger</code></td>
-<td><code>postToolUse</code>（write）</td>
-<td>成果物の作成 / 更新を記録（パスは <code>toolResult</code> から）</td>
+<td><code>PostToolUse</code>（<code>fs_write|str_replace|fs_append</code>）</td>
+<td>成果物の作成 / 更新を記録し、続けて適用される sensor を発火（パスはツールの結果から）</td>
 </tr>
 <tr>
-<td><code>aidlc-sensor-fire</code></td>
-<td><code>postToolUse</code>（write）</td>
-<td>適用される sensor を発火（パスは <code>toolResult</code> から）</td>
+<td><code>aidlc-log-subagent</code></td>
+<td><code>PostToolUse</code>（<code>invoke_sub_agent</code>）</td>
+<td>委譲先の identity 付きで <code>SUBAGENT_COMPLETED</code> を記録</td>
 </tr>
 <tr>
 <td><code>aidlc-runtime-compile</code></td>
-<td><code>postToolUse</code>（shell）</td>
+<td><code>PostToolUse</code>（<code>execute_bash</code>）</td>
 <td>runtime グラフを再コンパイル（audit 末尾で判定）</td>
 </tr>
 <tr>
 <td><code>aidlc-sync-statusline</code></td>
-<td><code>postToolUse</code>（shell）</td>
-<td>audit の最新 <code>STAGE_STARTED</code> から <code>Current Stage</code> を前方専用で同期（IDE では <code>spec</code> イベントは発火しない）</td>
+<td><code>PostToolUse</code>（<code>execute_bash</code>）</td>
+<td>audit の最新 <code>STAGE_STARTED</code> から <code>Current Stage</code> を前方専用で同期（IDE は解析できる task ペイロードを一切出さない）</td>
 </tr>
 </tbody></table>
+<p><code>aidlc-session-end</code> には <strong>v2 の登録が無い</strong>: IDE の <code>Stop</code> trigger は会話の終了ではなく
+アシスタントの各ターンの終わりに発火するため、登録すると同一セッション内のプロンプト間に
+偽の <code>SESSION_ENDED</code> を追記してしまう。IDE が本物の session-end イベントを露出するまで
+レガシー専用（<code>agentStop</code>、1.0 以前のビルド）にとどまる — IDE 1.x では <code>SESSION_ENDED</code> は
+記録されない。</p>
 <p>発火のたびにチャットに「Run Command Hook」の行が見える。</p>
 <h3 id="debugging-hooks">hook のデバッグ</h3>
 <p>hook が期待どおりに振る舞わないときは、デバッグログを有効にすると各 hook が決定の経路
@@ -226,7 +244,7 @@ audit トレイルから駆動する。</p>
 <tbody><tr>
 <td>hook の登録</td>
 <td><code>settings.json</code> の <code>hooks</code> ブロック</td>
-<td><code>.kiro/hooks/*.kiro.hook</code> ファイル（Agent Hooks パネルに表示）</td>
+<td><code>.kiro/hooks/aidlc-*.json</code> の v2 hook ファイル（IDE &gt;= 1.0）+ <code>.kiro/hooks/aidlc-*.kiro.hook</code> のレガシーファイル（1.0 以前）。両方同梱で二重発火はしない</td>
 </tr>
 <tr>
 <td>gate と質問</td>
@@ -251,7 +269,7 @@ audit トレイルから駆動する。</p>
 <tr>
 <td>セッションの audit イベント</td>
 <td><code>SESSION_STARTED/RESUMED/ENDED</code>、<code>SESSION_COMPACTED</code></td>
-<td><code>SESSION_STARTED</code> / <code>SESSION_ENDED</code>（pre-compaction のイベントは無い）</td>
+<td>IDE 1.x では <code>SESSION_STARTED</code> のみ（本物の session-end の trigger が無い — <code>SESSION_ENDED</code> は 1.0 以前のビルドでレガシー hook によってのみ記録される。pre-compaction のイベントは無い）</td>
 </tr>
 <tr>
 <td>MCP サーバー</td>
@@ -272,11 +290,11 @@ sensor、scope、depth / テスト戦略 — は同一に振る舞う。同一<e
 リネームした core のコピー）。<code>bun scripts/package.ts --check</code> がドリフトガードで CI で走る。
 authored な Kiro IDE のサーフェスは <code>harness/kiro-ide/</code> に住む: orchestrator のスキル
 （<code>skills/aidlc/</code>）、CLI 互換のエージェント JSON（<code>agents/</code>）、hook アダプタと
-<code>.kiro.hook</code> ファイル（<code>hooks/</code>）、CLI 専用の <code>settings/cli.json</code>、<code>AGENTS.md</code> —
+v2 hook JSON ファイル（<code>hooks/</code>）、CLI 専用の <code>settings/cli.json</code>、<code>AGENTS.md</code> —
 編集するのはそれら（または <code>core/</code>）であり、生成された <code>dist/kiro-ide</code> では決してない。</p>
 <p>IDE の harness は CLI の harness（<code>harness/kiro/</code>）と 3 点で異なる:
 <code>/aidlc</code> スキルが（<code>settings/cli.json</code> で選択されるエージェントではなく）conductor である。
-<code>.kiro.hook</code> ファイルを同梱する（CLI はエージェント JSON の <code>hooks</code> ブロックに依存し、
+v2 hook JSON ファイルを同梱する（CLI はエージェント JSON の <code>hooks</code> ブロックに依存し、
 IDE はそれを無視する）。そして manifest が委譲先エージェントの <code>.md</code> ファイルに <code>tools:</code> の
 frontmatter 許可を注入する（<code>frontmatterAdditions</code>）。IDE は委譲された subagent のツールを
 agent-v1 の JSON ではなく <code>.md</code> frontmatter から解決するためで、許可が無いと IDE の委譲先は
@@ -296,7 +314,7 @@ agent-v1 の JSON ではなく <code>.md</code> frontmatter から解決する�
 <p>他の harness: <a href="codex-cli.html">Codex CLI 上の AI-DLC</a> · <a href="README.html">harness ファミリーの索引</a>。</p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/kiro-ide.md"><code>docs/guide/harnesses/kiro-ide.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-23
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/guide/harnesses/kiro-ide.md"><code>docs/guide/harnesses/kiro-ide.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-27
 </footer>
 </main>
 </div>

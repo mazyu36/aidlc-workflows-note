@@ -224,8 +224,8 @@ session hook は、発行の前にアクティブな intent の `aidlc-state.md`
 
 | Event | Emitter | 備考 |
 |---|---|---|
-| `DECISION_RECORDED` | `tools/aidlc-log.ts` | `AskUserQuestion` の前に発火し、選択肢を捉える |
-| `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | user の応答の後に発火する |
+| `DECISION_RECORDED` | `tools/aidlc-log.ts` | gate ではない `AskUserQuestion` の前に発火し、選択肢を捉える |
+| `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | gate ではない質問への応答の後に発火する; 承認の選択は `report` が所有するライフサイクルイベントである |
 | `REVIEW_REQUESTED` | `tools/aidlc-log.ts` | conductor が §12a reviewer サブエージェントを dispatch したときに発火する |
 | `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` の reviewer verdict が読まれたときに発火する。すべての完了系の状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在の workflow attempt からの、かつ最新の関連する declared-artifact の書き込み以降の、一致する receipt を要求する。per-unit stage は、適用可能な unit ごとに 1 つと、その unit への scope artifact 無効化を要求する。autonomous swarm の finalization はさらに、設定された各 unit の Bolt 開始後の receipt を要求する。 |
 
