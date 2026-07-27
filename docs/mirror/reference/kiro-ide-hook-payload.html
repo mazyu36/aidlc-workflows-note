@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kiro IDE hook payload — 実証リファレンス — AI-DLC docs 日本語版</title>
+<title>Kiro IDE hook payload - 実証リファレンス — AI-DLC docs 日本語版</title>
 <link rel="stylesheet" href="../../assets/style.css">
 <script defer src="../../assets/mermaid.min.js"></script>
 <script defer src="../../assets/highlight.min.js"></script>
@@ -46,7 +46,7 @@
   <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
   <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
   <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
-  <a href="../reference/kiro-ide-hook-payload.html" class="here">Kiro IDE hook payload — 実証リファレンス</a>
+  <a href="../reference/kiro-ide-hook-payload.html" class="here">Kiro IDE hook payload - 実証リファレンス</a>
   <div class="group">DEVELOPER REFERENCE / 04-stages</div>
   <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
   <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
@@ -75,7 +75,8 @@
 
 <nav class="pagetoc" aria-label="このページの目次">
   <div class="group">このページの目次</div>
-  <a href="#the-channel-user_prompt-env-var-not-stdin">チャネル: stdin ではなく USER_PROMPT 環境変数</a>
+  <a href="#pre-10-channel-user_prompt-env-var">1.0 以前のチャネル: USER_PROMPT 環境変数</a>
+  <a href="#ide-1x-channel-stdin-snake_case">IDE 1.x のチャネル: stdin（snake_case）</a>
   <a href="#per-event-captures">イベントごとのキャプチャ</a>
   <a href="#consequences-for-each-hook">各 hook への帰結</a>
   <a href="#toolresult-path-extraction-patterns">toolResult パス抽出パターン</a>
@@ -83,22 +84,43 @@
 
 <main>
 <p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
-<h1 id="kiro-ide-hook-payload-empirical-reference">Kiro IDE hook payload — 実証リファレンス</h1>
-<p>Kiro IDE が <code>runCommand</code> hook にどうコンテキストを届けるか。stdin・argv・完全な
-環境をダンプする probe <code>.kiro.hook</code> ファイルを登録し、Kiro IDE 0.12-main 上でライブに
-捕捉した。これは <code>harness/kiro-ide/</code> アダプタの IDE ブランチの証拠ベースである;
-CLI harness（<code>harness/kiro/</code>）は、異なる stdin ベースの機構を使う。</p>
-<h2 id="the-channel-user_prompt-env-var-not-stdin">チャネル: stdin ではなく <code>USER_PROMPT</code> 環境変数</h2>
-<p>Kiro IDE の <code>runCommand</code> hook は、そのイベントコンテキストを stdin ではなく
-<strong><code>USER_PROMPT</code> 環境変数</strong> を通じて受け取る。</p>
+<h1 id="kiro-ide-hook-payload-empirical-reference">Kiro IDE hook payload - 実証リファレンス</h1>
+<p>Kiro IDE が <code>runCommand</code> hook にどうコンテキストを届けるか。チャネルは IDE の世代によって
+異なる:</p>
 <ul>
-<li><p><strong>stdin</strong> は開かれるが、書き込まれることも閉じられることもないため、<code>Bun.stdin.text()</code> はハングする。旧アダプタの stdin 読み取りは IDE では決して動作し得なかった（2 秒のタイムアウトに落ち、空の payload で進行した）。</p>
-</li>
-<li><p><strong><code>USER_PROMPT</code></strong> は次の形の JSON 文字列である:</p>
-<pre><code class="language-json">{ &quot;toolName&quot;: &quot;fs_write&quot;, &quot;toolArgs&quot;: {}, &quot;toolResult&quot;: &quot;Created the /abs/path/file.md file.&quot;, &quot;toolSuccess&quot;: true }
+<li><strong>1.0 以前（0.12-main）:</strong> コンテキストは <strong><code>USER_PROMPT</code> 環境変数</strong>（camelCase の JSON）
+を通じて届く。stdin は開かれるが、書き込まれることも閉じられることもない — 読むとハングする。</li>
+<li><strong>IDE &gt;= 1.0（1.x）:</strong> コンテキストは <strong>stdin 上の JSON</strong>（snake_case:
+<code>{ tool_name, tool_input, tool_response }</code>）として届く。<code>USER_PROMPT</code> は空である。</li>
+</ul>
+<p><strong>現在のアダプタの振る舞い:</strong> 同梱のアダプタは <code>USER_PROMPT</code> 環境変数（1.0 以前のチャネル）
+<strong>だけ</strong>を読む。stdin は決して読まない。<code>USER_PROMPT</code> が空になる IDE 1.x では、payload に
+依存する 2 つのターゲット（<code>audit-and-sensors</code>・<code>log-subagent</code>）は発火するが、見える形の
+hook drop を伴って no-op になる。残りの hook は payload に依存せず、どちらの世代でも動く。
+stdin のコンテキストチャネルは後続の強化として計画されている。</p>
+<h2 id="pre-10-channel-user_prompt-env-var">1.0 以前のチャネル: <code>USER_PROMPT</code> 環境変数</h2>
+<p>stdin・argv・完全な環境をダンプする probe <code>.kiro.hook</code> ファイルを登録し、Kiro IDE
+0.12-main 上でライブに捕捉した。</p>
+<ul>
+<li><strong>stdin</strong> は開かれるが、書き込まれることも閉じられることもないため、<code>Bun.stdin.text()</code> はハングする。</li>
+<li><strong><code>USER_PROMPT</code></strong> は次の形の JSON 文字列である:<pre><code class="language-json">{ &quot;toolName&quot;: &quot;fs_write&quot;, &quot;toolArgs&quot;: {}, &quot;toolResult&quot;: &quot;Created the /abs/path/file.md file.&quot;, &quot;toolSuccess&quot;: true }
 </code></pre>
 </li>
 </ul>
+<h2 id="ide-1x-channel-stdin-snake_case">IDE 1.x のチャネル: stdin（snake_case）</h2>
+<p>Kiro IDE 1.0.165 上でライブに捕捉した。stdin の payload の形（probe から逐語のフィールド）:</p>
+<pre><code class="language-json">{ &quot;session_id&quot;: &quot;sess_...&quot;, &quot;hook_event_name&quot;: &quot;PostToolUse&quot;, &quot;cwd&quot;: &quot;/path/to/project&quot;, &quot;tool_name&quot;: &quot;execute_bash&quot;, &quot;tool_input&quot;: {}, &quot;tool_response&quot;: &quot;Output:\n...\nExit Code: 0&quot; }
+</code></pre>
+<ul>
+<li><code>USER_PROMPT</code> は 1.x では空である。</li>
+<li><code>toolSuccess</code> / <code>tool_success</code> のフィールドは無い — 明示的な <code>false</code>（1.x は決して送らない）
+だけが #417 の失敗した書き込みのガードを起動する; 不在はすり抜ける。</li>
+<li><code>tool_input</code> はどちらの世代でも常に <code>{}</code> である — IDE は tool の入力を決して渡さない。</li>
+</ul>
+<blockquote>
+<p><strong>注記:</strong> アダプタはまだ 1.x の stdin チャネルを消費しない。この節は、後続の実装のために
+観測された payload の形を文書化する。</p>
+</blockquote>
 <p><code>VSCODE_IPC_HOOK</code> / <code>VSCODE_PID</code> も IDE には存在する（CLI には無い）が、アダプタは
 コンテキストチャネルとして <code>USER_PROMPT</code> を手がかりにする。</p>
 <h2 id="per-event-captures">イベントごとのキャプチャ</h2>
@@ -113,21 +135,21 @@ CLI harness（<code>harness/kiro/</code>）は、異なる stdin ベースの機
 </tr>
 </thead>
 <tbody><tr>
-<td>postToolUse(write) — create</td>
+<td>postToolUse(write) - create</td>
 <td><code>fs_write</code></td>
 <td><code>{}</code>（空）</td>
 <td><code>Created the &lt;ABS_PATH&gt; file.</code></td>
 <td>path: <code>toolResult</code> の散文からのみ</td>
 </tr>
 <tr>
-<td>postToolUse(write) — edit</td>
+<td>postToolUse(write) - edit</td>
 <td><code>str_replace</code></td>
 <td><code>{}</code>（空）</td>
 <td><code>Replaced text in &lt;ABS_PATH&gt;</code></td>
 <td>path: <code>toolResult</code> の散文からのみ</td>
 </tr>
 <tr>
-<td>postToolUse(write) — append</td>
+<td>postToolUse(write) - append</td>
 <td><code>fs_append</code></td>
 <td><code>{}</code>（空）</td>
 <td><code>Appended the text to the &lt;ABS_PATH&gt; file.</code></td>
@@ -144,15 +166,16 @@ CLI harness（<code>harness/kiro/</code>）は、異なる stdin ベースの機
 <h3 id="critical-limitations">重大な制限</h3>
 <ol>
 <li><strong><code>toolArgs</code> は常に <code>{}</code> である。</strong> IDE は tool の入力を決して渡さない。したがって、書き込まれたファイルパスは <code>toolResult</code> の散文から解析せねばならず、shell コマンドはまったく存在しない（stdout と exit code のみ）。</li>
-<li><strong>stdin は死んでいる。</strong> アダプタは <code>process.env.USER_PROMPT</code> を読む。</li>
-<li><strong><code>toolResult</code> 中のパスは workspace 相対である</strong>が、core hook は絶対の record root と比較する — そこでアダプタは、転送する前にそれらを絶対パスに解決する。</li>
+<li><strong>stdin は現在のアダプタでは読まれない。</strong> 1.0 以前ではハングし（書き込まれず閉じられない）; 1.x では payload を運ぶが、アダプタはまだそれを消費しない。アダプタは <code>process.env.USER_PROMPT</code> だけを読む。</li>
+<li><strong><code>toolResult</code> 中のパスは workspace 相対である</strong>が、core hook は絶対の record root と比較する - そこでアダプタは、転送する前にそれらを絶対パスに解決する。</li>
 </ol>
 <h2 id="consequences-for-each-hook">各 hook への帰結</h2>
 <ul>
-<li><strong>audit-logger / sensor-fire</strong> — 復元可能: <code>toolResult</code> からファイルパスを掻き取り、絶対パスに解決し、core hook に Claude 形の <code>{tool_input:{file_path}}</code> を渡す。既知のパターンに文言が合致しない write クラスの tool は、可視の hook-drop を記録する（静かな no-op には決してならない）。</li>
-<li><strong>runtime-compile</strong> — shell コマンドは復元不可なので、IDE 経路は command フィルタを落とし、純粋に audit tail でゲートする（mtime の冪等性ガード付きで、残存する遷移 — 例えば <code>WORKFLOW_COMPLETED</code> の後 — が後続のすべての shell コマンドで再コンパイルを起こさないようにする）。</li>
-<li><strong>sync-statusline</strong> — IDE は task payload を与えないので、audit tail 中の最新の <code>STAGE_STARTED</code> から現在の stage を導出する。これは <strong>forward-only</strong> のミラーである: <code>Current Stage</code> を完了済みまたはスキップされた stage に巻き戻すことは決してなく、ワークフローが <code>Running</code> でないときには決して発火しない（完了したワークフローの復活を防ぐ）。<code>shell</code> イベントに配線されている — <code>spec</code> イベントは IDE では決して発火しない。</li>
-<li><strong>session-start / session-end / stop</strong> — payload を必要としない; 変更なし。</li>
+<li><strong>audit-logger / sensor-fire</strong> - 1.0 以前では復元可能: <code>toolResult</code> からファイルパスを掻き取り、絶対パスに解決し、core hook に Claude 形の <code>{tool_input:{file_path}}</code> を渡す。既知のパターンに文言が合致しない write クラスの tool は、可視の hook-drop を記録する（静かな no-op には決してならない）。IDE 1.x ではこれらのターゲットは no-op になる（USER_PROMPT は空で、stdin は読まれない）。</li>
+<li><strong>runtime-compile</strong> - shell コマンドは復元不可なので、IDE 経路は command フィルタを落とし、純粋に audit tail でゲートする（mtime の冪等性ガード付きで、残存する遷移 - 例えば <code>WORKFLOW_COMPLETED</code> の後 - が後続のすべての shell コマンドで再コンパイルを起こさないようにする）。</li>
+<li><strong>sync-statusline</strong> - IDE は task payload を与えないので、audit tail 中の最新の <code>STAGE_STARTED</code> から現在の stage を導出する。これは <strong>forward-only</strong> のミラーである: <code>Current Stage</code> を完了済みまたはスキップされた stage に巻き戻すことは決してなく、ワークフローが <code>Running</code> でないときには決して発火しない（完了したワークフローの復活を防ぐ）。<code>shell</code> イベントに配線されている - <code>spec</code> イベントは IDE では決して発火しない。</li>
+<li><strong>session-start / stop</strong> - payload を必要としない; 変更なし。（<code>session-end</code> には v2 の登録が無い - 論拠は harness ガイドを参照。）</li>
+<li><strong>log-subagent</strong> - 1.0 以前では、<code>toolResult</code> から委譲先の identity を復元する。IDE 1.x では、見える形の hook drop を伴って no-op になる（USER_PROMPT は空で、stdin は読まれない）。</li>
 </ul>
 <h2 id="toolresult-path-extraction-patterns">toolResult パス抽出パターン</h2>
 <table>
@@ -179,7 +202,6 @@ CLI harness（<code>harness/kiro/</code>）は、異なる stdin ベースの機
 <td>Edit</td>
 </tr>
 </tbody></table>
-<p>extractor はマッチ前に末尾の空白/改行をトリムし、<code>str_replace</code> 形式からは末尾の括弧を剥ぐ。<code>fs_write</code> は <code>Write</code> に対応づけられる; <code>str_replace</code>/<code>fs_append</code> は <code>Edit</code> に対応づけられる（どちらも既存のファイルを対象にする → core audit-logger は <code>ARTIFACT_UPDATED</code> を記録する）。</p>
 
 <footer class="meta">
   原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/kiro-ide-hook-payload.md"><code>docs/reference/kiro-ide-hook-payload.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-23

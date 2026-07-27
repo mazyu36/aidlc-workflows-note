@@ -6,7 +6,7 @@ sensor は、agent が stage の出力を書くときに自動で発火する、
 バックの半分。rule は「user story は Given/When/Then に従う」と言う; sensor は、agent が
 たった今書いたファイルに必須の見出しが在ることをバイト単位で検証する。
 
-この章は、harness engineer が sensor で実際に行う仕事を語る: 同梱される 4 つを理解し、
+この章は、harness engineer が sensor で実際に行う仕事を語る: 同梱される 5 つを理解し、
 新しい manifest を著述し、それを走らせるべき stage に束ねる。完全なフィールドごとの契約は、
 開発者リファレンスの [Sensor System](../reference/07-sensor-system.md) に住む — この章は
 それを言い直すのではなく、各スキーマの判断のたびにそこへ指し降ろす。
@@ -44,23 +44,24 @@ sensor manifest は YAML frontmatter 付きの Markdown ファイルで、`core/
 
 ---
 
-## 同梱される 4 つの sensor
+## 同梱される 5 つの sensor
 
-4 つの manifest が `.claude/sensors/` の下に同梱され、各々が `aidlc-` プレフィックスを持つ:
+5 つの manifest が `.claude/sensors/` の下に同梱され、各々が `aidlc-` プレフィックスを持つ:
 
 | Manifest | 発火対象 | チェック |
 |----------|----------|--------|
+| `aidlc-claim-sources.md` | Intent Capture の record-dir 出力 | Intent Capture のすべての主張が解決可能な source タグを運ぶ; 登録された記述・scope・memory の値が正式な入力と一致する; 残存する assumption が明示的な人間の確認と厳密に一致する |
 | `aidlc-required-sections.md` | record-dir の markdown 出力 | 出力が必須の H2 見出しを運ぶ — 汎用のコンテンツ形状チェック |
 | `aidlc-upstream-coverage.md` | record-dir の markdown 出力 | stage の成果物（集合として評価）が、stage が消費すると宣言する各上流の成果物を、slug・wikilink・または生産する stage のディレクトリパスで参照する |
 | `aidlc-linter.md` | `.ts` / `.js` のコード出力 | 設定済みの linter（既定は ESLint）をラップする |
 | `aidlc-type-check.md` | `.ts` / `.tsx` のコード出力 | 設定済みの type-checker（既定は `tsc`）をラップする |
 
-4 つすべてが `matches:` glob でゲートされる（下で詳述）: 最初の 2 つのドキュメント形状
-チェックは成果物ツリーにスコープされ（同梱の manifest は `**/{aidlc-docs,intents}/**` を運ぶ
+5 つすべてが `matches:` glob でゲートされる（下で詳述）: provenance のチェックと 2 つの
+ドキュメント形状チェックは成果物ツリーにスコープされ（同梱の manifest は `**/{aidlc-docs,intents}/**` を運ぶ
 — intent ごとの record ツリー。移行前のプロジェクト用にレガシーの `aidlc-docs/` アームを
 保っている）、2 つのコード品質チェックはそれぞれの言語 glob（`**/*.{ts,js}`、
 `**/*.{ts,tsx}`）にスコープされる。自分のものを著述する前に `aidlc-required-sections.md` を
-end to end で読むこと — それは 4 つのうち最小で、形状全体、frontmatter と散文の本体を示す。
+end to end で読むこと — それは 5 つのうち最小で、形状全体、frontmatter と散文の本体を示す。
 
 ---
 

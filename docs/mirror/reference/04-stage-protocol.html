@@ -46,7 +46,7 @@
   <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
   <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
   <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
-  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload - 実証リファレンス</a>
   <div class="group">DEVELOPER REFERENCE / 04-stages</div>
   <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
   <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
@@ -187,15 +187,15 @@ subagent の返却フォーマット、§13 Learnings Ritual、そして phase �
 </tr>
 <tr>
 <td>2</td>
-<td><code>AskUserQuestion</code> を呼ぶ前に、<code>bun .claude/tools/aidlc-log.ts decision</code> を通じて選択肢をログする（<code>audit/</code> シャードへの手書きではなく）</td>
+<td>gate ではない質問については、<code>AskUserQuestion</code> を呼ぶ前に <code>bun .claude/tools/aidlc-log.ts decision</code> を通じて選択肢をログし（<code>audit/</code> シャードへの手書きではなく）、その後 <code>aidlc-log.ts answer</code> を通じて正確な応答をログする。</td>
 </tr>
 <tr>
 <td>3</td>
-<td>ユーザーが応答した後、<code>bun .claude/tools/aidlc-log.ts answer</code> を通じて正確な選択をログし、承認には <code>aidlc-orchestrate.ts report --stage &lt;slug&gt; --result approved --user-input &quot;&lt;exact choice&gt;&quot;</code> を、request-changes には <code>aidlc-orchestrate.ts report --stage &lt;slug&gt; --result rejected --user-input &quot;&lt;feedback&gt;&quot;</code> を使う。修正作業の後、gate を再提示する前に <code>--result revised</code> を報告する。</td>
+<td>承認 gate への応答の後、承認には <code>aidlc-orchestrate.ts report --stage &lt;slug&gt; --result approved --user-input &quot;&lt;exact choice&gt;&quot;</code> を、request-changes には <code>aidlc-orchestrate.ts report --stage &lt;slug&gt; --result rejected --user-input &quot;&lt;feedback&gt;&quot;</code> を呼ぶ。gate に対して <code>aidlc-log.ts decision</code> や <code>aidlc-log.ts answer</code> を決して呼ばない。修正作業の後、それを再提示する前に <code>--result revised</code> を報告する。</td>
 </tr>
 <tr>
 <td>4</td>
-<td>ユーザー入力を決して要約しない — 正確な選択肢ラベルを log tool に渡す; 自動化された stage には <code>N/A -- [reason]</code> を使う</td>
+<td>ユーザー入力を決して要約しない — 正確な選択肢ラベルを、それを所有する log tool か report tool に渡す; 自動化された stage には <code>N/A -- [reason]</code> を使う</td>
 </tr>
 <tr>
 <td>5</td>
@@ -269,8 +269,7 @@ revision, an &#39;Accept as-is&#39; option will become available.&quot;</p>
 <pre class="mermaid">
 flowchart TD
     COMPLETE["Stage work complete"]
-    REPORT_AWAITING["Report awaiting-approval:\nengine verifies evidence + opens gate"]
-    AUDIT_PRE["Append to this clone's audit shard:\nstage summary + options\n(fresh ISO timestamp)"]
+    REPORT_AWAITING["Report awaiting-approval:\nengine verifies evidence + opens gate\n(emits STAGE_AWAITING_APPROVAL)"]
     ASK["AskUserQuestion:\nApproval Gate"]
 
     APPROVE["Approve"]
@@ -278,16 +277,11 @@ flowchart TD
     ACCEPT["Accept as-is\n(escape hatch)"]
     ADD_STAGE["Add Skipped Stage\n(Ideation/Inception only)"]
 
-    AUDIT_POST_A["Log: User approved\n(fresh timestamp)"]
-    AUDIT_POST_C["Log: User requested changes\n(fresh timestamp)"]
-    AUDIT_POST_ACC["Log: User accepted as-is\n(fresh timestamp)"]
-    AUDIT_POST_ADD["Log: User added stage\n(fresh timestamp)"]
-
     REVISION_COUNT{"Revision\ncycle &gt;= 3?"}
     NOTE_2ND["After 2nd revision:\nnote that escape hatch\nactivates next cycle"]
 
-    REPORT_APPROVED["Report approved:\nengine completes + routes"]
-    REPORT_REJECTED["Report rejected:\nengine records feedback + revising state"]
+    REPORT_APPROVED["Report approved with exact choice:\nengine emits GATE_APPROVED,\ncompletes + routes"]
+    REPORT_REJECTED["Report rejected with feedback:\nengine emits GATE_REJECTED,\nrecords revising state"]
     REPORT_REVISED["Report revised:\nengine verifies evidence + re-opens gate"]
     PROGRESS["Display progress line:\nN/total overall"]
     NEXT_STAGE["Proceed to next stage"]
@@ -295,22 +289,22 @@ flowchart TD
     REVISE["Apply user feedback\nto stage artifacts"]
     RE_PRESENT["Re-present completion\nmessage"]
 
-    ADD_EXEC["Insert skipped stage\ninto workflow"]
+    ADD_EXEC["Insert skipped stage into workflow\n(scope tooling records the change)"]
 
-    COMPLETE --&gt; REPORT_AWAITING --&gt; AUDIT_PRE --&gt; ASK
+    COMPLETE --&gt; REPORT_AWAITING --&gt; ASK
     ASK --&gt; APPROVE
     ASK --&gt; CHANGES
     ASK --&gt; ACCEPT
     ASK --&gt; ADD_STAGE
 
-    APPROVE --&gt; AUDIT_POST_A --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
-    ACCEPT --&gt; AUDIT_POST_ACC --&gt; REPORT_APPROVED
+    APPROVE --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
+    ACCEPT --&gt; REPORT_APPROVED
 
-    CHANGES --&gt; AUDIT_POST_C --&gt; REPORT_REJECTED --&gt; REVISION_COUNT
-    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; REPORT_REVISED --&gt; RE_PRESENT --&gt; AUDIT_PRE
+    CHANGES --&gt; REPORT_REJECTED --&gt; REVISION_COUNT
+    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; REPORT_REVISED --&gt; RE_PRESENT --&gt; ASK
     REVISION_COUNT --&gt;|"&gt;= 3"| REVISE
 
-    ADD_STAGE --&gt; AUDIT_POST_ADD --&gt; ADD_EXEC
+    ADD_STAGE --&gt; ADD_EXEC
 
     style COMPLETE fill:#1d332b,stroke:#57d9a9
     style REPORT_AWAITING fill:#1b2c47,stroke:#6db3ff
@@ -328,10 +322,10 @@ flowchart TD
 <p>すべての stage は、この 5 部構成の構造で順に終わる。すべての部が必須である。</p>
 <p><em>(Protocol Section 2)</em></p>
 <h3 id="part-0-audit-logging">Part 0: Audit ロギング</h3>
-<p>完了メッセージを表示する前に:</p>
+<p>gate の audit トレイルは report が所有する:</p>
 <ol>
-<li><code>&lt;record&gt;/audit/</code>（clone ごとのシャード）に追記する: stage 名、作業サマリ、成果物</li>
-<li>承認の応答を受け取った後、ユーザーの選択を新鮮なタイムスタンプで追記する</li>
+<li>gate を提示する前に、<code>report --result awaiting-approval</code> が保留された gate を記録する（<code>STAGE_AWAITING_APPROVAL</code>）</li>
+<li>応答の後、<code>report --result approved|rejected --user-input &quot;&lt;exact choice&gt;&quot;</code> がユーザーの選択を記録する（<code>GATE_APPROVED</code>/<code>GATE_REJECTED</code>）; gate のプロンプトや選択について別のログエントリは追加されない</li>
 </ol>
 <h3 id="part-1-announcement">Part 1: アナウンス</h3>
 <pre><code class="language-markdown"># [emoji] [Stage Name] Complete
@@ -636,9 +630,12 @@ gate と終端の結果は <code>aidlc-orchestrate.ts</code> を通じて報告�
 <h3 id="conversation-event-logging-checklist">会話イベントのロギングチェックリスト</h3>
 <p><code>PostToolUse</code> hook はファイル書き込みを自動ログする。会話イベントは手動でログせねば
 ならない（最もよく見落とされるステップ）。</p>
-<p><strong>各承認 gate で:</strong> (1) <code>AskUserQuestion</code> の前 — 選択肢を新鮮なタイムスタンプで追記
-する。(2) 応答の後 — ユーザーの選択を新鮮なタイムスタンプで追記する。</p>
-<p><strong>各質問インタラクションで:</strong> 回答を受け取った後 — Q&amp;A サマリを追記する。</p>
+<p><strong>各承認 gate で:</strong> (1) <code>AskUserQuestion</code> の前 — <code>awaiting-approval</code> を報告する。
+(2) 応答の後 — 正確なユーザー入力とともに <code>approved</code> か <code>rejected</code> を報告する。
+report が所有するライフサイクルイベントが gate の完全な audit 記録である;
+<code>aidlc-log.ts decision</code> や <code>aidlc-log.ts answer</code> を呼ばない。</p>
+<p><strong>gate ではない各質問インタラクションで:</strong> 回答を受け取った後 — <code>aidlc-log.ts answer</code> を
+通じて Q&amp;A サマリを追記する。</p>
 <hr>
 <h2 id="agent-persona-loading">Agent Persona のロード</h2>
 <p>各 stage は lead と任意の support agent を指定する。persona は、広いコンテキストから stage

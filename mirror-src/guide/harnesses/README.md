@@ -9,7 +9,7 @@ harness を選ぶ:
 | **Claude Code** | `/aidlc` | [ユーザーガイド](../00-introduction.md) 全体でカバー（例は Claude Code で動く）。インストールは [はじめかた](../01-getting-started.md)。 |
 | **Kiro IDE** | `/aidlc` | [Kiro IDE で AI-DLC を動かす](kiro-ide.md) — 前提条件（Opus 4.8）、インストール、hooks、Kiro での違い。 |
 | **Kiro CLI**（≥ 2.6） | `/aidlc` | [Kiro CLI で AI-DLC を動かす](kiro-cli.md) — 前提条件、インストール、Kiro での違い。 |
-| **Codex CLI**（≥ 0.139.0） | `$aidlc` | [Codex CLI 上の AI-DLC](codex-cli.md) — 前提条件、trust の事前シード、Bedrock 設定、git リポジトリ必須の件。 |
+| **Codex CLI**（≥ 0.145.0） | `$aidlc` | [Codex CLI 上の AI-DLC](codex-cli.md) — 前提条件、trust の事前シード、Bedrock 設定、git リポジトリ必須の件。 |
 | **opencode**（≥ 1.17） | `/aidlc` | [opencode 上の AI-DLC](opencode.md) — `.aidlc/` + `.opencode/` の分割レイアウト、アダプタのプラグイン、opencode での違い。 |
 
 Kiro（IDE・CLI）上の AI-DLC は **Claude Opus 4.8** で最もよく動き、これには **Kiro の有償プラン**が必要である。

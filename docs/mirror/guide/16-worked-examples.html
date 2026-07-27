@@ -310,14 +310,41 @@ mvn verify<span class="t-comment">               # Integration tests pass</span>
 </blockquote>
 <h3 id="ideation-phase-stages-11-17">Ideation phase（stage 1.1-1.7）</h3>
 <p><strong>Stage 1.1 — Intent Capture</strong>（aidlc-product-agent）</p>
-<p>aidlc-product-agent が intent を捕捉し、<code>intent-statement.md</code> と <code>stakeholder-map.md</code> を作る。質問は対象ユーザー・通知チャネル・優先度に焦点を当てる:</p>
-<pre class="term"><code>Q1: Which notification channels are in scope?
+<p>aidlc-product-agent はまず許可された source の宇宙を
+<code>intent-capture-questions.md</code> に記録し、続いて問題・対象ユーザー・
+stakeholder・決定権限・コミュニケーション要求・scope について尋ねる:</p>
+<pre><code class="language-markdown">## Sources
+
+- [desc] Initial description: &quot;A notification service for our task management app...&quot;
+- [scope] Workflow-selected scope: `feature`.
+
+## Q1. Which notification channels are in scope?
 A. In-app only
 B. In-app + email
 C. In-app + email + push
 D. In-app + email + push + SMS
-X. Other</code></pre>
-<p>B（in-app + email）と答える。承認後、stage は通知種別とユーザートリガーを結ぶ構造化された intent statement を生む。</p>
+X. Other
+
+[Answer]: B. In-app + email
+</code></pre>
+<p>出来上がった artifact は、各主張をその register または確認済みの回答に
+結びつけたまま保つ:</p>
+<pre><code class="language-markdown">## Target Customer
+
+Task-management users receiving assignment, due-date, or comment events. [desc]
+
+## Notification Channels
+
+In-app notifications and optional email digests are in scope. [Q1]
+
+## Assumptions &amp; Open Questions
+
+None.
+</code></pre>
+<p>stakeholder map は同じタグを <code>Source</code> 列で使う。裏付けの無い内容は
+フォローアップとして質問されるか、<code>## Assumptions &amp; Open Questions</code> の下に残る。残存する assumption はあなたの明示的な受諾を必要とし、
+assumption としてラベルされたままになる。その後 aidlc-product-lead-agent が
+通常の承認 gate の前に source の裏付けをレビューする。</p>
 <p><strong>Stage 1.4 — Scope Definition</strong>（aidlc-product-agent）</p>
 <p>scope の境界を定義する: in-scope（3 つのトリガー種別・ユーザー設定・メールダイジェスト）、out-of-scope（プッシュ通知・SMS・リアルタイム WebSocket）。優先順位付けされた項目を持つ <code>scope-document.md</code> と <code>intent-backlog.md</code> を生む。</p>
 <p><strong>Stage 1.7 — Approval &amp; Handoff</strong>（aidlc-delivery-agent）</p>

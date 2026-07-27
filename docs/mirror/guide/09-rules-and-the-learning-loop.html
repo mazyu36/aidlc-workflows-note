@@ -163,8 +163,8 @@
 <p>このリリースでは sensor の結果は<strong>助言</strong>である。失敗した sensor は audit の行と、何が欠けているかを正確に指す詳細ファイルを作るが、stage の承認 gate をブロックせず、ワークフローを止めない。シグナルを見るのはあなた、どうするか決めるのもあなたである。</p>
 <h3 id="what-you-see-in-the-audit-log">audit ログに見えるもの</h3>
 <p>sensor の活動は intent の <code>audit/</code> シャードに <code>Sensor Fired</code>・<code>Sensor Passed</code>・<code>Sensor Failed</code> の行として現れる。失敗の行は、具体的なギャップ — 欠けた見出し、参照されていない上流成果物、lint エラー — を列挙する詳細ファイル（例: <code>&lt;record&gt;/.aidlc-sensors/&lt;stage-slug&gt;/required-sections-&lt;timestamp&gt;.md</code>）にリンクする。audit ログは <a href="10-state-and-audit.html">状態と audit</a> で扱う。</p>
-<h3 id="the-four-framework-sensors">4 つのフレームワーク sensor</h3>
-<p>フレームワークには 4 つの sensor が同梱される:</p>
+<h3 id="the-five-framework-sensors">5 つのフレームワーク sensor</h3>
+<p>フレームワークには 5 つの sensor が同梱される:</p>
 <table>
 <thead>
 <tr>
@@ -174,6 +174,11 @@
 </tr>
 </thead>
 <tbody><tr>
+<td><code>claim-sources</code></td>
+<td>Intent Capture の record dir 出力</td>
+<td>すべての主張に見える source タグが付いていること、登録された記述・ワークフローの scope・memory テキストが正式な入力と一致すること、残存する assumption が明示的な確認と厳密に一致すること</td>
+</tr>
+<tr>
 <td><code>required-sections</code></td>
 <td>record dir の任意の markdown 出力</td>
 <td>出力が必須の H2 見出しを含むこと（汎用のコンテンツ形状チェック）</td>

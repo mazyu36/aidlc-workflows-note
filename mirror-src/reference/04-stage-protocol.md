@@ -73,9 +73,9 @@ subagent の返却フォーマット、§13 Learnings Ritual、そして phase �
 | # | チェック |
 |---|-------|
 | 1 | 承認 gate で `bun .claude/tools/aidlc-orchestrate.ts report --stage <slug> --result awaiting-approval` を呼ぶ。engine は状態を `[-]` から `[?]` AwaitingApproval に反転させ、`STAGE_AWAITING_APPROVAL` をアトミックに発行するので、プロンプトが開いている間 status は保留中の gate を表示する。（`STAGE_STARTED` / `[-]` 遷移は stage がアクティブになったときに発行済み。） |
-| 2 | `AskUserQuestion` を呼ぶ前に、`bun .claude/tools/aidlc-log.ts decision` を通じて選択肢をログする（`audit/` シャードへの手書きではなく） |
-| 3 | ユーザーが応答した後、`bun .claude/tools/aidlc-log.ts answer` を通じて正確な選択をログし、承認には `aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"` を、request-changes には `aidlc-orchestrate.ts report --stage <slug> --result rejected --user-input "<feedback>"` を使う。修正作業の後、gate を再提示する前に `--result revised` を報告する。 |
-| 4 | ユーザー入力を決して要約しない — 正確な選択肢ラベルを log tool に渡す; 自動化された stage には `N/A -- [reason]` を使う |
+| 2 | gate ではない質問については、`AskUserQuestion` を呼ぶ前に `bun .claude/tools/aidlc-log.ts decision` を通じて選択肢をログし（`audit/` シャードへの手書きではなく）、その後 `aidlc-log.ts answer` を通じて正確な応答をログする。 |
+| 3 | 承認 gate への応答の後、承認には `aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"` を、request-changes には `aidlc-orchestrate.ts report --stage <slug> --result rejected --user-input "<feedback>"` を呼ぶ。gate に対して `aidlc-log.ts decision` や `aidlc-log.ts answer` を決して呼ばない。修正作業の後、それを再提示する前に `--result revised` を報告する。 |
+| 4 | ユーザー入力を決して要約しない — 正確な選択肢ラベルを、それを所有する log tool か report tool に渡す; 自動化された stage には `N/A -- [reason]` を使う |
 | 5 | 1 インタラクションにつき 1 つの audit エントリ — log/state tool が単一イベントの発行を強制する; 複数のイベントを 1 回の呼び出しにマージしない |
 | 6 | stage の終わりに、`aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"`（gate 付きの stage）または `report --stage <slug> --result completed`（Initialization）を呼ぶ。engine は `[?]`/`[-]` を `[x]` に反転させ、gate 付きなら `GATE_APPROVED` を発行し、state tool を通じて `STAGE_COMPLETED` をアトミックに発行する |
 | 7 | 作業が始まる前に、前の stage タスクを `completed`、現在の stage タスクを `activeForm` 付きで `in_progress` にマークする（`sync-statusline` hook が状態の同期を扱う） |
@@ -160,8 +160,7 @@ revision, an 'Accept as-is' option will become available."
 ```mermaid
 flowchart TD
     COMPLETE["Stage work complete"]
-    REPORT_AWAITING["Report awaiting-approval:\nengine verifies evidence + opens gate"]
-    AUDIT_PRE["Append to this clone's audit shard:\nstage summary + options\n(fresh ISO timestamp)"]
+    REPORT_AWAITING["Report awaiting-approval:\nengine verifies evidence + opens gate\n(emits STAGE_AWAITING_APPROVAL)"]
     ASK["AskUserQuestion:\nApproval Gate"]
 
     APPROVE["Approve"]
@@ -169,16 +168,11 @@ flowchart TD
     ACCEPT["Accept as-is\n(escape hatch)"]
     ADD_STAGE["Add Skipped Stage\n(Ideation/Inception only)"]
 
-    AUDIT_POST_A["Log: User approved\n(fresh timestamp)"]
-    AUDIT_POST_C["Log: User requested changes\n(fresh timestamp)"]
-    AUDIT_POST_ACC["Log: User accepted as-is\n(fresh timestamp)"]
-    AUDIT_POST_ADD["Log: User added stage\n(fresh timestamp)"]
-
     REVISION_COUNT{"Revision\ncycle >= 3?"}
     NOTE_2ND["After 2nd revision:\nnote that escape hatch\nactivates next cycle"]
 
-    REPORT_APPROVED["Report approved:\nengine completes + routes"]
-    REPORT_REJECTED["Report rejected:\nengine records feedback + revising state"]
+    REPORT_APPROVED["Report approved with exact choice:\nengine emits GATE_APPROVED,\ncompletes + routes"]
+    REPORT_REJECTED["Report rejected with feedback:\nengine emits GATE_REJECTED,\nrecords revising state"]
     REPORT_REVISED["Report revised:\nengine verifies evidence + re-opens gate"]
     PROGRESS["Display progress line:\nN/total overall"]
     NEXT_STAGE["Proceed to next stage"]
@@ -186,22 +180,22 @@ flowchart TD
     REVISE["Apply user feedback\nto stage artifacts"]
     RE_PRESENT["Re-present completion\nmessage"]
 
-    ADD_EXEC["Insert skipped stage\ninto workflow"]
+    ADD_EXEC["Insert skipped stage into workflow\n(scope tooling records the change)"]
 
-    COMPLETE --> REPORT_AWAITING --> AUDIT_PRE --> ASK
+    COMPLETE --> REPORT_AWAITING --> ASK
     ASK --> APPROVE
     ASK --> CHANGES
     ASK --> ACCEPT
     ASK --> ADD_STAGE
 
-    APPROVE --> AUDIT_POST_A --> REPORT_APPROVED --> PROGRESS --> NEXT_STAGE
-    ACCEPT --> AUDIT_POST_ACC --> REPORT_APPROVED
+    APPROVE --> REPORT_APPROVED --> PROGRESS --> NEXT_STAGE
+    ACCEPT --> REPORT_APPROVED
 
-    CHANGES --> AUDIT_POST_C --> REPORT_REJECTED --> REVISION_COUNT
-    REVISION_COUNT -->|"< 3"| NOTE_2ND --> REVISE --> REPORT_REVISED --> RE_PRESENT --> AUDIT_PRE
+    CHANGES --> REPORT_REJECTED --> REVISION_COUNT
+    REVISION_COUNT -->|"< 3"| NOTE_2ND --> REVISE --> REPORT_REVISED --> RE_PRESENT --> ASK
     REVISION_COUNT -->|">= 3"| REVISE
 
-    ADD_STAGE --> AUDIT_POST_ADD --> ADD_EXEC
+    ADD_STAGE --> ADD_EXEC
 
     style COMPLETE fill:#e8f5e9,stroke:#388e3c
     style REPORT_AWAITING fill:#e3f2fd,stroke:#1565c0
@@ -225,9 +219,9 @@ flowchart TD
 
 ### Part 0: Audit ロギング
 
-完了メッセージを表示する前に:
-1. `<record>/audit/`（clone ごとのシャード）に追記する: stage 名、作業サマリ、成果物
-2. 承認の応答を受け取った後、ユーザーの選択を新鮮なタイムスタンプで追記する
+gate の audit トレイルは report が所有する:
+1. gate を提示する前に、`report --result awaiting-approval` が保留された gate を記録する（`STAGE_AWAITING_APPROVAL`）
+2. 応答の後、`report --result approved|rejected --user-input "<exact choice>"` がユーザーの選択を記録する（`GATE_APPROVED`/`GATE_REJECTED`）; gate のプロンプトや選択について別のログエントリは追加されない
 
 ### Part 1: アナウンス
 
@@ -526,10 +520,13 @@ gate と終端の結果は `aidlc-orchestrate.ts` を通じて報告する。
 `PostToolUse` hook はファイル書き込みを自動ログする。会話イベントは手動でログせねば
 ならない（最もよく見落とされるステップ）。
 
-**各承認 gate で:** (1) `AskUserQuestion` の前 — 選択肢を新鮮なタイムスタンプで追記
-する。(2) 応答の後 — ユーザーの選択を新鮮なタイムスタンプで追記する。
+**各承認 gate で:** (1) `AskUserQuestion` の前 — `awaiting-approval` を報告する。
+(2) 応答の後 — 正確なユーザー入力とともに `approved` か `rejected` を報告する。
+report が所有するライフサイクルイベントが gate の完全な audit 記録である;
+`aidlc-log.ts decision` や `aidlc-log.ts answer` を呼ばない。
 
-**各質問インタラクションで:** 回答を受け取った後 — Q&A サマリを追記する。
+**gate ではない各質問インタラクションで:** 回答を受け取った後 — `aidlc-log.ts answer` を
+通じて Q&A サマリを追記する。
 
 ---
 

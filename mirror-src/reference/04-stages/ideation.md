@@ -61,6 +61,7 @@ phase への移行を制御する go/no-go gate で締めくくる。
 | 条件             | ALWAYS — 全ワークフローの最初の stage; イニシアチブの土台を確立する      |
 | リード agent     | aidlc-product-agent                                                          |
 | サポート agent   | aidlc-architect-agent（技術的コンテキスト）                                   |
+| レビュアー       | aidlc-product-lead-agent（source の裏付けとプロダクト品質のレビュー）       |
 | モード           | inline                                                                 |
 | 完了 Emoji       | :bulb:                                                                 |
 
@@ -84,25 +85,28 @@ stage が積み上げる土台となる。
 
 1. **agent persona のロード** — aidlc-product-agent の persona と knowledge をロードする。技術的コンテキストの視点のため aidlc-architect-agent の persona をロードする。
 2. **先行コンテキストのロード** — ユーザーのプロジェクト記述を読む。既存の成果物を確認する。guardrails をロードする。
-3. **明確化のための質問の生成** — ビジネス上の問題・顧客・成功指標・イニシアチブの契機・プロジェクトタイプを網羅する質問とともに `<record>/ideation/intent-capture/intent-capture-questions.md` を作成する。A-E の選択肢に X（Other）を加えた `[Answer]:` タグ形式を用いる。tri-mode の質問フローを提供する。
+3. **明確化のための質問の生成** — 最初の記述・ワークフローが選んだ scope・使用したアクティブ memory の rule のための `## Sources` register とともに `<record>/ideation/intent-capture/intent-capture-questions.md` を作成する。ビジネス上の問題・顧客・成功指標・イニシアチブの契機・ステークホルダー・決定権限・コミュニケーション要求、そしてワークフローが選んだ scope が意図するプロダクト境界と合致するかを尋ねる。A-E の選択肢に X（Other）を加えた `[Answer]:` タグ形式を用いる。tri-mode の質問フローを提供する。
 4. **回答の収集と分析** — すべてのタグが埋まっていることを確認する。曖昧さ・矛盾の分析を実行する。
-5. **成果物の生成** — intent statement と stakeholder map を生成する。
-6. **完了の準備** — 両方の成果物を検証する。state を編集しない; gate の結果を
+5. **裏付けのある成果物の生成** — intent statement と stakeholder map を生成する。実質的な段落・リスト項目・表のデータ行はすべて、インラインの `[desc]`・`[scope]`・`[Q<n>]`・`[memory:<id>]`・`[assumption]` のいずれかのタグを運ぶ。両方のファイルは `## Assumptions & Open Questions` を含む。
+6. **assumption の解決** — いずれかの成果物が assumption を残す場合、それを受諾するか、フォローアップの質問に変換するようユーザーに求める。受諾は assumption のラベルを保つ; 主張を事実へ昇格させない。
+7. **完了の準備** — Product Lead のレビューを実行し、両方の成果物を検証し、gate の結果を
    `aidlc-orchestrate.ts` 経由で報告する。
-7. **完了の提示と承認の要求** — 標準の 2 択 gate。
+8. **完了の提示と承認の要求** — 標準の 2 択 gate。
 
 ### 出力
 
 | ファイル                       | 内容                                                          |
 |-------------------------------|---------------------------------------------------------------|
-| `intent-statement.md`         | 問題の記述、対象顧客、成功指標、イニシアチブの契機、プロジェクトタイプ、初期の scope シグナル |
-| `stakeholder-map.md`          | 主要なステークホルダーと関心事、意思決定者 対 影響者、コミュニケーション要件 |
-| `intent-capture-questions.md` | `[Answer]:` タグ付きの明確化質問（入力成果物） |
+| `intent-statement.md`         | source タグ付きの問題の記述・対象顧客・成功指標・イニシアチブの契機、およびワークフローが選んだ scope 対ユーザーが確認した初期の scope シグナル; 必須の assumption セクション |
+| `stakeholder-map.md`          | source タグ付きのステークホルダーと関心事、意思決定者 対 影響者、コミュニケーション要件; 必須の assumption セクション |
+| `intent-capture-questions.md` | 許可された source の register、`[Answer]:` タグ付きの明確化質問、必要な場合の assumption の確認 |
 
 ### 補足
 
 - 全ワークフローの最初の stage。ユーザー入力以外に先行成果物は無い。
 - `$ARGUMENTS` 内の自由記述の intent は seed コンテキストとして用いられる。
+- 選ばれなかった選択肢は除外でも要件でもない。裏付けの無い内容は省略されるか、
+  フォローアップで引き出されるか、明示的な assumption としてのみ保持される。
 - intent statement は後続のすべての Ideation stage に供給され、Inception へと引き継がれる。
 
 ---

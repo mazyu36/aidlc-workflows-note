@@ -138,7 +138,7 @@
 <pre class="mermaid">
 flowchart TD
     COMPLETE["Stage work complete"]
-    AUDIT_PRE["Append to this clone's audit shard:\nstage summary + options\n(fresh ISO timestamp)"]
+    REPORT_AWAITING["Report awaiting-approval:\nengine opens gate + emits\nSTAGE_AWAITING_APPROVAL"]
     ASK["AskUserQuestion:\nApproval Gate"]
 
     APPROVE["Approve"]
@@ -146,42 +146,42 @@ flowchart TD
     ACCEPT["Accept as-is\n(escape hatch)"]
     ADD_STAGE["Add Skipped Stage\n(Ideation/Inception only)"]
 
-    AUDIT_POST_A["Log: User approved\n(fresh timestamp)"]
-    AUDIT_POST_C["Log: User requested changes\n(fresh timestamp)"]
-    AUDIT_POST_ACC["Log: User accepted as-is\n(fresh timestamp)"]
-    AUDIT_POST_ADD["Log: User added stage\n(fresh timestamp)"]
-
     REVISION_COUNT{"Revision\ncycle &gt;= 3?"}
     NOTE_2ND["After 2nd revision:\nnote that escape hatch\nactivates next cycle"]
 
-    REPORT_APPROVED["Report approved:\nengine completes + routes"]
+    REPORT_APPROVED["Report approved with exact choice:\nengine emits GATE_APPROVED,\ncompletes + routes"]
+    REPORT_REJECTED["Report rejected with feedback:\nengine emits GATE_REJECTED,\nrecords revising state"]
+    REPORT_REVISED["Report revised:\nengine re-opens gate"]
     PROGRESS["Display progress line:\nN/total overall"]
     NEXT_STAGE["Proceed to next stage"]
 
     REVISE["Apply user feedback\nto stage artifacts"]
     RE_PRESENT["Re-present completion\nmessage"]
 
-    ADD_EXEC["Insert skipped stage\ninto workflow"]
+    ADD_EXEC["Insert skipped stage into workflow\n(scope tooling records the change)"]
 
-    COMPLETE --&gt; AUDIT_PRE --&gt; ASK
+    COMPLETE --&gt; REPORT_AWAITING --&gt; ASK
     ASK --&gt; APPROVE
     ASK --&gt; CHANGES
     ASK --&gt; ACCEPT
     ASK --&gt; ADD_STAGE
 
-    APPROVE --&gt; AUDIT_POST_A --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
-    ACCEPT --&gt; AUDIT_POST_ACC --&gt; REPORT_APPROVED
+    APPROVE --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
+    ACCEPT --&gt; REPORT_APPROVED
 
-    CHANGES --&gt; AUDIT_POST_C --&gt; REVISION_COUNT
-    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; RE_PRESENT --&gt; AUDIT_PRE
+    CHANGES --&gt; REPORT_REJECTED --&gt; REVISION_COUNT
+    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; REPORT_REVISED --&gt; RE_PRESENT --&gt; ASK
     REVISION_COUNT --&gt;|"&gt;= 3"| REVISE
 
-    ADD_STAGE --&gt; AUDIT_POST_ADD --&gt; ADD_EXEC
+    ADD_STAGE --&gt; ADD_EXEC
 
     style COMPLETE fill:#1d332b,stroke:#57d9a9
+    style REPORT_AWAITING fill:#1b2c47,stroke:#6db3ff
     style ASK fill:#1b2c47,stroke:#6db3ff
     style APPROVE fill:#1d332b,stroke:#57d9a9
     style CHANGES fill:#35301b,stroke:#e5cf63
+    style REPORT_REJECTED fill:#38291a,stroke:#f2b35c
+    style REPORT_REVISED fill:#1b2c47,stroke:#6db3ff
     style ACCEPT fill:#38291a,stroke:#f2b35c
     style ADD_STAGE fill:#2a2440,stroke:#b895ff
     style NEXT_STAGE fill:#1d332b,stroke:#57d9a9

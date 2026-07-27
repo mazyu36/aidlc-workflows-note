@@ -99,16 +99,23 @@ hook の束線・アクティベーション）だけが異なる。</p>
 <li><strong>bun</strong> が PATH にあること（<code>curl -fsSL https://bun.sh/install | bash</code>）</li>
 </ul>
 <h2 id="install">インストール</h2>
-<pre><code class="language-bash">cp -r dist/kiro/.kiro your-project/.kiro
-cp -r dist/kiro/aidlc your-project/aidlc       # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
-cp dist/kiro/AGENTS.md your-project/AGENTS.md   # merge if you already have one
+<p>以下のコピーは、<a href="https://github.com/awslabs/aidlc-workflows">aidlc-workflows</a>
+リポジトリを <code>v2</code> ブランチで clone した場所から行う:</p>
+<pre><code class="language-bash">git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+</code></pre>
+<pre><code class="language-bash">mkdir -p your-project/.kiro your-project/aidlc
+cp -R dist/kiro/.kiro/. your-project/.kiro/
+cp -R dist/kiro/aidlc/. your-project/aidlc/    # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
+cp dist/kiro/AGENTS.md your-project/AGENTS.md  # merge if you already have one
 </code></pre>
 <p><code>aidlc/</code> ディレクトリはワークスペースシェルである — エンジンが読む構築済みの
 <code>aidlc/spaces/default/memory/</code> メソッドツリーを同梱する。<code>.kiro/</code> の<strong>兄弟</strong>なので
 別にコピーする（もしくは <code>dist/kiro/</code> ツリー全体を一度にコピーする）。
 これが無いと <code>/aidlc --doctor</code> の「workspace shell ready」チェックが失敗する。</p>
 <p>次に、プロジェクトでセッションを開始する:</p>
-<pre><code class="language-bash">kiro-cli chat
+<pre><code class="language-bash">cd your-project &amp;&amp; kiro-cli chat
 </code></pre>
 <p>インストールは <code>chat.defaultAgent: &quot;aidlc&quot;</code> を持つ <code>.kiro/settings/cli.json</code> を同梱するため、
 AI-DLC の conductor エージェントが既定で有効になる — <code>/aidlc</code> がそのまま動く。
