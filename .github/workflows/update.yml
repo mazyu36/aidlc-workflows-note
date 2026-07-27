@@ -292,7 +292,11 @@ jobs:
           fi
 
           SHORT_NEW=$(echo "$NEW" | cut -c1-7)
-          git push origin "$BRANCH"
+
+          # claude-code-action は後処理で GitHub App のインストールトークンを revoke するため、
+          # actions/checkout が仕込んだ認証ヘッダはこの時点で無効になっている。
+          # push は GITHUB_TOKEN を明示した remote URL で行う。
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${BRANCH}"
 
           # 検証が通るかどうかで WIP 判定する
           TITLE="feat: 上流 ${SHORT_NEW} に追随"
@@ -325,4 +329,7 @@ jobs:
             echo "cc @mazyu36"
           } > /tmp/pr-body.md
 
-          gh pr create --title "$TITLE" --body-file /tmp/pr-body.md
+          # head を明示する。push は remote URL 直指定で行ったため、
+# カレントブランチと upstream の関連付けに依存しない。
+gh pr create --title "$TITLE" --body-file /tmp/pr-body.md \
+  --head "$BRANCH" --base main
