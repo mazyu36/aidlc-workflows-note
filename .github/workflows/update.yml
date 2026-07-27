@@ -329,7 +329,4 @@ jobs:
             echo "cc @mazyu36"
           } > /tmp/pr-body.md
 
-          # head を明示する。push は remote URL 直指定で行ったため、
-# カレントブランチと upstream の関連付けに依存しない。
-gh pr create --title "$TITLE" --body-file /tmp/pr-body.md \
-  --head "$BRANCH" --base main
+          gh pr create --title "$TITLE" --body-file /tmp/pr-body.md --head "$BRANCH" --base main
