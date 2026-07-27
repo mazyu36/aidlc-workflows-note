@@ -74,6 +74,27 @@ jobs:
           '
           node scripts/check-staleness.mjs || true
 
+          # force_llm は動作確認用の経路。判定はここで 1 度だけ解き、以降のステップは
+          # 単純な真偽だけを見る。&& と || を混ぜると優先順位で意図がぶれるため。
+          FORCE='${{ inputs.force_llm }}'
+          V=$(node -e 'console.log(require("/tmp/staleness.json").verdict)')
+          if [ "$FORCE" = 'true' ] || [ "$V" != 'up-to-date' ]; then
+            echo 'proceed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'proceed=false' >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$FORCE" = 'true' ]; then
+            echo 'run_mirror=true' >> "$GITHUB_OUTPUT"
+            echo 'run_pages=true' >> "$GITHUB_OUTPUT"
+          else
+            node -e '
+              const r = require("/tmp/staleness.json"), fs = require("fs");
+              const out = process.env.GITHUB_OUTPUT;
+              fs.appendFileSync(out, `run_mirror=${r.needsMirror === true}\n`);
+              fs.appendFileSync(out, `run_pages=${r.needsPages === true}\n`);
+            '
+          fi
+
       - name: Summarise the verdict
         run: |
           {
@@ -85,14 +106,14 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Stop when already up to date
-        if: steps.stale.outputs.verdict == 'up-to-date' && inputs.force_llm != true
+        if: steps.stale.outputs.proceed == 'false'
         run: echo "基点が上流 HEAD と一致。更新不要。"
 
       # 未マージの update PR があるうちは新規起票しない。毎日実行なので、
       # レビュー待ちの PR を放置している間に日ごとの PR が積み上がるのを防ぐ。
       - name: Check for an open update PR or existing branch
         id: existing
-        if: steps.stale.outputs.verdict != 'up-to-date' || inputs.force_llm == true
+        if: steps.stale.outputs.proceed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -117,12 +138,12 @@ jobs:
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
       - name: Install build dependencies
-        if: steps.existing.outputs.skip == 'false'
+        if: steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false'
         working-directory: scripts/mirror-build
         run: npm ci --omit=dev --ignore-scripts || npm install --omit=dev --ignore-scripts
 
       - name: Prepare the working branch
-        if: steps.existing.outputs.skip == 'false'
+        if: steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false'
         env:
           BRANCH: ${{ steps.existing.outputs.branch }}
         run: |
@@ -140,7 +161,7 @@ jobs:
         run: bash scripts/retarget-sha.sh "$OLD" "$NEW"
 
       - name: Configure AWS credentials (OIDC)
-        if: steps.stale.outputs.verdict == 'needs-update' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+        if: steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
@@ -148,7 +169,7 @@ jobs:
 
       # 系統 1: ミラー追随。上流 docs が変わった日だけ動く。
       - name: Load the mirror prompt
-        if: steps.stale.outputs.needs_mirror == 'true' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+        if: steps.stale.outputs.run_mirror == 'true' && steps.existing.outputs.skip == 'false'
         uses: ./.github/actions/load-prompt
         with:
           prompt-file: prompts/mirror.md
@@ -159,7 +180,7 @@ jobs:
       - name: Retranslate the mirror with Claude
         id: mirror
         continue-on-error: true
-        if: steps.stale.outputs.needs_mirror == 'true' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+        if: steps.stale.outputs.run_mirror == 'true' && steps.existing.outputs.skip == 'false'
         uses: anthropics/claude-code-action@v1
         env:
           UPSTREAM: /tmp/aidlc-upstream
@@ -175,7 +196,7 @@ jobs:
           prompt: ${{ env.AGENT_PROMPT }}
       # 系統 2: 解説ページ。抜粋の行ズレ・実数値の陳腐化・参照切れがある日だけ動く。
       - name: Load the pages prompt
-        if: steps.stale.outputs.needs_pages == 'true' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+        if: steps.stale.outputs.run_pages == 'true' && steps.existing.outputs.skip == 'false'
         uses: ./.github/actions/load-prompt
         with:
           prompt-file: prompts/pages.md
@@ -185,7 +206,7 @@ jobs:
       - name: Update the authored pages with Claude
         id: pages
         continue-on-error: true
-        if: steps.stale.outputs.needs_pages == 'true' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+        if: steps.stale.outputs.run_pages == 'true' && steps.existing.outputs.skip == 'false'
         uses: anthropics/claude-code-action@v1
         env:
           UPSTREAM: /tmp/aidlc-upstream
@@ -198,7 +219,7 @@ jobs:
           prompt: ${{ env.AGENT_PROMPT }}
       # PR 起票は決定論ステップ。Claude が落ちても、そこまでの成果を PR として残す。
       - name: Open the pull request
-        if: always() && steps.existing.outputs.skip == 'false' && (steps.stale.outputs.verdict != 'up-to-date' || inputs.force_llm == true)
+        if: always() && steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ steps.existing.outputs.branch }}

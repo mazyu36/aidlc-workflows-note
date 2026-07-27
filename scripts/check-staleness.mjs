@@ -166,7 +166,8 @@ try {
   const newSha = git("rev-parse", "origin/v2");
 
   if (oldSha === newSha) {
-    result = { verdict: "up-to-date", oldSha, newSha, commits: 0 };
+    // 追随済みでもフラグは必ず出す。呼び出し側が undefined を扱わずに済むように。
+    result = { verdict: "up-to-date", needsMirror: false, needsPages: false, oldSha, newSha, commits: 0 };
   } else {
     const commits = Number(git("rev-list", "--count", `${oldSha}..${newSha}`));
     const docsChanged = git("diff", "--name-only", `${oldSha}..${newSha}`, "--", "docs/")
