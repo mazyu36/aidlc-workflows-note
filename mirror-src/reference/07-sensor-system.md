@@ -4,7 +4,7 @@
 
 この章は AI-DLC の sensor manifest の **スキーマリファレンス** である — stage の出力への書き込みで発火する決定論的なチェックのことである。sensor は制御ループのフィードバックの半分であり、rule はフィードフォワードの半分である（次章の [Rule システム](08-rule-system.md) を参照）。[Plane アーキテクチャ](02-plane-architecture.md) の章は、両者を compile が各 stage ノードへ解決する control-plane の入力として枠づける。
 
-この章は manifest の *ファイル形式* を扱う — sensor manifest が何を含むか、stage がどう sensor をインポートするか、同梱される 4 つの manifest がどう設定されるか。ワークフロー中に sensor がどう発火するかのユーザー向けのビューは、ユーザーガイドの [Rule と学習ループ](../guide/09-rules-and-the-learning-loop.md) を参照。
+この章は manifest の *ファイル形式* を扱う — sensor manifest が何を含むか、stage がどう sensor をインポートするか、同梱される 5 つの manifest がどう設定されるか。ワークフロー中に sensor がどう発火するかのユーザー向けのビューは、ユーザーガイドの [Rule と学習ループ](../guide/09-rules-and-the-learning-loop.md) を参照。
 
 > **パス規約。** 以下の `<record>/` = アクティブな intent の record dir、
 > `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`（コンパクトな UTC 日付プレフィックスと
@@ -70,7 +70,7 @@ timeout_seconds: 5                           # optional
 | `command` | ✓ | string | 正準の起動プレフィックス — 各同梱 sensor はそれ自身の sensor ごとのスクリプトを名指す（例: `bun .claude/tools/aidlc-sensor-required-sections.ts`）。dispatcher（`aidlc-sensor.ts`）は `--stage <slug>` に続けて、sensor の入力形状に合致するファイルフラグを追記する: document sensor には `--output-path <path>`、コード sensor（`linter`、`type-check`）には `--file-path <path>`。 |
 | `default_severity` | ✓ | enum | 今日受理されるのは `advisory` のみ; `blocking` は将来の ralph-driver 作業に予約されている。 |
 | `description` | ✓ | string | 1 行の人間向け説明。 |
-| `category` | optional | string | 自由形式の記述ラベル（4 つの同梱 manifest は `document-shape` と `code-quality` を使う; 閉じた enum ではない）。 |
+| `category` | optional | string | 自由形式の記述ラベル（同梱 manifest は `document-provenance`・`document-shape`・`code-quality` を使う; 閉じた enum ではない）。 |
 | `matches` | optional | glob string | 発火時に PostToolUse hook が消費する capability filter。下の [`matches` フィルタ](#matches-filter) を参照。 |
 | `input_schema` | optional | object | 今日は助言的; 将来の LLM dispatch がテンプレート化契約として使う。 |
 | `output_schema` | optional | object | 今日は助言的; 将来の LLM dispatch がパース契約として使う。 |
@@ -124,7 +124,8 @@ outputs: ...
 | Stage | `sensors:` |
 |---|---|
 | 3 つの initialization（workspace-scaffold、workspace-detection、state-init） | `[]`（決定論的セットアップ、agent が著述する markdown 無し） |
-| 7 つの ideation、8 つの inception、7 つの operation markdown stage + `code-generation` | markdown stage には `[required-sections, upstream-coverage]`; `code-generation` には `[linter, type-check]`（コードのみ） |
+| `intent-capture` | `[claim-sources, required-sections, upstream-coverage]`（`claim-sources` は stage の成果物全体にわたって、可視のインラインの provenance・権威ある source レジスタの値・人間が確認した厳密な assumption をチェックする） |
+| 他の 6 つの ideation、8 つの inception、7 つの operation markdown stage + `code-generation` | markdown stage には `[required-sections, upstream-coverage]`; `code-generation` には `[linter, type-check]`（コードのみ） |
 | `build-and-test` | `[required-sections, upstream-coverage, type-check]`（linter は意図的に省略 — build が正準の lint を走らせる） |
 | 5 つの construction-design（ci-pipeline、functional-design、infrastructure-design、nfr-design、nfr-requirements） | `[required-sections, upstream-coverage, linter, type-check]`（コードサンプルを伴う markdown design） |
 
@@ -138,12 +139,13 @@ fork は stage の `sensors:` リストを直接編集することで stage を�
 
 | Manifest | `matches` |
 |---|---|
+| `aidlc-claim-sources.md` | `**/{aidlc-docs,intents}/**` |
 | `aidlc-required-sections.md` | `**/{aidlc-docs,intents}/**` |
 | `aidlc-upstream-coverage.md` | `**/{aidlc-docs,intents}/**` |
 | `aidlc-linter.md` | `**/*.{ts,js}` |
 | `aidlc-type-check.md` | `**/*.{ts,tsx}` |
 
-`matches` **こそが** fire filter である — 実質的に任意ではない。hook は書き込まれるパスを glob と比較し、合致するときだけ発火する; `matches` glob を **持たない** エントリは一切発火しない（`aidlc-sensor-fire.ts`: `if (!entry.matches) continue`）。だから 4 つの同梱 manifest はすべて 1 つを宣言する — 2 つの document-shape sensor は artifact tree にスコープされ（同梱 manifest は上に示した `matches` 値を運ぶ）、2 つの code-quality sensor はそれぞれの言語 glob にスコープされる。compile resolver は `matches` を逐語で stage ごとの `sensors_applicable[]` エントリにコピーする; hook はスナップショットされた値をグラフノードから読む。
+`matches` **こそが** fire filter である — 実質的に任意ではない。hook は書き込まれるパスを glob と比較し、合致するときだけ発火する; `matches` glob を **持たない** エントリは一切発火しない（`aidlc-sensor-fire.ts`: `if (!entry.matches) continue`）。だから 5 つの同梱 manifest はすべて 1 つを宣言する — provenance と 2 つの document-shape sensor は artifact tree にスコープされ（同梱 manifest は上に示した `matches` 値を運ぶ）、2 つの code-quality sensor はそれぞれの言語 glob にスコープされる。compile resolver は `matches` を逐語で stage ごとの `sensors_applicable[]` エントリにコピーする; hook はスナップショットされた値をグラフノードから読む。
 
 空文字列（`matches: ""`）は parse 時に拒否される。glob が無いことは sensor が決して発火しないことを意味するので、manifest は自身が適用される glob 形状を宣言せねばならない — 「すべてで発火する」モードは無い。
 
@@ -220,7 +222,7 @@ sensor の提案が gate で確認されると、gate-ritual ツールは新し�
 
 manifest をスキャフォールドした後、gate-ritual ツールは — 同じ `withAuditLock` トランザクションの中で — 新しい id を発生元 stage の `sensors:` frontmatter リストに追記する（pull 著述の two-write インストール）。sensor は次のワークフローが compile するときに完全に結線される。これは唯一認可された stage-frontmatter の編集である: インポートリストを伸ばす（形状は不変、中身は不変ではない）のであって、`## Steps` / `## Sensors` / `## Learn` の本体は決して伸ばさない。
 
-4 つの同梱 manifest は、これらの既定値が後に発展する変種を示す: `aidlc-required-sections.md` と `aidlc-upstream-coverage.md` は artifact-tree の `matches` glob（上の `matches` 表に示した値）とともに `timeout_seconds: 5` を使う; `aidlc-linter.md` は `matches: "**/*.{ts,js}"` とともに `30` を使う; `aidlc-type-check.md` は `matches: "**/*.{ts,tsx}"` とともに `60` を使う。
+5 つの同梱 manifest は、これらの既定値が後に発展する変種を示す: `aidlc-claim-sources.md`・`aidlc-required-sections.md`・`aidlc-upstream-coverage.md` は artifact-tree の `matches` glob（上の `matches` 表に示した値）とともに `timeout_seconds: 5` を使う; `aidlc-linter.md` は `matches: "**/*.{ts,js}"` とともに `30` を使う; `aidlc-type-check.md` は `matches: "**/*.{ts,tsx}"` とともに `60` を使う。
 
 ---
 
@@ -247,4 +249,4 @@ sensor manifest の consumer（compile、dispatcher、gate-ritual のスキャ�
 - **ユーザー向けの learning loop** — sensor の提案がどう gate で表面化・確認され、確認された提案がどう新しい manifest をスキャフォールドするか。ユーザーガイドの [Rule と学習ループ](../guide/09-rules-and-the-learning-loop.md) を参照。
 - **compile 境界** — `sensors_applicable` がどうワークフロー開始時に一度解決され、発火時にグラフノードから読まれるか。[Plane アーキテクチャ](02-plane-architecture.md) を参照。
 
-上のスキーマと、`dist/claude/.claude/sensors/` にある 4 つの同梱 manifest が、動く実例である。
+上のスキーマと、`dist/claude/.claude/sensors/` にある 5 つの同梱 manifest が、動く実例である。

@@ -143,12 +143,13 @@ stage 中にエージェントが出力ファイルを書く・編集すると�
 
 sensor の活動は intent の `audit/` シャードに `Sensor Fired`・`Sensor Passed`・`Sensor Failed` の行として現れる。失敗の行は、具体的なギャップ — 欠けた見出し、参照されていない上流成果物、lint エラー — を列挙する詳細ファイル（例: `<record>/.aidlc-sensors/<stage-slug>/required-sections-<timestamp>.md`）にリンクする。audit ログは [状態と audit](10-state-and-audit.md) で扱う。
 
-### 4 つのフレームワーク sensor
+### 5 つのフレームワーク sensor
 
-フレームワークには 4 つの sensor が同梱される:
+フレームワークには 5 つの sensor が同梱される:
 
 | Sensor | 発火対象 | チェック内容 |
 |--------|----------|--------|
+| `claim-sources` | Intent Capture の record dir 出力 | すべての claim が可視の source タグを持つこと。登録された記述・workflow の scope・memory のテキストが権威ある入力と一致すること。保持された assumption が明示的な確認と厳密に一致すること |
 | `required-sections` | record dir の任意の markdown 出力 | 出力が必須の H2 見出しを含むこと（汎用のコンテンツ形状チェック） |
 | `upstream-coverage` | record dir の任意の markdown 出力 | stage の成果物（集合として評価）が、stage が consume すると宣言した各上流成果物を、slug・wikilink・生成元 stage のディレクトリパスのいずれかで参照していること |
 | `linter` | `.ts` / `.js` のコード出力 | 設定済みの linter（既定は ESLint）をラップ |

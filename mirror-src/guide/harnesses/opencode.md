@@ -29,6 +29,16 @@ opencode は `.opencode/tools/` と `.opencode/tool/` 配下のすべての `*.t
 
 ## インストール
 
+以下のコピーは
+[aidlc-workflows](https://github.com/awslabs/aidlc-workflows) リポジトリの
+`v2` ブランチの clone から行う:
+
+```bash
+git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+```
+
 1. ディストリビューションをプロジェクトへコピーする:
 
    ```bash

@@ -5,8 +5,8 @@
 > **Harness に関する注記。** セッション再開はどの harness でも動く（状態は harness ではなく
 > intent の record dir にある）。セッションの*ライフサイクルイベント*は異なる: Claude Code は
 > `SESSION_STARTED/RESUMED/ENDED` と `SESSION_COMPACTED` を発行し、Kiro は
-> `SESSION_STARTED` のみ、Codex は `SESSION_ENDED` を推定し、コンパクション後の
-> ミッション再注入を足す。[他の harness で動かす](harnesses/README.md) を参照。
+> `SESSION_STARTED` のみ、Codex は `SESSION_ENDED` を推定し、その後 compact-source の
+> `SessionStart` を通じてミッションを再注入する。[他の harness で動かす](harnesses/README.md) を参照。
 
 ---
 

@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SHA = "ccf284b501591b90b4081a8e1c7b261cc6d2df46";
+const SHA = "257b43a3b7f8cda1f8b8901077c0423194bc53be";
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const SRC_ORIG = process.env.MIRROR_ORIG ?? "/tmp/aidlc-v2/docs";
 const SRC_JA = process.env.MIRROR_SRC ?? path.join(REPO, "mirror-src");
@@ -443,7 +443,7 @@ ${secBlock("その他", "top", topFiles)}`;
 <main>
 ${body}
 <footer class="meta">
-  原文: awslabs/aidlc-workflows <code>v2</code> @ <a href="${GH_TREE.slice(0, -1)}">ccf284b</a> · 生成: ${TODAY} · 内容の改変は 2 点のみ — 描画不能だった Mermaid 5 図のセミコロン修正（upstream PR と同内容）と、図配色のダークパレットへの写像（色の意味は保持）
+  原文: awslabs/aidlc-workflows <code>v2</code> @ <a href="${GH_TREE.slice(0, -1)}">257b43a</a> · 生成: ${TODAY} · 内容の改変は 2 点のみ — 描画不能だった Mermaid 5 図のセミコロン修正（upstream PR と同内容）と、図配色のダークパレットへの写像（色の意味は保持）
 </footer>
 </main>
 </div>

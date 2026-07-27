@@ -46,7 +46,7 @@
   <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
   <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
   <a href="../reference/diagrams.html" class="here">AI-DLC ワークフロー図</a>
-  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload - 実証リファレンス</a>
   <div class="group">DEVELOPER REFERENCE / 04-stages</div>
   <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
   <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
@@ -531,11 +531,11 @@ sequenceDiagram
 </pre>
 <hr>
 <h2 id="11-approval-gate-flow">11. Approval Gate フロー</h2>
-<p>すべての stage（3 つの Initialization stage を除く）は approval gate で終わる。orchestrator は、オプションをユーザーに提示する前に audit trail へ記録し、そのあとユーザーの応答を記録する。3 回の revision サイクルのあと、「Accept as-is」の escape hatch が利用可能になる。Ideation と Inception の stage は、以前スキップした stage を追加する条件付きの第 3 オプションを含むこともある。</p>
+<p>すべての stage（3 つの Initialization stage を除く）は approval gate で終わる。gate の audit trail は report が所有する: <code>report --result awaiting-approval</code> が質問の提示前に保留中の gate を記録し（<code>STAGE_AWAITING_APPROVAL</code>）、<code>report --result approved|rejected</code> が応答を逐語で記録する（<code>GATE_APPROVED</code>/<code>GATE_REJECTED</code>）— <code>aidlc-log.ts decision</code>/<code>answer</code> は決して使わない。3 回の revision サイクルのあと、「Accept as-is」の escape hatch が利用可能になる。Ideation と Inception の stage は、以前スキップした stage を追加する条件付きの第 3 オプションを含むこともある。</p>
 <pre class="mermaid">
 flowchart TD
     COMPLETE["Stage work complete"]
-    AUDIT_PRE["Append to audit.md:\nstage summary + options\n(fresh ISO timestamp)"]
+    REPORT_AWAITING["Report awaiting-approval:\nengine opens gate + emits\nSTAGE_AWAITING_APPROVAL"]
     ASK["AskUserQuestion:\nApproval Gate"]
 
     APPROVE["Approve"]
@@ -543,42 +543,42 @@ flowchart TD
     ACCEPT["Accept as-is\n(escape hatch)"]
     ADD_STAGE["Add Skipped Stage\n(Ideation/Inception only)"]
 
-    AUDIT_POST_A["Log: User approved\n(fresh timestamp)"]
-    AUDIT_POST_C["Log: User requested changes\n(fresh timestamp)"]
-    AUDIT_POST_ACC["Log: User accepted as-is\n(fresh timestamp)"]
-    AUDIT_POST_ADD["Log: User added stage\n(fresh timestamp)"]
-
     REVISION_COUNT{"Revision\ncycle &gt;= 3?"}
     NOTE_2ND["After 2nd revision:\nnote that escape hatch\nactivates next cycle"]
 
-    REPORT_APPROVED["Report approved:\nengine completes + routes"]
+    REPORT_APPROVED["Report approved with exact choice:\nengine emits GATE_APPROVED,\ncompletes + routes"]
+    REPORT_REJECTED["Report rejected with feedback:\nengine emits GATE_REJECTED,\nrecords revising state"]
+    REPORT_REVISED["Report revised:\nengine re-opens gate"]
     PROGRESS["Display progress line:\nN/total overall"]
     NEXT_STAGE["Proceed to next stage"]
 
     REVISE["Apply user feedback\nto stage artifacts"]
     RE_PRESENT["Re-present completion\nmessage"]
 
-    ADD_EXEC["Insert skipped stage\ninto workflow"]
+    ADD_EXEC["Insert skipped stage into workflow\n(scope tooling records the change)"]
 
-    COMPLETE --&gt; AUDIT_PRE --&gt; ASK
+    COMPLETE --&gt; REPORT_AWAITING --&gt; ASK
     ASK --&gt; APPROVE
     ASK --&gt; CHANGES
     ASK --&gt; ACCEPT
     ASK --&gt; ADD_STAGE
 
-    APPROVE --&gt; AUDIT_POST_A --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
-    ACCEPT --&gt; AUDIT_POST_ACC --&gt; REPORT_APPROVED
+    APPROVE --&gt; REPORT_APPROVED --&gt; PROGRESS --&gt; NEXT_STAGE
+    ACCEPT --&gt; REPORT_APPROVED
 
-    CHANGES --&gt; AUDIT_POST_C --&gt; REVISION_COUNT
-    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; RE_PRESENT --&gt; AUDIT_PRE
+    CHANGES --&gt; REPORT_REJECTED --&gt; REVISION_COUNT
+    REVISION_COUNT --&gt;|"&lt; 3"| NOTE_2ND --&gt; REVISE --&gt; REPORT_REVISED --&gt; RE_PRESENT --&gt; ASK
     REVISION_COUNT --&gt;|"&gt;= 3"| REVISE
 
-    ADD_STAGE --&gt; AUDIT_POST_ADD --&gt; ADD_EXEC
+    ADD_STAGE --&gt; ADD_EXEC
 
     style COMPLETE fill:#1d332b,stroke:#57d9a9
+    style REPORT_AWAITING fill:#1b2c47,stroke:#6db3ff
     style ASK fill:#1b2c47,stroke:#6db3ff
     style APPROVE fill:#1d332b,stroke:#57d9a9
     style CHANGES fill:#35301b,stroke:#e5cf63
+    style REPORT_REJECTED fill:#38291a,stroke:#f2b35c
+    style REPORT_REVISED fill:#1b2c47,stroke:#6db3ff
     style ACCEPT fill:#38291a,stroke:#f2b35c
     style ADD_STAGE fill:#2a2440,stroke:#b895ff
     style NEXT_STAGE fill:#1d332b,stroke:#57d9a9
@@ -863,7 +863,7 @@ flowchart TD
 </tbody></table>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/diagrams.md"><code>docs/reference/diagrams.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-23
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/diagrams.md"><code>docs/reference/diagrams.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-27
 </footer>
 </main>
 </div>

@@ -20,10 +20,21 @@ hook の束線・アクティベーション）だけが異なる。
 
 ## インストール
 
+以下のコピーは
+[aidlc-workflows](https://github.com/awslabs/aidlc-workflows) リポジトリの
+`v2` ブランチの clone から行う:
+
 ```bash
-cp -r dist/kiro/.kiro your-project/.kiro
-cp -r dist/kiro/aidlc your-project/aidlc       # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
-cp dist/kiro/AGENTS.md your-project/AGENTS.md   # merge if you already have one
+git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+```
+
+```bash
+mkdir -p your-project/.kiro your-project/aidlc
+cp -R dist/kiro/.kiro/. your-project/.kiro/
+cp -R dist/kiro/aidlc/. your-project/aidlc/    # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
+cp dist/kiro/AGENTS.md your-project/AGENTS.md  # merge if you already have one
 ```
 
 `aidlc/` ディレクトリはワークスペースシェルである — エンジンが読む構築済みの
@@ -34,7 +45,7 @@ cp dist/kiro/AGENTS.md your-project/AGENTS.md   # merge if you already have one
 次に、プロジェクトでセッションを開始する:
 
 ```bash
-kiro-cli chat
+cd your-project && kiro-cli chat
 ```
 
 インストールは `chat.defaultAgent: "aidlc"` を持つ `.kiro/settings/cli.json` を同梱するため、

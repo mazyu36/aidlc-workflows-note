@@ -133,6 +133,12 @@ flowchart TD
 
 **stage の色:** 緑 = ALWAYS（すべての scope で実行）。黄 = CONDITIONAL（一部の scope でスキップ）。
 
+Intent Capture は、初期の記述・workflow が選んだ scope・使用した memory rule を
+questions ファイルに記録する。intent statement と stakeholder map の claim には
+インラインの source タグが付き、どちらの artifact も assumption と未解決の質問を
+明示する。保持された assumption は、Product Lead reviewer と承認ゲートが走る前に
+明示的な確認を必要とする。
+
 ---
 
 ## Phase 2: Inception

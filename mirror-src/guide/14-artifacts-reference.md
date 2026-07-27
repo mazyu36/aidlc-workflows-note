@@ -142,7 +142,7 @@ flowchart LR
 
 | Stage | 主要成果物 | 条件 |
 |-------|--------------|-----------|
-| 1.1 Intent Capture | `intent-statement.md`、`stakeholder-map.md` | 常に |
+| 1.1 Intent Capture | `intent-capture-questions.md`（source レジスタと確認済みの回答）、`intent-statement.md`、`stakeholder-map.md`（インラインの source タグと必須の assumption セクション） | 常に |
 | 1.2 Market Research | `competitive-analysis.md`、`build-vs-buy.md` | 条件付き |
 | 1.3 Feasibility | `feasibility-assessment.md`、`constraint-register.md`、`raid-log.md` | 条件付き |
 | 1.4 Scope Definition | `scope-document.md`、`intent-backlog.md` | 常に |

@@ -4,8 +4,10 @@
 
 ## 前提条件
 
-- **Codex CLI ≥ 0.139.0** — それより古いリリースは subagent の hook ペイロードで本物の
-  エージェントロールを表に出さず、ハイフン入りのエージェント TOML を解決しない。
+- **Codex CLI ≥ 0.145.0** — それより古いリリースは、ターン中の自動コンパクション後に
+  compact-source の `SessionStart` を遅延させるため、復元されたワークフローミッションを
+  持たないままモデルの継続が 1 回走りうる。0.139.0 より前のリリースは加えて、信頼できる
+  subagent のロール帰属とハイフン入りエージェント TOML の解決を欠く。
   `/aidlc --doctor` がこのピンを強制する。`codex --version` で確認する。
 - **bun** — Claude の harness と同じ要件。すべてのツールと hook は bun 経由で走る。
 - **モデルプロバイダ** — 同梱の `config.toml` は既定で **Amazon Bedrock**
@@ -15,6 +17,16 @@
   穏当に劣化する。
 
 ## インストール
+
+以下のコピーは
+[aidlc-workflows](https://github.com/awslabs/aidlc-workflows) リポジトリの
+`v2` ブランチの clone から行う:
+
+```bash
+git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+```
 
 1. ディストリビューションをプロジェクト（**git リポジトリ**でなければならない —
    Codex はプロジェクトの `.codex/hooks.json` を git リポジトリの中でしか発見しない）へ
@@ -67,10 +79,12 @@
    置き換える。2 つ目のコピーを追記しないこと — 重複した TOML テーブルは設定全体を
    無効化する。
 
-4. 同梱の `.codex/config.toml` を `~/.codex/config.toml` にマージする（またはプロジェクト
+4. `your-project/` に戻り（手順 3 は AI-DLC のソースチェックアウトで走った）、同梱の
+   `.codex/config.toml` を `~/.codex/config.toml` にマージする（またはプロジェクト
    レベルに保つ — 信頼されたプロジェクトはそれを読む）。検証:
 
    ```bash
+   cd your-project
    bun .codex/tools/aidlc-utility.ts doctor
    ```
 
@@ -101,8 +115,10 @@ stage ランナーは明示専用: `$aidlc-application-design`・`$aidlc-bugfix`
   （`SWARM_DEGRADED` が audit される）。
 - **セッションのライフサイクル**: Codex には SessionEnd のイベントが無い。閉じられなかった
   セッションは、次のセッション開始時に推定の `SESSION_ENDED` audit 行として調停される。
-  Codex 専用の PostCompact イベントはコンパクション後にワークフローのミッションを
-  再注入する — Claude harness に対する決定論の向上である。
+  コンパクション後、Codex は `source=compact` の SessionStart を発行する。
+  このサポート済みイベントが、コンパクション後の最初の継続より前にワークフローの
+  ミッションを再注入する。この即時のドレインが、AI-DLC が
+  Codex >= 0.145.0 を要求する理由である。
 - **成果物 audit の忠実度**: ヘッドレスの `codex exec` 実行では、モデルがシェルの
   ヒアドキュメントでファイルを書くことが多く、これは `apply_patch` の hook マッチャを
   すり抜ける — `ARTIFACT_*` の行が疎になりうる。対話的な TUI セッション（システムプロンプトが
@@ -110,7 +126,7 @@ stage ランナーは明示専用: `$aidlc-application-design`・`$aidlc-bugfix`
 - **AIDLC のルール層**はワークスペースルートの `aidlc/spaces/<active-space>/memory/` に住む（手で編集できる 1 つのソース。どの harness でも同一）。`config.toml` の `AIDLC_RULES_DIR` env の継ぎ目がリゾルバをそこへ向け、orchestrator は `@aidlc/spaces/<active-space>/memory/...` のプロンプト言及を注入する。Codex ネイティブの `.codex/rules/` ディレクトリは Starlark の権限ルールを持つ — AIDLC のメソッドとは別物である。
 - **ウェルカムメッセージは無い**: Claude harness はセッション開始時に `settings.json` の
   `companyAnnouncements` から Phases/Stages/Scopes のオンボーディングバナーを描画する。
-  Codex に同等物は無い。session-start の経路は再開の文脈だけを注入する。
+  Codex に同等物は無い。session-start の経路はワークフローの文脈だけを注入する。
 - **MCP サーバー**: Codex は MCP の定義を `config.toml`（プロジェクトの
   `.codex/config.toml` か `~/.codex/config.toml`）の `[mcp_servers.<name>]` テーブルから
   読む — 必要なサーバーをそこに足す。同梱の設定は**何も**宣言しない（Claude harness は

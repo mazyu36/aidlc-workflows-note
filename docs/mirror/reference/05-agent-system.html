@@ -46,7 +46,7 @@
   <a href="../reference/17-skill-system.html">The Orchestration Engine and Skill System</a>
   <a href="../reference/18-plugin-mechanism.html">Plugin メカニズム</a>
   <a href="../reference/diagrams.html">AI-DLC ワークフロー図</a>
-  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload — 実証リファレンス</a>
+  <a href="../reference/kiro-ide-hook-payload.html">Kiro IDE hook payload - 実証リファレンス</a>
   <div class="group">DEVELOPER REFERENCE / 04-stages</div>
   <a href="../reference/04-stages/construction.html">Construction phase — Stage リファレンス (3.1-3.7)</a>
   <a href="../reference/04-stages/ideation.html">Ideation phase — stage リファレンス (1.1-1.7)</a>
@@ -300,7 +300,7 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 </tbody></table>
 <p>表の背後にある主要な事実:</p>
 <ul>
-<li><strong>省略が継承のメカニズムである。</strong> Claude Code では、<code>effort:</code> キーの無い agent .md はセッションの effort を継承し、固定された <code>effort:</code> は両方向でセッションを上書きする（固定は cap であって floor ではない）-- だから不在が judgment と balanced の契約である。Codex では、<code>model</code> の無いロール TOML は同梱の <code>.codex/config.toml</code> のセッションデフォルトで spawn する（codex-cli 0.139.0（doctor が強制する最小）と 0.142.5 で live に検証済み）。Kiro では、agent-v1 スキーマが不在-<code>&quot;model&quot;</code> のフォールバックを文書化している: &quot;If not specified, uses the default model&quot;（<code>/model</code> の永続化された設定）。</li>
+<li><strong>省略が継承のメカニズムである。</strong> Claude Code では、<code>effort:</code> キーの無い agent .md はセッションの effort を継承し、固定された <code>effort:</code> は両方向でセッションを上書きする（固定は cap であって floor ではない）-- だから不在が judgment と balanced の契約である。Codex では、<code>model</code> の無いロール TOML は同梱の <code>.codex/config.toml</code> のセッションデフォルトで spawn する（codex-cli 0.139.0 と 0.142.5 で live に検証済み; 現在 doctor が強制する最小は、compact セッションの即時リロードのため 0.145.0 である）。Kiro では、agent-v1 スキーマが不在-<code>&quot;model&quot;</code> のフォールバックを文書化している: &quot;If not specified, uses the default model&quot;（<code>/model</code> の永続化された設定）。</li>
 <li><strong>Kiro は決して model を固定しない。</strong> 同梱の Kiro model ID は、その model がユーザーのインストールで有効なときにだけ解決する; 他の任意の model を走らせるセッションは、委譲された spawn を <code>Invalid model ID</code> ですべて拒否し、Kiro は Claude 方言の tier エイリアス（<code>opus</code>/<code>sonnet</code>）を真っ向から拒否する -- だから普遍的に安全に固定できる値は無い。したがってすべての Kiro tier は <code>&quot;model&quot;</code>（および <code>.md</code> frontmatter の <code>model:</code> 行）を省略する: すべての agent がセッションの model を継承する。<code>TIER_PROJECTIONS</code> の kiro スロットと <code>kiroModelDefaults()</code> の機構は、解決可能なインストールごとの固定メカニズムが現れたときに備え、休眠状態のまま残る。</li>
 <li><strong>Kiro は agent ごとの effort サーフェスを持たない。</strong> kiro-cli は agent JSON 内の effort 的なキーに対して fail-close するので、model ごとの effort デフォルトは <code>settings/cli.json</code> の <code>chat.modelDefaults[&lt;modelId&gt;].output_config.effort</code> にしか乗れない。tier が model を固定しないので、著述された条件付きエントリだけが同梱される（<code>claude-opus-4.8</code> -&gt; <code>xhigh</code>、セッションが実際にその model を走らせるときにだけ適用される）。そのファイルは CLI 専用である: Kiro IDE は cli.json を完全に無視し、拡張機能に埋め込まれた model ごとのデフォルト（またはユーザーの <code>/effort</code> のセッション state）を適用する。</li>
 </ul>
@@ -549,7 +549,7 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <li>ディストリビューションを再生成する: <code>bun scripts/package.ts</code>（続けて <code>--check</code> で drift が無いことを確認する）</li>
 <li>手で維持される knowledge テーブルに agent→examples の行を足す（space レベルのチーム knowledge dir は <code>aidlc/knowledge/{name}-agent/</code> で、内容があるときにチームによって作成される — engine はそれをスキャフォールドしない）</li>
 <li>テストを更新する: ファイル存在のための smoke テスト、stage-agent の相互参照のための feature テスト</li>
-<li>このファイルと <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/">reference/agents/</a> のドキュメントを更新する</li>
+<li>このファイルと <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/agents/">reference/agents/</a> のドキュメントを更新する</li>
 </ol>
 <h2 id="how-to-modify-an-agent">How to Modify an Agent</h2>
 <ul>
@@ -563,12 +563,12 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <ul>
 <li><a href="01-architecture.html">Architecture</a> -- agent レイヤーを含む 5 層モデル</li>
 <li><a href="10-knowledge-system.html">Knowledge System</a> -- knowledge のロード順</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/">Agents Technical Reference</a> -- agent ごとの技術的詳細</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/agents/">Agents Technical Reference</a> -- agent ごとの技術的詳細</li>
 <li><a href="04-stage-protocol.html">Stage Protocol</a> -- agent persona のロード rule</li>
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/05-agent-system.md"><code>docs/reference/05-agent-system.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-23
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/05-agent-system.md"><code>docs/reference/05-agent-system.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-27
 </footer>
 </main>
 </div>

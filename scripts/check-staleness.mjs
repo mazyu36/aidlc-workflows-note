@@ -116,10 +116,10 @@ function checkCounts(newSha) {
     { label: "stages", claimed: 32, actual: countFiles(newSha, "core/aidlc-common/stages", ".md") },
     { label: "agents", claimed: 14, actual: countFiles(newSha, "core/agents", ".md") },
     { label: "hooks", claimed: 13, actual: countFiles(newSha, "core/hooks", ".ts") },
-    { label: "tools", claimed: 30, actual: countFiles(newSha, "core/tools", ".ts") },
+    { label: "tools", claimed: 31, actual: countFiles(newSha, "core/tools", ".ts") },
     { label: "knowledge", claimed: 59, actual: countFiles(newSha, "core/knowledge", ".md") },
     { label: "scopes", claimed: 9, actual: countFiles(newSha, "core/scopes", ".md") },
-    { label: "sensors", claimed: 4, actual: countFiles(newSha, "core/sensors", ".md") },
+    { label: "sensors", claimed: 5, actual: countFiles(newSha, "core/sensors", ".md") },
     { label: "docs", claimed: 91, actual: countFiles(newSha, "docs", ".md") },
     { label: "harnesses", claimed: 5, actual: countDirs(newSha, "harness") },
   ];

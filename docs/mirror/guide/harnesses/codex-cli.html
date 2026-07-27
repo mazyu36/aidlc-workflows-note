@@ -83,8 +83,10 @@
 <p><code>dist/codex/</code> は、OpenAI の <strong>Codex CLI</strong> harness 向けの、フレームワークの harness ディストリビューションのひとつである。1 つの決定論的 core、多くの harness: エンジン、状態機械、audit ログ、グラフ、swarm の referee、learnings の gate はすべてのディストリビューションでバイト同一 — 異なるのはシェルだけである。このツリーは <code>core/</code> + <code>harness/codex/</code> から <code>bun scripts/package.ts codex</code> で<strong>生成</strong>される。決して手で編集しないこと（ドリフトガードが CI を落とす）。</p>
 <h2 id="prerequisites">前提条件</h2>
 <ul>
-<li><strong>Codex CLI ≥ 0.139.0</strong> — それより古いリリースは subagent の hook ペイロードで本物の
-エージェントロールを表に出さず、ハイフン入りのエージェント TOML を解決しない。
+<li><strong>Codex CLI ≥ 0.145.0</strong> — それより古いリリースは、ターン中の自動コンパクション後に
+compact-source の <code>SessionStart</code> を遅延させるため、復元されたワークフローミッションを
+持たないままモデルの継続が 1 回走りうる。0.139.0 より前のリリースは加えて、信頼できる
+subagent のロール帰属とハイフン入りエージェント TOML の解決を欠く。
 <code>/aidlc --doctor</code> がこのピンを強制する。<code>codex --version</code> で確認する。</li>
 <li><strong>bun</strong> — Claude の harness と同じ要件。すべてのツールと hook は bun 経由で走る。</li>
 <li><strong>モデルプロバイダ</strong> — 同梱の <code>config.toml</code> は既定で <strong>Amazon Bedrock</strong>
@@ -94,6 +96,13 @@
 穏当に劣化する。</li>
 </ul>
 <h2 id="install">インストール</h2>
+<p>以下のコピーは
+<a href="https://github.com/awslabs/aidlc-workflows">aidlc-workflows</a> リポジトリの
+<code>v2</code> ブランチの clone から行う:</p>
+<pre><code class="language-bash">git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+</code></pre>
 <ol>
 <li><p>ディストリビューションをプロジェクト（<strong>git リポジトリ</strong>でなければならない —
 Codex はプロジェクトの <code>.codex/hooks.json</code> を git リポジトリの中でしか発見しない）へ
@@ -137,9 +146,11 @@ bun scripts/package.ts codex trust --project &quot;/abs/path/to/your project&quo
 置き換える。2 つ目のコピーを追記しないこと — 重複した TOML テーブルは設定全体を
 無効化する。</p>
 </li>
-<li><p>同梱の <code>.codex/config.toml</code> を <code>~/.codex/config.toml</code> にマージする（またはプロジェクト
+<li><p><code>your-project/</code> に戻り（手順 3 は AI-DLC のソースチェックアウトで走った）、同梱の
+<code>.codex/config.toml</code> を <code>~/.codex/config.toml</code> にマージする（またはプロジェクト
 レベルに保つ — 信頼されたプロジェクトはそれを読む）。検証:</p>
-<pre><code class="language-bash">bun .codex/tools/aidlc-utility.ts doctor
+<pre><code class="language-bash">cd your-project
+bun .codex/tools/aidlc-utility.ts doctor
 </code></pre>
 </li>
 </ol>
@@ -168,8 +179,10 @@ worktree でヘッドレスのワーカーを 1 つ（常に <code>&lt; /dev/nul
 （<code>SWARM_DEGRADED</code> が audit される）。</li>
 <li><strong>セッションのライフサイクル</strong>: Codex には SessionEnd のイベントが無い。閉じられなかった
 セッションは、次のセッション開始時に推定の <code>SESSION_ENDED</code> audit 行として調停される。
-Codex 専用の PostCompact イベントはコンパクション後にワークフローのミッションを
-再注入する — Claude harness に対する決定論の向上である。</li>
+コンパクション後、Codex は <code>source=compact</code> の SessionStart を発行する。
+このサポート済みイベントが、コンパクション後の最初の継続より前にワークフローの
+ミッションを再注入する。この即時のドレインが、AI-DLC が
+Codex &gt;= 0.145.0 を要求する理由である。</li>
 <li><strong>成果物 audit の忠実度</strong>: ヘッドレスの <code>codex exec</code> 実行では、モデルがシェルの
 ヒアドキュメントでファイルを書くことが多く、これは <code>apply_patch</code> の hook マッチャを
 すり抜ける — <code>ARTIFACT_*</code> の行が疎になりうる。対話的な TUI セッション（システムプロンプトが
@@ -177,7 +190,7 @@ Codex 専用の PostCompact イベントはコンパクション後にワーク�
 <li><strong>AIDLC のルール層</strong>はワークスペースルートの <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> に住む（手で編集できる 1 つのソース。どの harness でも同一）。<code>config.toml</code> の <code>AIDLC_RULES_DIR</code> env の継ぎ目がリゾルバをそこへ向け、orchestrator は <code>@aidlc/spaces/&lt;active-space&gt;/memory/...</code> のプロンプト言及を注入する。Codex ネイティブの <code>.codex/rules/</code> ディレクトリは Starlark の権限ルールを持つ — AIDLC のメソッドとは別物である。</li>
 <li><strong>ウェルカムメッセージは無い</strong>: Claude harness はセッション開始時に <code>settings.json</code> の
 <code>companyAnnouncements</code> から Phases/Stages/Scopes のオンボーディングバナーを描画する。
-Codex に同等物は無い。session-start の経路は再開の文脈だけを注入する。</li>
+Codex に同等物は無い。session-start の経路はワークフローの文脈だけを注入する。</li>
 <li><strong>MCP サーバー</strong>: Codex は MCP の定義を <code>config.toml</code>（プロジェクトの
 <code>.codex/config.toml</code> か <code>~/.codex/config.toml</code>）の <code>[mcp_servers.&lt;name&gt;]</code> テーブルから
 読む — 必要なサーバーをそこに足す。同梱の設定は<strong>何も</strong>宣言しない（Claude harness は
@@ -203,7 +216,7 @@ bun scripts/package.ts --check        # CI drift guard (every harness)
 <p>他の harness: <a href="kiro-ide.html">Kiro IDE で AI-DLC を動かす</a> · <a href="README.html">harness ファミリーの索引</a>。</p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/harnesses/codex-cli.md"><code>docs/guide/harnesses/codex-cli.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-23
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/guide/harnesses/codex-cli.md"><code>docs/guide/harnesses/codex-cli.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-27
 </footer>
 </main>
 </div>

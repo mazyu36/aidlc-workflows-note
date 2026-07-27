@@ -591,7 +591,7 @@ Sensor は、stage 出力への `Write` または `Edit` のたびに走る決�
 | `describe <id>` | 1 つの Sensor の完全な manifest（コマンド、既定の severity、`matches` glob、タイムアウト）を表示 |
 | `fire <id> --stage <slug> --output-path <path>` | ファイルに対して Sensor を走らせ、`SENSOR_FIRED` 行とペアの結果行を発する |
 
-手動発火は `SENSOR_FIRED` の audit 行を発し、続けて厳密に 1 つの終端行を発する: `SENSOR_PASSED`、`SENSOR_FAILED`、または `SENSOR_BUDGET_OVERRIDE`。失敗は `<record>/.aidlc-sensors/<stage>/`（intent の record dir 内）に詳細ファイルを書く。Sensor は助言 — Sensor の失敗は決してツールの失敗ではないため、コマンドはなお 0 exit する。フレームワークが同梱する 4 つの Sensor は `required-sections`、`upstream-coverage`、`linter`、`type-check` である。
+手動発火は `SENSOR_FIRED` の audit 行を発し、続けて厳密に 1 つの終端行を発する: `SENSOR_PASSED`、`SENSOR_FAILED`、または `SENSOR_BUDGET_OVERRIDE`。失敗は `<record>/.aidlc-sensors/<stage>/`（intent の record dir 内）に詳細ファイルを書く。Sensor は助言 — Sensor の失敗は決してツールの失敗ではないため、コマンドはなお 0 exit する。フレームワークが同梱する 5 つの Sensor は `claim-sources`、`required-sections`、`upstream-coverage`、`linter`、`type-check` である。
 
 ```
 bun .claude/tools/aidlc-sensor.ts list
