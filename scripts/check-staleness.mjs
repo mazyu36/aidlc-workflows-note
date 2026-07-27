@@ -176,9 +176,15 @@ try {
     const counts = checkCounts(newSha);
     const paths = checkPaths(newSha);
 
-    const needsLlm = docsChanged.length > 0 || excerpts.drifted.length > 0 || counts.length > 0 || paths.missing.length > 0;
+    // 作業は 2 系統に分かれる。ミラー（逐語訳）は上流 docs の変更にのみ従い、
+    // 解説ページは抜粋の行ズレ・実数値・参照パスの破れに従う。
+    // ワークフローが片方だけを起こせるよう、系統ごとのフラグを出す。
+    const needsMirror = docsChanged.length > 0;
+    const needsPages = excerpts.drifted.length > 0 || counts.length > 0 || paths.missing.length > 0;
     result = {
-      verdict: needsLlm ? "needs-update" : "sha-bump-only",
+      verdict: needsMirror || needsPages ? "needs-update" : "sha-bump-only",
+      needsMirror,
+      needsPages,
       oldSha,
       newSha,
       commits,
@@ -203,6 +209,9 @@ if (JSON_OUT) {
 } else {
   const s = result.signals;
   console.log(`verdict : ${result.verdict}`);
+  if (result.verdict !== "up-to-date") {
+    console.log(`work    : mirror=${result.needsMirror ? "要" : "不要"} / pages=${result.needsPages ? "要" : "不要"}`);
+  }
   console.log(`old     : ${result.oldSha}`);
   console.log(`new     : ${result.newSha}  (${result.commits} commit(s) ahead)`);
   if (s) {

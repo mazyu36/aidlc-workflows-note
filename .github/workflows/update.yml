@@ -3,11 +3,17 @@ name: Update from upstream
 # 起動条件は決定論。上流が動いただけでは Claude を呼ばない。
 # scripts/check-staleness.mjs が「ノートの検査可能な主張が実際に壊れた」と判定した場合にかぎり起動する。
 #
+# 作業は 2 系統に分けて別々の Claude セッションで実行する。
+#   1. ミラー追随（逐語訳）  ... 上流 docs の変更に従う
+#   2. 解説ページ更新        ... 抜粋の行ズレ・実数値・参照パスの破れに従う
+# 分ける理由は 3 つ。片方だけ必要な日にもう片方を起こさない、文脈を短く保つ、
+# 片方が落ちてももう片方の成果をブランチに残す。
+#
 # pull_request では動かさない。fork から OIDC を引く経路を作らないため、
 # トリガは schedule と workflow_dispatch（書き込み権限者のみ）に限定する。
 on:
   schedule:
-    - cron: '0 0 * * 1'   # 毎週月曜 09:00 JST
+    - cron: '0 21 * * *'   # 毎日 06:00 JST
   workflow_dispatch:
     inputs:
       force_llm:
@@ -21,10 +27,14 @@ permissions:
   pull-requests: write
   id-token: write
 
+concurrency:
+  group: update-from-upstream
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       UPSTREAM: /tmp/aidlc-upstream
     steps:
@@ -40,25 +50,24 @@ jobs:
           git -C "$UPSTREAM" fetch --quiet origin v2
           echo "上流 origin/v2: $(git -C "$UPSTREAM" rev-parse origin/v2)"
 
-      # 判定本体。exit 1 = LLM が必要 / exit 0 = 追随済みか SHA 更新のみで足りる
+      # 判定本体。系統ごとのフラグ（needsMirror / needsPages）も出す。
       - name: Check staleness
         id: stale
         run: |
-          set +e
-          node scripts/check-staleness.mjs --json > /tmp/staleness.json
-          code=$?
-          set -e
+          node scripts/check-staleness.mjs --json > /tmp/staleness.json || true
           node -e '
-            const r = require("/tmp/staleness.json");
-            const out = process.env.GITHUB_OUTPUT;
             const fs = require("fs");
+            const r = JSON.parse(fs.readFileSync("/tmp/staleness.json", "utf8"));
+            const out = process.env.GITHUB_OUTPUT;
             fs.appendFileSync(out, `verdict=${r.verdict}\n`);
+            fs.appendFileSync(out, `needs_mirror=${r.needsMirror === true}\n`);
+            fs.appendFileSync(out, `needs_pages=${r.needsPages === true}\n`);
             fs.appendFileSync(out, `old_sha=${r.oldSha ?? ""}\n`);
             fs.appendFileSync(out, `new_sha=${r.newSha ?? ""}\n`);
             fs.appendFileSync(out, `commits=${r.commits ?? 0}\n`);
+            fs.appendFileSync(out, `docs_count=${(r.signals?.docsChanged ?? []).length}\n`);
           '
           node scripts/check-staleness.mjs || true
-          echo "exit=$code"
 
       - name: Summarise the verdict
         run: |
@@ -74,22 +83,29 @@ jobs:
         if: steps.stale.outputs.verdict == 'up-to-date' && inputs.force_llm != true
         run: echo "基点が上流 HEAD と一致。更新不要。"
 
-      - name: Check for an existing update branch or PR
+      # 未マージの update PR があるうちは新規起票しない。毎日実行なので、
+      # レビュー待ちの PR を放置している間に日ごとの PR が積み上がるのを防ぐ。
+      - name: Check for an open update PR or existing branch
         id: existing
         if: steps.stale.outputs.verdict != 'up-to-date' || inputs.force_llm == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH="update/upstream-$(echo '${{ steps.stale.outputs.new_sha }}' | cut -c1-7)"
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            echo "ブランチ $BRANCH は既に存在。スキップ。"
+          OPEN=$(gh pr list --repo '${{ github.repository }}' --state open \
+                   --json number,headRefName \
+                   --jq '[.[] | select(.headRefName | startswith("update/"))] | .[0] // empty')
+          if [ -n "$OPEN" ]; then
+            NUM=$(echo "$OPEN" | jq -r .number)
+            HEAD=$(echo "$OPEN" | jq -r .headRefName)
+            echo "::notice::未マージの更新 PR #${NUM} (${HEAD}) があるため新規起票をスキップします。"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          OPEN_PR=$(gh pr list --repo '${{ github.repository }}' --state open --head "$BRANCH" --json number --jq '.[0].number')
-          if [ -n "$OPEN_PR" ]; then
-            echo "PR #$OPEN_PR が既に存在。スキップ。"
+
+          BRANCH="update/upstream-$(echo '${{ steps.stale.outputs.new_sha }}' | cut -c1-7)"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "::notice::ブランチ $BRANCH が既に存在するためスキップします。"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -100,49 +116,23 @@ jobs:
         working-directory: scripts/mirror-build
         run: npm ci --omit=dev --ignore-scripts || npm install --omit=dev --ignore-scripts
 
-      # 検査可能な主張がどれも壊れていない場合。翻訳の判断が要らないので LLM を使わない。
-      - name: Bump the pinned SHA mechanically
-        if: steps.stale.outputs.verdict == 'sha-bump-only' && steps.existing.outputs.skip == 'false'
+      - name: Prepare the working branch
+        if: steps.existing.outputs.skip == 'false'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OLD: ${{ steps.stale.outputs.old_sha }}
-          NEW: ${{ steps.stale.outputs.new_sha }}
           BRANCH: ${{ steps.existing.outputs.branch }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git checkout -b "$BRANCH"
+          git -C "$UPSTREAM" checkout --quiet '${{ steps.stale.outputs.new_sha }}'
 
-          # 参照リンク・masthead バッジ・ビルド定数の SHA を張り替える
-          grep -rl "$OLD" docs mirror-src scripts AGENTS.md README.md 2>/dev/null \
-            | xargs -r sed -i "s/$OLD/$NEW/g"
-          SHORT_OLD=$(echo "$OLD" | cut -c1-7); SHORT_NEW=$(echo "$NEW" | cut -c1-7)
-          grep -rl "$SHORT_OLD" docs 2>/dev/null | xargs -r sed -i "s/$SHORT_OLD/$SHORT_NEW/g"
-          node -e '
-            const fs=require("fs"), p="docs/aidlc-workflows/meta.json";
-            const m=JSON.parse(fs.readFileSync(p,"utf8"));
-            m.analyzedCommit=process.env.NEW;
-            m.analyzedAt=new Date().toISOString().slice(0,10);
-            fs.writeFileSync(p, JSON.stringify(m,null,2)+"\n");
-          '
-
-          git -C "$UPSTREAM" checkout --quiet "$NEW" -- . 2>/dev/null || git -C "$UPSTREAM" checkout --quiet "$NEW"
-          MIRROR_ORIG="$UPSTREAM/docs" node scripts/mirror-build/build-mirror.mjs
-          UPSTREAM="$UPSTREAM" bash scripts/validate-refs.sh
-
-          git add -A
-          git commit -m "chore: retarget the note at upstream ${SHORT_NEW}" \
-            -m "The deterministic staleness check found no broken claim: docs/ is unchanged between ${SHORT_OLD} and ${SHORT_NEW}, every code excerpt still matches its cited lines, the asserted counts still hold, and all referenced paths still exist. Only the pinned SHA moves, so no prose was rewritten."
-          git push origin "$BRANCH"
-          gh pr create --title "chore: 基点コミットを ${SHORT_NEW} へ更新" --body "$(cat <<'EOF'
-          ## 概要
-          上流 `origin/v2` が進んだので基点コミットを張り替えました。決定論の検査では壊れた主張が見つからなかったため、文章の書き換えは行っていません。
-
-          検査内容は docs 差分・コード抜粋の行一致・実数値・参照パスの実在です。Actions のサマリに判定結果が出ています。
-
-          cc @mazyu36
-          EOF
-          )"
+      # 検査可能な主張がどれも壊れていない場合。翻訳の判断が要らないので LLM を使わない。
+      - name: Bump the pinned SHA mechanically
+        if: steps.stale.outputs.verdict == 'sha-bump-only' && steps.existing.outputs.skip == 'false'
+        env:
+          OLD: ${{ steps.stale.outputs.old_sha }}
+          NEW: ${{ steps.stale.outputs.new_sha }}
+        run: bash scripts/retarget-sha.sh "$OLD" "$NEW"
 
       - name: Configure AWS credentials (OIDC)
         if: steps.stale.outputs.verdict == 'needs-update' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
@@ -151,102 +141,188 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: us-west-2
 
-      - name: Update the note with Claude
-        if: steps.stale.outputs.verdict == 'needs-update' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+      # 系統 1: ミラー追随。上流 docs が変わった日だけ動く。
+      - name: Retranslate the mirror with Claude
+        id: mirror
+        continue-on-error: true
+        if: steps.stale.outputs.needs_mirror == 'true' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
         uses: anthropics/claude-code-action@v1
         env:
           UPSTREAM: /tmp/aidlc-upstream
         with:
           use_bedrock: "true"
-          # Bash の許可はコマンド名の前方一致で判定されるため、環境変数を前置した
-          # `MIRROR_ORIG=... node ...` やパイプを含む複合コマンドは個別パターンから漏れる。
-          # 漏れるたびに拒否とリトライでターンを消費し、上限に達して未完で終わる
-          # （初回実行は 11 回の拒否のあとターン 120 で打ち切られた）。ここでは Bash を
-          # 一括許可し、代わりに書き込み先をリポジトリ内に限る運用で担保する。
           claude_args: |
             --model us.anthropic.claude-opus-5
-            --max-turns 400
+            --max-turns 300
             --allowedTools "Read,Write,Edit,Glob,Grep,Bash"
           prompt: |
-            このリポジトリは awslabs/aidlc-workflows の v2 ブランチを解説する日本語ノートです。上流が進んだので追随させ、PR を作ってください。
+            このリポジトリは awslabs/aidlc-workflows の v2 ブランチを解説する日本語ノートです。上流 `docs/` が変わったので、逐語日本語訳（ミラー）を追随させてください。
+
+            この作業では**ミラーだけ**を扱います。解説ページ（`docs/aidlc-workflows/**`）と基点 SHA の張り替えは後続の別セッションが担当するので、触らないでください。
 
             ## 前提
-            - 上流の clone: `/tmp/aidlc-upstream`（`origin/v2` を fetch 済み）
+            - 上流の clone: `/tmp/aidlc-upstream`（新基点を checkout 済み）
             - 旧基点: `${{ steps.stale.outputs.old_sha }}`
-            - 新基点: `${{ steps.stale.outputs.new_sha }}`（${{ steps.stale.outputs.commits }} コミット先行）
-            - 作業ブランチ名: `${{ steps.existing.outputs.branch }}`
-            - 規約は `AGENTS.md` が正。文章規約・作図規約・参照規約はすべてそこに従う
+            - 新基点: `${{ steps.stale.outputs.new_sha }}`
+            - 変更された原文: ${{ steps.stale.outputs.docs_count }} ファイル
+            - 作業ブランチは既に作成済み。ブランチを切り直さないでください
+            - 規約は `AGENTS.md` の「docs ミラー（逐語日本語版）の規約」が正
+
+            ## Step 1: 対象を確認する
+            ```bash
+            node scripts/check-staleness.mjs
+            ```
+            `docs changed` に挙がったファイルだけが作業対象です。それ以外は触らないでください。
+
+            ## Step 2: 1 ファイルずつ追随させる
+            ファイルごとに次を繰り返します。原文や訳文の全体を読み直す必要はありません。差分が示した箇所の周辺だけを見てください。
+            ```bash
+            git -C /tmp/aidlc-upstream diff ${{ steps.stale.outputs.old_sha }}..${{ steps.stale.outputs.new_sha }} -- docs/<path>
+            ```
+            対応する `mirror-src/<同じ相対パス>` の該当箇所だけを訳し直します。規約は厳格です。
+
+            - 構造（見出し・コードフェンス・表）は原文と 1:1。パリティが崩れるとビルドが exit 2 で落ちる
+            - 逐語訳。原文の強調や構造をそのまま写す。解説ページの文章規約（bold 禁止など）はミラーには適用しない
+            - `docs/mirror/**.html` を直接編集しない。必ず `mirror-src/` を直す
+
+            ## Step 3: 再生成して検証する
+            全ファイルを直し終えてから 1 回だけ実行します。ファイルごとに再ビルドしないでください。
+            ```bash
+            MIRROR_ORIG=/tmp/aidlc-upstream/docs node scripts/mirror-build/build-mirror.mjs
+            ```
+            exit 0 と `built 91 page(s) + index` を確認します。落ちたらパリティ不一致なので直してください。
+
+            ## Step 4: コミットする
+            ```bash
+            git add -A
+            git commit -m "feat(mirror): 上流 docs の変更に追随"
+            ```
+            push も PR 作成もしないでください。後続のステップが行います。
+
+            ## 終われない場合
+            時間内に全部終わらないと判断したら、そこまでの成果をコミットしてください。コミットメッセージの本文に、未処理として残したファイルを列挙してください。何も残らないより部分的に進んだ方が有用です。
+
+      # 系統 2: 解説ページ。抜粋の行ズレ・実数値の陳腐化・参照切れがある日だけ動く。
+      - name: Update the authored pages with Claude
+        id: pages
+        continue-on-error: true
+        if: steps.stale.outputs.needs_pages == 'true' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+        uses: anthropics/claude-code-action@v1
+        env:
+          UPSTREAM: /tmp/aidlc-upstream
+        with:
+          use_bedrock: "true"
+          claude_args: |
+            --model us.anthropic.claude-opus-5
+            --max-turns 200
+            --allowedTools "Read,Write,Edit,Glob,Grep,Bash"
+          prompt: |
+            このリポジトリは awslabs/aidlc-workflows の v2 ブランチを解説する日本語ノートです。上流が進んで解説ページの記述が古くなったので、直してください。
+
+            この作業では**解説ページ（`docs/aidlc-workflows/**` と `docs/index.html`）**を扱います。ミラーの訳文（`mirror-src/**`）は先行セッションが追随済みなので、訳文の内容は触らないでください。
+
+            ## 前提
+            - 上流の clone: `/tmp/aidlc-upstream`（新基点を checkout 済み）
+            - 旧基点: `${{ steps.stale.outputs.old_sha }}`
+            - 新基点: `${{ steps.stale.outputs.new_sha }}`
+            - 作業ブランチは既に作成済み。ブランチを切り直さないでください
+            - 規約は `AGENTS.md` が正。文章規約（BLUF・1 文 60 字目安・bold は見出しのみ）と参照規約に従う
 
             ## Step 1: 何が壊れているかを確認する
             ```bash
             node scripts/check-staleness.mjs
             ```
-            この出力が作業範囲です。挙がっていないファイルは触らないでください。信号の意味は次のとおりです。
+            `excerpt drift` / `count drift` / `missing paths` に挙がったものが作業対象です。`docs changed` は先行セッションの担当なので無視してください。
 
-            - docs changed: 該当する `mirror-src/` の訳文を再翻訳する必要がある
-            - excerpt drift: そのページのコード抜粋が引用行とずれている。行番号か抜粋本文を直す
-            - count drift: ノートが書いている実数値が古い。該当箇所を新しい値に直す
-            - missing paths: 参照先が上流から消えた。リンクを差し替えるか記述を削る
-
-            ## Step 2: ブランチを作る
-            ```bash
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git checkout -b ${{ steps.existing.outputs.branch }}
-            ```
-
-            ## 進め方の指針
-            対象ファイルが多いときは、1 ファイルずつ「差分を見る → 該当箇所だけ直す」を回してください。原文全体や訳文全体を読み直す必要はありません。`git diff` が示した行の周辺だけを見て、対応する訳文の同じ箇所を直せば足ります。ターン数には上限があるので、確認のための再読み込みを繰り返さないでください。
-
-            検証（Step 6）は全ファイルを直し終えてから 1 回まとめて実行します。1 ファイルごとに再ビルドしないでください。
-
-            ## Step 3: 訳文を追随させる（docs changed がある場合）
-            変更された原文だけを対象にします。
-            ```bash
-            git -C /tmp/aidlc-upstream diff ${{ steps.stale.outputs.old_sha }}..${{ steps.stale.outputs.new_sha }} -- docs/<path>
-            ```
-            差分を読み、対応する `mirror-src/<同じ相対パス>.md` の該当箇所だけを訳し直します。ミラーの規約は厳格です。
-
-            - 構造（見出し・コードフェンス・表）は原文と 1:1。パリティが崩れるとビルドが exit 2 で落ちる
-            - 逐語訳。原文の強調や構造をそのまま写す。ノート本文の文章規約（bold 禁止など）はミラーには適用しない
-            - `docs/mirror/**.html` を直接編集しない。必ず `mirror-src/` を直して再生成する
-
-            ## Step 4: 抜粋と実数値を直す（excerpt drift / count drift がある場合）
-            抜粋は行番号が固定なので、新基点で実物を確認してから直します。
+            ## Step 2: 抜粋の行ズレを直す
+            行番号が固定なので、新基点で実物を確認してから直します。
             ```bash
             git -C /tmp/aidlc-upstream show ${{ steps.stale.outputs.new_sha }}:<path> | nl -ba | sed -n '<from>,<to>p'
             ```
             行がずれただけなら href アンカー・表示テキスト・`data-copy` の 3 箇所の行番号を更新します。コード自体が変わったなら抜粋本文と「動作:」の解説を書き直します。抜粋は連続した実在行を一字一句写し、中略や創作をしないでください。
 
-            実数値は本文・表・`stat-grid` のどこに出ているか grep して、漏れなく直します。
+            ## Step 3: 実数値を直す
+            ノートが書いている数値が上流と食い違っています。本文・表・`stat-grid`・`tree-view`・埋め込み SVG の `<text>` まで grep して漏れなく直してください。`scripts/check-staleness.mjs` の `claimed` 値も同じ数に更新します。
+
+            ## Step 4: 参照切れを直す
+            `missing paths` があれば、リンク先を新基点で存在するパスに差し替えるか、その記述自体を削ります。
 
             ## Step 5: 基点 SHA を張り替える
-            旧 SHA（40 桁と短縮 7 桁の両方）を新 SHA へ置換し、`meta.json` を更新します。
             ```bash
-            grep -rl ${{ steps.stale.outputs.old_sha }} docs mirror-src scripts AGENTS.md README.md | xargs -r sed -i 's/${{ steps.stale.outputs.old_sha }}/${{ steps.stale.outputs.new_sha }}/g'
+            bash scripts/retarget-sha.sh ${{ steps.stale.outputs.old_sha }} ${{ steps.stale.outputs.new_sha }}
             ```
-            `docs/aidlc-workflows/meta.json` の `analyzedCommit` と `analyzedAt` も更新します。
+            このスクリプトが旧 SHA（40 桁と短縮 7 桁）の置換、`meta.json` の更新、ミラーの再生成、参照検証まで行います。
 
             ## Step 6: 検証する（すべて通ること）
             ```bash
-            git -C /tmp/aidlc-upstream checkout ${{ steps.stale.outputs.new_sha }}
-            MIRROR_ORIG=/tmp/aidlc-upstream/docs node scripts/mirror-build/build-mirror.mjs   # exit 0 と 91 ページ
+            MIRROR_ORIG=/tmp/aidlc-upstream/docs node scripts/mirror-build/build-mirror.mjs   # exit 0 / 91 ページ
             UPSTREAM=/tmp/aidlc-upstream bash scripts/validate-refs.sh                        # missing: 0
             node scripts/check-staleness.mjs                                                  # up-to-date
             ```
-            落ちたら直してから進んでください。検証を通さずに PR を作らないこと。
+            落ちたら直してから進んでください。
 
-            ## Step 7: PR を作る
-            main へ直接コミットしないでください。必ずブランチから PR にします。
+            ## Step 7: コミットする
             ```bash
             git add -A
-            git commit -m "feat: 上流 <短縮SHA> に追随"
-            git push origin ${{ steps.existing.outputs.branch }}
+            git commit -m "feat(pages): 上流の変更にあわせて解説ページを更新"
             ```
-            PR 本文には、直した対象（再翻訳したファイル数、修正した抜粋、更新した数値）と検証結果を書き、末尾に `cc @mazyu36` を入れます。auto-merge は有効化しないでください（人間がレビューします）。
+            push も PR 作成もしないでください。後続のステップが行います。
 
             ## 図について
-            図の再生成には draw.io が必要で、この環境にはありません。図の更新が要ると判断した場合は、自分で作図せず PR 本文に「要手動対応」として何をどう直すべきか書いてください。
+            図の再生成には draw.io が必要で、この環境にはありません。図の更新が要ると判断した場合は、自分で作図せず `/tmp/manual-followup.md` に「要手動対応」として何をどう直すべきか書いてください。その内容が PR 本文に載ります。
 
-            ## 全部を終えられない場合
-            対象が多くて時間内に終わらないと判断したら、途中で放棄せず、そこまでの成果を PR にしてください。ビルドとリンク検証（Step 6 の前半 2 つ）だけは通した状態でコミットし、PR 本文に「未処理として残したファイル」を列挙し、タイトルの先頭に `[WIP]` を付けます。何も残らないより、部分的に進んだ PR が残る方が有用です。
+      # PR 起票は決定論ステップ。Claude が落ちても、そこまでの成果を PR として残す。
+      - name: Open the pull request
+        if: always() && steps.existing.outputs.skip == 'false' && (steps.stale.outputs.verdict != 'up-to-date' || inputs.force_llm == true)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.existing.outputs.branch }}
+          OLD: ${{ steps.stale.outputs.old_sha }}
+          NEW: ${{ steps.stale.outputs.new_sha }}
+          MIRROR_DONE: ${{ steps.mirror.outcome }}
+          PAGES_DONE: ${{ steps.pages.outcome }}
+        run: |
+          if git diff --quiet HEAD origin/main -- . 2>/dev/null; then
+            echo "変更なし。PR を作りません。"
+            exit 0
+          fi
+          if [ -z "$(git log origin/main..HEAD --oneline)" ]; then
+            echo "コミットがありません。PR を作りません。"
+            exit 0
+          fi
+
+          SHORT_NEW=$(echo "$NEW" | cut -c1-7)
+          git push origin "$BRANCH"
+
+          # 検証が通るかどうかで WIP 判定する
+          TITLE="feat: 上流 ${SHORT_NEW} に追随"
+          STATUS_OK=true
+          node scripts/check-staleness.mjs > /tmp/final-check.txt 2>&1 || STATUS_OK=false
+          if [ "$STATUS_OK" != true ]; then
+            TITLE="[WIP] feat: 上流 ${SHORT_NEW} に追随（未完）"
+          fi
+
+          {
+            echo "上流 \`awslabs/aidlc-workflows\` の \`v2\` を \`$(echo "$OLD" | cut -c1-7)\` → \`${SHORT_NEW}\` に追随させました。"
+            echo ""
+            echo "## コミット"
+            git log origin/main..HEAD --format='- %s'
+            echo ""
+            echo "## 追随後の検査結果"
+            echo '```'
+            cat /tmp/final-check.txt
+            echo '```'
+            if [ -f /tmp/manual-followup.md ]; then
+              echo ""
+              echo "## 要手動対応"
+              cat /tmp/manual-followup.md
+            fi
+            if [ "$STATUS_OK" != true ]; then
+              echo ""
+              echo "検査が \`up-to-date\` にならなかったため WIP です。残りを手元で仕上げてください。"
+            fi
+            echo ""
+            echo "cc @mazyu36"
+          } > /tmp/pr-body.md
+
+          gh pr create --title "$TITLE" --body-file /tmp/pr-body.md
