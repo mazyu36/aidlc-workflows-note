@@ -151,8 +151,11 @@ jobs:
           UPSTREAM: /tmp/aidlc-upstream
         with:
           use_bedrock: "true"
+          # ミラーは逐語訳で判断の要素が少なく、パリティゲートが構造の崩れを機械的に弾く。
+          # 実測のターン単価も解説側より短い（6.9 秒 / 9.2 秒）ので Sonnet で足りる。
+          # 解説ページ側は文章の判断が入るため Opus を維持する。
           claude_args: |
-            --model us.anthropic.claude-opus-5
+            --model us.anthropic.claude-sonnet-5
             --max-turns 300
             --allowedTools "Read,Write,Edit,Glob,Grep,Bash"
           prompt: |
