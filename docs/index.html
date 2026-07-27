@@ -16,7 +16,7 @@
 <header class="masthead">
   <a class="site" href="index.html">AI-DLC WORKFLOWS NOTE</a>
   <span class="here">トップ</span>
-  <a class="gh-link" href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46" title="分析基点: awslabs/aidlc-workflows @ ccf284b"><svg class="gh-mark" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-hash">ccf284b</span></a>
+  <a class="gh-link" href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be" title="分析基点: awslabs/aidlc-workflows @ 257b43a"><svg class="gh-mark" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-hash">257b43a</span></a>
 </header>
 
 <div class="layout no-nav">
@@ -42,22 +42,22 @@
   <div class="stat"><div class="stat-label">スコープ</div><div class="stat-value">9</div><div class="stat-detail">bugfix 7 〜 enterprise 32 ステージ</div></div>
   <div class="stat"><div class="stat-label">監査イベント</div><div class="stat-value">74</div><div class="stat-detail">19 カテゴリ・追記専用</div></div>
   <div class="stat"><div class="stat-label">配布ハーネス</div><div class="stat-value">5</div><div class="stat-detail">エンジンはバイト同一</div></div>
-  <div class="stat"><div class="stat-label">フック / ツール</div><div class="stat-value">13 / 30</div><div class="stat-detail">core の TypeScript 機構</div></div>
+  <div class="stat"><div class="stat-label">フック / ツール</div><div class="stat-value">13 / 31</div><div class="stat-detail">core の TypeScript 機構</div></div>
 </div>
 
 <h2 id="map">リポジトリの三層構造</h2>
-<p>手書きの正（core/ + harness/）→ パッケージャ（scripts/package.ts）→ コミット済み生成物（dist/）の一方通行。dist を書き換える PR は CI の --check が落とす。テストは 347 ファイルで、TUI・SDK・ACP の 3 方式で実ハーネスを駆動する e2e まで持つ。</p>
-<div class="tree-view"><span class="dir">core/</span>       <span class="comment"># 正: stages 32 / agents 14 / hooks 13 / tools 30 / knowledge 59 / scopes 9 / sensors 4</span>
+<p>手書きの正（core/ + harness/）→ パッケージャ（scripts/package.ts）→ コミット済み生成物（dist/）の一方通行。dist を書き換える PR は CI の --check が落とす。テストは 349 ファイルで、TUI・SDK・ACP の 3 方式で実ハーネスを駆動する e2e まで持つ。</p>
+<div class="tree-view"><span class="dir">core/</span>       <span class="comment"># 正: stages 32 / agents 14 / hooks 13 / tools 31 / knowledge 59 / scopes 9 / sensors 5</span>
 <span class="dir">harness/</span>    <span class="comment"># 5 ハーネスの投影レシピ（manifest.ts）+ adapter</span>
 <span class="dir">dist/</span>       <span class="comment"># 生成物（コミット済み・--check でドリフト検知）: claude / codex / kiro / kiro-ide / opencode / plugins</span>
 <span class="dir">plugins/</span>    <span class="comment"># サンプルプラグイン test-pro</span>
 <span class="dir">scripts/</span>    <span class="comment"># package.ts（パッケージャ）ほか</span>
 <span class="dir">docs/</span>       <span class="comment"># 公式ドキュメント 91 md（guide 37 / harness-engineering 11 / reference 41）</span>
-<span class="dir">tests/</span>      <span class="comment"># 347 テストファイル（smoke / unit / integration / e2e）</span>
+<span class="dir">tests/</span>      <span class="comment"># 349 テストファイル（smoke / unit / integration / e2e）</span>
 </div>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46">リポジトリルート（基点コミット）</a><button class="copy" type="button" data-copy="." aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/README.md">README.md</a><button class="copy" type="button" data-copy="README.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be">リポジトリルート（基点コミット）</a><button class="copy" type="button" data-copy="." aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/README.md">README.md</a><button class="copy" type="button" data-copy="README.md" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="pages">ページ索引</h2>
@@ -91,8 +91,8 @@
 <h2 id="sources">一次資料</h2>
 <ul>
   <li>方法論の原典である AWS ブログ記事 <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AI-Driven Development Life Cycle</a></li>
-  <li>リポジトリ同梱の仕様書 <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/assets/AI-DLC-Workflows-2.0-Specification.pdf">AI-DLC Workflows 2.0 Specification（PDF）</a></li>
-  <li>公式ドキュメント <a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs">docs/</a>（guide = 利用者向け / harness-engineering = 拡張者向け / reference = 開発者向け）</li>
+  <li>リポジトリ同梱の仕様書 <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/assets/AI-DLC-Workflows-2.0-Specification.pdf">AI-DLC Workflows 2.0 Specification（PDF）</a></li>
+  <li>公式ドキュメント <a href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs">docs/</a>（guide = 利用者向け / harness-engineering = 拡張者向け / reference = 開発者向け）</li>
 </ul>
 
 </main>

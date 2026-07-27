@@ -18,7 +18,7 @@
   <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../index.html">AI-DLC WORKFLOWS NOTE</a>
   <span class="here">aidlc-workflows / runtime</span>
-  <a class="gh-link" href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46" title="分析基点: awslabs/aidlc-workflows @ ccf284b"><svg class="gh-mark" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-hash">ccf284b</span></a>
+  <a class="gh-link" href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be" title="分析基点: awslabs/aidlc-workflows @ 257b43a"><svg class="gh-mark" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-hash">257b43a</span></a>
 </header>
 
 <div class="layout">
@@ -79,7 +79,7 @@ sequenceDiagram
 </pre>
 <p>ループの実体はスキル文書の 4 行の擬似コードで、エンジンと conductor の分業宣言は conductor.md の冒頭 5 行にある。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/aidlc-common/conductor.md#L3-L7">core/aidlc-common/conductor.md:3-7</a><button class="copy" type="button" data-copy="core/aidlc-common/conductor.md:3" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/aidlc-common/conductor.md#L3-L7">core/aidlc-common/conductor.md:3-7</a><button class="copy" type="button" data-copy="core/aidlc-common/conductor.md:3" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-markdown">You are the AI-DLC conductor. The forwarding loop in your runner's `SKILL.md`
 is the *mechanism* — get a directive from the engine, do that one move, report
 the outcome, repeat. This file is the irreducible *knowledge-work* the engine
@@ -88,15 +88,15 @@ is next; you own the quality of execution inside the move it named.</code></pre>
   <p class="excerpt-note">動作: LLM の裁量を「エンジンが指名した一手の中の実行品質」に限定する宣言。どのステージへ進むか・いつ止まるかの判断は LLM から取り上げられている。</p>
 </figure>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/harness/claude/skills/aidlc/SKILL.md#L38-L44">harness/claude/skills/aidlc/SKILL.md:38-44（ループ擬似コード）</a><button class="copy" type="button" data-copy="harness/claude/skills/aidlc/SKILL.md:38" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-orchestrate.ts">core/tools/aidlc-orchestrate.ts（4,009 行）</a><button class="copy" type="button" data-copy="core/tools/aidlc-orchestrate.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-directive.ts">core/tools/aidlc-directive.ts（directive の型）</a><button class="copy" type="button" data-copy="core/tools/aidlc-directive.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/harness/claude/skills/aidlc/SKILL.md#L38-L44">harness/claude/skills/aidlc/SKILL.md:38-44（ループ擬似コード）</a><button class="copy" type="button" data-copy="harness/claude/skills/aidlc/SKILL.md:38" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/tools/aidlc-orchestrate.ts">core/tools/aidlc-orchestrate.ts（4,009 行）</a><button class="copy" type="button" data-copy="core/tools/aidlc-orchestrate.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/tools/aidlc-directive.ts">core/tools/aidlc-directive.ts（directive の型）</a><button class="copy" type="button" data-copy="core/tools/aidlc-directive.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="protocol">ステージプロトコル　32 ステージが従う共通契約</h2>
-<p>各ステージは 1 枚の .md ファイルである。YAML frontmatter は 14 の authored フィールドを持つ。slug / phase / lead_agent / mode / produces / consumes / requires_stage がその一部である。本文は Steps / Sensors / Learn の順序が固定される。成果物のパスをステージファイルにハードコードすることは禁じられ、エンジンが directive 発行時に record dir の実パスへ解決する。全ステージの振る舞いは 1,128 行の stage-protocol.md が統べ、その中核が承認ゲートの HARD STOP 規則になる。</p>
+<p>各ステージは 1 枚の .md ファイルである。YAML frontmatter は 14 の authored フィールドを持つ。slug / phase / lead_agent / mode / produces / consumes / requires_stage がその一部である。本文は Steps / Sensors / Learn の順序が固定される。成果物のパスをステージファイルにハードコードすることは禁じられ、エンジンが directive 発行時に record dir の実パスへ解決する。全ステージの振る舞いは 1,147 行の stage-protocol.md が統べ、その中核が承認ゲートの HARD STOP 規則になる。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/aidlc-common/protocols/stage-protocol.md#L30-L35">core/aidlc-common/protocols/stage-protocol.md:30-35</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-protocol.md:30" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/aidlc-common/protocols/stage-protocol.md#L30-L35">core/aidlc-common/protocols/stage-protocol.md:30-35</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-protocol.md:30" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-markdown">### HARD STOP RULE (non-negotiable)
 
 When you present an approval gate question, you MUST end your turn immediately and wait for the user's explicit response. Do NOT call any tool until the user has typed their choice in a new message. An approval gate is a mandatory human checkpoint that cannot be inferred, auto-approved, or skipped.
@@ -106,14 +106,14 @@ Construction and Operation stages MUST use standardized 2-option completion mess
   <p class="excerpt-note">動作: ゲート提示後は即ターンを終え、ユーザーの新規メッセージまでツール呼び出しを禁じる。承認の推測・自動化・スキップを「交渉不能」と明記し、完了メッセージの形まで標準化して創発的なナビゲーションを塞ぐ。</p>
 </figure>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/aidlc-common/protocols/stage-definition.md">core/aidlc-common/protocols/stage-definition.md（frontmatter 仕様）</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-definition.md" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/aidlc-common/stages/inception/user-stories.md">stages/inception/user-stories.md（mob 実行の例）</a><button class="copy" type="button" data-copy="core/aidlc-common/stages/inception/user-stories.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/aidlc-common/protocols/stage-definition.md">core/aidlc-common/protocols/stage-definition.md（frontmatter 仕様）</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-definition.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/aidlc-common/stages/inception/user-stories.md">stages/inception/user-stories.md（mob 実行の例）</a><button class="copy" type="button" data-copy="core/aidlc-common/stages/inception/user-stories.md" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="routing">次ステージの決定　グラフ × スコープ × 状態上書き</h2>
 <p>routing の中心はただ 1 つのループである。コンパイル済みグラフを現在位置から前方へ歩き、完了・スキップ済みを飛ばし、スコープ行列で最初の EXECUTE ステージを返す。行列の判定では state 側の EXECUTE/SKIP 上書きが優先される。返すものがなければワークフロー完了になる。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-lib.ts#L4667-L4679">core/tools/aidlc-lib.ts:4667-4679（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:4667" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/tools/aidlc-lib.ts#L4667-L4679">core/tools/aidlc-lib.ts:4667-4679（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:4667" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-typescript">  for (let i = currentIdx + 1; i &lt; graph.length; i++) {
     const slug = graph[i].slug;
 
@@ -137,7 +137,7 @@ Construction and Operation stages MUST use standardized 2-option completion mess
 <figcaption>ステージの 6 状態と遷移。approve は次ステージの advance まで自動で連鎖する（auto-advance）。</figcaption>
 </figure>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/knowledge/aidlc-shared/state-template.md#L47-L62">core/knowledge/aidlc-shared/state-template.md:47-62</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/state-template.md:47" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/knowledge/aidlc-shared/state-template.md#L47-L62">core/knowledge/aidlc-shared/state-template.md:47-62</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/state-template.md:47" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-markdown">## Stage Progress
 &lt;!-- Checkbox states: [ ] pending, [-] in-progress, [?] awaiting approval, [R] revising, [x] completed, [S] skipped --&gt;
 
@@ -172,9 +172,9 @@ compiled stage in that phase:
             └── runtime-graph.json       <span class="comment"># データプレーンの読み取りモデル（gitignore）</span>
 </div>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-state.ts">core/tools/aidlc-state.ts（3,503 行・唯一の遷移実行者）</a><button class="copy" type="button" data-copy="core/tools/aidlc-state.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/knowledge/aidlc-shared/audit-format.md">core/knowledge/aidlc-shared/audit-format.md（74 イベントの台帳）</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/audit-format.md" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/10-state-and-audit.md">docs/guide/10-state-and-audit.md</a><button class="copy" type="button" data-copy="docs/guide/10-state-and-audit.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/tools/aidlc-state.ts">core/tools/aidlc-state.ts（3,503 行・唯一の遷移実行者）</a><button class="copy" type="button" data-copy="core/tools/aidlc-state.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/knowledge/aidlc-shared/audit-format.md">core/knowledge/aidlc-shared/audit-format.md（74 イベントの台帳）</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/audit-format.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/guide/10-state-and-audit.md">docs/guide/10-state-and-audit.md</a><button class="copy" type="button" data-copy="docs/guide/10-state-and-audit.md" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="hooks">フック 13 本　ハーネスイベントへの接続</h2>
@@ -196,16 +196,16 @@ compiled stage in that phase:
 </table>
 <p>非 Claude ハーネスは同じ 13 本をバイト同一のまま使う。authored な adapter 1 枚がネイティブイベントを Claude 形式の stdin へ正規化し、子プロセスとして実行する。写像はハーネスごとに違う。Codex の apply_patch はファイルごとの Write/Edit に展開され、Kiro の todo_list は TaskUpdate に対応する。opencode はフックレジストリ自体を持たないので、プラグインのハンドラ関数として同じ変換を行う。exit 2 と decision:block という流れを変えるチャネルも、各ハーネスのネイティブなブロック手段へ透過的に転送される。</p>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/harness/claude/settings.json#L146-L156">harness/claude/settings.json:146-156（Stop フックの束線）</a><button class="copy" type="button" data-copy="harness/claude/settings.json:146" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/hooks">core/hooks/（13 本の実体）</a><button class="copy" type="button" data-copy="core/hooks" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/harness/codex/hooks/aidlc-codex-adapter.ts">harness/codex/hooks/aidlc-codex-adapter.ts（adapter の例）</a><button class="copy" type="button" data-copy="harness/codex/hooks/aidlc-codex-adapter.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/harness/claude/settings.json#L146-L156">harness/claude/settings.json:146-156（Stop フックの束線）</a><button class="copy" type="button" data-copy="harness/claude/settings.json:146" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/hooks">core/hooks/（13 本の実体）</a><button class="copy" type="button" data-copy="core/hooks" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/harness/codex/hooks/aidlc-codex-adapter.ts">harness/codex/hooks/aidlc-codex-adapter.ts（adapter の例）</a><button class="copy" type="button" data-copy="harness/codex/hooks/aidlc-codex-adapter.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 
-<h2 id="cli">CLI 面　1 つのディスパッチャと 19 のツール</h2>
-<p><code>aidlc.ts</code>（1,083 行）はルーティング専用のシムである。受ける形は 2 系統ある。<code>aidlc &lt;verb&gt;</code> は 13 のトップレベル動詞を取る（next / report / park / compose / status / doctor / init ほか）。<code>aidlc &lt;noun&gt; &lt;verb&gt;</code> は 20 の名詞を取る（state / audit / graph / runtime / sensor / swarm / bolt / worktree / jump / learnings ほか）。いずれも 19 の兄弟ツールへ委譲する。エンジン中枢の orchestrate が公開するのは next / report / park の 3 動詞だけで、state は 24 動詞を持つ。「決める者は書かず、書く者は決めない」の分離が、CLI の面にもそのまま現れている。</p>
+<h2 id="cli">CLI 面　1 つのディスパッチャと 20 のツール</h2>
+<p><code>aidlc.ts</code>（1,087 行）はルーティング専用のシムである。受ける形は 2 系統ある。<code>aidlc &lt;verb&gt;</code> は 13 のトップレベル動詞を取る（next / report / park / compose / status / doctor / init ほか）。<code>aidlc &lt;noun&gt; &lt;verb&gt;</code> は 20 の名詞を取る（state / audit / graph / runtime / sensor / swarm / bolt / worktree / jump / learnings ほか）。いずれも 20 の兄弟ツールへ委譲する。エンジン中枢の orchestrate が公開するのは next / report / park の 3 動詞だけで、state は 24 動詞を持つ。「決める者は書かず、書く者は決めない」の分離が、CLI の面にもそのまま現れている。</p>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc.ts#L53-L73">core/tools/aidlc.ts:53-73（TOOLS 対応表）</a><button class="copy" type="button" data-copy="core/tools/aidlc.ts:53" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/guide/12-cli-commands.md">docs/guide/12-cli-commands.md</a><button class="copy" type="button" data-copy="docs/guide/12-cli-commands.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/tools/aidlc.ts#L53-L74">core/tools/aidlc.ts:53-74（TOOLS 対応表）</a><button class="copy" type="button" data-copy="core/tools/aidlc.ts:53" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/guide/12-cli-commands.md">docs/guide/12-cli-commands.md</a><button class="copy" type="button" data-copy="docs/guide/12-cli-commands.md" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="resume">再開・ジャンプ・復旧</h2>
@@ -217,9 +217,9 @@ compiled stage in that phase:
   <li>中断。park がステージ境界でワークフローを綺麗に停止させ、<code>/aidlc --resume</code> が解除する。</li>
 </ol>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/tools/aidlc-jump.ts">core/tools/aidlc-jump.ts</a><button class="copy" type="button" data-copy="core/tools/aidlc-jump.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/core/hooks/aidlc-session-start.ts">core/hooks/aidlc-session-start.ts</a><button class="copy" type="button" data-copy="core/hooks/aidlc-session-start.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/12-state-machine.md">docs/reference/12-state-machine.md</a><button class="copy" type="button" data-copy="docs/reference/12-state-machine.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/tools/aidlc-jump.ts">core/tools/aidlc-jump.ts</a><button class="copy" type="button" data-copy="core/tools/aidlc-jump.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/hooks/aidlc-session-start.ts">core/hooks/aidlc-session-start.ts</a><button class="copy" type="button" data-copy="core/hooks/aidlc-session-start.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/12-state-machine.md">docs/reference/12-state-machine.md</a><button class="copy" type="button" data-copy="docs/reference/12-state-machine.md" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 </main>

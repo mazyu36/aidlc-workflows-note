@@ -122,7 +122,7 @@
 <td>振る舞いの契約: 承認 gate、コンプライアンスチェックリスト</td>
 </tr>
 <tr>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/">Stages</a></td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/04-stages/">Stages</a></td>
 <td>phase ごとの stage ドキュメント（5 ファイル）</td>
 </tr>
 <tr>
@@ -186,19 +186,19 @@
 <td>すべての Mermaid 図を 1 箇所に</td>
 </tr>
 <tr>
-<td><a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/">Agents</a></td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/agents/">Agents</a></td>
 <td>技術的な agent リファレンス（frontmatter、ツール、stage の所有）</td>
 </tr>
 </tbody></table>
 <h2 id="how-to-navigate">ナビゲーションの仕方</h2>
 <ul>
 <li><strong>新しい関心事（rule、方法論、knowledge の事実）はどこに属すか？</strong> <a href="01-architecture.html#configuration-layers">Architecture: Configuration layers</a> を読む — 境界テストを備えた 2 軸モデル（著述 × 消費）が、あらゆる新しい関心事を正しいファイルへルーティングする。</li>
-<li><strong>新しい stage を足す？</strong> <a href="04-stage-protocol.html">Stage プロトコル</a>、続けて <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/04-stages/">Stages</a> の該当する phase ファイル、続けて <a href="11-contributing.html">Contributing</a> を読む。</li>
+<li><strong>新しい stage を足す？</strong> <a href="04-stage-protocol.html">Stage プロトコル</a>、続けて <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/04-stages/">Stages</a> の該当する phase ファイル、続けて <a href="11-contributing.html">Contributing</a> を読む。</li>
 <li><strong>stage 定義のフォーマットを変える？</strong> どの stage <code>.md</code> ファイルを編集する前にも <a href="15-stage-definition.html">Stage 定義</a> を読む。stage ファイルのフォーマットはデータ駆動である; ランタイムはコンパイル済みの JSON を読む。</li>
 <li><strong>成果物を足す、または改名する？</strong> <a href="16-artifact-vocabulary.html">Artifact Vocabulary</a> を読む — この章は命名規則、安定性ポリシー（改名/削除 = major、追加 = minor）を説明し、ライブなリストとして <code>bun aidlc-graph.ts artifacts</code> を指す。レジストリは stage ファイルから導出され、書かれるものではない。</li>
 <li><strong>新しい scope を足す？</strong> <a href="11-contributing.html#adding-a-scope">Contributing: Adding a Scope</a> を読む。scope はファイルで著述される — <code>.claude/scopes/aidlc-&lt;name&gt;.md</code> ファイルと、各メンバー stage の <code>scopes:</code> タグ — TypeScript の編集は不要である。</li>
 <li><strong>新しい agent を足す？</strong> <a href="11-contributing.html#adding-an-agent">Contributing: Adding an Agent</a> を読む。agent はその <code>.md</code> frontmatter を通じてデータ駆動である — TypeScript の編集は不要である。</li>
-<li><strong>agent を変更する？</strong> <a href="05-agent-system.html">Agent System</a> と、<a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/agents/">Agents</a> にある該当 agent のファイルを読む。</li>
+<li><strong>agent を変更する？</strong> <a href="05-agent-system.html">Agent System</a> と、<a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/agents/">Agents</a> にある該当 agent のファイルを読む。</li>
 <li><strong>hook に取り組む？</strong> <a href="06-hooks-and-tools.html">Hook とツール</a> と、hook のテストパターンとして <a href="09-testing.html">テスト</a> を読む。</li>
 <li><strong>orchestrator を変える？</strong> <a href="03-orchestrator.html">Orchestrator</a> と <a href="01-architecture.html">Architecture</a> を読む。audit イベントを足す、または変更するなら、<a href="12-state-machine.html">状態機械</a> の章から始める — そうしなければ drift テストが捕まえる。</li>
 </ul>
@@ -230,7 +230,7 @@
 </tbody></table>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/ccf284b501591b90b4081a8e1c7b261cc6d2df46/docs/reference/00-overview.md"><code>docs/reference/00-overview.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-23
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/00-overview.md"><code>docs/reference/00-overview.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-27
 </footer>
 </main>
 </div>
