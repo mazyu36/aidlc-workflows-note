@@ -38,7 +38,12 @@ jobs:
     env:
       UPSTREAM: /tmp/aidlc-upstream
     steps:
+      # push は GITHUB_TOKEN を明示した remote URL で行うため、checkout の認証情報に
+      # 依存しない。claude-code-action は後処理で App トークンを revoke するので、
+      # git config に認証を残す構成は当てにできない。
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -142,6 +147,15 @@ jobs:
           aws-region: us-west-2
 
       # 系統 1: ミラー追随。上流 docs が変わった日だけ動く。
+      - name: Load the mirror prompt
+        if: steps.stale.outputs.needs_mirror == 'true' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+        uses: ./.github/actions/load-prompt
+        with:
+          prompt-file: prompts/mirror.md
+          old-sha: ${{ steps.stale.outputs.old_sha }}
+          new-sha: ${{ steps.stale.outputs.new_sha }}
+          docs-count: ${{ steps.stale.outputs.docs_count }}
+
       - name: Retranslate the mirror with Claude
         id: mirror
         continue-on-error: true
@@ -158,54 +172,16 @@ jobs:
             --model us.anthropic.claude-sonnet-5
             --max-turns 300
             --allowedTools "Read,Write,Edit,Glob,Grep,Bash"
-          prompt: |
-            このリポジトリは awslabs/aidlc-workflows の v2 ブランチを解説する日本語ノートです。上流 `docs/` が変わったので、逐語日本語訳（ミラー）を追随させてください。
-
-            この作業では**ミラーだけ**を扱います。解説ページ（`docs/aidlc-workflows/**`）と基点 SHA の張り替えは後続の別セッションが担当するので、触らないでください。
-
-            ## 前提
-            - 上流の clone: `/tmp/aidlc-upstream`（新基点を checkout 済み）
-            - 旧基点: `${{ steps.stale.outputs.old_sha }}`
-            - 新基点: `${{ steps.stale.outputs.new_sha }}`
-            - 変更された原文: ${{ steps.stale.outputs.docs_count }} ファイル
-            - 作業ブランチは既に作成済み。ブランチを切り直さないでください
-            - 規約は `AGENTS.md` の「docs ミラー（逐語日本語版）の規約」が正
-
-            ## Step 1: 対象を確認する
-            ```bash
-            node scripts/check-staleness.mjs
-            ```
-            `docs changed` に挙がったファイルだけが作業対象です。それ以外は触らないでください。
-
-            ## Step 2: 1 ファイルずつ追随させる
-            ファイルごとに次を繰り返します。原文や訳文の全体を読み直す必要はありません。差分が示した箇所の周辺だけを見てください。
-            ```bash
-            git -C /tmp/aidlc-upstream diff ${{ steps.stale.outputs.old_sha }}..${{ steps.stale.outputs.new_sha }} -- docs/<path>
-            ```
-            対応する `mirror-src/<同じ相対パス>` の該当箇所だけを訳し直します。規約は厳格です。
-
-            - 構造（見出し・コードフェンス・表）は原文と 1:1。パリティが崩れるとビルドが exit 2 で落ちる
-            - 逐語訳。原文の強調や構造をそのまま写す。解説ページの文章規約（bold 禁止など）はミラーには適用しない
-            - `docs/mirror/**.html` を直接編集しない。必ず `mirror-src/` を直す
-
-            ## Step 3: 再生成して検証する
-            全ファイルを直し終えてから 1 回だけ実行します。ファイルごとに再ビルドしないでください。
-            ```bash
-            MIRROR_ORIG=/tmp/aidlc-upstream/docs node scripts/mirror-build/build-mirror.mjs
-            ```
-            exit 0 と `built 91 page(s) + index` を確認します。落ちたらパリティ不一致なので直してください。
-
-            ## Step 4: コミットする
-            ```bash
-            git add -A
-            git commit -m "feat(mirror): 上流 docs の変更に追随"
-            ```
-            push も PR 作成もしないでください。後続のステップが行います。
-
-            ## 終われない場合
-            時間内に全部終わらないと判断したら、そこまでの成果をコミットしてください。コミットメッセージの本文に、未処理として残したファイルを列挙してください。何も残らないより部分的に進んだ方が有用です。
-
+          prompt: ${{ env.AGENT_PROMPT }}
       # 系統 2: 解説ページ。抜粋の行ズレ・実数値の陳腐化・参照切れがある日だけ動く。
+      - name: Load the pages prompt
+        if: steps.stale.outputs.needs_pages == 'true' && steps.existing.outputs.skip == 'false' || inputs.force_llm == true
+        uses: ./.github/actions/load-prompt
+        with:
+          prompt-file: prompts/pages.md
+          old-sha: ${{ steps.stale.outputs.old_sha }}
+          new-sha: ${{ steps.stale.outputs.new_sha }}
+
       - name: Update the authored pages with Claude
         id: pages
         continue-on-error: true
@@ -219,61 +195,7 @@ jobs:
             --model us.anthropic.claude-opus-5
             --max-turns 200
             --allowedTools "Read,Write,Edit,Glob,Grep,Bash"
-          prompt: |
-            このリポジトリは awslabs/aidlc-workflows の v2 ブランチを解説する日本語ノートです。上流が進んで解説ページの記述が古くなったので、直してください。
-
-            この作業では**解説ページ（`docs/aidlc-workflows/**` と `docs/index.html`）**を扱います。ミラーの訳文（`mirror-src/**`）は先行セッションが追随済みなので、訳文の内容は触らないでください。
-
-            ## 前提
-            - 上流の clone: `/tmp/aidlc-upstream`（新基点を checkout 済み）
-            - 旧基点: `${{ steps.stale.outputs.old_sha }}`
-            - 新基点: `${{ steps.stale.outputs.new_sha }}`
-            - 作業ブランチは既に作成済み。ブランチを切り直さないでください
-            - 規約は `AGENTS.md` が正。文章規約（BLUF・1 文 60 字目安・bold は見出しのみ）と参照規約に従う
-
-            ## Step 1: 何が壊れているかを確認する
-            ```bash
-            node scripts/check-staleness.mjs
-            ```
-            `excerpt drift` / `count drift` / `missing paths` に挙がったものが作業対象です。`docs changed` は先行セッションの担当なので無視してください。
-
-            ## Step 2: 抜粋の行ズレを直す
-            行番号が固定なので、新基点で実物を確認してから直します。
-            ```bash
-            git -C /tmp/aidlc-upstream show ${{ steps.stale.outputs.new_sha }}:<path> | nl -ba | sed -n '<from>,<to>p'
-            ```
-            行がずれただけなら href アンカー・表示テキスト・`data-copy` の 3 箇所の行番号を更新します。コード自体が変わったなら抜粋本文と「動作:」の解説を書き直します。抜粋は連続した実在行を一字一句写し、中略や創作をしないでください。
-
-            ## Step 3: 実数値を直す
-            ノートが書いている数値が上流と食い違っています。本文・表・`stat-grid`・`tree-view`・埋め込み SVG の `<text>` まで grep して漏れなく直してください。`scripts/check-staleness.mjs` の `claimed` 値も同じ数に更新します。
-
-            ## Step 4: 参照切れを直す
-            `missing paths` があれば、リンク先を新基点で存在するパスに差し替えるか、その記述自体を削ります。
-
-            ## Step 5: 基点 SHA を張り替える
-            ```bash
-            bash scripts/retarget-sha.sh ${{ steps.stale.outputs.old_sha }} ${{ steps.stale.outputs.new_sha }}
-            ```
-            このスクリプトが旧 SHA（40 桁と短縮 7 桁）の置換、`meta.json` の更新、ミラーの再生成、参照検証まで行います。
-
-            ## Step 6: 検証する（すべて通ること）
-            ```bash
-            MIRROR_ORIG=/tmp/aidlc-upstream/docs node scripts/mirror-build/build-mirror.mjs   # exit 0 / 91 ページ
-            UPSTREAM=/tmp/aidlc-upstream bash scripts/validate-refs.sh                        # missing: 0
-            node scripts/check-staleness.mjs                                                  # up-to-date
-            ```
-            落ちたら直してから進んでください。
-
-            ## Step 7: コミットする
-            ```bash
-            git add -A
-            git commit -m "feat(pages): 上流の変更にあわせて解説ページを更新"
-            ```
-            push も PR 作成もしないでください。後続のステップが行います。
-
-            ## 図について
-            図の再生成には draw.io が必要で、この環境にはありません。図の更新が要ると判断した場合は、自分で作図せず `/tmp/manual-followup.md` に「要手動対応」として何をどう直すべきか書いてください。その内容が PR 本文に載ります。
-
+          prompt: ${{ env.AGENT_PROMPT }}
       # PR 起票は決定論ステップ。Claude が落ちても、そこまでの成果を PR として残す。
       - name: Open the pull request
         if: always() && steps.existing.outputs.skip == 'false' && (steps.stale.outputs.verdict != 'up-to-date' || inputs.force_llm == true)

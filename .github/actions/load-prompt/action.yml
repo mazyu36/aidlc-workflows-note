@@ -1,0 +1,43 @@
+name: Load prompt
+description: prompts/*.md を読み、許可した変数だけを展開して AGENT_PROMPT env に載せる
+
+# プロンプトを YAML に埋め込まないための仕掛け。埋め込むと 12 スペースのインデントに
+# 縛られて Markdown として編集できず、置換のたびに YAML を壊す危険がある（実際に壊した）。
+#
+# 展開は envsubst に渡した変数名だけに限定する。プロンプト本文には `${OLD_SHA}` のような
+# シェル変数に見える記法や、`$(...)` を含むコマンド例が入るため、無制限に展開すると
+# 意図しない置換が起きる。
+
+inputs:
+  prompt-file:
+    description: プロンプトファイルのパス（例 prompts/mirror.md）
+    required: true
+  old-sha:
+    description: 旧基点の 40 桁 SHA
+    required: true
+  new-sha:
+    description: 新基点の 40 桁 SHA
+    required: true
+  docs-count:
+    description: 変更された上流 docs のファイル数
+    required: false
+    default: '0'
+
+runs:
+  using: composite
+  steps:
+    - name: Load prompt
+      shell: bash
+      env:
+        OLD_SHA: ${{ inputs.old-sha }}
+        NEW_SHA: ${{ inputs.new-sha }}
+        DOCS_COUNT: ${{ inputs.docs-count }}
+        PROMPT_FILE: ${{ inputs.prompt-file }}
+      run: |
+        test -f "$PROMPT_FILE" || { echo "::error::プロンプトが見つかりません: $PROMPT_FILE"; exit 1; }
+        {
+          echo 'AGENT_PROMPT<<AGENT_PROMPT_EOF'
+          envsubst '$OLD_SHA $NEW_SHA $DOCS_COUNT' < "$PROMPT_FILE"
+          echo 'AGENT_PROMPT_EOF'
+        } >> "$GITHUB_ENV"
+        echo "読み込み: $PROMPT_FILE ($(wc -l < "$PROMPT_FILE") 行)"
