@@ -218,7 +218,7 @@ Lean path for the urgent production patch — regression test and deploy, nothin
 </li>
 <li><p><strong>plan の一致を検証する（任意だが推奨）</strong> — <code>AIDLC_GRAPH_RESOLVE=1 bun .claude/tools/aidlc-graph.ts resolve hotfix --stdout</code> が scope の plan を発する; EXECUTE 集合がタグ付けしたものに一致することを目視する。</p>
 </li>
-<li><p><strong>scope を意識したドキュメントを更新する</strong> — <code>docs/guide/05-scopes-and-depth.md</code>（完全な scope リファレンス）、<code>docs/guide/13-customization.md</code>（有効値のリストと scope テーブル）、<code>docs/reference/03-orchestrator.md</code>（scope から stage へのマッピング）はすべて scope を明示的に列挙する。本章末尾のドキュメントポリシーに従い、同じ PR で更新する。</p>
+<li><p><strong>scope を意識したドキュメントを更新する</strong> — <code>docs/guide/05-scopes-and-depth.md</code>（完全な scope リファレンス。Stage-by-Scope Matrix を含む — そのセルはコンパイル済み <code>scope-grid.json</code> に対して <code>tests/unit/t244-scope-matrix-doc-sync.test.ts</code> によりドリフトガードされる）、<code>docs/guide/13-customization.md</code>（有効値のリストと scope テーブル）、<code>docs/reference/03-orchestrator.md</code>（scope から stage へのマッピング）はすべて scope を明示的に列挙する。本章末尾のドキュメントポリシーに従い、同じ PR で更新する。</p>
 </li>
 <li><p><strong>scope ルーティングのワークフローテストを足す</strong> — scope が既存の scope と異なる振る舞い（新しい phase スキップパターン、新しい depth の組み合わせ）を持つなら、<code>tests/e2e/t53.test.ts</code>（sdk scope ルーティング）または <code>tests/e2e/t-tui-t50-bugfix-scope.serial.test.ts</code>（tui scope の通し）を手本にしたルーティング済み journey テストを足す。</p>
 </li>
@@ -249,7 +249,7 @@ Lean path for the urgent production patch — regression test and deploy, nothin
 </li>
 <li><p><strong>stage がルーティングされることを検証する</strong> — その stage を scope に含むワークフローに対して <code>bun .claude/tools/aidlc-orchestrate.ts next</code> を駆動し、engine が、解決された <code>lead_agent</code>、gate、<code>consumes</code>、<code>produces</code> とともにあなたの slug を名指す <code>run-stage</code> directive を発することを確認する。</p>
 </li>
-<li><p><strong>scope を意識した・stage を意識したドキュメントを更新する</strong> — 新しい stage は stage 数と scope ごとの plan を変える。<code>docs/reference/16-artifact-vocabulary.md</code>（初期化以外の stage 数）、Harness Engineer Guide の stage の章、そして plan を列挙する任意の scope リファレンスを更新する。本章末尾のドキュメントポリシーに従い、同じ PR で行う。</p>
+<li><p><strong>scope を意識した・stage を意識したドキュメントを更新する</strong> — 新しい stage は stage 数と scope ごとの plan を変える。<code>docs/guide/05-scopes-and-depth.md</code>（Stage-by-Scope Matrix — そのセルは <code>tests/unit/t244-scope-matrix-doc-sync.test.ts</code> によりドリフトガードされる）、<code>docs/reference/16-artifact-vocabulary.md</code>（初期化以外の stage 数）、Harness Engineer Guide の stage の章、そして plan を列挙する任意の scope リファレンスを更新する。本章末尾のドキュメントポリシーに従い、同じ PR で行う。</p>
 </li>
 <li><p><strong>テストを足してカバレッジをリフレッシュする</strong> — stage の振る舞いのための <code>t*.test.ts</code> を著述する（スイートは発見されるので、正しいレベルのディレクトリの下にファイルを落とすことがランナーに必要なすべてである — 足すべきレジストリ行は無い）。次に <code>bun tests/gen-coverage-registry.ts</code> でカバレッジインデックスを再生成し、<code>bun tests/gen-coverage-registry.ts --check</code> がクリーンであることを確認する。stage-runner drift guard <code>tests/unit/t129-stage-runner-drift.test.ts</code> は、生成された runner 集合がコンパイル済み stage 集合に等しいことをアサートし、<code>tests/integration/t55-test-suite-drift.test.ts</code> は古いパスとマーカーを掃引する。</p>
 </li>

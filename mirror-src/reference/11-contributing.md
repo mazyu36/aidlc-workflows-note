@@ -148,7 +148,7 @@ scope は、ファイル（そのアイデンティティ）に加えて stage �
 
 7. **plan の一致を検証する（任意だが推奨）** — `AIDLC_GRAPH_RESOLVE=1 bun .claude/tools/aidlc-graph.ts resolve hotfix --stdout` が scope の plan を発する; EXECUTE 集合がタグ付けしたものに一致することを目視する。
 
-8. **scope を意識したドキュメントを更新する** — `docs/guide/05-scopes-and-depth.md`（完全な scope リファレンス）、`docs/guide/13-customization.md`（有効値のリストと scope テーブル）、`docs/reference/03-orchestrator.md`（scope から stage へのマッピング）はすべて scope を明示的に列挙する。本章末尾のドキュメントポリシーに従い、同じ PR で更新する。
+8. **scope を意識したドキュメントを更新する** — `docs/guide/05-scopes-and-depth.md`（完全な scope リファレンス。Stage-by-Scope Matrix を含む — そのセルはコンパイル済み `scope-grid.json` に対して `tests/unit/t244-scope-matrix-doc-sync.test.ts` によりドリフトガードされる）、`docs/guide/13-customization.md`（有効値のリストと scope テーブル）、`docs/reference/03-orchestrator.md`（scope から stage へのマッピング）はすべて scope を明示的に列挙する。本章末尾のドキュメントポリシーに従い、同じ PR で更新する。
 
 9. **scope ルーティングのワークフローテストを足す** — scope が既存の scope と異なる振る舞い（新しい phase スキップパターン、新しい depth の組み合わせ）を持つなら、`tests/e2e/t53.test.ts`（sdk scope ルーティング）または `tests/e2e/t-tui-t50-bugfix-scope.serial.test.ts`（tui scope の通し）を手本にしたルーティング済み journey テストを足す。
 
@@ -180,7 +180,7 @@ stage は、`core/aidlc-common/stages/<phase>/<slug>.md` の下に YAML frontmat
 
 4. **stage がルーティングされることを検証する** — その stage を scope に含むワークフローに対して `bun .claude/tools/aidlc-orchestrate.ts next` を駆動し、engine が、解決された `lead_agent`、gate、`consumes`、`produces` とともにあなたの slug を名指す `run-stage` directive を発することを確認する。
 
-5. **scope を意識した・stage を意識したドキュメントを更新する** — 新しい stage は stage 数と scope ごとの plan を変える。`docs/reference/16-artifact-vocabulary.md`（初期化以外の stage 数）、Harness Engineer Guide の stage の章、そして plan を列挙する任意の scope リファレンスを更新する。本章末尾のドキュメントポリシーに従い、同じ PR で行う。
+5. **scope を意識した・stage を意識したドキュメントを更新する** — 新しい stage は stage 数と scope ごとの plan を変える。`docs/guide/05-scopes-and-depth.md`（Stage-by-Scope Matrix — そのセルは `tests/unit/t244-scope-matrix-doc-sync.test.ts` によりドリフトガードされる）、`docs/reference/16-artifact-vocabulary.md`（初期化以外の stage 数）、Harness Engineer Guide の stage の章、そして plan を列挙する任意の scope リファレンスを更新する。本章末尾のドキュメントポリシーに従い、同じ PR で行う。
 
 6. **テストを足してカバレッジをリフレッシュする** — stage の振る舞いのための `t*.test.ts` を著述する（スイートは発見されるので、正しいレベルのディレクトリの下にファイルを落とすことがランナーに必要なすべてである — 足すべきレジストリ行は無い）。次に `bun tests/gen-coverage-registry.ts` でカバレッジインデックスを再生成し、`bun tests/gen-coverage-registry.ts --check` がクリーンであることを確認する。stage-runner drift guard `tests/unit/t129-stage-runner-drift.test.ts` は、生成された runner 集合がコンパイル済み stage 集合に等しいことをアサートし、`tests/integration/t55-test-suite-drift.test.ts` は古いパスとマーカーを掃引する。
 
