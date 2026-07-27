@@ -14,7 +14,13 @@ const SRC_JA = process.env.MIRROR_SRC ?? path.join(REPO, "mirror-src");
 const OUT = process.env.MIRROR_OUT ?? path.join(REPO, "docs/mirror");
 const GH = `https://github.com/awslabs/aidlc-workflows/blob/${SHA}/`;
 const GH_TREE = `https://github.com/awslabs/aidlc-workflows/tree/${SHA}/`;
-const TODAY = process.env.MIRROR_DATE ?? new Date().toISOString().slice(0, 10);
+// footer に出す日付。ビルド時刻ではなく meta.json の analyzedAt（基点を張り替えたときだけ動く値）
+// を使う。ビルド日にすると再生成のたびに全 92 ファイルが差分になり、CI のドリフト検知が
+// 毎回誤検知するため。読者にとっても「いつ時点の上流を読んだか」の方が有用。
+const ANALYZED_AT = JSON.parse(
+  fs.readFileSync(path.join(REPO, "docs/aidlc-workflows/meta.json"), "utf8"),
+).analyzedAt;
+const TODAY = process.env.MIRROR_DATE ?? ANALYZED_AT;
 
 // 上流の Mermaid はライトテーマ前提の Material 配色（薄い塗り + 濃い線）を style/classDef 行に
 // ハードコードしており、ダーク地では文字が読めない。色相の意味（カテゴリ識別）を保ったまま

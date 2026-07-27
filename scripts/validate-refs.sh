@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# docs/ 内の GitHub blob/tree リンク（SHA 固定）を、ghq 配下のローカル clone の
-# git オブジェクトと突き合わせて検証する。missing: 0 になるまでページを直すこと。
-# 対象 owner: awslabs（aidlc-workflows）。clone は <ghq-root>/github.com/awslabs/<repo>。
+# docs/ 内の GitHub blob/tree リンク（SHA 固定）を、ローカル clone の git オブジェクトと
+# 突き合わせて検証する。missing: 0 になるまでページを直すこと。
+# 対象 owner: awslabs（aidlc-workflows）。
+#
+# clone の探索順:
+#   1. UPSTREAM 環境変数（CI 向け。aidlc-workflows の clone を直接指す）
+#   2. <ghq-root>/github.com/awslabs/<repo>（ローカル作業向け）
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -21,8 +25,12 @@ while IFS= read -r url; do
   # URL エンコード（%20 等）を git オブジェクト名に合わせてデコードする
   [ -n "$path" ] && path=$(printf '%b' "${path//%/\\x}")
 
-  d="$GHQ_ROOT/github.com/awslabs/$repo"
-  if [ ! -d "$d/.git" ]; then
+  if [ -n "${UPSTREAM:-}" ]; then
+    d="$UPSTREAM"
+  else
+    d="$GHQ_ROOT/github.com/awslabs/$repo"
+  fi
+  if [ ! -d "$d/.git" ] && [ ! -f "$d/.git" ]; then
     echo "SKIP (clone なし): $url"
     continue
   fi

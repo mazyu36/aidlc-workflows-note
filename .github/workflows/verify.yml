@@ -1,0 +1,97 @@
+name: Verify
+
+# 決定論の検証のみ。AWS も Bedrock も触らないので OIDC を要求しない。
+# fork からの PR でも安全に動く（シークレットを使わない）。
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'mirror-src/**', 'scripts/**', '.github/workflows/verify.yml']
+  pull_request:
+    paths: ['docs/**', 'mirror-src/**', 'scripts/**', '.github/workflows/verify.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Read the analysed commit
+        id: meta
+        run: |
+          SHA=$(jq -r .analyzedCommit docs/aidlc-workflows/meta.json)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "ノートの基点: $SHA"
+
+      # パリティ検証とアンカー計算に原文が必要。基点コミットだけを浅く取得する。
+      - name: Fetch upstream at the analysed commit
+        run: |
+          git init --quiet /tmp/aidlc-upstream
+          git -C /tmp/aidlc-upstream remote add origin https://github.com/awslabs/aidlc-workflows
+          git -C /tmp/aidlc-upstream fetch --quiet --depth 1 origin '${{ steps.meta.outputs.sha }}'
+          git -C /tmp/aidlc-upstream checkout --quiet FETCH_HEAD
+          test -d /tmp/aidlc-upstream/docs
+
+      - name: Install build dependencies
+        working-directory: scripts/mirror-build
+        run: npm ci --omit=dev --ignore-scripts || npm install --omit=dev --ignore-scripts
+
+      # ミラーを再生成する。見出し・フェンスのパリティ不一致は exit 2 で落ちる。
+      - name: Rebuild the mirror (parity gate)
+        env:
+          MIRROR_ORIG: /tmp/aidlc-upstream/docs
+        run: node scripts/mirror-build/build-mirror.mjs
+
+      # コミット済みの docs/mirror が mirror-src から再現できることを保証する。
+      # 生成物を手で編集した PR はここで落ちる。
+      - name: Detect committed-output drift
+        run: |
+          if ! git diff --quiet -- docs/mirror; then
+            echo '::error::docs/mirror が mirror-src から再生成した結果と一致しません。build-mirror.mjs を実行して結果をコミットしてください。'
+            git diff --stat -- docs/mirror
+            exit 1
+          fi
+          echo "ドリフトなし"
+
+      - name: Validate SHA-pinned references
+        env:
+          UPSTREAM: /tmp/aidlc-upstream
+        run: bash scripts/validate-refs.sh
+
+  # 図と Mermaid の実描画。ブラウザ導入に時間がかかるので独立ジョブにする。
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: scripts/mirror-build
+        run: npm ci --ignore-scripts || npm install --ignore-scripts
+
+      - name: Install Chromium
+        working-directory: scripts/mirror-build
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve docs
+        run: |
+          python3 -m http.server 8000 --directory docs &
+          for i in $(seq 1 20); do
+            curl -sf -o /dev/null http://127.0.0.1:8000/index.html && break
+            sleep 1
+          done
+
+      - name: Check rendering
+        run: node scripts/mirror-build/check-render.mjs http://127.0.0.1:8000/mirror
