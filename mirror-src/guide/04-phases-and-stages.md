@@ -131,7 +131,7 @@ flowchart TD
 | 1.6 | Rough Mockups | aidlc-design-agent | aidlc-product-agent | ワイヤーフレーム、ユーザーフロー、コンセプトデッキ | CONDITIONAL |
 | 1.7 | Approval & Handoff | aidlc-delivery-agent | aidlc-product-agent | initiative brief、決定ログ | ALWAYS |
 
-**stage の色:** 緑 = ALWAYS（すべての scope で実行）。黄 = CONDITIONAL（一部の scope でスキップ）。
+**stage の色:** 緑 = ALWAYS（選択した scope に含まれていれば必ず実行）。黄 = CONDITIONAL（scope・プロジェクト種別・plan によってスキップされることがある）。scope ごとの正確な stage 所属は [scope 別 stage マトリクス](05-scopes-and-depth.md#stage-by-scope-matrix) を参照。
 
 Intent Capture は、最初の記述・ワークフローが選んだ scope・使用した memory rule を
 その questions ファイルに記録する。intent statement と stakeholder map の主張には
@@ -419,7 +419,7 @@ flowchart TD
 
 ## 次のステップ
 
-- [Scope・Depth・テスト戦略](05-scopes-and-depth.md) — scope がどの stage を実行するかを制御する仕組み
+- [Scope・Depth・テスト戦略](05-scopes-and-depth.md) — scope がどの stage を実行するかを制御する仕組み、完全な [scope 別 stage マトリクス](05-scopes-and-depth.md#stage-by-scope-matrix) を含む
 - [エージェント](06-agents.md) — 14 エージェントの一覧と、ドメイン・レビュー・構成の役割
 - [最初のワークフロー](02-your-first-workflow.md) — 注釈付きウォークスルー
 - [用語集](glossary.md) — 用語リファレンス
