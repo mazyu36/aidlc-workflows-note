@@ -18,7 +18,7 @@
   <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
   <a class="site" href="../index.html">AI-DLC WORKFLOWS NOTE</a>
   <span class="here">aidlc-workflows / architecture</span>
-  <a class="gh-link" href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be" title="分析基点: awslabs/aidlc-workflows @ 257b43a"><svg class="gh-mark" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-hash">257b43a</span></a>
+  <a class="gh-link" href="https://github.com/awslabs/aidlc-workflows/tree/9f9145442429440ccd93f22e27186aa428007e5a" title="分析基点: awslabs/aidlc-workflows @ 9f91454"><svg class="gh-mark" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-hash">9f91454</span></a>
 </header>
 
 <div class="layout">
@@ -68,9 +68,9 @@
 <span class="dir">tests/</span>                       <span class="comment"># 349 テストファイル（smoke / unit / integration / e2e + 独自駆動基盤）</span>
 </div>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be/core">core/</a><button class="copy" type="button" data-copy="core" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be/harness">harness/</a><button class="copy" type="button" data-copy="harness" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/257b43a3b7f8cda1f8b8901077c0423194bc53be/dist">dist/</a><button class="copy" type="button" data-copy="dist" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/9f9145442429440ccd93f22e27186aa428007e5a/core">core/</a><button class="copy" type="button" data-copy="core" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/9f9145442429440ccd93f22e27186aa428007e5a/harness">harness/</a><button class="copy" type="button" data-copy="harness" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/9f9145442429440ccd93f22e27186aa428007e5a/dist">dist/</a><button class="copy" type="button" data-copy="dist" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="pipeline">パッケージングパイプライン　buildTree() の 8 手</h2>
@@ -87,7 +87,7 @@
 </figure>
 <p>変換は 1 クラスしかない。対象は .md のみで、.ts と .json は無変換でコピーされる。エンジンがハーネス間でバイト同一なのはこのためである。.md に走る書き換えは 3 つある。<code>{{HARNESS_DIR}}</code> トークンの置換（.claude / .kiro / .codex / .aidlc）、rules ディレクトリ名の文中リネーム、エージェント frontmatter の tier 投影である。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/scripts/package.ts#L238-L252">scripts/package.ts:238-252</a><button class="copy" type="button" data-copy="scripts/package.ts:238" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/scripts/package.ts#L238-L252">scripts/package.ts:238-252</a><button class="copy" type="button" data-copy="scripts/package.ts:238" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-typescript">function transform(
   srcPath: string,
   content: Buffer,
@@ -106,14 +106,14 @@
   <p class="excerpt-note">動作: パッケージャの変換全体がこの 1 関数。<code>.md</code> だけがトークン置換・rules リネーム・tier 投影の 3 書き換えを受け、それ以外（エンジンの .ts、データの .json）は Buffer のまま素通しになる。</p>
 </figure>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/scripts/package.ts">scripts/package.ts（buildTree 全体）</a><button class="copy" type="button" data-copy="scripts/package.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/harness-engineering/00-overview.md">docs/harness-engineering/00-overview.md</a><button class="copy" type="button" data-copy="docs/harness-engineering/00-overview.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/scripts/package.ts">scripts/package.ts（buildTree 全体）</a><button class="copy" type="button" data-copy="scripts/package.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/docs/harness-engineering/00-overview.md">docs/harness-engineering/00-overview.md</a><button class="copy" type="button" data-copy="docs/harness-engineering/00-overview.md" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="manifest">manifest 契約　ハーネスはデータ、コードは emit() だけ</h2>
 <p>ハーネスの追加・差異は原則としてデータ（manifest の宣言）で表現し、コードを書けるのは任意の emit() 1 箇所に限る。この契約により、新ハーネスの追加は「harness/ に 1 ディレクトリ + manifest 1 枚」で済み、共有コードの編集はゼロになる。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/scripts/manifest-types.ts#L67-L82">scripts/manifest-types.ts:67-82</a><button class="copy" type="button" data-copy="scripts/manifest-types.ts:67" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/scripts/manifest-types.ts#L67-L82">scripts/manifest-types.ts:67-82</a><button class="copy" type="button" data-copy="scripts/manifest-types.ts:67" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-typescript">export type HarnessManifest = {
   /** Harness name; matches the dist/&lt;name&gt;/ and harness/&lt;name&gt;/ dir. */
   name: string;
@@ -143,9 +143,9 @@
   </tbody>
 </table>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/harness/claude/manifest.ts">harness/claude/manifest.ts</a><button class="copy" type="button" data-copy="harness/claude/manifest.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/harness/codex/manifest.ts">harness/codex/manifest.ts</a><button class="copy" type="button" data-copy="harness/codex/manifest.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/harness-engineering/09-porting-to-a-new-harness.md">docs/harness-engineering/09-porting-to-a-new-harness.md</a><button class="copy" type="button" data-copy="docs/harness-engineering/09-porting-to-a-new-harness.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/harness/claude/manifest.ts">harness/claude/manifest.ts</a><button class="copy" type="button" data-copy="harness/claude/manifest.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/harness/codex/manifest.ts">harness/codex/manifest.ts</a><button class="copy" type="button" data-copy="harness/codex/manifest.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/docs/harness-engineering/09-porting-to-a-new-harness.md">docs/harness-engineering/09-porting-to-a-new-harness.md</a><button class="copy" type="button" data-copy="docs/harness-engineering/09-porting-to-a-new-harness.md" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="tiers">モデル tier の投影　判断の重さを 1 語で宣言する</h2>
@@ -160,8 +160,8 @@
 </table>
 <p>コスト上限は <code>AIDLC_TIER_CAP</code> 環境変数、または memory の <code>tier_cap:</code> キー（org → team → project の後勝ち）で一括して下方修正できる。tier は下がる方向にしか動かない。</p>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/tools/aidlc-tiers.ts#L101-L125">core/tools/aidlc-tiers.ts:101-125（TIER_PROJECTIONS）</a><button class="copy" type="button" data-copy="core/tools/aidlc-tiers.ts:101" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/scripts/package.ts">scripts/package.ts（projectTierFrontmatter）</a><button class="copy" type="button" data-copy="scripts/package.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/core/tools/aidlc-tiers.ts#L101-L125">core/tools/aidlc-tiers.ts:101-125（TIER_PROJECTIONS）</a><button class="copy" type="button" data-copy="core/tools/aidlc-tiers.ts:101" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/scripts/package.ts">scripts/package.ts（projectTierFrontmatter）</a><button class="copy" type="button" data-copy="scripts/package.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="planes">プレーンアーキテクチャ　compile 境界で結ばれた 3 面</h2>
@@ -175,8 +175,8 @@
   </tbody>
 </table>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/docs/reference/02-plane-architecture.md">docs/reference/02-plane-architecture.md</a><button class="copy" type="button" data-copy="docs/reference/02-plane-architecture.md" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/core/tools/aidlc-graph.ts">core/tools/aidlc-graph.ts（compile の実装）</a><button class="copy" type="button" data-copy="core/tools/aidlc-graph.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/docs/reference/02-plane-architecture.md">docs/reference/02-plane-architecture.md</a><button class="copy" type="button" data-copy="docs/reference/02-plane-architecture.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/core/tools/aidlc-graph.ts">core/tools/aidlc-graph.ts（compile の実装）</a><button class="copy" type="button" data-copy="core/tools/aidlc-graph.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 <div class="callout">
   <span class="callout-title">補足</span>
@@ -186,8 +186,8 @@
 <h2 id="install">インストール　dist をコピーするだけ</h2>
 <p>インストーラは存在しない。対象ハーネスの dist をプロジェクトへコピーすれば完了する。Claude Code なら <code>cp -r dist/claude/.claude/ your-project/.claude/</code> と <code>dist/claude/aidlc/</code> の 2 つで済む。実行時の前提は bun 1 つである。置かれるものはどのハーネスでも 3 点である。エンジン一式の <code>&lt;harnessDir&gt;/</code>、onboarding 文書（CLAUDE.md / AGENTS.md）、即動作するワークスペース雛形 <code>aidlc/</code> にあたる。雛形には active-space=default と編集可能な memory/ が入る。</p>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/README.md">README.md（ハーネス別 Quick Start）</a><button class="copy" type="button" data-copy="README.md" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/257b43a3b7f8cda1f8b8901077c0423194bc53be/scripts/onboarding.ts">scripts/onboarding.ts（onboarding 文書の描画器）</a><button class="copy" type="button" data-copy="scripts/onboarding.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/README.md">README.md（ハーネス別 Quick Start）</a><button class="copy" type="button" data-copy="README.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/scripts/onboarding.ts">scripts/onboarding.ts（onboarding 文書の描画器）</a><button class="copy" type="button" data-copy="scripts/onboarding.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 <p>非 Claude ハーネスでのフック接続は<a href="runtime.html#hooks">実行モデル</a>で扱う。adapter がネイティブイベントを Claude 形式に正規化し、バイト同一の core hooks に流す仕組みである。</p>
 
