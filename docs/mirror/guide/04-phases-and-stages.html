@@ -283,7 +283,7 @@ flowchart TD
 <td>ALWAYS</td>
 </tr>
 </tbody></table>
-<p><strong>stage の色:</strong> 緑 = ALWAYS（すべての scope で実行）。黄 = CONDITIONAL（一部の scope でスキップ）。</p>
+<p><strong>stage の色:</strong> 緑 = ALWAYS（選択した scope に含まれていれば必ず実行）。黄 = CONDITIONAL（scope・プロジェクト種別・plan によってスキップされることがある）。scope ごとの正確な stage 所属は <a href="05-scopes-and-depth.html#stage-by-scope-matrix">scope 別 stage マトリクス</a> を参照。</p>
 <p>Intent Capture は、最初の記述・ワークフローが選んだ scope・使用した memory rule を
 その questions ファイルに記録する。intent statement と stakeholder map の主張には
 インラインの source タグが付き、両方の artifact が assumption と未解決の問いを
@@ -743,7 +743,7 @@ flowchart TD
 <hr>
 <h2 id="next-steps">次のステップ</h2>
 <ul>
-<li><a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> — scope がどの stage を実行するかを制御する仕組み</li>
+<li><a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> — scope がどの stage を実行するかを制御する仕組み、完全な <a href="05-scopes-and-depth.html#stage-by-scope-matrix">scope 別 stage マトリクス</a> を含む</li>
 <li><a href="06-agents.html">エージェント</a> — 14 エージェントの一覧と、ドメイン・レビュー・構成の役割</li>
 <li><a href="02-your-first-workflow.html">最初のワークフロー</a> — 注釈付きウォークスルー</li>
 <li><a href="glossary.html">用語集</a> — 用語リファレンス</li>

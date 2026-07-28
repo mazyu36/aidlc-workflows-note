@@ -71,6 +71,7 @@
   <div class="group">このページの目次</div>
   <a href="#the-9-core-scopes">9 つのコア scope</a>
   <a href="#scope-routing-table">scope ルーティング表</a>
+  <a href="#stage-by-scope-matrix">scope 別 stage マトリクス</a>
   <a href="#auto-detection-from-freeform-intent">自由記述 intent からの自動検出</a>
   <a href="#the-adaptive-composer">適応コンポーザー</a>
   <a href="#the-3-depth-levels">3 つの depth レベル</a>
@@ -240,6 +241,430 @@
 <blockquote>
 <p><strong>プロジェクト単位の既定 scope:</strong> チームは <code>.claude/settings.json</code> の <code>AWS_AIDLC_DEFAULT_SCOPE</code> でプロジェクトの既定 scope を事前設定できる — 全参加者がフラグを覚えずに <code>workshop</code> から始めるべきワークショップで有用である。<a href="13-customization.html#per-project-default-scope">カスタマイズ § プロジェクト単位の既定 scope</a> を参照。</p>
 </blockquote>
+<hr>
+<h2 id="stage-by-scope-matrix">scope 別 stage マトリクス</h2>
+<p>上のルーティング表は数を示す。このマトリクスは、各既成 scope の下で厳密に<strong>どの</strong> stage が実行されるかを示す — ワークフローを始める前に、何を通過することになるかが分かる。✓ はその scope で stage が EXECUTE であることを意味し、空のセルは SKIP を意味する。stage 番号と名前は <a href="04-phases-and-stages.html">Phases and Stages</a> と一致する。</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Stage</th>
+<th align="center"><code>enterprise</code></th>
+<th align="center"><code>feature</code></th>
+<th align="center"><code>mvp</code></th>
+<th align="center"><code>poc</code></th>
+<th align="center"><code>bugfix</code></th>
+<th align="center"><code>refactor</code></th>
+<th align="center"><code>infra</code></th>
+<th align="center"><code>security-patch</code></th>
+<th align="center"><code>workshop</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.1–0.3</td>
+<td>Initialization (all 3 stages)</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>Intent Capture &amp; Framing</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>Market Research</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>Feasibility &amp; Constraints</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>Scope Definition</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>Team Formation</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td>1.6</td>
+<td>Rough Mockups</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td>1.7</td>
+<td>Approval &amp; Handoff</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>Reverse Engineering</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>Practices Discovery</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>Requirements Analysis</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td>User Stories</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>2.5</td>
+<td>Refined Mockups</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>2.6</td>
+<td>Application Design</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>2.7</td>
+<td>Units Generation</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>2.8</td>
+<td>Delivery Planning</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>Functional Design</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>NFR Requirements</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td>NFR Design</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td>Infrastructure Design</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td>Code Generation</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>3.6</td>
+<td>Build and Test</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>3.7</td>
+<td>CI Pipeline</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>4.1</td>
+<td>Deployment Pipeline</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>Environment Provisioning</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>Deployment Execution</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>4.4</td>
+<td>Observability Setup</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>4.5</td>
+<td>Incident Response</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>4.6</td>
+<td>Performance Validation</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td>4.7</td>
+<td>Feedback &amp; Optimization</td>
+<td align="center">✓</td>
+<td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">✓</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>Total stages</strong></td>
+<td align="center"><strong>32</strong></td>
+<td align="center"><strong>32</strong></td>
+<td align="center"><strong>22</strong></td>
+<td align="center"><strong>8</strong></td>
+<td align="center"><strong>7</strong></td>
+<td align="center"><strong>8</strong></td>
+<td align="center"><strong>13</strong></td>
+<td align="center"><strong>10</strong></td>
+<td align="center"><strong>25</strong></td>
+</tr>
+</tbody></table>
+<p>✓ は静的な scope 所属を示す — その stage が scope の plan に含まれることを意味し、無条件に実行されることを意味しない。CONDITIONAL の stage は、その条件が成り立たない場合に実行時にスキップされることがある（例えば Reverse Engineering は brownfield プロジェクトでのみ実行される）。また pending stage は承認済みの composer 提案によって組み替えられることがある（<a href="#the-adaptive-composer">the composer</a> を参照）。合成（カスタム）scope はここに列挙しない — そのグリッドは既成のものと並んで <code>scope-grid.json</code> に存在する。</p>
 <hr>
 <h2 id="auto-detection-from-freeform-intent">自由記述 intent からの自動検出</h2>
 <p>scope を明示的に指定する必要はない。作りたいものを記述すれば、orchestrator がキーワードから適切な scope を検出する:</p>
@@ -537,7 +962,7 @@ You can request different depth or test strategy at any approval gate.</code></p
 <td><code>workshop</code></td>
 </tr>
 </tbody></table>
-<p>迷ったら <code>feature</code> から始める — 全 32 stage を含み、個々の stage は承認 gate でスキップできる。</p>
+<p>迷ったら <code>feature</code> から始める — 全 32 stage を含み、CONDITIONAL の stage は自分のプロジェクトに条件が当てはまらない場合に自ら自己スキップする。</p>
 <hr>
 <h2 id="next-steps">次のステップ</h2>
 <ul>

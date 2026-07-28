@@ -108,6 +108,52 @@ scope の儀式の重さは桁で違う: `poc` は 8 stage・承認 gate 5 個�
 
 ---
 
+## scope 別 stage マトリクス
+
+上のルーティング表は数を示す。このマトリクスは、各既成 scope の下で厳密に**どの** stage が実行されるかを示す — ワークフローを始める前に、何を通過することになるかが分かる。✓ はその scope で stage が EXECUTE であることを意味し、空のセルは SKIP を意味する。stage 番号と名前は [Phases and Stages](04-phases-and-stages.md) と一致する。
+
+<!-- BEGIN scope-stage-matrix: derived from each stage's `scopes:` frontmatter via the compiled scope-grid.json — kept in sync by tests/unit/t244-scope-matrix-doc-sync.test.ts; do not hand-edit cells without re-checking that test -->
+
+| # | Stage | `enterprise` | `feature` | `mvp` | `poc` | `bugfix` | `refactor` | `infra` | `security-patch` | `workshop` |
+|---|-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 0.1–0.3 | Initialization (all 3 stages) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 1.1 | Intent Capture & Framing | ✓ | ✓ | ✓ | ✓ |  |  |  |  |  |
+| 1.2 | Market Research | ✓ | ✓ |  |  |  |  |  |  |  |
+| 1.3 | Feasibility & Constraints | ✓ | ✓ | ✓ |  |  |  |  |  |  |
+| 1.4 | Scope Definition | ✓ | ✓ | ✓ |  |  |  |  |  |  |
+| 1.5 | Team Formation | ✓ | ✓ |  |  |  |  |  |  |  |
+| 1.6 | Rough Mockups | ✓ | ✓ | ✓ |  |  |  |  |  |  |
+| 1.7 | Approval & Handoff | ✓ | ✓ |  |  |  |  |  |  |  |
+| 2.1 | Reverse Engineering | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  | ✓ | ✓ |
+| 2.2 | Practices Discovery | ✓ | ✓ | ✓ |  |  |  | ✓ |  | ✓ |
+| 2.3 | Requirements Analysis | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 2.4 | User Stories | ✓ | ✓ | ✓ |  |  |  |  |  | ✓ |
+| 2.5 | Refined Mockups | ✓ | ✓ | ✓ |  |  |  |  |  | ✓ |
+| 2.6 | Application Design | ✓ | ✓ | ✓ |  |  |  |  |  | ✓ |
+| 2.7 | Units Generation | ✓ | ✓ | ✓ |  |  |  |  |  | ✓ |
+| 2.8 | Delivery Planning | ✓ | ✓ | ✓ |  |  |  |  |  | ✓ |
+| 3.1 | Functional Design | ✓ | ✓ | ✓ |  |  | ✓ |  |  | ✓ |
+| 3.2 | NFR Requirements | ✓ | ✓ | ✓ |  |  |  | ✓ | ✓ | ✓ |
+| 3.3 | NFR Design | ✓ | ✓ | ✓ |  |  |  | ✓ |  | ✓ |
+| 3.4 | Infrastructure Design | ✓ | ✓ | ✓ |  |  |  | ✓ |  | ✓ |
+| 3.5 | Code Generation | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  | ✓ | ✓ |
+| 3.6 | Build and Test | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  | ✓ | ✓ |
+| 3.7 | CI Pipeline | ✓ | ✓ | ✓ |  |  |  | ✓ |  | ✓ |
+| 4.1 | Deployment Pipeline | ✓ | ✓ |  |  |  |  | ✓ | ✓ | ✓ |
+| 4.2 | Environment Provisioning | ✓ | ✓ |  |  |  |  | ✓ |  | ✓ |
+| 4.3 | Deployment Execution | ✓ | ✓ |  |  |  |  | ✓ | ✓ | ✓ |
+| 4.4 | Observability Setup | ✓ | ✓ |  |  |  |  | ✓ |  | ✓ |
+| 4.5 | Incident Response | ✓ | ✓ |  |  |  |  |  |  | ✓ |
+| 4.6 | Performance Validation | ✓ | ✓ |  |  |  |  |  |  | ✓ |
+| 4.7 | Feedback & Optimization | ✓ | ✓ |  |  |  |  |  |  | ✓ |
+| | **Total stages** | **32** | **32** | **22** | **8** | **7** | **8** | **13** | **10** | **25** |
+
+<!-- END scope-stage-matrix -->
+
+✓ は静的な scope 所属を示す — その stage が scope の plan に含まれることを意味し、無条件に実行されることを意味しない。CONDITIONAL の stage は、その条件が成り立たない場合に実行時にスキップされることがある（例えば Reverse Engineering は brownfield プロジェクトでのみ実行される）。また pending stage は承認済みの composer 提案によって組み替えられることがある（[the composer](#the-adaptive-composer) を参照）。合成（カスタム）scope はここに列挙しない — そのグリッドは既成のものと並んで `scope-grid.json` に存在する。
+
+---
+
 ## 自由記述 intent からの自動検出
 
 scope を明示的に指定する必要はない。作りたいものを記述すれば、orchestrator がキーワードから適切な scope を検出する:
@@ -348,7 +394,7 @@ You can request different depth or test strategy at any approval gate.
 | コンプライアンスを要する規制下の機能 | `enterprise` |
 | AI-DLC ワークショップ・トレーニングラボ | `workshop` |
 
-迷ったら `feature` から始める — 全 32 stage を含み、個々の stage は承認 gate でスキップできる。
+迷ったら `feature` から始める — 全 32 stage を含み、CONDITIONAL の stage は自分のプロジェクトに条件が当てはまらない場合に自ら自己スキップする。
 
 ---
 
