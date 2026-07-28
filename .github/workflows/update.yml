@@ -218,6 +218,25 @@ jobs:
             --allowedTools "Read,Write,Edit,Glob,Grep,Bash"
           prompt: ${{ env.AGENT_PROMPT }}
       # PR 起票は決定論ステップ。Claude が落ちても、そこまでの成果を PR として残す。
+      # SHA の張り替えは判断が要らない機械作業なので、Claude ではなくここで行う。
+      # プロンプト側に置いていたときは、ミラーだけが必要な日（run_pages=false）に
+      # 誰も張り替えず、訳文が新しいのにリンクが旧 SHA を指す WIP PR になった。
+      - name: Retarget the pinned SHA
+        if: always() && steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false' && steps.stale.outputs.verdict != 'sha-bump-only'
+        env:
+          OLD: ${{ steps.stale.outputs.old_sha }}
+          NEW: ${{ steps.stale.outputs.new_sha }}
+        run: |
+          if [ -z "$(git log origin/main..HEAD --oneline)" ] && [ -z "$(git status --porcelain)" ]; then
+            echo "変更がないため張り替えません。"
+            exit 0
+          fi
+          bash scripts/retarget-sha.sh "$OLD" "$NEW"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "chore: 基点コミットを $(echo "$NEW" | cut -c1-7) へ更新"
+          fi
+
       - name: Open the pull request
         if: always() && steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false'
         env:

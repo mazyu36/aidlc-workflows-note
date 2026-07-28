@@ -28,21 +28,14 @@ git -C /tmp/aidlc-upstream show ${NEW_SHA}:<path> | nl -ba | sed -n '<from>,<to>
 ## Step 4: 参照切れを直す
 `missing paths` があれば、リンク先を新基点で存在するパスに差し替えるか、その記述自体を削ります。
 
-## Step 5: 基点 SHA を張り替える
-```bash
-bash scripts/retarget-sha.sh ${OLD_SHA} ${NEW_SHA}
-```
-このスクリプトが旧 SHA（40 桁と短縮 7 桁）の置換、`meta.json` の更新、ミラーの再生成、参照検証まで行います。
-
-## Step 6: 検証する（すべて通ること）
+## Step 5: 検証する
 ```bash
 MIRROR_ORIG=/tmp/aidlc-upstream/docs node scripts/mirror-build/build-mirror.mjs   # exit 0 / 91 ページ
 UPSTREAM=/tmp/aidlc-upstream bash scripts/validate-refs.sh                        # missing: 0
-node scripts/check-staleness.mjs                                                  # up-to-date
 ```
-落ちたら直してから進んでください。
+落ちたら直してから進んでください。この時点では基点 SHA がまだ旧のままなので、`check-staleness.mjs` は `up-to-date` になりません。張り替えは後続の決定論ステップが行います。
 
-## Step 7: コミットする
+## Step 6: コミットする
 ```bash
 git add -A
 git commit -m "feat(pages): 上流の変更にあわせて解説ページを更新"
