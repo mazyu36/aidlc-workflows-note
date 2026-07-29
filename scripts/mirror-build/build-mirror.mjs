@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SHA = "9f9145442429440ccd93f22e27186aa428007e5a";
+const SHA = "9f8c2874dd3a152394f463ed23e77041d2940f9e";
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const SRC_ORIG = process.env.MIRROR_ORIG ?? "/tmp/aidlc-v2/docs";
 const SRC_JA = process.env.MIRROR_SRC ?? path.join(REPO, "mirror-src");

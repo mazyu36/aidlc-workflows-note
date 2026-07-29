@@ -146,7 +146,7 @@ orchestrator を <code>/aidlc</code>（Claude Code / Kiro）として呼び出�
 <li><strong>claim の直前に必ず <code>git fetch --all</code> する。</strong> 古いローカル参照は並行する claim を隠す。</li>
 <li><strong><code>foo</code> という Bolt の claim は、<code>bolt-foo</code> を共有リモートへ最初に push することを意味する。</strong> 先に push した者が勝つ。</li>
 <li><strong>遅れて claim した者は non-fast-forward の push 拒否を見る</strong>（リモートに既に <code>bolt-foo</code> があるとき）。それが別の Bolt を選べという合図である。</li>
-<li><strong>ブランチの形は practices が統べる — 推測せず読むこと。</strong> <code>aidlc/spaces/&lt;active-space&gt;/memory/{project,team,org}.md</code> の解決済み <code>## Way of Working</code> の記述が、merge dispatch 時に <code>aidlc-pipeline-deploy-agent</code> が読んでマージ先と戦略を選ぶものである。worktree を作るベースブランチは、その確認済みの形と一致しなければならない: トランクベースのチームは <code>main</code>、gitflow のチームは <code>develop</code>、リリースブランチのチームはアクティブなリリースブランチをベースにする。これは参加者が選ぶのではない — ファシリテーターの確認済み practices が既に選んでいる。aidlc-pipeline-deploy-agent が守る契約は <a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/core/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md">branching-strategies のナレッジファイル</a>（harness の <code>knowledge/</code> ディレクトリに同梱される）を参照。</li>
+<li><strong>ブランチの形は practices が統べる — 推測せず読むこと。</strong> <code>aidlc/spaces/&lt;active-space&gt;/memory/{project,team,org}.md</code> の解決済み <code>## Way of Working</code> の記述が、merge dispatch 時に <code>aidlc-pipeline-deploy-agent</code> が読んでマージ先と戦略を選ぶものである。worktree を作るベースブランチは、その確認済みの形と一致しなければならない: トランクベースのチームは <code>main</code>、gitflow のチームは <code>develop</code>、リリースブランチのチームはアクティブなリリースブランチをベースにする。これは参加者が選ぶのではない — ファシリテーターの確認済み practices が既に選んでいる。aidlc-pipeline-deploy-agent が守る契約は <a href="https://github.com/awslabs/aidlc-workflows/blob/9f8c2874dd3a152394f463ed23e77041d2940f9e/core/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md">branching-strategies のナレッジファイル</a>（harness の <code>knowledge/</code> ディレクトリに同梱される）を参照。</li>
 </ol>
 <blockquote>
 <p><strong>なぜここでは参加者が <code>--base</code> を手で渡すのか。</strong> 標準の（単独エンジニアの）Construction フローでは、conductor が <code>aidlc-pipeline-deploy-agent</code> を dispatch してアクティブ space の <code>## Way of Working</code> を読み、<code>--base</code> を解決してくれる。ワークショップのレシピは<em>手動の</em>マルチクローン変種である — conductor 駆動のワークショップディスパッチャは今日存在しないため、各参加者は全員が pull したアクティブ space の memory ファイルから同じ <code>--base</code> 値を書き写す。stage 2.2 のファシリテーターによる確認が荷重を受けるのはこのためだ: それが全参加者の読む単一の正である。</p>
@@ -359,11 +359,11 @@ and run `aidlc-bolt release-merge --slug &lt;slug&gt;` before retrying.</code></
 <li><a href="10-state-and-audit.html">状態と audit</a> — Construction の worktree が状態と audit をフォークする仕組み</li>
 <li><a href="12-cli-commands.html">CLI コマンド</a> — <code>aidlc-worktree</code> と <code>aidlc-bolt</code> のサブコマンドリファレンス</li>
 <li><a href="../reference/03-orchestrator.html">Orchestrator: Construction フロー</a> — 各 Bolt の中で何が起きるか</li>
-<li><a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/core/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md">ブランチ戦略（ナレッジファイル）</a> — aidlc-pipeline-deploy-agent の merge-dispatch 契約</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/blob/9f8c2874dd3a152394f463ed23e77041d2940f9e/core/knowledge/aidlc-pipeline-deploy-agent/branching-strategies.md">ブランチ戦略（ナレッジファイル）</a> — aidlc-pipeline-deploy-agent の merge-dispatch 契約</li>
 </ul>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/docs/guide/workshop-mode.md"><code>docs/guide/workshop-mode.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-28
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/9f8c2874dd3a152394f463ed23e77041d2940f9e/docs/guide/workshop-mode.md"><code>docs/guide/workshop-mode.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-29
 </footer>
 </main>
 </div>

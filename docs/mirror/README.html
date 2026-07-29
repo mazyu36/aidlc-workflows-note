@@ -41,7 +41,7 @@
 <p class="eyebrow">AI-DLC DOCS 日本語版 / DOCS</p>
 <h1 id="ai-dlc-documentation">AI-DLC ドキュメント</h1>
 <p><strong>AI-DLC は方法論である</strong> — AI 駆動のソフトウェア開発に対する、構造化された gate 付きのアプローチである（AWS が定義）。<strong>このリポジトリは、そのネイティブかつ複数 harness 対応の実装である:</strong> 方法論を単一の harness 非依存な <code>core/</code> から skills・agents・hooks・tools として具現化したものであり、利用する CLI harness 上でネイティブに動作する — 現時点では Claude Code・Kiro CLI・Kiro IDE・Codex CLI・opencode、および移植先となる任意の対応 CLI である。方法論は <em>何を</em> に当たり、各 harness ディストリビューションは 1 つのランタイムに対する <em>どのように</em> に当たる。そして、すべてのディストリビューションは同一のソースから生成される。</p>
-<p>初めてだろうか？ <a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/README.md">README</a> にインストールの Quick Start と「pick your harness」の表がある。このページはドキュメントそのものの地図である。</p>
+<p>初めてだろうか？ <a href="https://github.com/awslabs/aidlc-workflows/blob/9f8c2874dd3a152394f463ed23e77041d2940f9e/README.md">README</a> にインストールの Quick Start と「pick your harness」の表がある。このページはドキュメントそのものの地図である。</p>
 <h2 id="three-guides-one-per-reader">3 つのガイド、読者ごとに 1 つ</h2>
 <p>変更しようとしている対象で選ぶ:</p>
 <table>
@@ -75,7 +75,7 @@
 <p>メンテナは <code>core/</code> で執筆し、<code>bun scripts/package.ts</code> で <code>dist/&lt;harness&gt;/</code> ツリーを再生成する — ビルドとテストの一連のループについては <a href="reference/11-contributing.html">コントリビューションガイド</a> を、harness を追加するには <a href="harness-engineering/09-porting-to-a-new-harness.html">新しい harness への移植</a> を参照。</p>
 
 <footer class="meta">
-  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/9f9145442429440ccd93f22e27186aa428007e5a/docs/README.md"><code>docs/README.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-28
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/9f8c2874dd3a152394f463ed23e77041d2940f9e/docs/README.md"><code>docs/README.md</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: 2026-07-29
 </footer>
 </main>
 </div>

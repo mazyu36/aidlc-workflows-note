@@ -1,6 +1,6 @@
 # docs 逐語日本語化の翻訳規約（mirror-src）
 
-awslabs/aidlc-workflows v2（コミット 9f9145442429440ccd93f22e27186aa428007e5a）の `docs/` 配下 Markdown を、構造を 1 対 1 で保った日本語版 Markdown にする。原文は `/tmp/aidlc-v2/docs/<相対パス>`、出力は本リポジトリの `mirror-src/<同じ相対パス>`（ファイル名・拡張子も同一。スペースを含む名前もそのまま）。
+awslabs/aidlc-workflows v2（コミット 9f8c2874dd3a152394f463ed23e77041d2940f9e）の `docs/` 配下 Markdown を、構造を 1 対 1 で保った日本語版 Markdown にする。原文は `/tmp/aidlc-v2/docs/<相対パス>`、出力は本リポジトリの `mirror-src/<同じ相対パス>`（ファイル名・拡張子も同一。スペースを含む名前もそのまま）。
 
 この訳文は後段の決定論コンバータが HTML 化する。コンバータは「見出しの数と順序が原文と一致」を前提に原文由来のアンカー id を位置対応で振るため、構造の保存が絶対条件になる。
 
