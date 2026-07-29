@@ -1,71 +1,91 @@
-# Kiro IDE hook payload - 実証リファレンス
+# Kiro IDE hook payload — 実証リファレンス
 
-Kiro IDE が `runCommand` hook にどうコンテキストを届けるか。チャネルは IDE の世代によって
-異なる:
+Kiro IDE が command hook にどうコンテキストを届けるか。IDE の 2 つの世代でライブに捕捉した:
+0.12-main（stdin・argv・完全な環境をダンプする probe `.kiro.hook` ファイル）と 1.0.165
+（probe v2 hook JSON ファイル; upstream #543/#555）。これは `harness/kiro-ide/` アダプタの
+根拠であり、CLI harness（`harness/kiro/`）は別の、kiro-cli 形の stdin 機構を使う。
 
-- **1.0 以前（0.12-main）:** コンテキストは **`USER_PROMPT` 環境変数**（camelCase の JSON）
-  を通じて届く。stdin は開かれるが、書き込まれることも閉じられることもない — 読むとハングする。
-- **IDE >= 1.0（1.x）:** コンテキストは **stdin 上の JSON**（snake_case:
-  `{ tool_name, tool_input, tool_response }`）として届く。`USER_PROMPT` は空である。
+## IDE の世代を通じてチャネルは変わった
 
-**現在のアダプタの振る舞い:** 同梱のアダプタは `USER_PROMPT` 環境変数（1.0 以前のチャネル）
-**だけ**を読む。stdin は決して読まない。`USER_PROMPT` が空になる IDE 1.x では、payload に
-依存する 2 つのターゲット（`audit-and-sensors`・`log-subagent`）は発火するが、見える形の
-hook drop を伴って no-op になる。残りの hook は payload に依存せず、どちらの世代でも動く。
-stdin のコンテキストチャネルは後続の強化として計画されている。
+| | Kiro IDE 0.12 | Kiro IDE 1.x（≥1.0.1xx） |
+|---|---|---|
+| Hook 登録 | `.kiro/hooks/*.kiro.hook`（`{"version":"1.0.0","when":{...},"then":{...}}`） | `.kiro/hooks/*.json` v2 schema（`{"version":"v1","hooks":[{name,trigger,matcher,action}]}`、PascalCase の trigger）。レガシーの `.kiro.hook` ファイルは**静かに不活性**である — 決して実行されない。 |
+| コンテキストチャネル | `USER_PROMPT` 環境変数（JSON 文字列） | **stdin**（JSON、書き込まれて閉じられる）。`USER_PROMPT` は空で届く。 |
+| stdin の振る舞い | 開かれるが決して書き込まれ / 閉じられない — 素朴な読み取りはハングする | 書き込まれて閉じられる — 読み取りは速やかに解決する |
+| フィールド命名 | camelCase: `{ toolName, toolArgs, toolResult, toolSuccess }` | snake_case: `{ session_id, hook_event_name, cwd, tool_name, tool_input, tool_response }` — **success フラグは無い** |
 
-## 1.0 以前のチャネル: `USER_PROMPT` 環境変数
-
-stdin・argv・完全な環境をダンプする probe `.kiro.hook` ファイルを登録し、Kiro IDE
-0.12-main 上でライブに捕捉した。
-
-- **stdin** は開かれるが、書き込まれることも閉じられることもないため、`Bun.stdin.text()` はハングする。
-- **`USER_PROMPT`** は次の形の JSON 文字列である:
-  ```json
-  { "toolName": "fs_write", "toolArgs": {}, "toolResult": "Created the /abs/path/file.md file.", "toolSuccess": true }
-  ```
-
-## IDE 1.x のチャネル: stdin（snake_case）
-
-Kiro IDE 1.0.165 上でライブに捕捉した。stdin の payload の形（probe から逐語のフィールド）:
+ライブの 1.0.165 PostToolUse キャプチャ、フィールド逐語:
 
 ```json
-{ "session_id": "sess_...", "hook_event_name": "PostToolUse", "cwd": "/path/to/project", "tool_name": "execute_bash", "tool_input": {}, "tool_response": "Output:\n...\nExit Code: 0" }
+{"session_id":"sess_…","hook_event_name":"PostToolUse","cwd":"/path/to/project","tool_name":"execute_bash","tool_input":{},"tool_response":"Output:\n…\nExit Code: 0"}
 ```
 
-- `USER_PROMPT` は 1.x では空である。
-- `toolSuccess` / `tool_success` のフィールドは無い — 明示的な `false`（1.x は決して送らない）
-  だけが #417 の失敗した書き込みのガードを起動する; 不在はすり抜ける。
-- `tool_input` はどちらの世代でも常に `{}` である — IDE は tool の入力を決して渡さない。
+アダプタは非空の `USER_PROMPT` をただちに使う（stdin が決して閉じられない 0.12 のチャネル）。
+その変数が空のとき、アダプタは 1.x のチャネルのために stdin を読み、broken-channel タイムアウト
+と競わせる。本番デフォルトは 2 秒であり、`AIDLC_IDE_STDIN_TIMEOUT_MS` に正の値を設定すると、
+診断や決定論的なレイテンシテストのためにその上限をミリ秒単位で上書きする。どちらのフィールド
+表記も受け入れられる。取得はペイロードに依存する 2 つのターゲット（`audit-and-sensors`・
+`log-subagent`）に限定してゲートされている。それ以外のすべてのターゲット（ツール呼び出しごと
+の `block` の床を含む）はどちらのチャネルにも触れず、ゼロレイテンシのパスを保つ。
 
-> **注記:** アダプタはまだ 1.x の stdin チャネルを消費しない。この節は、後続の実装のために
-> 観測された payload の形を文書化する。
-
-`VSCODE_IPC_HOOK` / `VSCODE_PID` も IDE には存在する（CLI には無い）が、アダプタは
-コンテキストチャネルとして `USER_PROMPT` を手がかりにする。
+`VSCODE_IPC_HOOK` / `VSCODE_PID` も IDE には存在する（CLI には無い）が、アダプタは上記の
+payload チャネルを手がかりにする。
 
 ## イベントごとのキャプチャ
 
-| イベント | `toolName` | `toolArgs` | `toolResult` | 復元可能か？ |
-|-------|-----------|-----------|-------------|--------------|
-| postToolUse(write) - create | `fs_write` | `{}`（空） | `Created the <ABS_PATH> file.` | path: `toolResult` の散文からのみ |
-| postToolUse(write) - edit | `str_replace` | `{}`（空） | `Replaced text in <ABS_PATH>` | path: `toolResult` の散文からのみ |
-| postToolUse(write) - append | `fs_append` | `{}`（空） | `Appended the text to the <ABS_PATH> file.` | path: `toolResult` の散文からのみ |
-| postToolUse(shell) | `execute_bash` | `{}`（空） | `Output:\n<stdout>\n\nExit Code: 0` | command: **復元不可**（stdout のみ） |
+結果の散文はどちらのチャネルでも同一である（0.12 では `toolResult`、1.x では
+`tool_response`）:
+
+| イベント | tool 名 | tool 入力 | 結果の散文 | 復元可能か？ |
+|-------|-----------|-------------|--------------|--------------|
+| PostToolUse（write）— create | `fs_write` | `{}`（空） | `Created the <PATH> file.` | path: 結果の散文からのみ |
+| PostToolUse（write）— edit | `str_replace` | `{}`（空） | `Replaced text in <PATH>` | path: 結果の散文からのみ |
+| PostToolUse（write）— append | `fs_append` | `{}`（空） | `Appended the text to the <PATH> file.` | path: 結果の散文からのみ |
+| PostToolUse（shell） | `execute_bash` | `{}`（空） | `Output:\n<stdout>\n\nExit Code: 0` | command: **復元不可**（stdout のみ） |
 
 ### 重大な制限
 
-1. **`toolArgs` は常に `{}` である。** IDE は tool の入力を決して渡さない。したがって、書き込まれたファイルパスは `toolResult` の散文から解析せねばならず、shell コマンドはまったく存在しない（stdout と exit code のみ）。
-2. **stdin は現在のアダプタでは読まれない。** 1.0 以前ではハングし（書き込まれず閉じられない）; 1.x では payload を運ぶが、アダプタはまだそれを消費しない。アダプタは `process.env.USER_PROMPT` だけを読む。
-3. **`toolResult` 中のパスは workspace 相対である**が、core hook は絶対の record root と比較する - そこでアダプタは、転送する前にそれらを絶対パスに解決する。
+1. **PostToolUse の write / shell キャプチャは、どちらのチャネルでも tool 入力が空である。**
+   したがって、書き込まれたパスは結果の散文から解析せねばならず、shell コマンドは不在である
+   （stdout と exit code のみが存在する）。これは IDE 全般の規則ではない: より新しい 1.x の
+   ビルドは一部の PreToolUse の入力と委譲の入力を投入する（#543）。
+2. **1.x には success フラグが無い。** 0.12 のチャネルの明示的なブーリアン
+   `toolSuccess: false` だけが、正しい形の write を audit から落とす（#417）。そのフィールドが
+   不在の 1.x の payload は path のチェックにすり抜け、既知のパターンに合致しないエラーの
+   散文は可視の hook-drop を記録する。存在するが null でない payload のフィールドが誤った
+   実行時型を持つ場合は不正な形として扱われる: 助言のみの hook は正常に終了し、可視の drop を
+   記録し、audit や subagent のイベントを一切転送しない。`null` は、そのチャネルの既存の
+   不在値の契約に合わせて、利用不能なフィールドと同様に扱われる。
+3. **結果の散文中のパスは workspace 相対である**が、core hook は絶対の record root と比較する
+   — そこでアダプタは、転送する前にそれらを絶対パスに解決する。
 
 ## 各 hook への帰結
 
-- **audit-logger / sensor-fire** - 1.0 以前では復元可能: `toolResult` からファイルパスを掻き取り、絶対パスに解決し、core hook に Claude 形の `{tool_input:{file_path}}` を渡す。既知のパターンに文言が合致しない write クラスの tool は、可視の hook-drop を記録する（静かな no-op には決してならない）。IDE 1.x ではこれらのターゲットは no-op になる（USER_PROMPT は空で、stdin は読まれない）。
-- **runtime-compile** - shell コマンドは復元不可なので、IDE 経路は command フィルタを落とし、純粋に audit tail でゲートする（mtime の冪等性ガード付きで、残存する遷移 - 例えば `WORKFLOW_COMPLETED` の後 - が後続のすべての shell コマンドで再コンパイルを起こさないようにする）。
-- **sync-statusline** - IDE は task payload を与えないので、audit tail 中の最新の `STAGE_STARTED` から現在の stage を導出する。これは **forward-only** のミラーである: `Current Stage` を完了済みまたはスキップされた stage に巻き戻すことは決してなく、ワークフローが `Running` でないときには決して発火しない（完了したワークフローの復活を防ぐ）。`shell` イベントに配線されている - `spec` イベントは IDE では決して発火しない。
-- **session-start / stop** - payload を必要としない; 変更なし。（`session-end` には v2 の登録が無い - 論拠は harness ガイドを参照。）
-- **log-subagent** - 1.0 以前では、`toolResult` から委譲先の identity を復元する。IDE 1.x では、見える形の hook drop を伴って no-op になる（USER_PROMPT は空で、stdin は読まれない）。
+- **audit-logger / sensor-fire** — 復元可能: 結果の散文からファイルパスを掻き取り、絶対パスに
+  解決し、core hook に Claude 形の `{tool_input:{file_path}}` を渡す。既知のパターンに文言が
+  合致しない write クラスの tool は、可視の hook-drop を記録する（静かな no-op には決してならない）。
+- **runtime-compile** — shell コマンドは復元不可なので、IDE 経路は command フィルタを落とし、
+  純粋に audit tail でゲートする（mtime の冪等性ガード付きで、残存する遷移 — 例えば
+  `WORKFLOW_COMPLETED` の後 — が後続のすべての shell コマンドで再コンパイルを起こさないように
+  する）。
+- **sync-statusline** — IDE は task payload を与えないので、audit tail 中の最新の
+  `STAGE_STARTED` から現在の stage を導出する。これは **forward-only** のミラーである:
+  `Current Stage` を完了済みまたはスキップされた stage に巻き戻すことは決してなく、
+  ワークフローが `Running` でないときには決して発火しない（完了したワークフローの復活を
+  防ぐ）。`execute_bash` に一致させている — IDE は sync が解析できる task イベントを一切
+  出さない。
+- **log-subagent** — payload に依存する。IDE 0.12 は `invoke_sub_agent` を送っていた;
+  1.x（1.0.89-1.0.138）は代わりに `subagent_<agent>` を送り、それぞれの前に空の
+  `subagent_response` シェル（`"Response recorded."`）が来る。したがって登録の matcher は
+  広く取られており（`^(subagent_.+|invoke_sub_agent)$`）、どの委譲先名でもアダプタに届き、
+  アダプタは `subagent_response` を捨てる — そのシェルは散文を運ぶが identity を運ばないので、
+  それを転送すると `Agent Type: unknown` の `SUBAGENT_COMPLETED` 行を偽造してしまう。identity
+  は構造化された 1.x の `subagent_<agent>` という tool 名（#543）を優先する — これは
+  プラットフォームが提供するものなので、agent が書いた結果の散文が audit 行を誤帰属させる
+  ことはない — そして 0.12 の `invoke_sub_agent` の形での唯一の identity 信号である、#459 由来
+  の `**Reviewer:**` / `**Agent:**` の結果マーカーにフォールバックする。
+- **session-start / session-end / stop / mint / block** — payload を必要としない; stdin を
+  決して読まない。
 
 ## toolResult パス抽出パターン
 
@@ -74,3 +94,7 @@ Kiro IDE 1.0.165 上でライブに捕捉した。stdin の payload の形（pro
 | `fs_write` | `Created the <PATH> file.` | Write |
 | `str_replace` | `Replaced text in <PATH>`（末尾に ` (N occurrences)` を伴うことがある） | Edit |
 | `fs_append` | `Appended the text to the <PATH> file.` | Edit |
+
+抽出器はマッチの前に末尾の空白 / 改行をトリムし、`str_replace` の形から末尾の括弧書きを
+取り除く。`fs_write` は `Write` に対応する; `str_replace` / `fs_append` は `Edit` に対応する
+（どちらも既存ファイルを対象とする → core の audit-logger は `ARTIFACT_UPDATED` を記録する）。
