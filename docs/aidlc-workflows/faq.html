@@ -92,20 +92,62 @@
 <table>
 <thead><tr><th>層</th><th>構成要素</th><th>役割</th><th>従わせる力</th></tr></thead>
 <tbody>
-<tr><td>人間の判断</td><td>承認ゲート・ladder prompt・halt-and-ask</td><td>進行可否の最終判断。機械検査できない部分の引き受け先</td><td>人間</td></tr>
-<tr><td>決定論</td><td>engine・hook 13 本・ツール 31 本・コンパイル済み JSON・bun</td><td>ルーティング・状態遷移・audit・並列の審判・ループ強制</td><td>絶対（コード実行）</td></tr>
-<tr><td>ステアリング</td><td>SKILL.md・stage 定義 32・agent 14・knowledge 59・rules</td><td>LLM への手順・ペルソナ・知識・規範の供給</td><td>確率的。結果はゲートと事後条件で検査</td></tr>
-<tr><td>記録</td><td>aidlc-state.md・audit・成果物・codekb</td><td>ワークフローの正。再開・復旧・実績グラフの源</td><td>書き込み経路をツールに限定</td></tr>
+<tr><td>人間の判断</td><td>承認ゲート（AskUserQuestion）・ladder prompt・halt-and-ask</td><td>進行可否の最終判断。機械検査できない部分の引き受け先</td><td>人間</td></tr>
+<tr><td>決定論</td><td>engine（aidlc-orchestrate.ts、サブコマンドは next / report / park）・hook 13 本・ツール 31 本・コンパイル済み表（stage-graph.json / scope-grid.json）・実行系 bun</td><td>ルーティング・状態遷移・audit・並列の審判・ループ強制。判断は型付き directive として発行</td><td>絶対（コード実行）</td></tr>
+<tr><td>ステアリング</td><td>SKILL.md（conductor）・stage-protocol.md + stage 定義 32・agent 定義 14・knowledge 59・scope 宣言 9・rules / practices</td><td>LLM への手順・ペルソナ・知識・規範の供給</td><td>確率的。結果はゲートと事後条件で検査</td></tr>
+<tr><td>記録</td><td>aidlc-state.md・audit シャード・record dir の成果物・codekb・runtime-graph.json</td><td>ワークフローの正。再開・復旧・実績グラフの源</td><td>書き込み経路をツールに限定</td></tr>
 </tbody>
 </table>
 <p>層をつなぐ橋は 2 つある。第 1 に compile — stage 定義の YAML と scope 宣言は aidlc-graph.ts compile が stage-graph.json / scope-grid.json へ変換し、手編集は CI の compile --check が検出する。第 2 に学習ループ — 実行シグナルを sensor（blocking / advisory の 2 段階）が検知し、learnings ゲートを通過したものだけが rules へ還流する。</p>
 <div class="refrow"><span class="label">参照:</span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/hooks">core/hooks/</a><button class="copy" type="button" data-copy="core/hooks" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/tools">core/tools/</a><button class="copy" type="button" data-copy="core/tools" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/knowledge">core/knowledge/</a><button class="copy" type="button" data-copy="core/knowledge" aria-label="パスをコピー">⧉</button></span></div>
 <p>出典: <a href="../mirror/reference/15-stage-definition.html">reference/15 Stage Definition</a>・<a href="../mirror/reference/17-skill-system.html">reference/17 Engine and Skill System</a></p>
 
-<h3 id="bun-invocation">bun の TypeScript は誰がいつ呼ぶのか</h3>
+<h3 id="flow">動作の流れ — 1 つの stage はどう進むのか</h3>
+<p>conductor（LLM）と engine（決定論）の往復が骨格で、hook がその外側で自動発火する。engine の next が「次に実行する stage」を directive で指名し、conductor が実行し、人間のゲートを経て report で返すと、engine が audit を書いてから状態を進めて次の directive を返す。このループが workflow 完了まで続く。</p>
+<figure class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  participant U as 人間
+  participant H as Hooks（bun・自動発火）
+  participant C as Conductor（LLM）
+  participant E as Engine（bun・決定論）
+  participant D as 記録（state / audit）
+  U->>C: /aidlc
+  H->>H: SessionStart で再開文脈を注入
+  C->>E: next
+  E-->>C: directive（次に実行する stage）
+  C->>C: stage 実行（役割 subagent へ委譲）
+  C-->>U: 承認ゲート（AskUserQuestion）
+  U->>C: Approve / Request Changes
+  C->>E: report --result approved
+  E->>D: audit を書いてから状態遷移（audit-first）
+  E-->>C: 次の directive（ループ継続）
+</pre>
+<figcaption>stage 実行ループの簡約版。hook の発火点・ゲート状態の遷移まで含む完全版は<a href="runtime.html">解説: 実行モデル</a>にある。</figcaption>
+</figure>
+<p>stage の実行形態は stage 定義が宣言し、inline・subagent の hub-and-spoke・mob・pipeline の 4 形がある。どの形で走るかも conductor の裁量ではなく定義データ側にある。</p>
+<p>出典: <a href="../mirror/reference/03-orchestrator.html">reference/03 Orchestrator</a>・<a href="../mirror/reference/04-stage-protocol.html">reference/04 Stage Protocol</a></p>
+
+<h3 id="bun-invocation">bun は何を実行していて、誰がいつ呼ぶのか</h3>
+<p>bun は 13 本の hook と 31 本のツール（すべて TypeScript）の実行系である。職務は状態管理・audit 記録・sensor ディスパッチ・runtime-graph のコンパイル・ループ強制・状態遷移と reviewer スコープの強制・statusline・human-turn の記録で、起動約 20ms・追加依存なし・macOS / Linux / Windows で同一に動く。</p>
 <p>呼び出し経路は 2 つある。経路 A はハーネスが呼ぶ。Claude Code のライフサイクルイベント（SessionStart・SessionEnd・コンパクション直前ほか）が settings.json にプロジェクト全体で登録された hook を必ず実行し、LLM は介在できない。各 hook は self-gate していて、アクティブなワークフローが無ければ即終了するため、AI-DLC の外の通常利用では no-op になる。</p>
-<p>経路 B は LLM が CLI として呼ぶ。conductor が bun で engine（aidlc-orchestrate.ts）の next を実行して directive を受け取り、stage 実行後に report で結果を返す。状態と audit の書き込みも専用ツール経由に限られる。経路 B の呼び忘れや逸脱は経路 A の hook（状態遷移とループの強制）が検査するので、LLM のサボりで工程管理は破綻しない。ハーネスごとに差し替わるのは経路 A の配線先だけである（Claude Code = settings.json、Kiro CLI = agents/aidlc.json、Kiro IDE = .kiro/hooks/、Codex = .codex/hooks.json、opencode = plugin）。</p>
-<p>出典: <a href="../mirror/reference/06-hooks-and-tools.html">reference/06 Hooks and Tools</a>・<a href="../mirror/reference/14-claude-features.html">reference/14 Claude Features</a></p>
+<p>経路 B は LLM が CLI として呼ぶ。conductor が bun で engine（aidlc-orchestrate.ts）の next を実行して directive を受け取り、stage 実行後に report で結果を返す。状態と audit の書き込みも専用ツール経由に限られる。経路 B の呼び忘れや逸脱は経路 A の hook（状態遷移とループの強制）が検査するので、LLM のサボりで工程管理は破綻しない。</p>
+<p>出典: <a href="../mirror/reference/06-hooks-and-tools.html">reference/06 Hooks and Tools</a>・<a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a></p>
+
+<h3 id="cc-mapping">素の Claude Code の設定機構とはどう対応するのか</h3>
+<p>Claude Code ユーザーが普段使う機構が、そのまま AI-DLC の部品として使われている。対応は次のとおりで、他ハーネスでは hook の配線先だけが差し替わり（Kiro CLI = agents/aidlc.json、Kiro IDE = .kiro/hooks/、Codex = .codex/hooks.json、opencode = plugin）、決定論層のコードはバイト同一のまま動く。</p>
+<table>
+<thead><tr><th>Claude Code の機構</th><th>AI-DLC v2 での使い道</th></tr></thead>
+<tbody>
+<tr><td>hooks（settings.json 登録）</td><td>強制の土台。13 本すべてをプロジェクト全体に登録し、self-gate で AI-DLC 外では no-op</td></tr>
+<tr><td>skills</td><td>conductor（SKILL.md、/aidlc で起動）と stage-protocol・32 stage ファイル。エントリポイント兼実行手順</td></tr>
+<tr><td>subagents</td><td>14 の役割 agent。tier 宣言をハーネスごとに model + effort へ射影</td></tr>
+<tr><td>permissions</td><td>組み込みツールの事前承認。ワークフロー中の許可プロンプトを消す</td></tr>
+<tr><td>CLAUDE.md に相当する常設規範</td><td>rules / practices が担当。5 レイヤー継承・strict-additive で、上書きは audit に記録</td></tr>
+<tr><td>MCP</td><td>任意の外部統合。.mcp.json で宣言し Claude Code の MCP レイヤーが管轄</td></tr>
+</tbody>
+</table>
+<p>出典: <a href="../mirror/reference/14-claude-features.html">reference/14 Claude Features</a>（コンセプトからプリミティブへのマッピング表がある）</p>
 
 <h2 id="runtime">実行モデル</h2>
 
