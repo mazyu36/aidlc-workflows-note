@@ -428,7 +428,7 @@ aidlc/                                    # neutral, harness-independent, commit
 
 パスヘルパー — `intentsDir`、`knowledgeDir`、`codekbDir`（`aidlc-lib.ts`）、
 そして `memoryDirFor`（`aidlc-graph.ts:234`）— はすべて、space 引数を
-`activeSpace(projectDir)` にデフォルトする。だから AI-DLC 自身の resolver は cursor に従う; `/aidlc space <name>` で space を切り替えると、各 harness ネイティブの rule include（上で述べた Claude の `@`-import スタブ、Kiro の resources glob、Codex の rules dir）も、切り替えられた space の `memory/` に指し直される。`default` では指し直しはバイト単位で同一の no-op なので、単一チームのコミットされたツリーが churn することは決してない。
+`activeSpace(projectDir)` にデフォルトする。だから AI-DLC 自身の resolver は cursor に従う; `/aidlc space <name>` で space を切り替えると、各 harness ネイティブの rule include（上で述べた Claude の `@`-import スタブ、Kiro CLI の resources または IDE の steering、Codex の rules dir）も、切り替えられた space の `memory/` に指し直される。`default` では指し直しはバイト単位で同一の no-op なので、単一チームのコミットされたツリーが churn することは決してない。
 
 **Committed 対 gitignored。** `aidlc/` は、チームが作業を共有するためにチェックインされる。分割（`harness/claude/dot-gitignore:34-54`）: 2 つの cursor（`active-space`、`active-intent`）、clone ごとのランタイム（`.aidlc-clone-id`、`.aidlc-sessions/`）、そして導出された state（`runtime-graph.json`、record の下の `.aidlc-*`）は **gitignored**; メソッド（`memory/**`）、knowledge（`knowledge/**`、`codekb/**`）、`intents.json` レジストリ、各 record の `aidlc-state.md`、`audit/` シャード、そして artifact は **committed** である。audit が clone ごとのシャード（`audit/<host>-<clone>.md`）としてコミットされるのは、まさに git が並行する追記をマージせずに済むようにするためである — 意図的に `merge=union` 属性は無い。
 
@@ -497,7 +497,7 @@ tests/
 | Level | Directory | What It Covers |
 |-------|-----------|----------------|
 | **Smoke** (L1) | `tests/smoke/` | ファイルの存在、agent/stage/protocol の構造、SKILL.md グラフの整合性、settings.json スキーマ。欠けた、または名前を誤ったファイルを捕まえる高速な構造チェック。LLM なし。 |
-| **Unit** (L1) | `tests/unit/` | 13 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。 |
+| **Unit** (L1) | `tests/unit/` | 14 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。 |
 | **Integration** (L2) | `tests/integration/` | コンポーネント横断の契約（scope-to-stage のマッピング、stage-agent のクロスチェック、protocol の準拠、audit/runtime-graph の end-to-end）と、`claude` CLI または SDK を通じて駆動される live な stage/CLI ユーティリティ。live ファイルは `claude` が無いときクリーンにスキップする。 |
 | **E2E** (L3) | `tests/e2e/` | 完全なライフサイクルと worktree のプリミティブ、加えて、実際の AskUserQuestion gate に答えることがディスク state を前進させることを証明するレンダリングされたターミナル（`tui-drive.ts`）の journey。live な journey は `claude` + Bedrock creds を要し、`AIDLC_TUI_LIVE=1` の背後で gate される。 |
 

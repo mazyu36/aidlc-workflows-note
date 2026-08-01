@@ -648,20 +648,23 @@ report が所有するライフサイクルイベントが gate の完全な aud
 位置ごとに動的である。</p>
 <h3 id="inline-stages-and-inline-mob-leads">Inline Stage と Inline Mob Lead</h3>
 <ol>
-<li>stage 作業を行う前に、<code>directive.inline_context_paths</code> の <strong>すべての</strong> ファイルを読む。
-engine は正確な persona と既存の knowledge ファイルのパスを展開する: <code>inline</code> には
-lead + supports、<code>mob</code> には lead のみ（mob の supports は dispatch されるため）。
-agent 名だけではロードされたコンテキストにならない。</li>
-<li>directive のパス順を保つ。これは 6 ステップの knowledge 順に従う。<code>inline</code> の
-support-agent エントリや <code>mob</code> の lead エントリを省略しない。</li>
-<li>実行中、ロードされたすべての観点を適用する。</li>
+<li><code>run-stage</code> の前に、順序付けられた <code>load-steering</code> シーケンスを適用する。それは
+アクティブ space のすべての実質的な rule をコンテンツとして届け、stage ごとに
+再実行される。</li>
+<li><code>inline_context_paths</code> の全エントリを読む: <code>inline</code> には lead + supports、<code>mob</code>
+には lead のみ（mob の supports は dispatch されるため）。persona と knowledge は
+path-loaded のままである。<code>context_warnings</code> があればそのまま示し、読み取り可能な
+ロースターで続行する。agent 名だけではロードされたコンテキストにならない。</li>
+<li>実行中、ロードされたすべての観点を適用する。<code>inline</code> の support-agent の観点や
+<code>mob</code> の lead の観点を省略しない。</li>
 </ol>
 <h3 id="subagent-stages">Subagent Stage</h3>
 <ol>
-<li>名指された harness agent を dispatch する; その config が persona と knowledge をロード
-する。</li>
-<li>コピーした persona や knowledge の散文ではなく、正確な rule パス、関連する先行成果物の
-パス、タスク指示を渡す。</li>
+<li>名指された harness agent を dispatch する; その config が persona と knowledge を
+ロードする（reviewer のチェックリストはビルド時に reviewer agent 本体へ吸収される）。</li>
+<li>積み上げられた <code>load-steering</code> の rule バンドルを逐語的にブリーフへ貼り付け、
+コピーした persona や knowledge の散文ではなく、関連する先行成果物のパスと
+タスク指示を渡す。</li>
 <li>stage のメタデータが名指す agent を選ぶ。</li>
 </ol>
 <h3 id="multi-agent-stages-ensemble-topologies">Multi-Agent Stage（アンサンブルトポロジ）</h3>

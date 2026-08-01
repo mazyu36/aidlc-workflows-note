@@ -308,8 +308,9 @@ conductor はバトンを人間へ戻す。hands-off モードは happy-path の
 <li><strong>referee</strong> <code>aidlc-swarm.ts</code> — worktree を fork し、verdict を走らせ、マージ前に主張された
 すべての Unit を再検証し（嘘つき conductor のガード）、merge-back を直列化し、6 つの <code>SWARM_*</code>
 audit イベントを発する、ステートレスな <code>prepare</code> / <code>check</code> / <code>finalize</code> サブコマンド。</li>
-<li><strong>engine</strong> <code>aidlc-orchestrate.ts</code> — 厳密に 3 つのサブコマンド <code>next</code>・<code>report</code>・<code>park</code> を
-持つ決定論的なルーター; それは Construction の batch がいつ swarm の適格になるかを決める。</li>
+<li><strong>engine</strong> <code>aidlc-orchestrate.ts</code> — 厳密に 4 つのサブコマンド <code>next</code>・<code>continue</code>・<code>report</code>・
+<code>park</code> を持つ決定論的なルーター（<code>continue</code> は内部の steering 用トランスポート）。それは
+Construction の batch がいつ swarm の適格になるかを決める。</li>
 <li><strong>Bolt-DAG パーサー</strong> — エッジブロックを <code>runtime-graph.json</code> に読む compile ステップ。</li>
 </ul>
 <p>3 つすべての規範的な契約は

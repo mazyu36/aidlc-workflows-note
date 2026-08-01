@@ -60,6 +60,9 @@ cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have 
 - `.kiro/skills/aidlc/SKILL.md` — `/aidlc` の呼び出しで読み込まれる conductor。
   同梱の `.kiro/settings/cli.json` と agent-v1 の JSON ファイルは CLI 専用の
   互換サーフェスであり、IDE の既定エージェントを選択しない。
+- `.kiro/steering/aidlc-active-memory.md` — 常時包含の IDE steering。そのライブ
+  ファイル参照が、conductor と委譲先エージェントの両方に向けてアクティブ space の
+  memory ファイルをプリロードする。
 - `.kiro/hooks/aidlc-*.json` — IDE ネイティブの v2 hook 形式で登録されたフレームワークの
   hook。IDE の Agent Hooks パネルに現れる。（Kiro IDE 1.x は、harness が以前同梱していた
   レガシーの `.kiro.hook` 形式をもう実行しない。それらのビルドではレガシー hook は
@@ -161,17 +164,19 @@ sensor、scope、depth / テスト戦略 — は同一に振る舞う。同一*�
 **生成**される（`{{HARNESS_DIR}}` トークンを `.kiro` に置換し、`rules/` → `steering/` に
 リネームした core のコピー）。`bun scripts/package.ts --check` がドリフトガードで CI で走る。
 authored な Kiro IDE のサーフェスは `harness/kiro-ide/` に住む: orchestrator のスキル
-（`skills/aidlc/`）、CLI 互換のエージェント JSON（`agents/`）、hook アダプタと
-v2 hook JSON ファイル（`hooks/`）、CLI 専用の `settings/cli.json`、`AGENTS.md` —
+（`skills/aidlc/`）、常時包含の active-memory steering（`steering/`）、CLI 互換の
+エージェント JSON（`agents/`）、hook アダプタと v2 hook JSON ファイル（`hooks/`）、
+CLI 専用の `settings/cli.json`、`AGENTS.md` —
 編集するのはそれら（または `core/`）であり、生成された `dist/kiro-ide` では決してない。
 
-IDE の harness は CLI の harness（`harness/kiro/`）と 3 点で異なる:
+IDE の harness は CLI の harness（`harness/kiro/`）と 4 点で異なる:
 `/aidlc` スキルが（`settings/cli.json` で選択されるエージェントではなく）conductor である。
 v2 hook JSON ファイルを同梱する（CLI はエージェント JSON の `hooks` ブロックに依存し、
-IDE はそれを無視する）。そして manifest が委譲先エージェントの `.md` ファイルに `tools:` の
-frontmatter 許可を注入する（`frontmatterAdditions`）。IDE は委譲された subagent のツールを
-agent-v1 の JSON ではなく `.md` frontmatter から解決するためで、許可が無いと IDE の委譲先は
-ツール無しで走ることになる。frontmatter の許可はスコープ無しである点に注意
+IDE はそれを無視する）。常時包含の steering を通じて standing rule をプリロードする
+（CLI 専用のエージェント resources ではなく）。そして manifest が委譲先エージェントの `.md`
+ファイルに `tools:` の frontmatter 許可を注入する（`frontmatterAdditions`）。IDE は委譲された
+subagent のツールを agent-v1 の JSON ではなく `.md` frontmatter から解決するためで、許可が
+無いと IDE の委譲先はツール無しで走ることになる。frontmatter の許可はスコープ無しである点に注意
 （IDE にはそこに `allowedCommands`/`allowedPaths` の同等物が無い）。CLI の JSON サンドボックス
 より広い。
 [新しい harness への移植](../../harness-engineering/09-porting-to-a-new-harness.md) を参照。

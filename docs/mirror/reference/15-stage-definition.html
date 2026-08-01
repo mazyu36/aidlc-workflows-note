@@ -312,8 +312,8 @@ conductor はそれがどこに落ちるかをなお知る。stage が <code>pro
 <li><code>subagent</code> — ハブアンドスポーク。lead は新鮮な subagent コンテキストに dispatch される
 （conductor のコンテキストを吹き飛ばすであろう長い stage、例: Construction のコード生成）。
 stage が <code>support_agents</code> も宣言するとき、各々は lead が返したドラフトに対して本物のスポーク
-として dispatch され — 相互に盲目で、パスのみのブリーフ — そして lead は統合のためにもう 1 回
-dispatch される。</li>
+として dispatch され（相互に盲目なブリーフで、成果物はパスとして、積み上げられた steering
+bundle を運ぶ）、lead は統合のためにもう 1 回 dispatch される。</li>
 <li><code>pipeline</code> — チェーン。lead がドラフトする; 各 support agent が宣言された順序で肉付けし、各
 リンクはドラフトとそれ以前のすべての貢献を見る。順序が要点である。空でない <code>support_agents</code>
 を要求する。</li>

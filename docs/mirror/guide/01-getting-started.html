@@ -104,7 +104,7 @@
 </tr>
 <tr>
 <td><strong>bun</strong></td>
-<td>すべての CLI ツールと全 13 hooks（状態管理・audit ログ・sensor ディスパッチ・runtime-graph コンパイル・ループ強制・状態遷移と reviewer スコープの強制・statusline・human-turn の記録）に必要。すべて TypeScript で bun により実行される（起動 約 20ms）。追加依存なし — macOS・Linux・ネイティブ Windows PowerShell で同一に動作する。</td>
+<td>すべての CLI ツールと全 14 hooks（状態管理・audit ログ・sensor ディスパッチ・runtime-graph コンパイル・ループ強制・厳密な dispatch-rule 配送・状態遷移と reviewer スコープの強制・statusline・human-turn の記録）に必要。すべて TypeScript で bun により実行される（起動 約 20ms）。追加依存なし — macOS・Linux・ネイティブ Windows PowerShell で同一に動作する。</td>
 <td><code>curl -fsSL https://bun.sh/install | bash</code>（<a href="https://bun.sh">docs</a>）。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code></td>
 </tr>
 </tbody></table>
@@ -326,7 +326,7 @@ init コマンドを実行することはない。</p>
 </tr>
 <tr>
 <td>hook の存在</td>
-<td><code>settings.json</code> が束線するすべての hook（<code>hooks</code> ブロック + <code>statusLine</code> コマンド — フレームワークの全 13 hook）が <code>.claude/hooks/</code> に存在すること。束線済みなのに欠けている hook は大きく失敗する。期待一覧を <code>settings.json</code> から取るため、そこに hook を足せば自動で検査対象になる</td>
+<td><code>settings.json</code> が束線するすべての hook（<code>hooks</code> ブロック + <code>statusLine</code> コマンド — フレームワークの全 14 hook）が <code>.claude/hooks/</code> に存在すること。束線済みなのに欠けている hook は大きく失敗する。期待一覧を <code>settings.json</code> から取るため、そこに hook を足せば自動で検査対象になる</td>
 </tr>
 <tr>
 <td>プロジェクト構造</td>

@@ -47,8 +47,9 @@ stage は率いる agent を名指すが、agent は自分の stage を決して
 
 これらの stage を通して仕事を動かす機構は 2 つあり、harness engineer としてあなたは両者が
 読む**データ**を形作る。決定論的な**エンジン**
-（`core/tools/aidlc-orchestrate.ts`。サブコマンドは厳密に 3 つ: `next`、
-`report`、`park`）は `aidlc-state.md` とコンパイル済みの `stage-graph.json` を読み、
+（`core/tools/aidlc-orchestrate.ts`。サブコマンドは厳密に 4 つ: `next`、
+`continue`、`report`、`park`。`continue` は内部の steering 用トランスポート）は
+`aidlc-state.md` とコンパイル済みの `stage-graph.json` を読み、
 次に何が走るかを決め、型付きのディレクティブを 1 つ発する。**conductor**
 （`skills/aidlc/SKILL.md`）は各ディレクティブを運び出す薄い forwarding ループである。
 ルーティングはエンジンにある。あなたの stage ファイル、scope、rule はそれを操舵する入力である。

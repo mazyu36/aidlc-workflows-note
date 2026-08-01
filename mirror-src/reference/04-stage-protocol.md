@@ -546,20 +546,23 @@ Step 1-3 は framework に同梱される。Step 4-5 は user が管理する。
 
 ### Inline Stage と Inline Mob Lead
 
-1. stage 作業を行う前に、`directive.inline_context_paths` の **すべての** ファイルを読む。
-   engine は正確な persona と既存の knowledge ファイルのパスを展開する: `inline` には
-   lead + supports、`mob` には lead のみ（mob の supports は dispatch されるため）。
-   agent 名だけではロードされたコンテキストにならない。
-2. directive のパス順を保つ。これは 6 ステップの knowledge 順に従う。`inline` の
-   support-agent エントリや `mob` の lead エントリを省略しない。
-3. 実行中、ロードされたすべての観点を適用する。
+1. `run-stage` の前に、順序付けられた `load-steering` シーケンスを適用する。それは
+   アクティブ space のすべての実質的な rule をコンテンツとして届け、stage ごとに
+   再実行される。
+2. `inline_context_paths` の全エントリを読む: `inline` には lead + supports、`mob`
+   には lead のみ（mob の supports は dispatch されるため）。persona と knowledge は
+   path-loaded のままである。`context_warnings` があればそのまま示し、読み取り可能な
+   ロースターで続行する。agent 名だけではロードされたコンテキストにならない。
+3. 実行中、ロードされたすべての観点を適用する。`inline` の support-agent の観点や
+   `mob` の lead の観点を省略しない。
 
 ### Subagent Stage
 
-1. 名指された harness agent を dispatch する; その config が persona と knowledge をロード
-   する。
-2. コピーした persona や knowledge の散文ではなく、正確な rule パス、関連する先行成果物の
-   パス、タスク指示を渡す。
+1. 名指された harness agent を dispatch する; その config が persona と knowledge を
+   ロードする（reviewer のチェックリストはビルド時に reviewer agent 本体へ吸収される）。
+2. 積み上げられた `load-steering` の rule バンドルを逐語的にブリーフへ貼り付け、
+   コピーした persona や knowledge の散文ではなく、関連する先行成果物のパスと
+   タスク指示を渡す。
 3. stage のメタデータが名指す agent を選ぶ。
 
 ### Multi-Agent Stage（アンサンブルトポロジ）

@@ -90,16 +90,17 @@
 <main>
 <p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
 <h1 id="hooks-and-tools">Hooks and Tools</h1>
-<p>この章は、hook システムのアーキテクチャ、13 個すべての hook スクリプト、audit イベントの分類体系、CLI ツールの構成、そして決定論的なユーティリティツールを文書化する。</p>
+<p>この章は、hook システムのアーキテクチャ、14 個すべての hook スクリプト、audit イベントの分類体系、CLI ツールの構成、そして決定論的なユーティリティツールを文書化する。</p>
 <blockquote>
 <p><strong>パス規約。</strong> 状態・audit・成果物は、アクティブな intent の <strong>record dir</strong> の下に住む — <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>、以下では <code>&lt;record&gt;/</code> と書く（record dir が時系列でソートされるよう、コンパクトな UTC 日付プレフィックスと短い kebab-case ラベルを付す; 正規の id は <code>intents.json</code> レジストリ行の UUIDv7 である）。audit トレイルは単一ファイルではなく、<code>&lt;record&gt;/audit/</code> の下の clone ごとのシャードのディレクトリである。</p>
 </blockquote>
 <hr>
 <h2 id="hook-system-architecture">Hook システムのアーキテクチャ</h2>
-<p>この実装は <code>.claude/hooks/</code> にある 13 個の hook スクリプトを使う。13 個すべてが TypeScript である（<code>bun</code> で走る）。13 個すべてが <strong>project-wide</strong> である — <code>settings.json</code> に登録され（statusline はトップレベルの <code>statusLine</code> キーで、残る 12 個は <code>hooks</code> ブロックで）、どの skill がアクティブかに関わらず発火する。以前は分割されていた（6 個は skill スコープとして <code>aidlc/SKILL.md</code> frontmatter に宣言され、残りは project-wide だった）; v0.6.0 で skill スコープの 6 個を <code>settings.json</code> に移し、すべてのエントリポイント — orchestrator、各同梱の scope/stage runner、および手書きの顧客 runner — が runner ごとの <code>hooks:</code> ブロック無しで決定論的なスパインを継承するようにした。</p>
-<p>13 個のうち 10 個は <strong>非ブロッキング</strong> である。3 個は <strong>フロー変更</strong> である: <code>Stop</code> hook はフォワーディングループを走らせ続け、reviewer-scope hook は兄弟 unit の reviewer アクセスを拒否し、state-transition guard は <code>aidlc-orchestrate.ts report</code> を迂回する直接のライフサイクル呼び出しを拒否する。</p>
+<p>この実装は <code>.claude/hooks/</code> にある 14 個の hook スクリプトを使う。14 個すべてが TypeScript である（<code>bun</code> で走る）。14 個すべてが <strong>project-wide</strong> である — <code>settings.json</code> に登録され（statusline はトップレベルの <code>statusLine</code> キーで、残る 13 個は <code>hooks</code> ブロックで）、どの skill がアクティブかに関わらず発火する。以前は分割されていた（6 個は skill スコープとして <code>aidlc/SKILL.md</code> frontmatter に宣言され、残りは project-wide だった）; v0.6.0 で skill スコープの 6 個を <code>settings.json</code> に移し、すべてのエントリポイント — orchestrator、各同梱の scope/stage runner、および手書きの顧客 runner — が runner ごとの <code>hooks:</code> ブロック無しで決定論的なスパインを継承するようにした。</p>
+<p>14 個のうち 10 個は <strong>非ブロッキング</strong> である。4 個は <strong>フロー変更</strong> である: <code>Stop</code> hook はフォワーディングループを走らせ続け、dispatch-rules hook は harness が入力の書き換えをサポートする場合に厳密な active-stage の rule を subagent のブリーフに添付し、reviewer-scope hook は兄弟 unit の reviewer アクセスを拒否し、state-transition guard は <code>aidlc-orchestrate.ts report</code> を迂回する直接のライフサイクル呼び出しを拒否する。</p>
 <pre class="term"><code>.claude/hooks/
 +-- mint-presence.ts<span class="t-comment">     # UserPromptSubmit + PostToolUse AskUserQuestion (project-wide, settings.json, TypeScript)</span>
++-- dispatch-rules.ts<span class="t-comment">    # PreToolUse Task|Agent (project-wide, settings.json, TypeScript, flow-altering)</span>
 +-- state-transition-guard.ts # PreToolUse Bash (project-wide, settings.json, TypeScript, flow-altering)
 +-- reviewer-scope.ts<span class="t-comment">    # PreToolUse file/search/shell tools (project-wide, settings.json, TypeScript, flow-altering)</span>
 +-- audit-logger.ts<span class="t-comment">      # PostToolUse Write|Edit (project-wide, settings.json, TypeScript)</span>
@@ -129,6 +130,13 @@
 <td>Project-wide (settings.json)</td>
 <td>(空) / <code>AskUserQuestion</code></td>
 <td>すべての本物の人間プロンプトと、応答されたすべての <code>AskUserQuestion</code> ウィジェットで <code>HUMAN_TURN</code> イベントを記録する（gate 承認やインタビュー回答はタイプされたプロンプトではなくウィジェットのクリックである）; 承認/インタビュー gate は台帳をチェックし、最後の gate 解決以降に 1 つを要求するので、autopilot 下のモデルは人間が行動していないのに承認を捏造できない</td>
+</tr>
+<tr>
+<td><code>dispatch-rules.ts</code></td>
+<td>PreToolUse</td>
+<td>Project-wide (settings.json)</td>
+<td><code>Task|Agent</code></td>
+<td><strong>フロー変更。</strong> ディスパッチされた stage の実質的なアクティブ space の rule を解決し、その正確なバイトをすべての AI-DLC subagent ブリーフに追記する。Claude、Codex、opencode の入力を書き換える; Kiro CLI はツール引数を書き換えられないため、不完全なブリーフは advisory の警告付きで進む（Kiro CLI agent は <code>resources</code> を通じてアクティブな memory ツリーをプリロードする; ロードできない必須 rule はそれでも repair guidance 付きでブロックする）。Kiro IDE はライブの memory-file 参照を持つ常時包含のワークスペース steering を使う。完全な bundle が既に存在する場合は idempotent である</td>
 </tr>
 <tr>
 <td><code>state-transition-guard.ts</code></td>
@@ -216,13 +224,13 @@
 </tr>
 </tbody></table>
 <h3 id="shared-characteristics">共通の性質</h3>
-<p>13 個の TypeScript hook すべて:</p>
+<p>14 個の TypeScript hook すべて:</p>
 <ul>
 <li>TypeScript で書かれ、<code>bun</code> で走る</li>
 <li>実行権限を必要としない — macOS、Linux、ネイティブ Windows PowerShell で同一に動く</li>
 <li>Claude Code から stdin で JSON を受け取る</li>
 <li>ネイティブの JSON パースを使う（<code>jq</code> 依存なし）</li>
-<li>成功時またはスキップ時に code 0 で exit する（<code>Stop</code> hook はブロックするときも 0 で exit する — ブロックは stdout の <code>{&quot;decision&quot;:&quot;block&quot;}</code> JSON オブジェクトで通知される; 2 つの PreToolUse guard は exit 2 + stderr の理由で拒否を通知する）</li>
+<li>成功時またはスキップ時に code 0 で exit する（<code>Stop</code> hook はブロックするときも 0 で exit する — ブロックは stdout の <code>{&quot;decision&quot;:&quot;block&quot;}</code> JSON オブジェクトで通知される; 3 つの PreToolUse 制御 hook は回復不能または再試行可能な拒否を exit 2 + stderr の理由で通知する）</li>
 <li>複数のフォールバック手法で <code>$CLAUDE_PROJECT_DIR</code> を解決する</li>
 <li>ロックとユーティリティ関数を <code>lib.ts</code> から共有する</li>
 </ul>
@@ -370,7 +378,7 @@ sequenceDiagram
 <p><strong>ソース:</strong> <code>.claude/hooks/aidlc-stop.ts</code>
 <strong>トリガー:</strong> conductor がターンを終えようとするとき（matcher: 空 = 常時、<code>/aidlc</code> がアクティブな間）
 <strong>目的:</strong> インタラクティブなフォワーディングループを強制する — engine がワークフローを <code>done</code> と報告するまで走らせ続ける</p>
-<p>これはフレームワークの 3 つのフロー変更 hook の 1 つであり、下の 2 つの PreToolUse guard と並ぶ。ターンの終了を止めるために <code>{&quot;decision&quot;:&quot;block&quot;}</code> を返しうる; 他の 10 個の hook は観察して exit 0 する。gate 付きの会話的な経路では conductor（LLM）がループを保持する、なぜなら人間に質問できるのはそれだけだからである — だから engine を参照し忘れると、ワークフローは漂流する。この hook はその LLM の勤勉さへの依存を取り除く: ループは harness によって強制される。</p>
+<p>これはフレームワークの 4 つのフロー変更 hook の 1 つであり、dispatch-rules・state-transition・reviewer-scope の 3 つの PreToolUse 制御と並ぶ。ターンの終了を止めるために <code>{&quot;decision&quot;:&quot;block&quot;}</code> を返しうる; 他の 10 個の hook は観察して exit 0 する。gate 付きの会話的な経路では conductor（LLM）がループを保持する、なぜなら人間に質問できるのはそれだけだからである — だから engine を参照し忘れると、ワークフローは漂流する。この hook はその LLM の勤勉さへの依存を取り除く: ループは harness によって強制される。</p>
 <p><strong>処理ステップ:</strong></p>
 <ol>
 <li><strong>stdin のイディオム:</strong> <code>log-subagent.ts</code> を鏡写す — TTY は Claude Code JSON が来ないことを意味する（test/debug）ので、stop を許す。さもなければ Stop-hook JSON を読み、そこから必要なのは <code>stop_hook_active</code> だけである。</li>
@@ -399,6 +407,13 @@ sequenceDiagram
 <p><strong>sensor-fire hook の advisory 契約との対比。</strong> <code>aidlc-sensor-fire.ts</code> は明示的な <em>never-block</em> 契約を運ぶ（決して <code>{decision: block}</code> を返さない、<code>t95</code> Case 7 で保証される）。それは <em>その hook の</em> advisory 契約であり、フレームワーク全体のブロック禁止ではない。<code>Stop</code> hook のループ強制のための <code>block</code> の使用は、別の、認可された契約である。</p>
 </blockquote>
 <hr>
+<h3 id="pretooluse-aidlc-dispatch-rulests">PreToolUse: aidlc-dispatch-rules.ts</h3>
+<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-dispatch-rules.ts</code>
+<strong>トリガー:</strong> AI-DLC subagent 呼び出しの前（Claude では <code>Task</code> または <code>Agent</code>; 他の harness ではアダプタの等価物）
+<strong>目的:</strong> conductor からワーカーへの境界を越えて厳密な active-stage の rule を保持する</p>
+<p>orchestration engine は既に、境界付きの <code>load-steering</code> チャンクを通じて conductor へ実質的な rule を届けている。この hook は次の境界を閉じる: 有効な明示的な stage-file パスをまず、次に状態ファイルの <code>Current Stage</code> を、最後に生きた stage が無いときの一意な slug 言及を、ディスパッチ stage の解決に使う。未知のパス形の参照は生きた stage のフォールバックを抑制しない。engine と同じアクティブ space の rule ロースターを読み、正確なファイル内容を digest マーク付きの bundle に追記する。その完全な生成ブロックだけが既に配送済みとみなされるので、marker の無いコピーや rule を言い換えた散文は注入を回避せず、再試行は idempotent のままである。composer を除くインストール済みの agent ロースターのすべてのエントリが、plugin 所有の agent を含めて参加する; ロースター外のターゲットは無変更で通過する。</p>
+<p>Claude と Codex は <code>hookSpecificOutput.updatedInput</code> を消費する; opencode アダプタはその書き換えを <code>output.args</code> に適用する。hook は完全な応答をシリアライズしてから書き込み、過大な応答は repair guidance 付きで拒否するので、トランスポートの上限が切り詰められた JSON を生むことはない。Kiro CLI は subagent の引数を露出するが書き換えチャンネルを持たないので、そのアダプタは提案された書き換えを観察し、advisory の警告を出しつつディスパッチを許す; その agent-v1 の <code>resources</code> が memory ツリーをプリロードする。書き換え上限を超える有効な bundle もそのネイティブなプリロードを通じて進む一方、欠落・読み取り不能・無効な UTF-8 の必須 rule はそれでもブロックして repair guidance を出す。Kiro IDE は hook にツール引数を露出せず、この hook を登録しない; <code>.kiro/steering/aidlc-active-memory.md</code> は常時包含され、ライブファイル参照を使って conductor と委譲先エージェントの両方に向けてアクティブな memory ツリーをプリロードする。</p>
+<hr>
 <h3 id="pretooluse-aidlc-state-transition-guardts">PreToolUse: aidlc-state-transition-guard.ts</h3>
 <p><strong>ソース:</strong> <code>.claude/hooks/aidlc-state-transition-guard.ts</code>
 <strong>トリガー:</strong> <code>Bash</code> ツール呼び出しの前
@@ -415,7 +430,7 @@ recovery/構成の動詞は利用可能なまま残る。state CLI は独立に�
 <p><strong>ソース:</strong> <code>.claude/hooks/aidlc-reviewer-scope.ts</code>
 <strong>トリガー:</strong> file/search/shell ツール呼び出しの前（<code>Read</code>、<code>NotebookRead</code>、<code>Edit</code>、<code>MultiEdit</code>、<code>Write</code>、<code>NotebookEdit</code>、<code>LS</code>、<code>Glob</code>、<code>Grep</code>、または <code>Bash</code>; matcher: <code>&quot;Read|NotebookRead|Edit|MultiEdit|Write|NotebookEdit|LS|Glob|Grep|Bash&quot;</code>）
 <strong>目的:</strong> unit ごとの reviewer 読み取りスコープ境界（stage-protocol §12a）を決定論的に強制する</p>
-<p>これはフレームワークの 3 つのフロー変更 hook の 1 つであり、2 つの <code>PreToolUse</code> guard の 1 つである。§12a の散文の境界は、1 つの unit にディスパッチされた reviewer は兄弟 unit の <code>construction/&lt;other-unit&gt;/</code> の内容をどのツールでも読んではならないと言う — フィールドのトランスクリプトは、勤勉な reviewer が cross-unit glob（<code>construction/*/*/*.md</code>）を運ぶ再帰的な grep で散文を迂回し、unit ごとのレビューコストを unit 数に対して超線形に育てるのを示した。フレームワークのレイヤリング（決定論はツールと hook に属する）に従い、この hook は境界を自己強制させる。</p>
+<p>これはフレームワークの 4 つのフロー変更 hook の 1 つであり、3 つの <code>PreToolUse</code> 制御の 1 つである。§12a の散文の境界は、1 つの unit にディスパッチされた reviewer は兄弟 unit の <code>construction/&lt;other-unit&gt;/</code> の内容をどのツールでも読んではならないと言う — フィールドのトランスクリプトは、勤勉な reviewer が cross-unit glob（<code>construction/*/*/*.md</code>）を運ぶ再帰的な grep で散文を迂回し、unit ごとのレビューコストを unit 数に対して超線形に育てるのを示した。フレームワークのレイヤリング（決定論はツールと hook に属する）に従い、この hook は境界を自己強制させる。</p>
 <p><strong>ディスパッチをどう学ぶか。</strong> conductor は §12a ステップ 1（unit ごとの stage のみ）で <code>&lt;record&gt;/.aidlc-reviewer-dispatch.json</code> を書く — <code>{reviewer, stage, unit, exempt[]}</code>、ここで <code>exempt</code> は解決済みの <code>consumes</code> 契約パス、stage ファイル、Q&amp;A ファイル、そして（現在の unit の設計が統合ポイントを明示的に名指すとき）その 1 つの所有する兄弟ファイルを運ぶ — そしてステップ 3 で判定が読まれるときそれを削除する。この記録が強制のウィンドウである; 6 時間より古い記録はクラッシュしたレビューからの孤児であり、無視され janitor される（compose-marker の陳腐化規律）。</p>
 <p><strong>Identity。</strong> Claude Code と Codex はアクティブな subagent の名前を hook ペイロードの <code>agent_type</code> として届ける（メインセッションの呼び出しでは不在）ので、hook は <code>agent_type</code> が記録の <code>reviewer</code> に等しいときだけ強制する。Kiro CLI は hook を 2 つの reviewer agent 自身の JSON 設定の中に登録するので、登録それ自体が identity である（adapter が <code>scoped_registration</code> を保証する）。Kiro IDE は登録を出荷しない: ツール入力はサポートされる世代をまたいで一様には利用できない（捕捉される PostToolUse の write / shell の入力は空。より新しい 1.x ビルドは一部の PreToolUse と委譲の入力を populate する - <code>kiro-ide-hook-payload.md</code> を参照）ので、フレームワークはそこで安定した pre-tool の identity/target 契約に依存できず、§12a の散文の境界がその harness で統べる。</p>
 <p><strong>Decision。</strong> matcher（<code>evaluateReviewerScope</code>、<code>t220</code> で固定されたエクスポートされた純関数）はパスフィールドとコマンド/パターンテキストを <code>construction/&lt;seg&gt;</code> トークンについて走査する: ディスパッチされた unit は通過し、ワイルドカードや裸の sweep ルートはブロックし、具体的な兄弟は、完全なトークンが免除エントリの <code>construction/</code> サフィックスに正確に合致しない限りブロックする。現在の unit の grep、共有の inception 契約、および validation ツールの実行は決して触られない。ブロックは <code>REVIEWER_SCOPE_BLOCKED</code> audit 行（Tool、Target、Stage、Unit）を発し、<strong>exit 2 + リダイレクトする stderr の理由</strong> で通知する — harness の PreToolUse reject 契約 — それはスコープを名指し、reviewer を通過した契約へ指し戻す。</p>
@@ -957,7 +972,7 @@ test コマンド、インフラ）で期待される。WebSearch は調査志�
 <hr>
 <h2 id="prerequisites">前提条件</h2>
 <ol>
-<li><strong>bun</strong> -- 13 個すべての hook とすべての CLI ツール（<code>aidlc-utility.ts</code>、<code>aidlc-state.ts</code>、<code>aidlc-jump.ts</code>、<code>aidlc-orchestrate.ts</code>、<code>aidlc-audit.ts</code>、<code>aidlc-validate.ts</code>、<code>aidlc-graph.ts</code>、<code>aidlc-sensor.ts</code>、<code>aidlc-learnings.ts</code>、<code>aidlc-runtime.ts</code>）に必須。<code>curl -fsSL https://bun.sh/install | bash</code> でインストール。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code>。非対話シェルのために PATH に在らねばならない。</li>
+<li><strong>bun</strong> -- 14 個すべての hook とすべての CLI ツール（<code>aidlc-utility.ts</code>、<code>aidlc-state.ts</code>、<code>aidlc-jump.ts</code>、<code>aidlc-orchestrate.ts</code>、<code>aidlc-audit.ts</code>、<code>aidlc-validate.ts</code>、<code>aidlc-graph.ts</code>、<code>aidlc-sensor.ts</code>、<code>aidlc-learnings.ts</code>、<code>aidlc-runtime.ts</code>）に必須。<code>curl -fsSL https://bun.sh/install | bash</code> でインストール。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code>。非対話シェルのために PATH に在らねばならない。</li>
 <li><strong>$CLAUDE_PROJECT_DIR</strong> -- Claude Code がプロジェクトルートに設定する。すべての hook がこれを使って <code>aidlc/</code> workspace（およびその中のアクティブな intent の record dir）を特定する。</li>
 </ol>
 <p>他の前提条件は無い: すべての hook とツールは bun で走る TypeScript なので、どのプラットフォームでも <code>jq</code>、<code>sed</code>、<code>awk</code>、Git Bash、WSL は不要である。</p>

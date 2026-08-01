@@ -307,12 +307,21 @@ bash tests/run-tests.sh       # POSIX compatibility wrapper
 
 # Output modifiers
 --verbose       # Write per-test logs to tests/logs/
+--no-llm        # Force all live-model gates closed while deterministic
+                # integration/e2e tests still run. Also via AIDLC_NO_LLM=1.
 --debug         # Implies --verbose; streams per-test output and writes SDK/TUI
                 # driver traces to tests/logs/
 --filter PAT    # Only run tests whose filename matches extended regex PAT
 --parallel N    # Run up to N test files concurrently within a tier (alias: -P N).
                 # Default: 1 (serial). Smoke and unit tiers are always serial.
 ```
+
+`--no-llm`（または `AIDLC_NO_LLM=1`）は導出された Claude gate を閉じ、すべての
+ライブモデル opt-in を `0` に強制する: Claude TUI、Kiro ACP/TUI/IDE、Codex exec、
+opencode run。これらの tier の決定論的なテストは、トークンフリーの TUI 基盤の
+preflight を含めてなお走る。これにより CI は、CLI がインストールされていて
+ライブ変数が `1` として継承されていても、ライブモデルのコストやフレーキーさ無しの
+完全な tier の決定論的プロファイルを得られる。
 
 ライブの SDK と TUI harness の driver は、既定で project のみの Claude 設定ソースを用いる。つまり、
 コピーされたテストの `.claude/` プロジェクト設定と hook をロードし、開発者の user レベルの hook/設定を

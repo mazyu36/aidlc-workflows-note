@@ -112,8 +112,9 @@ agent の追加、scope の定義: フレームワーク自身の設計原則は
 （agent ファイルを置く）しても、ある stage がそれを使うと選ぶまでワークフローを乱さない。</p>
 <p>これらの stage を通して仕事を動かす機構は 2 つあり、harness engineer としてあなたは両者が
 読む<strong>データ</strong>を形作る。決定論的な<strong>エンジン</strong>
-（<code>core/tools/aidlc-orchestrate.ts</code>。サブコマンドは厳密に 3 つ: <code>next</code>、
-<code>report</code>、<code>park</code>）は <code>aidlc-state.md</code> とコンパイル済みの <code>stage-graph.json</code> を読み、
+（<code>core/tools/aidlc-orchestrate.ts</code>。サブコマンドは厳密に 4 つ: <code>next</code>、
+<code>continue</code>、<code>report</code>、<code>park</code>。<code>continue</code> は内部の steering 用トランスポート）は
+<code>aidlc-state.md</code> とコンパイル済みの <code>stage-graph.json</code> を読み、
 次に何が走るかを決め、型付きのディレクティブを 1 つ発する。<strong>conductor</strong>
 （<code>skills/aidlc/SKILL.md</code>）は各ディレクティブを運び出す薄い forwarding ループである。
 ルーティングはエンジンにある。あなたの stage ファイル、scope、rule はそれを操舵する入力である。</p>
