@@ -86,7 +86,7 @@
   <li>エージェント別ナレッジを読む。developer なら code-generation-guide や api-design-guide にあたる。</li>
   <li>チーム側の共有ナレッジとエージェント別ナレッジを、存在すれば読む。最後に現在ステージの consumes 契約が指す前段成果物を読む。</li>
 </ol>
-<p>ルールの適用対象は実行時に解決しない。compile が org → team → project → phase → stage の 5 層を厳密加算で解決する。上書きはせず、すべて足す。結果は各ステージノードの rules_in_context に焼き込まれる。directive を受けた conductor は、そのリストを読むだけで済む。</p>
+<p>ルールの適用対象は実行時に解決しない。compile が org → team → project → phase → stage の 5 層を厳密加算で解決する。上書きはせず、すべて足す。結果は各ステージノードの rules_in_context に焼き込まれる。ただし conductor へ渡すのはパスの一覧ではなく本文である。ステージ入場時、エンジンは run-stage の前に load-steering directive を順に返し、実質的な中身を持つルールファイルを分割して届ける。中身が空のテンプレートは落ちる。サイズ超過時にパス渡しへ退避する経路はない。</p>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/knowledge">core/knowledge/（59 ファイル）</a><button class="copy" type="button" data-copy="core/knowledge" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/knowledge/aidlc-shared/rules-reading.md">rules-reading.md（5 層解決の仕様）</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/rules-reading.md" aria-label="パスをコピー">⧉</button></span>
@@ -114,9 +114,11 @@ You are a senior product leader — the person who signs off before work goes to
   <p class="excerpt-note">動作: レビュアーの frontmatter。「作らない、挑む」を宣言し、tier: balanced（中型モデル固定）と Task 禁止を持つ。応答の 1 行目に自分の名前を書く Output Contract があり、監査がどのレビュアーが走ったかを機械的に記録できる。</p>
 </figure>
 <p>architecture-reviewer には読み取り境界もある。担当 Unit の外、つまり他 Unit の <code>construction/</code> ディレクトリはどのツールでも読めない。この境界は約束ではなく、PreToolUse フック（<code>aidlc-reviewer-scope.ts</code>）が exit 2 で機械的に拒否する。</p>
+<p>レビュアーのチェックリストは実行時に読ませない。レビュアーは常に dispatch されるので、確実に届く経路は定義本文だけである。そこでパッケージャがビルド時に <code>core/knowledge/&lt;agent&gt;/</code> の中身を各レビュアーの <code>.md</code> 本文へ吸収する。手書きの正はナレッジファイル側に残り、吸収後の本文は dist と同じ生成物になる。対象レビュアーはステージ frontmatter の <code>reviewer:</code> 行から導出するので、新しいレビュアーを宣言するステージが増えれば自動で追随する。</p>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/agents/aidlc-architecture-reviewer-agent.md">aidlc-architecture-reviewer-agent.md</a><button class="copy" type="button" data-copy="core/agents/aidlc-architecture-reviewer-agent.md" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/hooks/aidlc-reviewer-scope.ts">core/hooks/aidlc-reviewer-scope.ts</a><button class="copy" type="button" data-copy="core/hooks/aidlc-reviewer-scope.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/scripts/agent-knowledge.ts">scripts/agent-knowledge.ts（ビルド時の吸収）</a><button class="copy" type="button" data-copy="scripts/agent-knowledge.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="sensors">センサー　決定論の第二意見（助言のみ）</h2>
