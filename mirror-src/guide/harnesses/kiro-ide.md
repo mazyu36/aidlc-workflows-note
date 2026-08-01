@@ -85,17 +85,21 @@ trigger）で hook を登録する（エージェント JSON 内の `hooks` ブ�
 とは別の機構）。各 hook は共有の `aidlc-kiro-adapter.ts` シムを経由するコマンドを
 実行し、シムが IDE の hook イベントをバイト共有の core hook が期待する形に正規化する。
 
-アダプタは hook のコンテキストを **`USER_PROMPT` 環境変数**（1.0 以前のチャネル）から
-読む。コンテキストが stdin で届き `USER_PROMPT` が空になる IDE 1.x では、ペイロードに
-依存する 2 つのターゲット（`audit-and-sensors`・`log-subagent`）は発火するが、見える形の
-hook drop を伴って no-op になる。残りの hook はペイロードに依存せず、どちらの IDE 世代でも
-動く。stdin のコンテキストチャネルは後続の強化として計画されている。
+Kiro IDE 1.x は hook のコンテキストを **stdin 上の JSON**（snake_case:
+`{ tool_name, tool_input, tool_response }`）で渡す。より古い 0.12 ビルドは代わりに
+`USER_PROMPT` 環境変数を camelCase の等価物で設定し、アダプタは両方を受け入れる）。
+捕捉される PostToolUse の write / shell イベントは、どちらのチャネルでもツールの
+input を空のままにするので、書かれたパスは結果テキストから復元する必要があり、
+ペイロードの無い hook（`runtime-compile`・`sync-statusline`）は audit トレイルから
+走る。より新しい 1.x ビルドは一部の PreToolUse と委譲の input を populate する。
+アダプタはそれらのフィールドに依存せずに保持する。
 
-1.0 以前のビルドでは、`USER_PROMPT` は JSON 文字列
-`{ toolName, toolArgs, toolResult, toolSuccess }` である。IDE は `toolArgs` を空のままに
-するため、アダプタは書かれたファイルのパスを `toolResult` のテキストから復元し、
-ペイロードの無い hook（`runtime-compile`・`sync-statusline`）をツールのペイロードではなく
-audit トレイルから駆動する。
+ペイロードの取得は**ペイロードに依存するターゲットに限定してゲートされる**
+（`audit-and-sensors`・`log-subagent`）。0.12 ビルド（一度も書き込まずに stdin を開く）
+では、空でない `USER_PROMPT` が即座に消費される。それ以外では、アダプタは 2 秒の
+broken-channel 上限付きで 1.x の stdin チャネルを読む。他のすべてのターゲット —
+すべての `PreToolUse` で発火する `block` を含む — はどちらのチャネルにも触れず、
+ゼロレイテンシの経路を保つ。
 
 | Hook | trigger（matcher） | 目的 |
 |------|-------------------|---------|
@@ -104,7 +108,7 @@ audit トレイルから駆動する。
 | `aidlc-stop` | `Stop` | forwarding loop の audit（助言のみ。IDE では Stop の trigger はブロックできない — 強制は conductor 自身の Stop プロトコルに依る） |
 | `aidlc-block` | `PreToolUse` | 承認 gate が開いていて以降に人間が行動していない間、ツール呼び出しをハードブロック（human-presence の床） |
 | `aidlc-audit-logger` | `PostToolUse`（`fs_write\|str_replace\|fs_append`） | 成果物の作成 / 更新を記録し、続けて適用される sensor を発火（パスはツールの結果から） |
-| `aidlc-log-subagent` | `PostToolUse`（`invoke_sub_agent`） | 委譲先の identity 付きで `SUBAGENT_COMPLETED` を記録 |
+| `aidlc-log-subagent` | `PostToolUse`（`^(subagent_.+\|invoke_sub_agent)$`） | 委譲先の identity 付きで `SUBAGENT_COMPLETED` を記録。matcher が広いのでどの委譲名もアダプタに届く。アダプタは補助的な `subagent_response` シェルを捨てる |
 | `aidlc-runtime-compile` | `PostToolUse`（`execute_bash`） | runtime グラフを再コンパイル（audit 末尾で判定） |
 | `aidlc-sync-statusline` | `PostToolUse`（`execute_bash`） | audit の最新 `STAGE_STARTED` から `Current Stage` を前方専用で同期（IDE は解析できる task ペイロードを一切出さない） |
 

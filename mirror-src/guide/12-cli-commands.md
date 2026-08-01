@@ -577,6 +577,16 @@ bun .claude/tools/aidlc-utility.ts select-plugins aidlc,test-pro
 
 `bun .claude/tools/aidlc-utility.ts recompose --skip <slugs> --add <slugs>`（カンマ区切り）は、ライブの状態ファイル上で、PENDING かつカーソルより先の stage の計画 suffix を flip する。audit ロック下で走り、残る stage の必須入力を飢えさせる flip を拒否する（および完了／進行中 stage の flip、カーソルより後ろの stage、Construction の最初の EXECUTE stage — walking-skeleton の錨 — をどちらの向きにも動かす flip、Status が Running でないワークフローに対する recompose、自律 Construction 下の recompose — 計画の再形成は gate に人間を要するので先に gated に切り替えるか swarm を終わらせる）、派生した状態フィールドを再構築し、`RECOMPOSED` を発する。通常はワークフロー途中に `/aidlc compose` 経由で到達し、直接は打たない。
 
+### `aidlc-graph ars` — 決定論的な ARS スコアリング
+
+`bun .claude/tools/aidlc-graph.ts ars --iae <s> --csu <s> --ve <s> --r <s> --ua <s> [--completed <csv>] [--project-type <t>]` は、adaptive composer の Autonomy Risk Score の算術を計算する: バンドラベル付きの重み付き合成値、LOW/MED/HIGH コンポーネントバンド、出荷済みコストの事前分布に対する stage ごとの期待値スクリーン、グリッド diff 数で最も近い既製 scope、そして markdown として事前レンダリングされた 2 つの gate テーブルである。定数 — 重み、バンドの境界、stage コストの事前分布、EV しきい値 — はすべて `tools/data/ars-priors.json` から読まれるので、同じ 5 つのスコアは常に同じ数値を描画する。composer はエビデンスからコンポーネントをスコアリングし、乗算を自分でやる代わりにこの出力をコピーする。`--completed`（カンマ区切りの slug）は、既に EXECUTE を走らせた stage を派生グリッドに残す。`--project-type brownfield|greenfield` は、コンパイル済みの `condition:` が他方の種類のプロジェクトに制限している stage をスクリーンアウトする（今日時点では Reverse Engineering が brownfield 限定）。JSON 結果は stdout に着地する。範囲外のスコア、未知の stage slug、priors スキーマ違反では exit 1 — 無言のフォールバックは決してしない。合成値は gate にいる人間のための ADVISORY な指標である: 決定論的に何かがそれでルーティングされることはない。
+
+```bash
+bun .claude/tools/aidlc-graph.ts ars --iae 0.55 --csu 0.75 --ve 0.65 --r 0.50 --ua 0.55
+bun .claude/tools/aidlc-graph.ts ars --iae 0.30 --csu 0.80 --ve 0.40 --r 0.20 --ua 0.10 \
+  --project-type greenfield --completed intent-capture,scope-definition
+```
+
 ### `aidlc-graph validate-grid` — 任意グリッドの依存チェック
 
 `bun .claude/tools/aidlc-graph.ts validate-grid --proposal <path> [--strict] [--project-type <t>] [--keywords <csv>]` は、任意の `{"<stage>": "EXECUTE"|"SKIP"}` JSON グリッドを検証する。lenient モードは `validate-scope` を映す（経路外の必須プロデューサは助言）。`--strict` はそれをハード却下する（recompose の姿勢）。`--keywords` は付与された各キーワードを、既存 scope が既に主張するキーワードと照合する: 衝突は現職の scope を名指すハードエラーである（composer は gate で付与されたキーワードを書く前にこれを走らせる）。無効なときのみ exit 1。JSON 結果は stdout に着地する。

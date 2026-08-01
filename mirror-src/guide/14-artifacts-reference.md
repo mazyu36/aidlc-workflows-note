@@ -40,7 +40,6 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
     approval-handoff/
 
   inception/                        # Phase 2 artifacts
-    reverse-engineering/            (conditional: brownfield)
     practices-discovery/            (conditional)
     requirements-analysis/
     user-stories/                   (conditional)
@@ -71,6 +70,22 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
   archive/                          (created on-demand)
     {ISO-date}-{stage-name}/
 ```
+
+**9 個の reverse-engineering 成果物は record dir に無い。** それら
+（`architecture.md`、`code-structure.md`、`technology-stack.md`、…）は 1 階層上、
+space レベルのリポジトリごとの CodeKB —
+`aidlc/spaces/<space>/codekb/<repo>/` — に落ちる。intent ごとのコピーではなく、
+リポジトリごとに 1 つのストアである。スナップショットではない: stage の条件は
+「鮮度のために常に再実行」なので、当てはまるすべての brownfield intent がスキャンを
+再実行し、その 9 ファイルを上書きする。最後の書き込みが勝つ
+（`reverse-engineering-timestamp.md` が最後にいつスキャンが走り、何をカバーしたかを
+記録する）。したがって intent はリポジトリの最新スキャンを読む — 自分自身の record dir が
+作られた時点のものではない。record dir が実際に得るのは、stage 自身の `memory.md`
+日誌 — stage が走るときにオンデマンドで作られる（下の**stage ごとの memory 日誌**を
+参照）— であり、そのため `inception/reverse-engineering/` ディレクトリがそこに現れることは
+あるが、日誌以外は何も持たない。Codekb への書き込みは `codekb > <repo> > <name>` という
+breadcrumb で audit ログされるので、intent ごとの記録は何が変わったか・いつ変わったかを
+それでも残す。
 
 **チームナレッジは record dir に無い。** 1 階層上、space レベル —
 `aidlc/spaces/<space>/knowledge/`（`intents/` の兄弟）— に住み、1 つの intent の記録に
@@ -118,7 +133,7 @@ flowchart LR
 
 <!-- Text fallback: Stage creates artifact, reviewed at approval gate, committed to version control, consumed by downstream stages, verified at phase boundary. -->
 
-1. **作成** — リードエージェントが stage 実行中に成果物を作り、intent の record dir の適切なサブディレクトリへ書く
+1. **作成** — リードエージェントが stage 実行中に成果物を作り、intent の record dir の適切なサブディレクトリへ書く（上で述べた space レベルの例外あり: Reverse Engineering はリポジトリごとの codekb ストアへ、チームナレッジは `knowledge/` へ書く）
 2. **レビュー** — 承認 gate で成果物をレビューし、承認するか変更を要求する
 3. **コミット** — 承認後、成果物はバージョン管理の準備が整う（下の git ポリシーを参照）
 4. **消費** — 下流の stage が成果物を入力として読む（下の入力の表を参照）
@@ -154,7 +169,7 @@ flowchart LR
 
 | Stage | 主要成果物 | 条件 |
 |-------|--------------|-----------|
-| 2.1 Reverse Engineering | `architecture.md`・`code-structure.md`・`technology-stack.md` を含む 9 ファイル | brownfield のみ |
+| 2.1 Reverse Engineering | `architecture.md`・`code-structure.md`・`technology-stack.md` を含む 9 ファイル（space レベルの `aidlc/spaces/<active-space>/codekb/<repo>/` へ書かれる — リポジトリごとに 1 つのストアで、brownfield の再実行ごとに上書きされる。intent の記録に入るのは stage の `memory.md` 日誌だけ） | brownfield のみ |
 | 2.2 Practices Discovery | `team-practices.md`、`discovered-rules.md`、`evidence.md`、`practices-discovery-timestamp.md`、加えて quality / developer / devsecops の contribution ファイル（承認後に `aidlc/spaces/<active-space>/memory/team.md` と `project.md` へ昇格） | 条件付き |
 | 2.3 Requirements Analysis | `requirements.md` | 常に |
 | 2.4 User Stories | `stories.md`、`personas.md` | ユーザー向け機能 |

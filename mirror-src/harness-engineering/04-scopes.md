@@ -28,7 +28,7 @@ skeleton: on
 Prose intent: why these stages, why skip those.
 ```
 
-frontmatter のフィールドは、1 つの必須フィールドと 3 つの任意のつまみに分かれる:
+scope の frontmatter フィールドは次のとおりである:
 
 | フィールド | 必須 | 何をするか |
 |-------|----------|--------------|
@@ -38,9 +38,25 @@ frontmatter のフィールドは、1 つの必須フィールドと 3 つの任
 | `keywords` | No | `/aidlc <freeform text>` の自動検出のための自然言語トリガ。空リストはオプトアウト。 |
 | `description` | No | `/aidlc --help` に描画される 1 行。（SKILL.md のコンパイル済み scope テーブルは Scope / Depth / TestStrategy / EXECUTE / Total のみを表示し、description は省く。） |
 | `skeleton` | No | practice が scope 依存のとき、`on` は scope を walking-skeleton の儀式にオプトインさせる。`off` または不在はオプトアウト。 |
+| `runner` | No | `true` は scope を既定生成される scope-runner 集合に含める。 |
+| `freeform_default` | No | `true` は、望ましい core の既定（`feature` や `poc`）が plugin 選択後に有効でないときの、selection-aware なフォールバックとしてこの scope を指名する。 |
 
 ローダーはファイル間で重複した scope の `name` 値を拒否し、エラーで両方の
 ファイルを名指す。
+
+### Freeform default
+
+`freeform_default: true` は、`feature` や `poc` のような内部既定が plugin 選択後に
+使えないときに使われる scope を、インストールに指名させる。この指名は
+sole-enabled-plugin フォールバックより前にチェックされるので、複数の scope を持つ
+plugin は、アルファベット順で先頭の scope を受け入れる代わりに、自分の軽量な既定を
+選べる。
+
+**有効な** scope のうち `freeform_default: true` を宣言できるのは最大 1 つである。
+選択された core / plugin 集合に 2 つ以上含まれると、グラフのコンパイルは失敗し、
+すべての claimant を名指す。無効な plugin 上の claim は、それらの plugin が一緒に
+有効化されるまで衝突しない。このフィールドは明示的なタイプミスを修復しない: 未知の
+`AWS_AIDLC_DEFAULT_SCOPE` 値は依然として検証に失敗する。
 
 ### walking-skeleton の既定
 
@@ -85,7 +101,7 @@ scope と stage は反対の端から互いを指し、両方向を視界に保�
 
 ### Steps
 
-1. **`core/scopes/aidlc-hotfix.md` を置く。** `aidlc-bugfix.md`（最も近い既存 scope）をコピーし、frontmatter を編集する: `name: hotfix` を設定、`depth` を選び、freeform 自動検出が欲しければ `keywords`（`[hotfix, urgent]`）、ヘルプ用の `description`、scope 依存の Construction 儀式の既定用に `skeleton: on|off`、`depth` から分岐すべき場合のみ `testStrategy` を足す。意図を説明する短い散文の本体を書く。
+1. **`core/scopes/aidlc-hotfix.md` を置く。** `aidlc-bugfix.md`（最も近い既存 scope）をコピーし、frontmatter を編集する: `name: hotfix` を設定、`depth` を選び、freeform 自動検出が欲しければ `keywords`（`[hotfix, urgent]`）、ヘルプ用の `description`、scope 依存の Construction 儀式の既定用に `skeleton: on|off`、これが選択されたインストールの唯一のフォールバック指名である場合のみ `freeform_default: true`、`depth` から分岐すべき場合のみ `testStrategy` を足す。意図を説明する短い散文の本体を書く。
 
 2. **`hotfix` の下で走るべき stage にタグする。** `EXECUTE` にしたい各 stage（`core/aidlc-common/stages/<phase>/` 下）で、その frontmatter の `scopes:` リストに `hotfix` を足す。タグしない stage はその scope で `SKIP` である。3 つの初期化 stage はそれを含めねばならない（常に走る）。
 

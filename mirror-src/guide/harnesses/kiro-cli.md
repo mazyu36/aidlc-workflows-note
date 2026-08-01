@@ -75,6 +75,24 @@ Kiro にはエージェント別の effort サーフェスが無いため、effo
 （`/aidlc-application-design`）と scope 別（`/aidlc-feature`）のランナースキルも
 インストールされている。
 
+**セッションはプロジェクトルートから開始すること。** conductor のエンジン呼び出しは
+プロジェクト相対の `bun .kiro/tools/<tool>.ts` コマンドとして事前承認されているので、
+作業ディレクトリが別の場所にあるセッションは、conductor を承認が必要なコマンド形に
+押し込んでしまう。絶対パス、`KIRO_PROJECT_DIR` の展開、`cd <dir> && bun .kiro/tools/...`
+の連鎖は意図的に gated のままである。パスがツールパスの形をしているだけでパターンに
+マッチしてしまい、それが信頼できるかどうかは別問題である: `/.../.kiro/tools/*.ts` を
+まるごと事前承認すれば、world-writable なディレクトリに仕込まれたファイルも事前承認
+してしまうし、変数の値やチェーンされた作業ディレクトリはパターンからは知り得ない。
+
+**承認者のいないセッションは、プロンプトを出す代わりに止まる。** 事前承認された集合の
+外にあるものはすべて対話的な回答を必要とする。`kiro-cli chat --no-interactive` の下では
+尋ねる相手がいないので、Kiro は `non-interactive mode (no user to approve)` で
+コマンドを即座に拒否する。ACP 経由では、クライアントが `session/request_permission` に
+答えなければならない。それらのリクエストを無視するクライアントは、権限エラーとまったく
+同じに見える。`--trust-all-tools` は許可リストと拒否リストの両方をバイパスする —
+再帰的な `rm` と `git push` の拒否も含めて。使い捨てのサンドボックスで、シェルへの
+無条件アクセスが許容できる場合にのみ使うこと。
+
 ## Kiro での違い
 
 | 領域 | Claude Code | Kiro CLI |
@@ -85,7 +103,7 @@ Kiro にはエージェント別の effort サーフェスが無いため、effo
 | Construction の swarm | 並列 `Task` の床、任意の ultracode Workflow | subagent のファンアウトのみ。`AIDLC_USE_SWARM=1` は no-op として告知される |
 | セッションの audit イベント | `SESSION_STARTED/RESUMED/ENDED`、`SESSION_COMPACTED` | `SESSION_STARTED` のみ（Kiro には session-end / pre-compaction の hook が無い） |
 | forwarding loop の強制（Stop hook） | 対話 + ヘッドレス | 対話セッションのみ — `--no-interactive` の実行は stop-hook のブロックを尊重しない |
-| 権限 | `settings.json` の許可リスト | `aidlc` エージェント設定: 事前承認は `bun .kiro/tools/*` だけ。他のシェルコマンドはプロンプトが出る |
+| 権限 | `settings.json` の許可リスト | `aidlc` エージェント設定: 事前承認はプロジェクト相対のフレームワーク呼び出し `bun .kiro/tools/<tool>.ts` と `date -u` だけ。他のシェルコマンドはプロンプトが出る |
 | ウェルカムメッセージ | セッション開始時に `settings.json` の `companyAnnouncements` から描画 | 無し — Kiro にはウェルカム描画の同等物が無い。session-start の hook は再開の文脈だけを注入する |
 | MCP サーバー | 5 つ同梱（`.mcp.json`: `context7` + 4 つの AWS サーバー） | 同梱なし。Kiro の MCP 設定機構はここではまだ文書化されていない — 実務上は今日 Claude 専用 |
 

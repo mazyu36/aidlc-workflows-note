@@ -216,8 +216,13 @@ Fragment は `(order, plugin)` によって決定論的に順序づけられる�
   [Agent を足す](03-adding-an-agent.md) を参照。
 - **Sensor。** manifest `sensors/aidlc-<id>.md` **と** そのスクリプトを `tools/` の下に出荷する
   （両方 — manifest だけでも発見可能だが、走るにはそのスクリプトが `tools/` に住まねばならない）。
-  それを `sensors:` 経由であなた自身の stage に、あるいは contribution の `adds.sensors` 経由で
-  core stage に束ねる。[Sensor](06-sensors.md) を参照。
+  `sensors/` の先頭にある `aidlc-<id>.md` という名前は慣習ではなく厳格な要件である: sensor の
+  発見は `sensors/` をフラットにスキャンし、`aidlc-<id>.md` にマッチする basename だけを
+  索引する。したがって他の名前の manifest（またはサブディレクトリにネストされたもの）は
+  compose されても決して発火しない。Compose は今、そのような manifest を、死んだまま着地
+  させるのではなく、ファイルと必須の形を名指す degraded drop（`--doctor` が表面化する）で
+  却下する。sensor を `sensors:` 経由であなた自身の stage に、あるいは contribution の
+  `adds.sensors` 経由で core stage に束ねる。[Sensor](06-sensors.md) を参照。
 - **Method/rules。** *(⏳ 延期。)* `contributes.memory` 経由で `memory/` サブツリー —
   `memory/phases/<phase>.md`（または `memory/{org,team,project}.md`）— を出荷する。設計上それは
   **default-space の method seed にマージされる**（`aidlc/spaces/default/memory/`）が、
@@ -232,7 +237,10 @@ Fragment は `(order, plugin)` によって決定論的に順序づけられる�
 - **Scope。** scope の **identity** は、`scopes/<plugin>-<name>.md` の下に出荷する 1 つのファイルで
   ある。plugin プレフィックスは core の `aidlc-` ファイル名プレフィックスを置き換え、ファイル名の
   語幹は frontmatter の `name` に等しくねばならない（例えば `scopes/test-pro-validation.md` は
-  `name: test-pro-validation` を持つ）。plugin が著述した stage のメンバーシップは、それらの
+  `name: test-pro-validation` を持つ）。core の `feature`/`poc` の既定が無効なときのフォールバックとして
+  plugin の scope を指名するには `freeform_default: true` を設定する。選択された core/plugin
+  集合をまたいで有効な scope のうち最大 1 つだけがそれを主張でき、曖昧な集合はグラフの
+  コンパイルが却下する。plugin が著述した stage のメンバーシップは、それらの
   `scopes:` frontmatter リストである。contribution の `adds.scopes`（§3）は依然として延期され、
   マージされるのではなく drop ログされるので、既存の core stage にあなたの scope を足すためにまだ
   それに頼ってはならない。[Scope](04-scopes.md) を参照。

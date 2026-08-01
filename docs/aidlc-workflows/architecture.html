@@ -51,7 +51,7 @@
 <p class="lede">設計の柱は「手書きの正は 1 箇所、配布物はすべて生成」。core/ にあるステージ・エージェント・フック・ツールは、scripts/package.ts が dist/&lt;name&gt;/ へ投影する。投影の指示は harness/&lt;name&gt;/manifest.ts の宣言が与える。生成物は git にコミットされ、--check がバイト単位の差分でドリフトを封じる。エンジンの TypeScript は 5 ハーネスでバイト同一。</p>
 
 <h2 id="layout">リポジトリマップ</h2>
-<p>トップレベルは 7 区画で、生成物は dist だけである。手書きは core / harness / plugins / docs / tests / scripts の 6 つになる。core の内訳は Markdown 16,561 行と TypeScript 40,014 行で、前者が方法論・ペルソナ・ナレッジ、後者がエンジン・フック・センサーを担う。「知識は Markdown、機構は TypeScript」の分離が、ファイル種別のレベルで貫かれている。</p>
+<p>トップレベルは 7 区画で、生成物は dist だけである。手書きは core / harness / plugins / docs / tests / scripts の 6 つになる。core の内訳は Markdown 16,599 行と TypeScript 40,627 行で、前者が方法論・ペルソナ・ナレッジ、後者がエンジン・フック・センサーを担う。「知識は Markdown、機構は TypeScript」の分離が、ファイル種別のレベルで貫かれている。</p>
 <div class="tree-view"><span class="dir">core/</span>                        <span class="comment"># 手書きの正（ハーネス非依存）</span>
 ├── <span class="dir">aidlc-common/</span>            <span class="comment"># conductor.md + protocols 4 + stages 32（5 フェーズ）</span>
 ├── <span class="dir">agents/</span>                  <span class="comment"># 14 エージェント .md（frontmatter に tier:）</span>
@@ -66,7 +66,7 @@
 <span class="dir">plugins/</span>                     <span class="comment"># サンプルプラグイン test-pro（stages / sensors / agents を寄与）</span>
 <span class="dir">scripts/</span>                     <span class="comment"># package.ts（パッケージャ）/ manifest-types.ts / onboarding.ts</span>
 <span class="dir">docs/</span>                        <span class="comment"># 公式ドキュメント 91 md（guide / harness-engineering / reference）</span>
-<span class="dir">tests/</span>                       <span class="comment"># 349 テストファイル（smoke / unit / integration / e2e + 独自駆動基盤）</span>
+<span class="dir">tests/</span>                       <span class="comment"># 354 テストファイル（smoke / unit / integration / e2e + 独自駆動基盤）</span>
 </div>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core">core/</a><button class="copy" type="button" data-copy="core" aria-label="パスをコピー">⧉</button></span>

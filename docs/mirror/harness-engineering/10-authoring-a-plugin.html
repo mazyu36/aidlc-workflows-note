@@ -274,8 +274,13 @@ core の <code>aidlc-</code> ファイル名プレフィックスを置き換え
 <a href="03-adding-an-agent.html">Agent を足す</a> を参照。</li>
 <li><strong>Sensor。</strong> manifest <code>sensors/aidlc-&lt;id&gt;.md</code> <strong>と</strong> そのスクリプトを <code>tools/</code> の下に出荷する
 （両方 — manifest だけでも発見可能だが、走るにはそのスクリプトが <code>tools/</code> に住まねばならない）。
-それを <code>sensors:</code> 経由であなた自身の stage に、あるいは contribution の <code>adds.sensors</code> 経由で
-core stage に束ねる。<a href="06-sensors.html">Sensor</a> を参照。</li>
+<code>sensors/</code> の先頭にある <code>aidlc-&lt;id&gt;.md</code> という名前は慣習ではなく厳格な要件である: sensor の
+発見は <code>sensors/</code> をフラットにスキャンし、<code>aidlc-&lt;id&gt;.md</code> にマッチする basename だけを
+索引する。したがって他の名前の manifest（またはサブディレクトリにネストされたもの）は
+compose されても決して発火しない。Compose は今、そのような manifest を、死んだまま着地
+させるのではなく、ファイルと必須の形を名指す degraded drop（<code>--doctor</code> が表面化する）で
+却下する。sensor を <code>sensors:</code> 経由であなた自身の stage に、あるいは contribution の
+<code>adds.sensors</code> 経由で core stage に束ねる。<a href="06-sensors.html">Sensor</a> を参照。</li>
 <li><strong>Method/rules。</strong> <em>(⏳ 延期。)</em> <code>contributes.memory</code> 経由で <code>memory/</code> サブツリー —
 <code>memory/phases/&lt;phase&gt;.md</code>（または <code>memory/{org,team,project}.md</code>）— を出荷する。設計上それは
 <strong>default-space の method seed にマージされる</strong>（<code>aidlc/spaces/default/memory/</code>）が、
@@ -290,7 +295,10 @@ plugin はそれを出荷しない。<a href="07-team-knowledge.html">チーム 
 <li><strong>Scope。</strong> scope の <strong>identity</strong> は、<code>scopes/&lt;plugin&gt;-&lt;name&gt;.md</code> の下に出荷する 1 つのファイルで
 ある。plugin プレフィックスは core の <code>aidlc-</code> ファイル名プレフィックスを置き換え、ファイル名の
 語幹は frontmatter の <code>name</code> に等しくねばならない（例えば <code>scopes/test-pro-validation.md</code> は
-<code>name: test-pro-validation</code> を持つ）。plugin が著述した stage のメンバーシップは、それらの
+<code>name: test-pro-validation</code> を持つ）。core の <code>feature</code>/<code>poc</code> の既定が無効なときのフォールバックとして
+plugin の scope を指名するには <code>freeform_default: true</code> を設定する。選択された core/plugin
+集合をまたいで有効な scope のうち最大 1 つだけがそれを主張でき、曖昧な集合はグラフの
+コンパイルが却下する。plugin が著述した stage のメンバーシップは、それらの
 <code>scopes:</code> frontmatter リストである。contribution の <code>adds.scopes</code>（§3）は依然として延期され、
 マージされるのではなく drop ログされるので、既存の core stage にあなたの scope を足すためにまだ
 それに頼ってはならない。<a href="04-scopes.html">Scope</a> を参照。</li>

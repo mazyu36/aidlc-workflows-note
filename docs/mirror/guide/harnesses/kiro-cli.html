@@ -142,6 +142,22 @@ Kiro にはエージェント別の effort サーフェスが無いため、effo
 <code>/aidlc space [name]</code>・<code>/aidlc space-create &lt;name&gt;</code> を使う。stage 別
 （<code>/aidlc-application-design</code>）と scope 別（<code>/aidlc-feature</code>）のランナースキルも
 インストールされている。</p>
+<p><strong>セッションはプロジェクトルートから開始すること。</strong> conductor のエンジン呼び出しは
+プロジェクト相対の <code>bun .kiro/tools/&lt;tool&gt;.ts</code> コマンドとして事前承認されているので、
+作業ディレクトリが別の場所にあるセッションは、conductor を承認が必要なコマンド形に
+押し込んでしまう。絶対パス、<code>KIRO_PROJECT_DIR</code> の展開、<code>cd &lt;dir&gt; &amp;&amp; bun .kiro/tools/...</code>
+の連鎖は意図的に gated のままである。パスがツールパスの形をしているだけでパターンに
+マッチしてしまい、それが信頼できるかどうかは別問題である: <code>/.../.kiro/tools/*.ts</code> を
+まるごと事前承認すれば、world-writable なディレクトリに仕込まれたファイルも事前承認
+してしまうし、変数の値やチェーンされた作業ディレクトリはパターンからは知り得ない。</p>
+<p><strong>承認者のいないセッションは、プロンプトを出す代わりに止まる。</strong> 事前承認された集合の
+外にあるものはすべて対話的な回答を必要とする。<code>kiro-cli chat --no-interactive</code> の下では
+尋ねる相手がいないので、Kiro は <code>non-interactive mode (no user to approve)</code> で
+コマンドを即座に拒否する。ACP 経由では、クライアントが <code>session/request_permission</code> に
+答えなければならない。それらのリクエストを無視するクライアントは、権限エラーとまったく
+同じに見える。<code>--trust-all-tools</code> は許可リストと拒否リストの両方をバイパスする —
+再帰的な <code>rm</code> と <code>git push</code> の拒否も含めて。使い捨てのサンドボックスで、シェルへの
+無条件アクセスが許容できる場合にのみ使うこと。</p>
 <h2 id="whats-different-on-kiro">Kiro での違い</h2>
 <table>
 <thead>
@@ -184,7 +200,7 @@ Kiro にはエージェント別の effort サーフェスが無いため、effo
 <tr>
 <td>権限</td>
 <td><code>settings.json</code> の許可リスト</td>
-<td><code>aidlc</code> エージェント設定: 事前承認は <code>bun .kiro/tools/*</code> だけ。他のシェルコマンドはプロンプトが出る</td>
+<td><code>aidlc</code> エージェント設定: 事前承認はプロジェクト相対のフレームワーク呼び出し <code>bun .kiro/tools/&lt;tool&gt;.ts</code> と <code>date -u</code> だけ。他のシェルコマンドはプロンプトが出る</td>
 </tr>
 <tr>
 <td>ウェルカムメッセージ</td>

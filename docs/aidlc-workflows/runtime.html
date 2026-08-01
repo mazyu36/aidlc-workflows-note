@@ -90,7 +90,7 @@ is next; you own the quality of execution inside the move it named.</code></pre>
 </figure>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/harness/claude/skills/aidlc/SKILL.md#L38-L44">harness/claude/skills/aidlc/SKILL.md:38-44（ループ擬似コード）</a><button class="copy" type="button" data-copy="harness/claude/skills/aidlc/SKILL.md:38" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-orchestrate.ts">core/tools/aidlc-orchestrate.ts（4,009 行）</a><button class="copy" type="button" data-copy="core/tools/aidlc-orchestrate.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-orchestrate.ts">core/tools/aidlc-orchestrate.ts（4,019 行）</a><button class="copy" type="button" data-copy="core/tools/aidlc-orchestrate.ts" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-directive.ts">core/tools/aidlc-directive.ts（directive の型）</a><button class="copy" type="button" data-copy="core/tools/aidlc-directive.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 
@@ -114,7 +114,7 @@ Construction and Operation stages MUST use standardized 2-option completion mess
 <h2 id="routing">次ステージの決定　グラフ × スコープ × 状態上書き</h2>
 <p>routing の中心はただ 1 つのループである。コンパイル済みグラフを現在位置から前方へ歩き、完了・スキップ済みを飛ばし、スコープ行列で最初の EXECUTE ステージを返す。行列の判定では state 側の EXECUTE/SKIP 上書きが優先される。返すものがなければワークフロー完了になる。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-lib.ts#L4667-L4679">core/tools/aidlc-lib.ts:4667-4679（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:4667" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-lib.ts#L4704-L4716">core/tools/aidlc-lib.ts:4704-4716（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:4704" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-typescript">  for (let i = currentIdx + 1; i &lt; graph.length; i++) {
     const slug = graph[i].slug;
 
@@ -203,7 +203,7 @@ compiled stage in that phase:
 </div>
 
 <h2 id="cli">CLI 面　1 つのディスパッチャと 20 のツール</h2>
-<p><code>aidlc.ts</code>（1,087 行）はルーティング専用のシムである。受ける形は 2 系統ある。<code>aidlc &lt;verb&gt;</code> は 13 のトップレベル動詞を取る（next / report / park / compose / status / doctor / init ほか）。<code>aidlc &lt;noun&gt; &lt;verb&gt;</code> は 20 の名詞を取る（state / audit / graph / runtime / sensor / swarm / bolt / worktree / jump / learnings ほか）。いずれも 20 の兄弟ツールへ委譲する。エンジン中枢の orchestrate が公開するのは next / report / park の 3 動詞だけで、state は 24 動詞を持つ。「決める者は書かず、書く者は決めない」の分離が、CLI の面にもそのまま現れている。</p>
+<p><code>aidlc.ts</code>（1,134 行）はルーティング専用のシムである。受ける形は 2 系統ある。<code>aidlc &lt;verb&gt;</code> は 13 のトップレベル動詞を取る（next / report / park / compose / status / doctor / init ほか）。<code>aidlc &lt;noun&gt; &lt;verb&gt;</code> は 20 の名詞を取る（state / audit / graph / runtime / sensor / swarm / bolt / worktree / jump / learnings ほか）。いずれも 20 の兄弟ツールへ委譲する。エンジン中枢の orchestrate が公開するのは next / report / park の 3 動詞だけで、state は 24 動詞を持つ。「決める者は書かず、書く者は決めない」の分離が、CLI の面にもそのまま現れている。</p>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc.ts#L53-L74">core/tools/aidlc.ts:53-74（TOOLS 対応表）</a><button class="copy" type="button" data-copy="core/tools/aidlc.ts:53" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/docs/guide/12-cli-commands.md">docs/guide/12-cli-commands.md</a><button class="copy" type="button" data-copy="docs/guide/12-cli-commands.md" aria-label="パスをコピー">⧉</button></span>

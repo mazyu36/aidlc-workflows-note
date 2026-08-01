@@ -71,7 +71,7 @@ skeleton: on
 
 Prose intent: why these stages, why skip those.
 </code></pre>
-<p>frontmatter のフィールドは、1 つの必須フィールドと 3 つの任意のつまみに分かれる:</p>
+<p>scope の frontmatter フィールドは次のとおりである:</p>
 <table>
 <thead>
 <tr>
@@ -110,9 +110,30 @@ Prose intent: why these stages, why skip those.
 <td>No</td>
 <td>practice が scope 依存のとき、<code>on</code> は scope を walking-skeleton の儀式にオプトインさせる。<code>off</code> または不在はオプトアウト。</td>
 </tr>
+<tr>
+<td><code>runner</code></td>
+<td>No</td>
+<td><code>true</code> は scope を既定生成される scope-runner 集合に含める。</td>
+</tr>
+<tr>
+<td><code>freeform_default</code></td>
+<td>No</td>
+<td><code>true</code> は、望ましい core の既定（<code>feature</code> や <code>poc</code>）が plugin 選択後に有効でないときの、selection-aware なフォールバックとしてこの scope を指名する。</td>
+</tr>
 </tbody></table>
 <p>ローダーはファイル間で重複した scope の <code>name</code> 値を拒否し、エラーで両方の
 ファイルを名指す。</p>
+<h3 id="freeform-default">Freeform default</h3>
+<p><code>freeform_default: true</code> は、<code>feature</code> や <code>poc</code> のような内部既定が plugin 選択後に
+使えないときに使われる scope を、インストールに指名させる。この指名は
+sole-enabled-plugin フォールバックより前にチェックされるので、複数の scope を持つ
+plugin は、アルファベット順で先頭の scope を受け入れる代わりに、自分の軽量な既定を
+選べる。</p>
+<p><strong>有効な</strong> scope のうち <code>freeform_default: true</code> を宣言できるのは最大 1 つである。
+選択された core / plugin 集合に 2 つ以上含まれると、グラフのコンパイルは失敗し、
+すべての claimant を名指す。無効な plugin 上の claim は、それらの plugin が一緒に
+有効化されるまで衝突しない。このフィールドは明示的なタイプミスを修復しない: 未知の
+<code>AWS_AIDLC_DEFAULT_SCOPE</code> 値は依然として検証に失敗する。</p>
 <h3 id="walking-skeleton-default">walking-skeleton の既定</h3>
 <p>任意の <code>skeleton:</code> フィールドは、scope 依存の walking-skeleton の
 スタンスを制御する。<code>skeleton: on</code> は、チームの <code>## Walking Skeleton</code>
@@ -140,7 +161,7 @@ walking-skeleton の儀式で開くことを意味する。<code>skeleton: off</
 <p>あなたのチームが <code>hotfix</code> scope を望むとしよう — <code>bugfix</code> より軽く、回帰テストとデプロイだけが欲しい緊急の本番パッチ用。変更は、新しい scope ファイル、走るべき各 stage の <code>scopes:</code> タグ、そして再コンパイルである。以下の規律を映す。検証ステップと完全なコマンドラインは <a href="../reference/11-contributing.html#adding-a-scope">Contributing § Scope を足す</a> にある。</p>
 <h3 id="steps">Steps</h3>
 <ol>
-<li><p><strong><code>core/scopes/aidlc-hotfix.md</code> を置く。</strong> <code>aidlc-bugfix.md</code>（最も近い既存 scope）をコピーし、frontmatter を編集する: <code>name: hotfix</code> を設定、<code>depth</code> を選び、freeform 自動検出が欲しければ <code>keywords</code>（<code>[hotfix, urgent]</code>）、ヘルプ用の <code>description</code>、scope 依存の Construction 儀式の既定用に <code>skeleton: on|off</code>、<code>depth</code> から分岐すべき場合のみ <code>testStrategy</code> を足す。意図を説明する短い散文の本体を書く。</p>
+<li><p><strong><code>core/scopes/aidlc-hotfix.md</code> を置く。</strong> <code>aidlc-bugfix.md</code>（最も近い既存 scope）をコピーし、frontmatter を編集する: <code>name: hotfix</code> を設定、<code>depth</code> を選び、freeform 自動検出が欲しければ <code>keywords</code>（<code>[hotfix, urgent]</code>）、ヘルプ用の <code>description</code>、scope 依存の Construction 儀式の既定用に <code>skeleton: on|off</code>、これが選択されたインストールの唯一のフォールバック指名である場合のみ <code>freeform_default: true</code>、<code>depth</code> から分岐すべき場合のみ <code>testStrategy</code> を足す。意図を説明する短い散文の本体を書く。</p>
 </li>
 <li><p><strong><code>hotfix</code> の下で走るべき stage にタグする。</strong> <code>EXECUTE</code> にしたい各 stage（<code>core/aidlc-common/stages/&lt;phase&gt;/</code> 下）で、その frontmatter の <code>scopes:</code> リストに <code>hotfix</code> を足す。タグしない stage はその scope で <code>SKIP</code> である。3 つの初期化 stage はそれを含めねばならない（常に走る）。</p>
 </li>

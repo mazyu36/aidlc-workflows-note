@@ -310,7 +310,7 @@ or として読む）。残るのは:</p>
 <li>stage レベルの rules 層（<code>aidlc-stage-&lt;slug&gt;.md</code>）: 予約済み・未実装（ゴール 2）。</li>
 <li>plugin の未提供サーフェス: agents / scopes / memory / knowledge の投影、<code>when:</code> の評価、マーケットプレイス（ゴール 2）。</li>
 <li>sensor のブロッキング重大度（#431): sensor は助言のみで、機械チェックが gate を止めることはできない（ゴール 4 に隣接。2.4.0 からは意図的に外す）。</li>
-<li>conductor の健全性クラスタ（#547, #548, #551）と Kiro IDE 1.0 のリグレッション（#543, #555）: GA 前の品質であり、ゴールには対応しない。</li>
+<li>conductor の健全性クラスタ（#547, #548, #551）と Kiro IDE 1.0 クラスタ（#543, #555）: GA 前の品質であり、ゴールには対応しない。どちらの IDE issue も OPEN のままである: 2.5.10 が #555 の hook 登録の半分（v2 スキーマ）を出荷し、2.5.12 が #543 のコンテキストチャネルを出荷したが、#555 の agent / settings のサーフェスは依然として未対応である。これらの issue は手で閉じる必要がある — <code>v2</code> をターゲットにした PR の <code>Fixes</code> トレイラーはそれらを自動クローズしない。</li>
 <li>unit 横断のディスカバリー伝播（ゴール 6）: 依然として実在する v2 のギャップだが、唯一のオープン PR（#300）は退役した v1 ツリー（<code>aidlc-rules/</code>、base main、2026-05）を対象にしている。rebase ではなく v2 での新規実装が必要。</li>
 </ul>
 
