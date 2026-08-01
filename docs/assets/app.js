@@ -1,5 +1,24 @@
 /* Kiro Codebase Atlas — 共通スクリプト (依存なし・オフライン動作) */
 
+// 基点ピン: ページ内の上流リンクは可動の blob/v2・tree/v2 形式で書かれており、表示時に
+// base.js の基点コミット（40 桁 SHA）へ張り替える。基点をページに直書きしないことで、
+// 基点更新の差分を base.js と meta.json の 2 ファイルに閉じ込めるための仕掛け。
+// JS が動かない閲覧ではブランチリンクのまま残る（リンク切れはしないが行番号はズレ得る）。
+(() => {
+  const base = window.AIDLC_BASE;
+  if (!base || !/^[0-9a-f]{40}$/.test(base.sha)) return;
+  const short = base.sha.slice(0, 7);
+  const re = /^(https:\/\/github\.com\/awslabs\/aidlc-workflows\/(?:blob|tree|raw)\/)v2(?=\/|$)/;
+  document.querySelectorAll('a[href^="https://github.com/awslabs/aidlc-workflows/"]').forEach((a) => {
+    a.href = a.href.replace(re, `$1${base.sha}`);
+  });
+  document.querySelectorAll(".gh-hash").forEach((el) => { el.textContent = short; });
+  document.querySelectorAll("a.gh-link").forEach((el) => {
+    el.title = `分析基点: awslabs/aidlc-workflows @ ${short}`;
+  });
+  document.querySelectorAll(".base-date").forEach((el) => { el.textContent = base.analyzedAt; });
+})();
+
 // Mermaid 初期化: ダークテーマ + 高コントラスト。
 // 書体は本文と同じ sans（図ラベルは文章であってコードではない）。
 // ノード配色はサイトのトークンに合わせ、docs ミラーの図は build-mirror.mjs が

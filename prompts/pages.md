@@ -22,6 +22,8 @@ git -C /tmp/aidlc-upstream show ${NEW_SHA}:<path> | nl -ba | sed -n '<from>,<to>
 ```
 行がずれただけなら href アンカー・表示テキスト・`data-copy` の 3 箇所の行番号を更新します。コード自体が変わったなら抜粋本文と「動作:」の解説を書き直します。抜粋は連続した実在行を一字一句写し、中略や創作をしないでください。
 
+リンクは `blob/v2/...`・`tree/v2/...` 形式のまま書きます。40 桁 SHA をページに直書きしないでください（表示時に app.js が `docs/assets/base.js` の基点へ張り替えます。verify が直書きを検出すると落ちます）。
+
 ## Step 3: 実数値を直す
 ノートが書いている数値が上流と食い違っています。本文・表・`stat-grid`・`tree-view`・埋め込み SVG の `<text>` まで grep して漏れなく直してください。`scripts/check-staleness.mjs` の `claimed` 値も同じ数に更新します。
 
@@ -33,7 +35,7 @@ git -C /tmp/aidlc-upstream show ${NEW_SHA}:<path> | nl -ba | sed -n '<from>,<to>
 MIRROR_ORIG=/tmp/aidlc-upstream/docs node scripts/mirror-build/build-mirror.mjs   # exit 0 / 91 ページ
 UPSTREAM=/tmp/aidlc-upstream bash scripts/validate-refs.sh                        # missing: 0
 ```
-落ちたら直してから進んでください。この時点では基点 SHA がまだ旧のままなので、`check-staleness.mjs` は `up-to-date` になりません。張り替えは後続の決定論ステップが行います。
+落ちたら直してから進んでください。基点の更新（`docs/aidlc-workflows/meta.json` と `docs/assets/base.js`）は後続の決定論ステップが行うので、触らないでください。この時点では `check-staleness.mjs` は `up-to-date` になりません。
 
 ## Step 6: コミットする
 ```bash

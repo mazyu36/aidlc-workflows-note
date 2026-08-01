@@ -7,20 +7,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SHA = "9f9145442429440ccd93f22e27186aa428007e5a";
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const SRC_ORIG = process.env.MIRROR_ORIG ?? "/tmp/aidlc-v2/docs";
 const SRC_JA = process.env.MIRROR_SRC ?? path.join(REPO, "mirror-src");
 const OUT = process.env.MIRROR_OUT ?? path.join(REPO, "docs/mirror");
-const GH = `https://github.com/awslabs/aidlc-workflows/blob/${SHA}/`;
-const GH_TREE = `https://github.com/awslabs/aidlc-workflows/tree/${SHA}/`;
-// footer に出す日付。ビルド時刻ではなく meta.json の analyzedAt（基点を張り替えたときだけ動く値）
-// を使う。ビルド日にすると再生成のたびに全 92 ファイルが差分になり、CI のドリフト検知が
-// 毎回誤検知するため。読者にとっても「いつ時点の上流を読んだか」の方が有用。
-const ANALYZED_AT = JSON.parse(
-  fs.readFileSync(path.join(REPO, "docs/aidlc-workflows/meta.json"), "utf8"),
-).analyzedAt;
-const TODAY = process.env.MIRROR_DATE ?? ANALYZED_AT;
+// 生成 HTML に基点 SHA も日付も埋め込まない。リンクは可動の blob/v2 形式で出し、表示時に
+// app.js が docs/assets/base.js の基点コミットへ張り替える。これにより基点更新でミラー
+// HTML は 1 バイトも変わらず、訳文（mirror-src）が変わったページだけが差分になる。
+const GH = "https://github.com/awslabs/aidlc-workflows/blob/v2/";
+const GH_TREE = "https://github.com/awslabs/aidlc-workflows/tree/v2/";
 
 // 上流の Mermaid はライトテーマ前提の Material 配色（薄い塗り + 濃い線）を style/classDef 行に
 // ハードコードしており、ダーク地では文字が読めない。色相の意味（カテゴリ識別）を保ったまま
@@ -251,6 +246,7 @@ function pageHtml({ rel, title, body, pagetoc, files, titles }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)} — AI-DLC docs 日本語版</title>
 <link rel="stylesheet" href="${assets}/style.css">
+<script src="${assets}/base.js"></script>
 <script defer src="${assets}/mermaid.min.js"></script>
 <script defer src="${assets}/highlight.min.js"></script>
 <script defer src="${assets}/app.js"></script>
@@ -279,7 +275,7 @@ ${ptoc}
 <p class="eyebrow">${esc(eyebrow)}</p>
 ${body}
 <footer class="meta">
-  原文: <a href="${GH}${origPath.split("/").map(encodeURIComponent).join("/")}"><code>${esc(origPath)}</code></a>（基点コミット固定）· 逐語日本語訳 · 生成: ${TODAY}
+  原文: <a href="${GH}${origPath.split("/").map(encodeURIComponent).join("/")}"><code>${esc(origPath)}</code></a>（基点コミット <span class="gh-hash">v2</span> に固定）· 逐語日本語訳
 </footer>
 </main>
 </div>
@@ -418,6 +414,7 @@ ${secBlock("その他", "top", topFiles)}`;
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>公式 docs 日本語版 — AI-DLC Workflows v2 ノート</title>
 <link rel="stylesheet" href="../assets/style.css">
+<script src="../assets/base.js"></script>
 <script defer src="../assets/mermaid.min.js"></script>
 <script defer src="../assets/highlight.min.js"></script>
 <script defer src="../assets/app.js"></script>
@@ -443,7 +440,7 @@ ${secBlock("その他", "top", topFiles)}`;
 <main>
 ${body}
 <footer class="meta">
-  原文: awslabs/aidlc-workflows <code>v2</code> @ <a href="${GH_TREE.slice(0, -1)}">ccf284b</a> · 生成: ${TODAY} · 内容の改変は 2 点のみ — 描画不能だった Mermaid 5 図のセミコロン修正（upstream PR と同内容）と、図配色のダークパレットへの写像（色の意味は保持）
+  原文: awslabs/aidlc-workflows <code>v2</code> @ <a href="${GH_TREE.slice(0, -1)}"><span class="gh-hash">v2</span></a>（<span class="base-date">基点</span> 時点）· 内容の改変は 2 点のみ — 描画不能だった Mermaid 5 図のセミコロン修正（upstream PR と同内容）と、図配色のダークパレットへの写像（色の意味は保持）
 </footer>
 </main>
 </div>

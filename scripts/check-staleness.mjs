@@ -8,7 +8,10 @@
 //   UPSTREAM=/path/to/upstream/clone node scripts/check-staleness.mjs [--json]
 //   UPSTREAM は origin/v2 を fetch 済みの clone。新 HEAD は origin/v2 から解決する。
 //
-// 終了コード: 0 = 追随済みまたは機械更新で済む / 1 = LLM による更新が必要 / 2 = 実行エラー
+// 終了コード: 0 = 更新不要（追随済み、または主張がすべて成立） / 1 = LLM による更新が必要 / 2 = 実行エラー
+//
+// ページ内のリンクは可動の blob/v2 形式（表示時に app.js が基点へ合成）なので、上流が
+// 進んだだけでは何も直すものがない。検査はすべて新 HEAD の実体と突き合わせて行う。
 
 import fs from "node:fs";
 import path from "node:path";
@@ -85,7 +88,7 @@ function authoredPages() {
 // ---- 信号 B: 行番号つきコード抜粋が新 HEAD でも一致するか ----
 function checkExcerpts(newSha) {
   const re =
-    /<figure class="excerpt">[\s\S]*?href="[^"]*blob\/[0-9a-f]{40}\/([^"#]+)#L(\d+)-L(\d+)"[\s\S]*?<pre><code[^>]*>([\s\S]*?)<\/code><\/pre>/g;
+    /<figure class="excerpt">[\s\S]*?href="[^"]*blob\/(?:v2|[0-9a-f]{40})\/([^"#]+)#L(\d+)-L(\d+)"[\s\S]*?<pre><code[^>]*>([\s\S]*?)<\/code><\/pre>/g;
   const drifted = [];
   let total = 0;
   for (const page of authoredPages()) {
@@ -128,7 +131,7 @@ function checkCounts(newSha) {
 
 // ---- 信号 D: 参照している上流パスが新 HEAD にも存在するか ----
 function checkPaths(newSha) {
-  const re = /https:\/\/github\.com\/awslabs\/aidlc-workflows\/(?:blob|tree)\/[0-9a-f]{40}\/([^"#]*)/g;
+  const re = /https:\/\/github\.com\/awslabs\/aidlc-workflows\/(?:blob|tree)\/(?:v2|[0-9a-f]{40})\/([^"#]*)/g;
   const seen = new Set();
   const missing = [];
   for (const page of [...authoredPages(), ...walk(path.join(REPO, "docs/mirror"))]) {
@@ -180,10 +183,12 @@ try {
     // 作業は 2 系統に分かれる。ミラー（逐語訳）は上流 docs の変更にのみ従い、
     // 解説ページは抜粋の行ズレ・実数値・参照パスの破れに従う。
     // ワークフローが片方だけを起こせるよう、系統ごとのフラグを出す。
+    // consistent = 上流は進んだが検査可能な主張はすべて成立。直すものがないので
+    // 何もしない（基点はノートを実際に直した PR でだけ進める）。
     const needsMirror = docsChanged.length > 0;
     const needsPages = excerpts.drifted.length > 0 || counts.length > 0 || paths.missing.length > 0;
     result = {
-      verdict: needsMirror || needsPages ? "needs-update" : "sha-bump-only",
+      verdict: needsMirror || needsPages ? "needs-update" : "consistent",
       needsMirror,
       needsPages,
       oldSha,

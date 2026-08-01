@@ -31,6 +31,27 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "ノートの基点: $SHA"
 
+      # base.js は meta.json の写し（表示時のリンク合成に使う）。ズレは bump-base.sh を
+      # 通さず片方だけ編集したことを意味するので落とす。
+      - name: Check base.js matches meta.json
+        run: |
+          SHA=$(jq -r .analyzedCommit docs/aidlc-workflows/meta.json)
+          DATE=$(jq -r .analyzedAt docs/aidlc-workflows/meta.json)
+          grep -qF "sha: \"$SHA\"" docs/assets/base.js \
+            || { echo "::error::docs/assets/base.js の sha が meta.json と一致しません。scripts/bump-base.sh で更新してください。"; exit 1; }
+          grep -qF "analyzedAt: \"$DATE\"" docs/assets/base.js \
+            || { echo "::error::docs/assets/base.js の analyzedAt が meta.json と一致しません。scripts/bump-base.sh で更新してください。"; exit 1; }
+          echo "base.js は meta.json と一致"
+
+      # ページに基点 SHA を直書きしない規約の検査。リンクは blob/v2 形式が正。
+      - name: Forbid hard-coded base SHAs in pages
+        run: |
+          if grep -rnE 'github\.com/awslabs/aidlc-workflows/(blob|tree)/[0-9a-f]{40}' docs --include='*.html'; then
+            echo "::error::ページに 40 桁 SHA の直書きリンクがあります。blob/v2 形式で書いてください（表示時に app.js が基点へ合成します）。"
+            exit 1
+          fi
+          echo "直書き SHA なし"
+
       # パリティ検証とアンカー計算に原文が必要。基点コミットだけを浅く取得する。
       - name: Fetch upstream at the analysed commit
         run: |
@@ -61,7 +82,7 @@ jobs:
           fi
           echo "ドリフトなし"
 
-      - name: Validate SHA-pinned references
+      - name: Validate upstream references
         env:
           UPSTREAM: /tmp/aidlc-upstream
         run: bash scripts/validate-refs.sh

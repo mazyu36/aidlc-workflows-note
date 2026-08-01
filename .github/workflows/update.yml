@@ -1,7 +1,10 @@
 name: Update from upstream
 
-# 起動条件は決定論。上流が動いただけでは Claude を呼ばない。
+# 起動条件は決定論。上流が動いただけでは何もしない（Claude も呼ばず、PR も作らない）。
 # scripts/check-staleness.mjs が「ノートの検査可能な主張が実際に壊れた」と判定した場合にかぎり起動する。
+# ページは基点 SHA を直書きしない（リンクは blob/v2 形式で、表示時に app.js が
+# docs/assets/base.js の基点へ合成する）ので、基点更新は meta.json + base.js の
+# 2 ファイルに閉じ、内容を直したページだけが PR の差分に現れる。
 #
 # 作業は 2 系統に分けて別々の Claude セッションで実行する。
 #   1. ミラー追随（逐語訳）  ... 上流 docs の変更に従う
@@ -76,9 +79,11 @@ jobs:
 
           # force_llm は動作確認用の経路。判定はここで 1 度だけ解き、以降のステップは
           # 単純な真偽だけを見る。&& と || を混ぜると優先順位で意図がぶれるため。
+          # up-to-date（基点 = 上流 HEAD）も consistent（上流は進んだが主張は全て成立）も
+          # 何もしない。進めるのは needs-update だけ。
           FORCE='${{ inputs.force_llm }}'
           V=$(node -e 'console.log(require("/tmp/staleness.json").verdict)')
-          if [ "$FORCE" = 'true' ] || [ "$V" != 'up-to-date' ]; then
+          if [ "$FORCE" = 'true' ] || [ "$V" = 'needs-update' ]; then
             echo 'proceed=true' >> "$GITHUB_OUTPUT"
           else
             echo 'proceed=false' >> "$GITHUB_OUTPUT"
@@ -105,9 +110,9 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Stop when already up to date
+      - name: Stop when nothing is broken
         if: steps.stale.outputs.proceed == 'false'
-        run: echo "基点が上流 HEAD と一致。更新不要。"
+        run: echo "検査可能な主張がすべて成立。更新不要（基点はノートを直す PR でだけ進む）。"
 
       # 未マージの update PR があるうちは新規起票しない。毎日実行なので、
       # レビュー待ちの PR を放置している間に日ごとの PR が積み上がるのを防ぐ。
@@ -151,14 +156,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git checkout -b "$BRANCH"
           git -C "$UPSTREAM" checkout --quiet '${{ steps.stale.outputs.new_sha }}'
-
-      # 検査可能な主張がどれも壊れていない場合。翻訳の判断が要らないので LLM を使わない。
-      - name: Bump the pinned SHA mechanically
-        if: steps.stale.outputs.verdict == 'sha-bump-only' && steps.existing.outputs.skip == 'false'
-        env:
-          OLD: ${{ steps.stale.outputs.old_sha }}
-          NEW: ${{ steps.stale.outputs.new_sha }}
-        run: bash scripts/retarget-sha.sh "$OLD" "$NEW"
 
       - name: Configure AWS credentials (OIDC)
         if: steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false'
@@ -217,21 +214,19 @@ jobs:
             --max-turns 200
             --allowedTools "Read,Write,Edit,Glob,Grep,Bash"
           prompt: ${{ env.AGENT_PROMPT }}
-      # PR 起票は決定論ステップ。Claude が落ちても、そこまでの成果を PR として残す。
-      # SHA の張り替えは判断が要らない機械作業なので、Claude ではなくここで行う。
-      # プロンプト側に置いていたときは、ミラーだけが必要な日（run_pages=false）に
-      # 誰も張り替えず、訳文が新しいのにリンクが旧 SHA を指す WIP PR になった。
-      - name: Retarget the pinned SHA
-        if: always() && steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false' && steps.stale.outputs.verdict != 'sha-bump-only'
+      # 基点更新は決定論ステップ。Claude が落ちても、そこまでの成果を PR として残す。
+      # ページは基点を直書きしないので、更新は meta.json と docs/assets/base.js の
+      # 2 ファイルだけ。実作業（コミットまたは未コミット変更）があるときにかぎり進める。
+      - name: Advance the base commit
+        if: always() && steps.stale.outputs.proceed == 'true' && steps.existing.outputs.skip == 'false'
         env:
-          OLD: ${{ steps.stale.outputs.old_sha }}
           NEW: ${{ steps.stale.outputs.new_sha }}
         run: |
           if [ -z "$(git log origin/main..HEAD --oneline)" ] && [ -z "$(git status --porcelain)" ]; then
-            echo "変更がないため張り替えません。"
+            echo "変更がないため基点を進めません。"
             exit 0
           fi
-          bash scripts/retarget-sha.sh "$OLD" "$NEW"
+          bash scripts/bump-base.sh "$NEW"
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
             git commit -m "chore: 基点コミットを $(echo "$NEW" | cut -c1-7) へ更新"

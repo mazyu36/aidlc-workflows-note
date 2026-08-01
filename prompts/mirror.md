@@ -1,6 +1,6 @@
 このリポジトリは awslabs/aidlc-workflows の v2 ブランチを解説する日本語ノートです。上流 `docs/` が変わったので、逐語日本語訳（ミラー）を追随させてください。
 
-この作業では**ミラーだけ**を扱います。解説ページ（`docs/aidlc-workflows/**`）と基点 SHA の張り替えは後続の別セッションが担当するので、触らないでください。
+この作業では**ミラーだけ**を扱います。解説ページ（`docs/aidlc-workflows/**`）と基点の更新（`meta.json` / `docs/assets/base.js`）は後続が担当するので、触らないでください。
 
 ## 前提
 - 上流の clone: `/tmp/aidlc-upstream`（新基点を checkout 済み）
