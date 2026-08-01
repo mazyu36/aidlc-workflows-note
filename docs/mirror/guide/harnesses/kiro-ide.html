@@ -155,16 +155,20 @@ hook。IDE の Agent Hooks パネルに現れる。（Kiro IDE 1.x は、harness
 trigger）で hook を登録する（エージェント JSON 内の <code>hooks</code> ブロックを読む Kiro CLI
 とは別の機構）。各 hook は共有の <code>aidlc-kiro-adapter.ts</code> シムを経由するコマンドを
 実行し、シムが IDE の hook イベントをバイト共有の core hook が期待する形に正規化する。</p>
-<p>アダプタは hook のコンテキストを <strong><code>USER_PROMPT</code> 環境変数</strong>（1.0 以前のチャネル）から
-読む。コンテキストが stdin で届き <code>USER_PROMPT</code> が空になる IDE 1.x では、ペイロードに
-依存する 2 つのターゲット（<code>audit-and-sensors</code>・<code>log-subagent</code>）は発火するが、見える形の
-hook drop を伴って no-op になる。残りの hook はペイロードに依存せず、どちらの IDE 世代でも
-動く。stdin のコンテキストチャネルは後続の強化として計画されている。</p>
-<p>1.0 以前のビルドでは、<code>USER_PROMPT</code> は JSON 文字列
-<code>{ toolName, toolArgs, toolResult, toolSuccess }</code> である。IDE は <code>toolArgs</code> を空のままに
-するため、アダプタは書かれたファイルのパスを <code>toolResult</code> のテキストから復元し、
-ペイロードの無い hook（<code>runtime-compile</code>・<code>sync-statusline</code>）をツールのペイロードではなく
-audit トレイルから駆動する。</p>
+<p>Kiro IDE 1.x は hook のコンテキストを <strong>stdin 上の JSON</strong>（snake_case:
+<code>{ tool_name, tool_input, tool_response }</code>）で渡す。より古い 0.12 ビルドは代わりに
+<code>USER_PROMPT</code> 環境変数を camelCase の等価物で設定し、アダプタは両方を受け入れる）。
+捕捉される PostToolUse の write / shell イベントは、どちらのチャネルでもツールの
+input を空のままにするので、書かれたパスは結果テキストから復元する必要があり、
+ペイロードの無い hook（<code>runtime-compile</code>・<code>sync-statusline</code>）は audit トレイルから
+走る。より新しい 1.x ビルドは一部の PreToolUse と委譲の input を populate する。
+アダプタはそれらのフィールドに依存せずに保持する。</p>
+<p>ペイロードの取得は<strong>ペイロードに依存するターゲットに限定してゲートされる</strong>
+（<code>audit-and-sensors</code>・<code>log-subagent</code>）。0.12 ビルド（一度も書き込まずに stdin を開く）
+では、空でない <code>USER_PROMPT</code> が即座に消費される。それ以外では、アダプタは 2 秒の
+broken-channel 上限付きで 1.x の stdin チャネルを読む。他のすべてのターゲット —
+すべての <code>PreToolUse</code> で発火する <code>block</code> を含む — はどちらのチャネルにも触れず、
+ゼロレイテンシの経路を保つ。</p>
 <table>
 <thead>
 <tr>
@@ -200,8 +204,8 @@ audit トレイルから駆動する。</p>
 </tr>
 <tr>
 <td><code>aidlc-log-subagent</code></td>
-<td><code>PostToolUse</code>（<code>invoke_sub_agent</code>）</td>
-<td>委譲先の identity 付きで <code>SUBAGENT_COMPLETED</code> を記録</td>
+<td><code>PostToolUse</code>（<code>^(subagent_.+|invoke_sub_agent)$</code>）</td>
+<td>委譲先の identity 付きで <code>SUBAGENT_COMPLETED</code> を記録。matcher が広いのでどの委譲名もアダプタに届く。アダプタは補助的な <code>subagent_response</code> シェルを捨てる</td>
 </tr>
 <tr>
 <td><code>aidlc-runtime-compile</code></td>

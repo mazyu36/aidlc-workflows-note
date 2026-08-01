@@ -119,7 +119,6 @@ git ポリシーの完全なリファレンスである。</p>
     approval-handoff/
 
   inception/<span class="t-comment">                        # Phase 2 artifacts</span>
-    reverse-engineering/<span class="t-comment">            (conditional: brownfield)</span>
     practices-discovery/<span class="t-comment">            (conditional)</span>
     requirements-analysis/
     user-stories/<span class="t-comment">                   (conditional)</span>
@@ -149,6 +148,21 @@ git ポリシーの完全なリファレンスである。</p>
 
   archive/<span class="t-comment">                          (created on-demand)</span>
     {ISO-date}-{stage-name}/</code></pre>
+<p><strong>9 個の reverse-engineering 成果物は record dir に無い。</strong> それら
+（<code>architecture.md</code>、<code>code-structure.md</code>、<code>technology-stack.md</code>、…）は 1 階層上、
+space レベルのリポジトリごとの CodeKB —
+<code>aidlc/spaces/&lt;space&gt;/codekb/&lt;repo&gt;/</code> — に落ちる。intent ごとのコピーではなく、
+リポジトリごとに 1 つのストアである。スナップショットではない: stage の条件は
+「鮮度のために常に再実行」なので、当てはまるすべての brownfield intent がスキャンを
+再実行し、その 9 ファイルを上書きする。最後の書き込みが勝つ
+（<code>reverse-engineering-timestamp.md</code> が最後にいつスキャンが走り、何をカバーしたかを
+記録する）。したがって intent はリポジトリの最新スキャンを読む — 自分自身の record dir が
+作られた時点のものではない。record dir が実際に得るのは、stage 自身の <code>memory.md</code>
+日誌 — stage が走るときにオンデマンドで作られる（下の<strong>stage ごとの memory 日誌</strong>を
+参照）— であり、そのため <code>inception/reverse-engineering/</code> ディレクトリがそこに現れることは
+あるが、日誌以外は何も持たない。Codekb への書き込みは <code>codekb &gt; &lt;repo&gt; &gt; &lt;name&gt;</code> という
+breadcrumb で audit ログされるので、intent ごとの記録は何が変わったか・いつ変わったかを
+それでも残す。</p>
 <p><strong>チームナレッジは record dir に無い。</strong> 1 階層上、space レベル —
 <code>aidlc/spaces/&lt;space&gt;/knowledge/</code>（<code>intents/</code> の兄弟）— に住み、1 つの intent の記録に
 閉じ込められるのではなく、space 内のすべての intent を横断して蓄積される。
@@ -187,7 +201,7 @@ flowchart LR
     style VERIFY fill:#3a1f27,stroke:#ff8f8f
 </pre>
 <ol>
-<li><strong>作成</strong> — リードエージェントが stage 実行中に成果物を作り、intent の record dir の適切なサブディレクトリへ書く</li>
+<li><strong>作成</strong> — リードエージェントが stage 実行中に成果物を作り、intent の record dir の適切なサブディレクトリへ書く（上で述べた space レベルの例外あり: Reverse Engineering はリポジトリごとの codekb ストアへ、チームナレッジは <code>knowledge/</code> へ書く）</li>
 <li><strong>レビュー</strong> — 承認 gate で成果物をレビューし、承認するか変更を要求する</li>
 <li><strong>コミット</strong> — 承認後、成果物はバージョン管理の準備が整う（下の git ポリシーを参照）</li>
 <li><strong>消費</strong> — 下流の stage が成果物を入力として読む（下の入力の表を参照）</li>
@@ -277,7 +291,7 @@ flowchart LR
 </thead>
 <tbody><tr>
 <td>2.1 Reverse Engineering</td>
-<td><code>architecture.md</code>・<code>code-structure.md</code>・<code>technology-stack.md</code> を含む 9 ファイル</td>
+<td><code>architecture.md</code>・<code>code-structure.md</code>・<code>technology-stack.md</code> を含む 9 ファイル（space レベルの <code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> へ書かれる — リポジトリごとに 1 つのストアで、brownfield の再実行ごとに上書きされる。intent の記録に入るのは stage の <code>memory.md</code> 日誌だけ）</td>
 <td>brownfield のみ</td>
 </tr>
 <tr>

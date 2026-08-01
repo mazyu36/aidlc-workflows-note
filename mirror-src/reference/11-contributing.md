@@ -117,6 +117,7 @@ scope は、ファイル（そのアイデンティティ）に加えて stage �
    - `description`（任意）: `/aidlc --help` と SKILL.md のコンパイル済み scope-table でレンダリングされる 1 行の要約。
    - `testStrategy`（任意）: depth から独立して test strategy をオーバーライドする（例: workshop には `Minimal`）。既定では depth に一致する。
    - `runner`（任意）: 既定の生成 runner 集合に scope を含めるには `true` に設定する。
+   - `freeform_default`（任意）: 望ましい core の既定（`feature`/`poc`）が有効でないとき、この scope を指名するには `true` に設定する。有効な scope のうち最大 1 つだけがそれを主張でき、グラフのコンパイルは曖昧な選択済み plugin 集合を却下する。未知の明示的な `AWS_AIDLC_DEFAULT_SCOPE` 値は依然として検証に失敗する。
 
    本体は散文の intent である — 「なぜこれらの stage か、なぜそれらをスキップするか」。`validScopes()` は `.claude/scopes/*.md` の存在から導出するので、ファイルが着地した瞬間に scope は有効になる。構造的な問題を捕らえるには、編集後に `/aidlc --doctor` を走らせる。
 
