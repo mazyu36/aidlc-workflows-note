@@ -30,6 +30,7 @@ git -C "$(ghq root)/github.com/awslabs/aidlc-workflows" worktree add --detach /t
 | `docs/aidlc-workflows/architecture.html` | リポジトリ構成: core → harness → dist の三層、パッケージングパイプライン、プレーンアーキテクチャ |
 | `docs/aidlc-workflows/runtime.html` | 実行モデル: セッションの流れ、conductor、ステージプロトコル、状態機械、フック |
 | `docs/aidlc-workflows/quality.html` | エージェントと検証: 14 エージェント、knowledge、センサー、swarm、学習ループ |
+| `docs/aidlc-workflows/faq.html` | FAQ: coding agent 経験者の想定問答 27 問。位置づけ・仕組みの核・実行モデル・導入と運用 |
 | `docs/mirror/**` | 公式 docs 全 91 ファイルの逐語日本語版（生成物。手で編集しない） |
 
 ## docs ミラー（逐語日本語版）の規約
