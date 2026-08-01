@@ -46,25 +46,25 @@
 
 <main>
 <p class="eyebrow">AIDLC-WORKFLOWS / FAQ</p>
-<h1>FAQ — coding agent 経験者の想定問答</h1>
-<p class="lede">coding agent を日常的に使う開発者に AI-DLC Workflows v2 を紹介したとき、実際に出る順で質問と答えを並べた。答えの根拠はすべて基点コミットの公式 docs にあり、各回答末尾のリンクから日本語版で確認できる。詳細な図解は解説各ページ（仕様・モデル・構成・実行・検証）が受け持つ。</p>
+<h1>FAQ　coding agent 経験者の想定問答</h1>
+<p class="lede">coding agent を日常的に使う開発者に AI-DLC Workflows v2 を紹介したとき、実際に出る順で質問と答えを並べた。答えの根拠はすべて基点コミットの公式 docs にあり、各回答末尾のリンクから日本語版で確認できる。詳細な図解は解説各ページ（仕様、モデル、構成、実行、検証）が受け持つ。</p>
 
 <h2 id="positioning">位置づけ</h2>
 
 <h3 id="what-is">AI-DLC Workflows とは何か</h3>
-<p>AWS が定義する AI 主導開発の方法論 AI-DLC の公式実装で、awslabs の OSS である。開発ライフサイクルを 5 フェーズ（initialization・ideation・inception・construction・operation）・32 ステージに構造化し、承認ゲート付きで coding agent に実行させる。単一の core/ から Claude Code・Kiro CLI・Kiro IDE・Codex CLI・opencode の 5 配布物を生成する。</p>
+<p>AWS が定義する AI 主導開発の方法論 AI-DLC の公式実装で、awslabs の OSS である。開発ライフサイクルを 5 フェーズ（initialization、ideation、inception、construction、operation）、32 ステージに構造化し、承認ゲート付きで coding agent に実行させる。単一の core/ から Claude Code、Kiro CLI、Kiro IDE、Codex CLI、opencode の 5 配布物を生成する。</p>
 <div class="refrow"><span class="label">参照:</span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core">core/</a><button class="copy" type="button" data-copy="core" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/harness">harness/</a><button class="copy" type="button" data-copy="harness" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/dist">dist/</a><button class="copy" type="button" data-copy="dist" aria-label="パスをコピー">⧉</button></span></div>
 
 <h3 id="vs-claude-md">CLAUDE.md とスキルを整備すれば同じことができるのでは</h3>
-<p>プロンプト資産は助言であり、agent が従うかは確率的である。AI-DLC は工程管理を TypeScript のコードに移した。次にどの stage を実行するか・承認されたか・何が起きたと記録するかを LLM は 1 つも決めず、決定論の engine が型付き directive で指示する。公式 docs の原則は「TypeScript が決定論的な記帳を所有し、LLM が判断を所有する」で、並列マージの保留のような不変条件は散文ではなくツーリングで強制される。</p>
+<p>プロンプト資産は助言であり、agent が従うかは確率的である。AI-DLC は工程管理を TypeScript のコードに移した。次にどの stage を実行するか、承認されたか、何が起きたと記録するかを LLM は 1 つも決めず、決定論の engine が型付き directive で指示する。公式 docs の原則は「TypeScript が決定論的な記帳を所有し、LLM が判断を所有する」で、並列マージの保留のような不変条件は散文ではなくツーリングで強制される。</p>
 <p>出典: <a href="../mirror/reference/03-orchestrator.html">reference/03 Orchestrator</a>・<a href="../mirror/reference/12-state-machine.html">reference/12 State Machine</a></p>
 
 <h3 id="vs-kiro-spec">Kiro の spec-driven development と何が違うのか</h3>
-<p>Kiro の spec は 1 機能の要件・設計・タスクを Markdown 化する仕組みで、対象は実装前の合意形成にある。AI-DLC は要求から運用までのライフサイクル全体を対象に、14 の役割別エージェント、工程間の受け渡し、承認ゲート、チーム知識の蓄積までを規定する。Kiro CLI / IDE は AI-DLC を実行するハーネスの 1 つ、という関係になる。</p>
+<p>Kiro の spec は 1 機能の要件、設計、タスクを Markdown 化する仕組みで、対象は実装前の合意形成にある。AI-DLC は要求から運用までのライフサイクル全体を対象に、14 の役割別エージェント、工程間の受け渡し、承認ゲート、チーム知識の蓄積までを規定する。Kiro CLI / IDE は AI-DLC を実行するハーネスの 1 つ、という関係になる。</p>
 <p>出典: <a href="../mirror/guide/04-phases-and-stages.html">guide/04 Phases and Stages</a></p>
 
 <h3 id="harnesses">Claude Code 専用か</h3>
-<p>5 ハーネス対応で、移植ではなく生成である。決定論的な core/ が 1 つあり、scripts/package.ts が各配布物を生成する。エンジン・状態機械・audit・グラフ・swarm レフェリー・learnings ゲートは全配布物でバイト同一で、docs は「異なるのはシェルだけ」と述べる。dist/ を手で編集すると CI のドリフトガードが落ちる。</p>
+<p>5 ハーネス対応で、移植ではなく生成である。決定論的な core/ が 1 つあり、scripts/package.ts が各配布物を生成する。エンジン、状態機械、audit、グラフ、swarm レフェリー、learnings ゲートは全配布物でバイト同一で、docs は「異なるのはシェルだけ」と述べる。dist/ を手で編集すると CI のドリフトガードが落ちる。</p>
 <div class="refrow"><span class="label">参照:</span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/scripts/package.ts">scripts/package.ts</a><button class="copy" type="button" data-copy="scripts/package.ts" aria-label="パスをコピー">⧉</button></span></div>
 <p>出典: <a href="../mirror/guide/harnesses/README.html">guide/harnesses</a>・<a href="architecture.html">解説: リポジトリ構成</a></p>
 
@@ -84,7 +84,7 @@
 <p>出典: <a href="spec.html">解説: 方法論仕様</a>・<a href="../mirror/reference/15-stage-definition.html">reference/15 Stage Definition</a></p>
 
 <h3 id="deterministic-vs-llm">どこが決定論で、どこが確率的か</h3>
-<p>仕事量の大半（要件を書く・設計する・コードを書く）は LLM が担う。一方でワークフローの進行に関する判断は 1 つ残らず TypeScript コードが担う。scope 判定・stage ルーティング・ジャンプ検証・ゲート状態・完了判定は engine が、状態遷移と audit 記録は専用ツールが、並列の審判とループ強制は hook が行う。LLM は作業を終えるたびに engine へ report し、返ってくる directive に従う。「終わった」という LLM の自己申告ではなく、ツールが書いた状態ファイルと audit だけが正である。</p>
+<p>仕事量の大半（要件を書く、設計する、コードを書く）は LLM が担う。一方でワークフローの進行に関する判断は 1 つ残らず TypeScript コードが担う。scope 判定、stage ルーティング、ジャンプ検証、ゲート状態、完了判定は engine が、状態遷移と audit 記録は専用ツールが、並列の審判とループ強制は hook が行う。LLM は作業を終えるたびに engine へ report し、返ってくる directive に従う。「終わった」という LLM の自己申告ではなく、ツールが書いた状態ファイルと audit だけが正である。</p>
 <p>出典: <a href="../mirror/reference/03-orchestrator.html">reference/03 Orchestrator</a>・<a href="runtime.html">解説: 実行モデル</a></p>
 
 <h3 id="tech-stack">技術要素はそれぞれ何を担っているのか</h3>
@@ -98,11 +98,11 @@
 <tr><td>記録</td><td>aidlc-state.md・audit シャード・record dir の成果物・codekb・runtime-graph.json</td><td>ワークフローの正。再開・復旧・実績グラフの源</td><td>書き込み経路をツールに限定</td></tr>
 </tbody>
 </table>
-<p>層をつなぐ橋は 2 つある。第 1 に compile — stage 定義の YAML と scope 宣言は aidlc-graph.ts compile が stage-graph.json / scope-grid.json へ変換し、手編集は CI の compile --check が検出する。第 2 に学習ループ — 実行シグナルを sensor（blocking / advisory の 2 段階）が検知し、learnings ゲートを通過したものだけが rules へ還流する。</p>
+<p>層をつなぐ橋は 2 つある。第 1 が compile である。stage 定義の YAML と scope 宣言は aidlc-graph.ts compile が stage-graph.json / scope-grid.json へ変換し、手編集は CI の compile --check が検出する。第 2 が学習ループである。実行シグナルを sensor（blocking / advisory の 2 段階）が検知し、learnings ゲートを通過したものだけが rules へ還流する。</p>
 <div class="refrow"><span class="label">参照:</span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/hooks">core/hooks/</a><button class="copy" type="button" data-copy="core/hooks" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/tools">core/tools/</a><button class="copy" type="button" data-copy="core/tools" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/knowledge">core/knowledge/</a><button class="copy" type="button" data-copy="core/knowledge" aria-label="パスをコピー">⧉</button></span></div>
 <p>出典: <a href="../mirror/reference/15-stage-definition.html">reference/15 Stage Definition</a>・<a href="../mirror/reference/17-skill-system.html">reference/17 Engine and Skill System</a></p>
 
-<h3 id="flow">動作の流れ — 1 つの stage はどう進むのか</h3>
+<h3 id="flow">動作の流れ　1 つの stage はどう進むのか</h3>
 <p>conductor（LLM）と engine（決定論）の往復が骨格で、hook がその外側で自動発火する。engine の next が「次に実行する stage」を directive で指名し、conductor が実行し、人間のゲートを経て report で返すと、engine が audit を書いてから状態を進めて次の directive を返す。このループが workflow 完了まで続く。</p>
 <figure class="diagram">
 <pre class="mermaid">
@@ -125,12 +125,12 @@ sequenceDiagram
 </pre>
 <figcaption>stage 実行ループの簡約版。hook の発火点・ゲート状態の遷移まで含む完全版は<a href="runtime.html">解説: 実行モデル</a>にある。</figcaption>
 </figure>
-<p>stage の実行形態は stage 定義が宣言し、inline・subagent の hub-and-spoke・mob・pipeline の 4 形がある。どの形で走るかも conductor の裁量ではなく定義データ側にある。</p>
+<p>stage の実行形態は stage 定義が宣言し、inline、subagent の hub-and-spoke、mob、pipeline の 4 形がある。どの形で走るかも conductor の裁量ではなく定義データ側にある。</p>
 <p>出典: <a href="../mirror/reference/03-orchestrator.html">reference/03 Orchestrator</a>・<a href="../mirror/reference/04-stage-protocol.html">reference/04 Stage Protocol</a></p>
 
 <h3 id="bun-invocation">bun は何を実行していて、誰がいつ呼ぶのか</h3>
-<p>bun は 13 本の hook と 31 本のツール（すべて TypeScript）の実行系である。職務は状態管理・audit 記録・sensor ディスパッチ・runtime-graph のコンパイル・ループ強制・状態遷移と reviewer スコープの強制・statusline・human-turn の記録で、起動約 20ms・追加依存なし・macOS / Linux / Windows で同一に動く。</p>
-<p>呼び出し経路は 2 つある。経路 A はハーネスが呼ぶ。Claude Code のライフサイクルイベント（SessionStart・SessionEnd・コンパクション直前ほか）が settings.json にプロジェクト全体で登録された hook を必ず実行し、LLM は介在できない。各 hook は self-gate していて、アクティブなワークフローが無ければ即終了するため、AI-DLC の外の通常利用では no-op になる。</p>
+<p>bun は 13 本の hook と 31 本のツール（すべて TypeScript）の実行系である。職務は状態管理、audit 記録、sensor ディスパッチ、runtime-graph のコンパイル、ループ強制、状態遷移と reviewer スコープの強制、statusline、human-turn の記録で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。</p>
+<p>呼び出し経路は 2 つある。経路 A はハーネスが呼ぶ。Claude Code のライフサイクルイベント（SessionStart、SessionEnd、コンパクション直前ほか）が settings.json にプロジェクト全体で登録された hook を必ず実行し、LLM は介在できない。各 hook は self-gate していて、アクティブなワークフローが無ければ即終了するため、AI-DLC の外の通常利用では no-op になる。</p>
 <p>経路 B は LLM が CLI として呼ぶ。conductor が bun で engine（aidlc-orchestrate.ts）の next を実行して directive を受け取り、stage 実行後に report で結果を返す。状態と audit の書き込みも専用ツール経由に限られる。経路 B の呼び忘れや逸脱は経路 A の hook（状態遷移とループの強制）が検査するので、LLM のサボりで工程管理は破綻しない。</p>
 <p>出典: <a href="../mirror/reference/06-hooks-and-tools.html">reference/06 Hooks and Tools</a>・<a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a></p>
 
@@ -161,23 +161,23 @@ sequenceDiagram
 <p>出典: <a href="../mirror/harness-engineering/08-construction-and-swarm.html">harness-engineering/08 Construction and Swarm</a>・<a href="../mirror/guide/workshop-mode.html">guide Workshop モード</a></p>
 
 <h3 id="state-audit">状態と監査はどう壊れないようにしているのか</h3>
-<p>workflow・phase・stage の 3 つの入れ子状態機械と、ハーネスのセッションイベントの計 4 ストリームが intent ごとの audit trail を共有する。不変条件は「すべての状態遷移はツールが所有する emitter をちょうど 1 つ持つ」で、LLM の散文から audit を書くことは禁止されている。さらに audit-first atomicity — ツールは状態を変更する前に audit を書き、audit が失敗したら状態に触れる前に throw する — により audit と状態ファイルは食い違わない。承認ゲートのたびに audit から runtime-graph.json（実績のグラフ）が実体化され、計画側の stage-graph.json と突き合わせられる。</p>
+<p>workflow、phase、stage の 3 つの入れ子状態機械と、ハーネスのセッションイベントの計 4 ストリームが intent ごとの audit trail を共有する。不変条件は「すべての状態遷移はツールが所有する emitter をちょうど 1 つ持つ」で、LLM の散文から audit を書くことは禁止されている。さらに audit-first atomicity（ツールは状態を変更する前に audit を書き、audit が失敗したら状態に触れる前に throw する）により、audit と状態ファイルは食い違わない。承認ゲートのたびに audit から runtime-graph.json（実績のグラフ）が実体化され、計画側の stage-graph.json と突き合わせられる。</p>
 <p>出典: <a href="../mirror/reference/12-state-machine.html">reference/12 State Machine</a>・<a href="../mirror/reference/13-runtime-graph.html">reference/13 Runtime Graph</a></p>
 
 <h3 id="context-reset">コンテキストのリセットは誰がいつやるのか</h3>
-<p>リセット操作（/clear や新セッション開始）は人間の操作で、フレームワークが会話を自動リセットすることはない。フレームワークが肩代わりするのは 3 つある。第 1 に、いつ切られても復旧できる設計 — 成果物・状態・audit はディスクにあり、次の /aidlc で SessionStart hook が再開コンテキストを注入し、再開オプションは 4 つある。第 2 に、リセットし忘れて自動コンパクションが起きた場合の防御 — 直前に hook が復旧ファイル .aidlc-recovery.md を書き、次回起動時に状態と突き合わせて食い違いを警告する。第 3 に、肥大しにくい構造 — stage の実作業は役割エージェントの subagent に分かれ、各 subagent は新しいコンテキストで走る。</p>
+<p>リセット操作（/clear や新セッション開始）は人間の操作で、フレームワークが会話を自動リセットすることはない。フレームワークが肩代わりするのは 3 つある。第 1 に、いつ切られても復旧できる設計である。成果物、状態、audit はディスクにあり、次の /aidlc で SessionStart hook が再開コンテキストを注入し、再開オプションは 4 つある。第 2 に、リセットし忘れて自動コンパクションが起きた場合の防御である。直前に hook が復旧ファイル .aidlc-recovery.md を書き、次回起動時に状態と突き合わせて食い違いを警告する。第 3 に、肥大しにくい構造である。stage の実作業は役割エージェントの subagent に分かれ、各 subagent は新しいコンテキストで走る。</p>
 <p>切るタイミングの規定は docs に無い。状態がディスク上で確定する承認ゲートの直後が安全な切れ目になる、というのは状態機械の性質から導ける運用指針である。</p>
 <p>出典: <a href="../mirror/guide/11-session-management.html">guide/11 Session Management</a></p>
 
 <h3 id="reverse-engineering">Reverse Engineering は何をしているのか</h3>
-<p>brownfield プロジェクト限定の Stage 2.1 で、initialization の決定論スキャナ（ルールベース。プロジェクト直下と既知のソースディレクトリを走査）が brownfield と判定した場合だけ走る。実行は 2 リンクの pipeline で、developer エージェントがコードベース全体をスキャンし、architect エージェントが結果を 9 個の成果物へ統合する — business-overview・architecture（相互作用図つき）・code-structure・api-documentation・component-inventory・technology-stack・dependencies・code-quality-assessment・reverse-engineering-timestamp。</p>
-<p>出力先は intent の外の永続ストア aidlc/spaces/&lt;space&gt;/codekb/&lt;repo&gt;/ で、以後の Inception・Construction 全 stage の土台になる。成果物が既にあっても毎回再実行する always-rerun ポリシーを持ち、古いスナップショットに基づく設計を防ぐ。</p>
+<p>brownfield プロジェクト限定の Stage 2.1 で、initialization の決定論スキャナ（ルールベース。プロジェクト直下と既知のソースディレクトリを走査）が brownfield と判定した場合だけ走る。実行は 2 リンクの pipeline で、developer エージェントがコードベース全体をスキャンし、architect エージェントが結果を 9 個の成果物へ統合する。内訳は business-overview、architecture（相互作用図つき）、code-structure、api-documentation、component-inventory、technology-stack、dependencies、code-quality-assessment、reverse-engineering-timestamp である。</p>
+<p>出力先は intent の外の永続ストア aidlc/spaces/&lt;space&gt;/codekb/&lt;repo&gt;/ で、以後の Inception、Construction 全 stage の土台になる。成果物が既にあっても毎回再実行する always-rerun ポリシーを持ち、古いスナップショットに基づく設計を防ぐ。</p>
 <p>出典: <a href="../mirror/reference/04-stages/inception.html">reference/04-stages Inception</a>・<a href="../mirror/guide/02-your-first-workflow.html">guide/02 Your First Workflow</a></p>
 
 <h2 id="operation">導入と運用</h2>
 
 <h3 id="too-heavy">32 ステージは小さなタスクには重すぎないか</h3>
-<p>scope が実行する stage を選ぶ。9 種（poc・mvp・feature・bugfix・refactor・security-patch・infra・enterprise・workshop）があり、bugfix は最小、enterprise はフル構成である。さらに depth（3 段階）が各 stage の成果物の詳細度を、テスト戦略がテスト生成量を制御する。この 3 つで、包括的なエンタープライズ機能から素早い bugfix までをタスクに合わせる。</p>
+<p>scope が実行する stage を選ぶ。9 種（poc、mvp、feature、bugfix、refactor、security-patch、infra、enterprise、workshop）があり、bugfix は最小、enterprise はフル構成である。さらに depth（3 段階）が各 stage の成果物の詳細度を、テスト戦略がテスト生成量を制御する。この 3 つで、包括的なエンタープライズ機能から素早い bugfix までをタスクに合わせる。</p>
 <div class="refrow"><span class="label">参照:</span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/scopes">core/scopes/</a><button class="copy" type="button" data-copy="core/scopes" aria-label="パスをコピー">⧉</button></span></div>
 <p>出典: <a href="../mirror/guide/05-scopes-and-depth.html">guide/05 Scopes and Depth</a></p>
 
@@ -186,15 +186,15 @@ sequenceDiagram
 <p>出典: <a href="../mirror/guide/02-your-first-workflow.html">guide/02 Your First Workflow</a></p>
 
 <h3 id="artifacts">成果物はどこに残るのか</h3>
-<p>すべてリポジトリ内のファイルである。aidlc/spaces/&lt;space&gt;/ 配下に intents（ワークフロー単位の成果物と audit）・knowledge・codekb・memory/team.md が置かれ、状態は aidlc-state.md に入る。全部 git 管理なので、レビューも履歴追跡も普段の PR フローに乗る。</p>
+<p>すべてリポジトリ内のファイルである。aidlc/spaces/&lt;space&gt;/ 配下に intents（ワークフロー単位の成果物と audit）、knowledge、codekb、memory/team.md が置かれ、状態は aidlc-state.md に入る。全部 git 管理なので、レビューも履歴追跡も普段の PR フローに乗る。</p>
 <p>出典: <a href="../mirror/guide/14-artifacts-reference.html">guide/14 Artifacts Reference</a></p>
 
 <h3 id="team-knowledge">チームの規約と学びはどう蓄積されるのか</h3>
-<p>2 系統ある。チームの常設ルールは practices として書き、rule システム（5 レイヤー継承・ファイル名由来の scope・strict-additive なランタイムモデル・rule-drift 検出）が管理する。実行中の学びは sensor が検知し、learnings ゲートを通過したものだけが rules へ還流するので、無条件に増殖しない。エージェントの役割知識は 59 ファイルの knowledge として同梱される。</p>
+<p>2 系統ある。チームの常設ルールは practices として書き、rule システム（5 レイヤー継承、ファイル名由来の scope、strict-additive なランタイムモデル、rule-drift 検出）が管理する。実行中の学びは sensor が検知し、learnings ゲートを通過したものだけが rules へ還流するので、無条件に増殖しない。エージェントの役割知識は 59 ファイルの knowledge として同梱される。</p>
 <p>出典: <a href="../mirror/guide/09-rules-and-the-learning-loop.html">guide/09 Rules and the Learning Loop</a>・<a href="../mirror/reference/08-rule-system.html">reference/08 Rule System</a></p>
 
 <h3 id="customize">自社の開発プロセスに合わせて拡張できるか</h3>
-<p>Harness Engineering ガイドに公式手順がある。stage 追加・エージェント追加・scope・sensor の追加、新しいハーネスへの移植、プラグイン作成まで章立てされており、core/ を 1 箇所直せば 5 配布物すべてに反映される。</p>
+<p>Harness Engineering ガイドに公式手順がある。stage 追加、エージェント追加、scope、sensor の追加、新しいハーネスへの移植、プラグイン作成まで章立てされており、core/ を 1 箇所直せば 5 配布物すべてに反映される。</p>
 <p>出典: <a href="../mirror/harness-engineering/00-overview.html">harness-engineering/00 Overview</a></p>
 
 <h3 id="harness-parity">ハーネスごとの制約差はないのか</h3>
@@ -206,13 +206,13 @@ sequenceDiagram
 <p>出典: <a href="../mirror/reference/14-claude-features.html">reference/14 Claude Features</a>・<a href="../mirror/guide/harnesses/codex-cli.html">guide/harnesses Codex CLI</a></p>
 
 <h3 id="cost">トークン消費はどれくらい増えるのか</h3>
-<p>公式の実測値は示されておらず、定量では答えられない。多段の成果物生成と役割別エージェントのぶん、素の 1 セッションより確実に増える。制御レバーは scope・depth・テスト戦略で、小タスクに enterprise scope を使わないことが実務上の答えになる。</p>
+<p>公式の実測値は示されておらず、定量では答えられない。多段の成果物生成と役割別エージェントのぶん、素の 1 セッションより確実に増える。制御レバーは scope、depth、テスト戦略で、小タスクに enterprise scope を使わないことが実務上の答えになる。</p>
 
 <h3 id="license">ライセンスと本番利用の位置づけは</h3>
 <p>awslabs の OSS で、ライセンスは MIT-0（MIT No Attribution）である。AWS のサービスではないので SLA やサポートは無い。v2 は v2.x タグのリリースラインだが開発が活発で、docs はほぼ毎日動く。導入するならタグかコミットで固定し、追随を計画的に行うのが現実的である。</p>
 
 <h3 id="getting-started">まず何をすれば試せるのか</h3>
-<p>前提ツールは対応ハーネスのどれか 1 つと bun である。bun は 13 本の hook と 31 本のツール（すべて TypeScript）の実行系で、起動約 20ms・追加依存なし・macOS / Linux / Windows で同一に動く。配布物をプロジェクトにコピーすれば始められ、MCP サーバーや Bedrock 連携は任意になる。最初は poc か feature scope で小さく 1 周回すことを勧める。</p>
+<p>前提ツールは対応ハーネスのどれか 1 つと bun である。bun は 13 本の hook と 31 本のツール（すべて TypeScript）の実行系で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。配布物をプロジェクトにコピーすれば始められ、MCP サーバーや Bedrock 連携は任意になる。最初は poc か feature scope で小さく 1 周回すことを勧める。</p>
 <p>出典: <a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a></p>
 
 </main>
