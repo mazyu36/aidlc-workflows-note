@@ -160,6 +160,19 @@ sequenceDiagram
 <p>並列の単位は Bolt（1 つの Unit に対する stage 3.1–3.5 の 1 パス）で、並列にできる形は units-generation stage が作る依存 DAG がデータとして決める。conductor は 1 メッセージで Unit ごとに並列の subagent を発行し、作業分離は git worktree ツールが担う。同一バッチで複数 Bolt が失敗すると、成功分はマージ保留（HOLD-MERGE 不変条件）になり、失敗は 1 件ずつ halt-and-ask で人間に順番に上がる。ファシリテーター 1 人と参加者 N 人が別々の Bolt を進める workshop scope もある。</p>
 <p>出典: <a href="../mirror/harness-engineering/08-construction-and-swarm.html">harness-engineering/08 Construction and Swarm</a>・<a href="../mirror/guide/workshop-mode.html">guide Workshop モード</a></p>
 
+<h3 id="limits">トークン予算や再試行の上限は設定できるか</h3>
+<p>トークン予算は設定できない。仕様（原則 3）は自己修正ループの停止条件として「反復上限またはトークン予算」を挙げるが、v2 の実装にトークン予算の機構は無く、roadmap に「明示的にスコープ外」と設計判断が記録されている。実装されている停止条件は反復系で、対象ごとに 3 つある。</p>
+<table>
+<thead><tr><th>上限</th><th>既定</th><th>設定方法</th><th>使い果たすと</th></tr></thead>
+<tbody>
+<tr><td>レビューの反復（reviewer_max_iterations）</td><td>2</td><td>stage 定義の frontmatter を編集して recompile。stage ごとに設定できる</td><td>未解決の findings を書き留めたまま承認ゲートへ進む（人間が見る）</td></tr>
+<tr><td>修正のエスケープハッチ</td><td>3 回（固定）</td><td>公開された設定ノブは無い（環境変数にも stage フィールドにも該当なし）</td><td>同一 stage で 3 回変更を要求すると第 3 の選択肢が現れる</td></tr>
+<tr><td>Bolt の失敗</td><td>上限という形をとらない</td><td>—</td><td>自動リトライで粘らず、失敗した時点で halt-and-ask。自律モードでも必ず停止し、Retry / Skip / Abort を人間に提示する</td></tr>
+</tbody>
+</table>
+<p>コスト側のレバーは別にある。AIDLC_TIER_CAP 環境変数（または memory の tier_cap: キー、org → team → project の後勝ち）が全エージェントのモデル tier を一括で下方修正し、tier は下がる方向にしか動かない。scope と depth は実行するステージ数と成果物の量を減らす。トークン量の予算ではなく、単価と量を別々に絞る構成である。</p>
+<p>出典: <a href="../mirror/reference/15-stage-definition.html">reference/15 Stage Definition</a>・<a href="../mirror/guide/07-interaction-modes.html">guide/07 Interaction Modes</a>・<a href="../mirror/harness-engineering/08-construction-and-swarm.html">harness-engineering/08 Construction and Swarm</a>・<a href="../mirror/roadmap.html">roadmap</a></p>
+
 <h3 id="state-audit">状態と監査はどう壊れないようにしているのか</h3>
 <p>workflow、phase、stage の 3 つの入れ子状態機械と、ハーネスのセッションイベントの計 4 ストリームが intent ごとの audit trail を共有する。不変条件は「すべての状態遷移はツールが所有する emitter をちょうど 1 つ持つ」で、LLM の散文から audit を書くことは禁止されている。さらに audit-first atomicity（ツールは状態を変更する前に audit を書き、audit が失敗したら状態に触れる前に throw する）により、audit と状態ファイルは食い違わない。承認ゲートのたびに audit から runtime-graph.json（実績のグラフ）が実体化され、計画側の stage-graph.json と突き合わせられる。</p>
 <p>出典: <a href="../mirror/reference/12-state-machine.html">reference/12 State Machine</a>・<a href="../mirror/reference/13-runtime-graph.html">reference/13 Runtime Graph</a></p>
