@@ -96,7 +96,6 @@ or として読む）。残るのは:
 
 ## マイナーのはしごに載っていない既知のギャップ
 
-- rules の強制（#495）: `rules_in_context` のパスは出力されるが、conductor に読ませる強制が無い。実行時にゴール 2 を静かに損なう。
 - stage レベルの rules 層（`aidlc-stage-<slug>.md`）: 予約済み・未実装（ゴール 2）。
 - plugin の未提供サーフェス: agents / scopes / memory / knowledge の投影、`when:` の評価、マーケットプレイス（ゴール 2）。
 - sensor のブロッキング重大度（#431): sensor は助言のみで、機械チェックが gate を止めることはできない（ゴール 4 に隣接。2.4.0 からは意図的に外す）。

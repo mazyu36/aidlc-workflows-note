@@ -11,7 +11,7 @@
 | 前提条件 | 目的 | インストール |
 |-------------|---------|---------|
 | **Claude Code** | この実装は Claude Code のコマンドとして動作する。orchestrator・エージェント・hooks はすべて Claude Code 内で実行される。 | ネイティブインストール（推奨・自動更新）: macOS/Linux/WSL `curl -fsSL https://claude.ai/install.sh \| bash`; Windows PowerShell `irm https://claude.ai/install.ps1 \| iex`。または `brew install --cask claude-code`。（[docs](https://code.claude.com/docs/en/quickstart)） |
-| **bun** | すべての CLI ツールと全 13 hooks（状態管理・audit ログ・sensor ディスパッチ・runtime-graph コンパイル・ループ強制・状態遷移と reviewer スコープの強制・statusline・human-turn の記録）に必要。すべて TypeScript で bun により実行される（起動 約 20ms）。追加依存なし — macOS・Linux・ネイティブ Windows PowerShell で同一に動作する。 | `curl -fsSL https://bun.sh/install \| bash`（[docs](https://bun.sh)）。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 \| iex"` |
+| **bun** | すべての CLI ツールと全 14 hooks（状態管理・audit ログ・sensor ディスパッチ・runtime-graph コンパイル・ループ強制・厳密な dispatch-rule 配送・状態遷移と reviewer スコープの強制・statusline・human-turn の記録）に必要。すべて TypeScript で bun により実行される（起動 約 20ms）。追加依存なし — macOS・Linux・ネイティブ Windows PowerShell で同一に動作する。 | `curl -fsSL https://bun.sh/install \| bash`（[docs](https://bun.sh)）。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 \| iex"` |
 
 > **重要**: 非対話シェルでも `bun` が `PATH` に載っていること。Claude Code はシェルを非対話で実行するため、読み込まれるのは `~/.zshenv`（zsh）または `~/.bashrc`（bash）であり、`~/.zshrc` ではない。Windows の Git Bash では `~/.bashrc` が正しいファイルになる。Claude Code 内で `which bun` が失敗する場合は、該当ファイルに bun の PATH export を追加する。
 
@@ -212,7 +212,7 @@ init コマンドを実行することはない。
 | チェック | 検証する内容 |
 |-------|-------------------|
 | 前提条件 | `bun` がインストール済みで `$PATH` にあること |
-| hook の存在 | `settings.json` が束線するすべての hook（`hooks` ブロック + `statusLine` コマンド — フレームワークの全 13 hook）が `.claude/hooks/` に存在すること。束線済みなのに欠けている hook は大きく失敗する。期待一覧を `settings.json` から取るため、そこに hook を足せば自動で検査対象になる |
+| hook の存在 | `settings.json` が束線するすべての hook（`hooks` ブロック + `statusLine` コマンド — フレームワークの全 14 hook）が `.claude/hooks/` に存在すること。束線済みなのに欠けている hook は大きく失敗する。期待一覧を `settings.json` から取るため、そこに hook を足せば自動で検査対象になる |
 | プロジェクト構造 | `.claude/settings.json` が期待する構成で存在すること |
 | ワークスペースシェル | `.claude/` + `aidlc/spaces/default/memory/`（同梱シェル）が存在すること |
 | 状態ファイル | アクティブ intent の `aidlc-state.md` が audit トレイルと一致すること（ドリフトなし） |

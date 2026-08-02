@@ -186,7 +186,7 @@ space を切り替えると、2 つのものがカーソルに自動追従する
 1. **AI-DLC 自身のリゾルバ** — 次に開始する intent と、エージェントが読み込む
    practices・ナレッジは、すべて切り替え先の space から来る。
 2. **harness がコンテキストに読み込むルール** — 切り替えは harness ネイティブの
-   ルール取り込み（Claude の `@`-import、Kiro の resources glob、Codex の rules dir）を
+   ルール取り込み（Claude の `@`-import、Kiro CLI の resources または IDE の steering、Codex の rules dir）を
    新しい space の `memory/` に向け直すため、次のターンはそのチームのメソッドの下で動く。
 
 `default` ではこの向け直しは no-op であり、単一チームのワークスペースがコミット済み

@@ -22,7 +22,7 @@ harness に移植するときは列を足す。
 | **Orchestrator エントリ**（`/aidlc` + runner） | Skills（`/aidlc`） | Skills（`/aidlc`） | Skills（`/aidlc`） | Skills（`$aidlc`） | Command → skill（`/aidlc`; `.aidlc/skills` からの skill を `skills.paths` 経由で） |
 | **Agent ペルソナ**（合計 14） | `.claude/agents/*.md` | `.kiro/agents/*.json` + ペルソナ `.md` | ペルソナ `.md`; 委任先は IDE の `tools:` grant を足す | `.codex/agents/` の TOML | `.opencode/agents/*.md`（subagent）+ ペルソナ `.md` |
 | **自動化**（audit、状態、追跡） | `settings.json` 経由の Hook | `agents/aidlc.json` 経由の Hook | `.kiro/hooks/aidlc-*.json`（v2、IDE >= 1.0）+ `.kiro/hooks/aidlc-*.kiro.hook`（レガシー、1.0 以前） | `.codex/hooks.json` 経由の Hook（1 つのアダプタ） | アダプタ plugin（`.opencode/plugin/`） |
-| **常設の rule**（レイヤーチェーン） | `aidlc/spaces/<active-space>/memory/`（`.claude/rules/aidlc.md` の @-import stub 経由） | `aidlc/spaces/<active-space>/memory/`（Kiro resources glob 経由） | `aidlc/spaces/<active-space>/memory/`（Kiro resources glob 経由） | `aidlc/spaces/<active-space>/memory/`（`AIDLC_RULES_DIR` 経由） | `aidlc/spaces/<active-space>/memory/`（`instructions` glob 経由） |
+| **常設の rule**（レイヤーチェーン） | `aidlc/spaces/<active-space>/memory/`（`.claude/rules/aidlc.md` の @-import stub 経由） | `aidlc/spaces/<active-space>/memory/`（agent resources 経由） | `aidlc/spaces/<active-space>/memory/`（常時包含の steering のライブ参照経由） | `aidlc/spaces/<active-space>/memory/`（`AIDLC_RULES_DIR` 経由） | `aidlc/spaces/<active-space>/memory/`（`instructions` glob 経由） |
 | **プロジェクトオンボーディング文書** | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
 | **Permissions / 設定** | `.claude/settings.json` | `.kiro/settings/cli.json` + agent 設定 | 委任先のための Agent `.md` の `tools:` frontmatter | `.codex/config.toml`（+ Starlark `rules/`） | `opencode.json`（プロジェクトルート） |
 

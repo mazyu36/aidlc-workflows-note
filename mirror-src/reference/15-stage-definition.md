@@ -267,8 +267,8 @@ stage の **通信トポロジ** — ボディが走る間、誰が誰に話す�
 - `subagent` — ハブアンドスポーク。lead は新鮮な subagent コンテキストに dispatch される
   （conductor のコンテキストを吹き飛ばすであろう長い stage、例: Construction のコード生成）。
   stage が `support_agents` も宣言するとき、各々は lead が返したドラフトに対して本物のスポーク
-  として dispatch され — 相互に盲目で、パスのみのブリーフ — そして lead は統合のためにもう 1 回
-  dispatch される。
+  として dispatch され（相互に盲目なブリーフで、成果物はパスとして、積み上げられた steering
+  bundle を運ぶ）、lead は統合のためにもう 1 回 dispatch される。
 - `pipeline` — チェーン。lead がドラフトする; 各 support agent が宣言された順序で肉付けし、各
   リンクはドラフトとそれ以前のすべての貢献を見る。順序が要点である。空でない `support_agents`
   を要求する。

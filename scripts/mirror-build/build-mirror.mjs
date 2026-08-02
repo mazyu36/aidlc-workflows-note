@@ -42,6 +42,7 @@ const MERMAID_COLOR_MAP = new Map(Object.entries({
 // 既知の Mermaid 描画バグ（メッセージ文中の ; は文区切りになる）の修正。upstream PR #651 相当。
 const MERMAID_FIXES = [
   ["O->>ST: Report approved; engine marks [x] and routes", "O->>ST: Report approved — engine marks [x] and routes"],
+  ["Note over A: Rules arrive as content; persona and knowledge remain path-loaded", "Note over A: Rules arrive as content — persona and knowledge remain path-loaded"],
   ["O->>O: Report outcome; engine completes and advances", "O->>O: Report outcome — engine completes and advances"],
   ["O->>O: Report outcome; engine updates state + advances", "O->>O: Report outcome — engine updates state + advances"],
   ["Note over A: Inline lead/support; mob lead-only persona + knowledge paths", "Note over A: Inline lead/support — mob lead-only persona + knowledge paths"],

@@ -102,7 +102,7 @@
 <h2 id="prerequisites">前提条件</h2>
 <ul>
 <li><strong>Claude Code</strong> -- ネイティブインストール（推奨、自動更新）: macOS/Linux/WSL は <code>curl -fsSL https://claude.ai/install.sh | bash</code>; Windows PowerShell は <code>irm https://claude.ai/install.ps1 | iex</code>。あるいは <code>brew install --cask claude-code</code>。（<a href="https://code.claude.com/docs/en/quickstart">Claude Code docs</a> を参照）</li>
-<li><strong>bun</strong> -- すべての CLI ツールと 13 個すべての hook に必須。<code>curl -fsSL https://bun.sh/install | bash</code> でインストールする。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code>。非対話シェルでは PATH 上に在る必要がある（zsh は <code>~/.zshenv</code>、bash / Windows の Git Bash は <code>~/.bashrc</code>）。</li>
+<li><strong>bun</strong> -- すべての CLI ツールと 14 個すべての hook に必須。<code>curl -fsSL https://bun.sh/install | bash</code> でインストールする。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code>。非対話シェルでは PATH 上に在る必要がある（zsh は <code>~/.zshenv</code>、bash / Windows の Git Bash は <code>~/.bashrc</code>）。</li>
 <li><strong>timeout</strong>（GNU coreutils）-- LLM テストのタイムアウト（L2/L3）のためにテストスイートが必要とする。Linux にはプリインストール済み。macOS: <code>brew install coreutils</code> の後、gnubin を PATH に足す: <code>export PATH=&quot;/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH&quot;</code>（<code>~/.zshenv</code> または <code>~/.zshrc</code> で）。</li>
 <li><strong>Bash</strong> -- POSIX 互換ラッパー（<code>tests/run-tests.sh</code>）向けに任意。主要なテストランナーは <code>bun tests/run-tests.ts</code> である; 実行時には、配布される hook のいずれも Bash を必要としない。</li>
 <li><strong>Bedrock access</strong> -- ライブの integration および e2e テスト（L2/L3）を走らせるのに必須。L1 の protocol テストには不要。</li>
@@ -126,7 +126,7 @@ docs/<span class="t-comment">                # Documentation</span>
 <ol>
 <li><strong>Fork してブランチを切る</strong> — <code>main</code> から。その後 <code>bun install --frozen-lockfile</code> を走らせる</li>
 <li><strong>アーキテクチャを読む</strong> -- <a href="01-architecture.html">reference/01-architecture.md</a> は実行モデル、agent 委譲、hook システムを説明する</li>
-<li><strong>エントリポイントを理解する</strong> -- 決定論的な engine <code>core/tools/aidlc-orchestrate.ts</code>（正確に 3 つのサブコマンド: <code>next</code>、<code>report</code>、<code>park</code> を持つ）がルーティングを所有する; conductor <code>harness/claude/skills/aidlc/SKILL.md</code> は、その directive に基づいて動作する薄い転送ループである。規範的な engine / directive / conductor / swarm の契約は <a href="17-skill-system.html">The Skill System</a> を参照</li>
+<li><strong>エントリポイントを理解する</strong> -- 決定論的な engine <code>core/tools/aidlc-orchestrate.ts</code>（正確に 4 つのサブコマンド: <code>next</code>、<code>continue</code>、<code>report</code>、<code>park</code> を持ち、<code>continue</code> は内部の steering 用トランスポート）がルーティングを所有する; conductor <code>harness/claude/skills/aidlc/SKILL.md</code> は、その directive に基づいて動作する薄い転送ループである。規範的な engine / directive / conductor / swarm の契約は <a href="17-skill-system.html">The Skill System</a> を参照</li>
 <li><strong>変更を加える</strong> -- <code>core/</code> の harness 中立なソース（tools、stages、agents、hooks、rules、knowledge）、または <code>harness/&lt;name&gt;/</code> の harness サーフェス（orchestrator skill、settings）を編集する。その後 <code>bun scripts/package.ts</code> を走らせて <code>dist/</code> を再生成する — <code>dist/</code> を決して手で編集しないこと。drift guard（<code>package.ts --check</code>）が CI を失敗させる</li>
 <li><strong>テスト</strong> -- 提出前に <code>bun tests/run-tests.ts</code> を走らせる</li>
 <li><strong>提出</strong> -- <code>main</code> に対して PR を開く</li>

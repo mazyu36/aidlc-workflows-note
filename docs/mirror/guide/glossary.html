@@ -155,7 +155,7 @@
 </tr>
 <tr>
 <td><strong>Engine</strong></td>
-<td>stage 間のルーティングすべて — scope の解決、stage の順序付け、ジャンプ、再開、gate の状態 — を所有し、<strong>Conductor</strong> が実行する型付き <strong>Directive</strong> を発行する決定論的オーケストレーションツール（<code>aidlc-orchestrate.ts</code>。サブコマンドはちょうど 3 つ: <code>next</code>・<code>report</code>・<code>park</code>）。<a href="../reference/17-skill-system.html">Engine と Skill システム</a> を参照。</td>
+<td>stage 間のルーティングすべて — scope の解決、stage の順序付け、ジャンプ、再開、gate の状態 — を所有し、<strong>Conductor</strong> が実行する型付き <strong>Directive</strong> を発行する決定論的オーケストレーションツール（<code>aidlc-orchestrate.ts</code>。サブコマンドはちょうど 4 つ: <code>next</code>・<code>continue</code>・<code>report</code>・<code>park</code>。<code>continue</code> は内部の steering 用トランスポート）。<a href="../reference/17-skill-system.html">Engine と Skill システム</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>External tool</strong></td>
@@ -171,7 +171,7 @@
 </tr>
 <tr>
 <td><strong>Hook</strong></td>
-<td>イベントに応じて Claude Code が自動実行する TypeScript スクリプト。この実装は 13 の hook を使い、すべて <code>settings.json</code> にプロジェクト全体で登録される: ワークフローの背骨（audit ログ、sensor ディスパッチ、runtime グラフのコンパイル、statusline 同期、コンパクション時の状態検証、subagent 追跡、ターン終端のループ強制）に加え、セッションライフサイクル、human-turn の記録、状態遷移と reviewer スコープのガード、statusline コマンド。それぞれ自己判定し、ワークフローが無ければ no-op になる。</td>
+<td>イベントに応じて Claude Code が自動実行する TypeScript スクリプト。この実装は 14 の hook を使い、すべて <code>settings.json</code> にプロジェクト全体で登録される: ワークフローの背骨（audit ログ、sensor ディスパッチ、runtime グラフのコンパイル、statusline 同期、コンパクション時の状態検証、subagent 追跡、ターン終端のループ強制）に加え、セッションライフサイクル、human-turn の記録、厳密な dispatch-rule 配送、状態遷移と reviewer スコープのガード、statusline コマンド。それぞれ自己判定し、ワークフローが無ければ no-op になる。</td>
 </tr>
 <tr>
 <td><strong>Inline execution</strong></td>
@@ -183,7 +183,7 @@
 </tr>
 <tr>
 <td><strong>Kiro</strong></td>
-<td>Kiro の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> から <code>dist/kiro/</code>（CLI）と <code>dist/kiro-ide/</code>（IDE）へ生成され、AIDLC のメソッドは Kiro のエージェント resources glob 経由で <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> から読まれる。<code>/aidlc</code> で呼び出す。<a href="harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a> と <a href="harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a> を参照。</td>
+<td>Kiro の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> から <code>dist/kiro/</code>（CLI）と <code>dist/kiro-ide/</code>（IDE）へ生成され、AIDLC のメソッドは CLI のエージェント resources または IDE の常時包含 steering のライブ参照を通じて <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> から読まれる。<code>/aidlc</code> で呼び出す。<a href="harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a> と <a href="harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Knowledge</strong></td>
@@ -267,7 +267,7 @@
 </tr>
 <tr>
 <td><strong>Rule</strong></td>
-<td>ワークスペースルートのアクティブ space の memory 層（<code>aidlc/spaces/&lt;active-space&gt;/memory/</code>）に一度だけ書かれ、各 harness のネイティブな取り込み（Claude の <code>@</code>-import スタブ、Kiro の resources glob、Codex の <code>AIDLC_RULES_DIR</code>）でコンテキストへ引き込まれ、カバーするすべての stage に適用される永続的な行動ルール。rule は厳密加算の 5 層連鎖 — org → team → project → phase → stage — で解決され、適用されるすべての rule がコンテキストに現れる。広い層は決して上書きされず、足されるだけである。rule は<strong>制御ループ</strong>の feedforward 側であり、決定論検証のために Sensor と対になりうる。<a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</td>
+<td>ワークスペースルートのアクティブ space の memory 層（<code>aidlc/spaces/&lt;active-space&gt;/memory/</code>）に一度だけ書かれ、各 harness のネイティブな取り込み（Claude の <code>@</code>-import スタブ、Kiro CLI の resources または IDE の steering、Codex の <code>AIDLC_RULES_DIR</code>）でコンテキストへ引き込まれ、カバーするすべての stage に適用される永続的な行動ルール。rule は厳密加算の 5 層連鎖 — org → team → project → phase → stage — で解決され、適用されるすべての rule がコンテキストに現れる。広い層は決して上書きされず、足されるだけである。rule は<strong>制御ループ</strong>の feedforward 側であり、決定論検証のために Sensor と対になりうる。<a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Runtime graph</strong></td>

@@ -490,7 +490,7 @@ engine が <em>ランタイムに読み書きする</em> すべては、プロ�
 </ul>
 <p>パスヘルパー — <code>intentsDir</code>、<code>knowledgeDir</code>、<code>codekbDir</code>（<code>aidlc-lib.ts</code>）、
 そして <code>memoryDirFor</code>（<code>aidlc-graph.ts:234</code>）— はすべて、space 引数を
-<code>activeSpace(projectDir)</code> にデフォルトする。だから AI-DLC 自身の resolver は cursor に従う; <code>/aidlc space &lt;name&gt;</code> で space を切り替えると、各 harness ネイティブの rule include（上で述べた Claude の <code>@</code>-import スタブ、Kiro の resources glob、Codex の rules dir）も、切り替えられた space の <code>memory/</code> に指し直される。<code>default</code> では指し直しはバイト単位で同一の no-op なので、単一チームのコミットされたツリーが churn することは決してない。</p>
+<code>activeSpace(projectDir)</code> にデフォルトする。だから AI-DLC 自身の resolver は cursor に従う; <code>/aidlc space &lt;name&gt;</code> で space を切り替えると、各 harness ネイティブの rule include（上で述べた Claude の <code>@</code>-import スタブ、Kiro CLI の resources または IDE の steering、Codex の rules dir）も、切り替えられた space の <code>memory/</code> に指し直される。<code>default</code> では指し直しはバイト単位で同一の no-op なので、単一チームのコミットされたツリーが churn することは決してない。</p>
 <p><strong>Committed 対 gitignored。</strong> <code>aidlc/</code> は、チームが作業を共有するためにチェックインされる。分割（<code>harness/claude/dot-gitignore:34-54</code>）: 2 つの cursor（<code>active-space</code>、<code>active-intent</code>）、clone ごとのランタイム（<code>.aidlc-clone-id</code>、<code>.aidlc-sessions/</code>）、そして導出された state（<code>runtime-graph.json</code>、record の下の <code>.aidlc-*</code>）は <strong>gitignored</strong>; メソッド（<code>memory/**</code>）、knowledge（<code>knowledge/**</code>、<code>codekb/**</code>）、<code>intents.json</code> レジストリ、各 record の <code>aidlc-state.md</code>、<code>audit/</code> シャード、そして artifact は <strong>committed</strong> である。audit が clone ごとのシャード（<code>audit/&lt;host&gt;-&lt;clone&gt;.md</code>）としてコミットされるのは、まさに git が並行する追記をマージせずに済むようにするためである — 意図的に <code>merge=union</code> 属性は無い。</p>
 <h2 id="key-design-decisions">Key Design Decisions</h2>
 <ol>
@@ -563,7 +563,7 @@ engine が <em>ランタイムに読み書きする</em> すべては、プロ�
 <tr>
 <td><strong>Unit</strong> (L1)</td>
 <td><code>tests/unit/</code></td>
-<td>13 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。</td>
+<td>14 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。</td>
 </tr>
 <tr>
 <td><strong>Integration</strong> (L2)</td>

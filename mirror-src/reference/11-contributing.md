@@ -11,7 +11,7 @@
 ## 前提条件
 
 - **Claude Code** -- ネイティブインストール（推奨、自動更新）: macOS/Linux/WSL は `curl -fsSL https://claude.ai/install.sh | bash`; Windows PowerShell は `irm https://claude.ai/install.ps1 | iex`。あるいは `brew install --cask claude-code`。（[Claude Code docs](https://code.claude.com/docs/en/quickstart) を参照）
-- **bun** -- すべての CLI ツールと 13 個すべての hook に必須。`curl -fsSL https://bun.sh/install | bash` でインストールする。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 | iex"`。非対話シェルでは PATH 上に在る必要がある（zsh は `~/.zshenv`、bash / Windows の Git Bash は `~/.bashrc`）。
+- **bun** -- すべての CLI ツールと 14 個すべての hook に必須。`curl -fsSL https://bun.sh/install | bash` でインストールする。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 | iex"`。非対話シェルでは PATH 上に在る必要がある（zsh は `~/.zshenv`、bash / Windows の Git Bash は `~/.bashrc`）。
 - **timeout**（GNU coreutils）-- LLM テストのタイムアウト（L2/L3）のためにテストスイートが必要とする。Linux にはプリインストール済み。macOS: `brew install coreutils` の後、gnubin を PATH に足す: `export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"`（`~/.zshenv` または `~/.zshrc` で）。
 - **Bash** -- POSIX 互換ラッパー（`tests/run-tests.sh`）向けに任意。主要なテストランナーは `bun tests/run-tests.ts` である; 実行時には、配布される hook のいずれも Bash を必要としない。
 - **Bedrock access** -- ライブの integration および e2e テスト（L2/L3）を走らせるのに必須。L1 の protocol テストには不要。
@@ -43,7 +43,7 @@ docs/                # Documentation
 
 1. **Fork してブランチを切る** — `main` から。その後 `bun install --frozen-lockfile` を走らせる
 2. **アーキテクチャを読む** -- [reference/01-architecture.md](01-architecture.md) は実行モデル、agent 委譲、hook システムを説明する
-3. **エントリポイントを理解する** -- 決定論的な engine `core/tools/aidlc-orchestrate.ts`（正確に 3 つのサブコマンド: `next`、`report`、`park` を持つ）がルーティングを所有する; conductor `harness/claude/skills/aidlc/SKILL.md` は、その directive に基づいて動作する薄い転送ループである。規範的な engine / directive / conductor / swarm の契約は [The Skill System](17-skill-system.md) を参照
+3. **エントリポイントを理解する** -- 決定論的な engine `core/tools/aidlc-orchestrate.ts`（正確に 4 つのサブコマンド: `next`、`continue`、`report`、`park` を持ち、`continue` は内部の steering 用トランスポート）がルーティングを所有する; conductor `harness/claude/skills/aidlc/SKILL.md` は、その directive に基づいて動作する薄い転送ループである。規範的な engine / directive / conductor / swarm の契約は [The Skill System](17-skill-system.md) を参照
 4. **変更を加える** -- `core/` の harness 中立なソース（tools、stages、agents、hooks、rules、knowledge）、または `harness/<name>/` の harness サーフェス（orchestrator skill、settings）を編集する。その後 `bun scripts/package.ts` を走らせて `dist/` を再生成する — `dist/` を決して手で編集しないこと。drift guard（`package.ts --check`）が CI を失敗させる
 5. **テスト** -- 提出前に `bun tests/run-tests.ts` を走らせる
 6. **提出** -- `main` に対して PR を開く

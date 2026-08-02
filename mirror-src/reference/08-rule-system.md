@@ -6,7 +6,7 @@
 
 ## Layout
 
-rule は、アクティブな space の memory レイヤー `aidlc/spaces/<active-space>/memory/`（workspace ルートの手編集可能な 1 セットで、各 harness がそのネイティブ include 経由で読む — Claude の `@`-import スタブ、Kiro CLI と Kiro IDE の resources glob、Codex の `AIDLC_RULES_DIR`）に、scope 名の中立的なファイルとして住む:
+rule は、アクティブな space の memory レイヤー `aidlc/spaces/<active-space>/memory/`（workspace ルートの手編集可能な 1 セットで、各 harness がそのネイティブ include 経由で読む — Claude の `@`-import スタブ、Kiro CLI の agent resources、ライブファイル参照付きの Kiro IDE の常時包含 steering、Codex の `AIDLC_RULES_DIR`）に、scope 名の中立的なファイルとして住む:
 
 ```
 aidlc/spaces/<active-space>/memory/
@@ -49,7 +49,7 @@ org はフレームワークの既定を運ぶ; team と project のレイヤー
 
 ## Strict-additive なランタイムモデル
 
-適用可能なすべての rule が `rules_in_context` に現れる。org、team、project の rule は連結される; ランタイムで何も落ちない。phase rule は、rule のファイル名が stage の `phase:` 宣言に合致するとき付く — glob フィルタも、具体パスの合成も無い。agent はセッション開始時にフルチェーンを読む。
+適用可能なすべての rule が `rules_in_context` に現れる。org、team、project の rule は連結される; ランタイムで何も落ちない。phase rule は、rule のファイル名が stage の `phase:` 宣言に合致するとき付く — glob フィルタも、具体パスの合成も無い。`run-stage` の前に、engine はアクティブ space の各実質的な rule ファイルを読み、その文面を 1 つ以上の境界付き `load-steering` ディレクティブを通じて発行する。継続トークンは、アクティブ intent の gitignore された `.aidlc-*` ランタイム状態下（intent がまだ無いときは clone ローカルのセッションランタイム下）にあるランダムでマシンローカルな秘密で鍵付けされた integrity MAC を運ぶ; トークンは stage・ワークフロー状態・rule bundle・route・次のパートを束ね、公開プロジェクトパスから再署名できない。新しい `next` は必要に応じてキーを遅延生成する。サイズベースのパスフォールバックは無い。空のテンプレートは落とされる一方、読み取り不能または無効な必須 rule は repair guidance で停止する。配送は stage ごとに繰り返されるので、ワークフロー途中で認可された learning は次の stage に届く。
 
 conflict（より狭い scope がより広いポリシーに矛盾すること）は、learning が resolver に届く前に memory gate — §13 Learnings Ritual の admission チェック — で拒否される。チェックはセクションレベルである: 提案された日付付き learning エントリが `memory/project.md`（または `memory/team.md`）に書かれようとするとき、orchestrator はそれを `memory/org.md` の合致する見出しと LLM チェックで比較する; conflict が見つかれば、ユーザーは **revise、skip、または escalate** する（override 経路は無い）。Practices-discovery の affirmation gate はもう 1 つの admission gate だが、その promotion は決定論的なセクション置換（`aidlc-state.ts practices-promote`）でユーザーの affirmation によって正当化される — 自動の org-conflict チェックは走らせない。org と team/project の内容の書き込み後のドリフトは、doctor の rule-drift 行（下）で別途表面化される。
 

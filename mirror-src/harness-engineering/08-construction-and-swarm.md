@@ -225,8 +225,9 @@ swarm の機構はコードであり、それを形作ることは開発者リ�
 - **referee** `aidlc-swarm.ts` — worktree を fork し、verdict を走らせ、マージ前に主張された
   すべての Unit を再検証し（嘘つき conductor のガード）、merge-back を直列化し、6 つの `SWARM_*`
   audit イベントを発する、ステートレスな `prepare` / `check` / `finalize` サブコマンド。
-- **engine** `aidlc-orchestrate.ts` — 厳密に 3 つのサブコマンド `next`・`report`・`park` を
-  持つ決定論的なルーター; それは Construction の batch がいつ swarm の適格になるかを決める。
+- **engine** `aidlc-orchestrate.ts` — 厳密に 4 つのサブコマンド `next`・`continue`・`report`・
+  `park` を持つ決定論的なルーター（`continue` は内部の steering 用トランスポート）。それは
+  Construction の batch がいつ swarm の適格になるかを決める。
 - **Bolt-DAG パーサー** — エッジブロックを `runtime-graph.json` に読む compile ステップ。
 
 3 つすべての規範的な契約は

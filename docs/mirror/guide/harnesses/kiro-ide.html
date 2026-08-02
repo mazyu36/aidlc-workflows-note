@@ -135,6 +135,9 @@ cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have 
 <li><code>.kiro/skills/aidlc/SKILL.md</code> — <code>/aidlc</code> の呼び出しで読み込まれる conductor。
 同梱の <code>.kiro/settings/cli.json</code> と agent-v1 の JSON ファイルは CLI 専用の
 互換サーフェスであり、IDE の既定エージェントを選択しない。</li>
+<li><code>.kiro/steering/aidlc-active-memory.md</code> — 常時包含の IDE steering。そのライブ
+ファイル参照が、conductor と委譲先エージェントの両方に向けてアクティブ space の
+memory ファイルをプリロードする。</li>
 <li><code>.kiro/hooks/aidlc-*.json</code> — IDE ネイティブの v2 hook 形式で登録されたフレームワークの
 hook。IDE の Agent Hooks パネルに現れる。（Kiro IDE 1.x は、harness が以前同梱していた
 レガシーの <code>.kiro.hook</code> 形式をもう実行しない。それらのビルドではレガシー hook は
@@ -294,16 +297,18 @@ sensor、scope、depth / テスト戦略 — は同一に振る舞う。同一<e
 <strong>生成</strong>される（<code>{{HARNESS_DIR}}</code> トークンを <code>.kiro</code> に置換し、<code>rules/</code> → <code>steering/</code> に
 リネームした core のコピー）。<code>bun scripts/package.ts --check</code> がドリフトガードで CI で走る。
 authored な Kiro IDE のサーフェスは <code>harness/kiro-ide/</code> に住む: orchestrator のスキル
-（<code>skills/aidlc/</code>）、CLI 互換のエージェント JSON（<code>agents/</code>）、hook アダプタと
-v2 hook JSON ファイル（<code>hooks/</code>）、CLI 専用の <code>settings/cli.json</code>、<code>AGENTS.md</code> —
+（<code>skills/aidlc/</code>）、常時包含の active-memory steering（<code>steering/</code>）、CLI 互換の
+エージェント JSON（<code>agents/</code>）、hook アダプタと v2 hook JSON ファイル（<code>hooks/</code>）、
+CLI 専用の <code>settings/cli.json</code>、<code>AGENTS.md</code> —
 編集するのはそれら（または <code>core/</code>）であり、生成された <code>dist/kiro-ide</code> では決してない。</p>
-<p>IDE の harness は CLI の harness（<code>harness/kiro/</code>）と 3 点で異なる:
+<p>IDE の harness は CLI の harness（<code>harness/kiro/</code>）と 4 点で異なる:
 <code>/aidlc</code> スキルが（<code>settings/cli.json</code> で選択されるエージェントではなく）conductor である。
 v2 hook JSON ファイルを同梱する（CLI はエージェント JSON の <code>hooks</code> ブロックに依存し、
-IDE はそれを無視する）。そして manifest が委譲先エージェントの <code>.md</code> ファイルに <code>tools:</code> の
-frontmatter 許可を注入する（<code>frontmatterAdditions</code>）。IDE は委譲された subagent のツールを
-agent-v1 の JSON ではなく <code>.md</code> frontmatter から解決するためで、許可が無いと IDE の委譲先は
-ツール無しで走ることになる。frontmatter の許可はスコープ無しである点に注意
+IDE はそれを無視する）。常時包含の steering を通じて standing rule をプリロードする
+（CLI 専用のエージェント resources ではなく）。そして manifest が委譲先エージェントの <code>.md</code>
+ファイルに <code>tools:</code> の frontmatter 許可を注入する（<code>frontmatterAdditions</code>）。IDE は委譲された
+subagent のツールを agent-v1 の JSON ではなく <code>.md</code> frontmatter から解決するためで、許可が
+無いと IDE の委譲先はツール無しで走ることになる。frontmatter の許可はスコープ無しである点に注意
 （IDE にはそこに <code>allowedCommands</code>/<code>allowedPaths</code> の同等物が無い）。CLI の JSON サンドボックス
 より広い。
 <a href="../../harness-engineering/09-porting-to-a-new-harness.html">新しい harness への移植</a> を参照。</p>

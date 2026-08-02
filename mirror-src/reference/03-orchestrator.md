@@ -1,6 +1,6 @@
 # Orchestrator
 
-オーケストレーションは 2 つの部品に分かれている。決定論的な **engine**（`aidlc-orchestrate.ts`。サブコマンドは `next`・`report`・`park` のちょうど 3 つ）が stage 間のあらゆる判断——scope 判定、stage ルーティング、ジャンプ解決、resume と init のガード、gate の状態、workflow の完了——を担い、`next` のたびに型付きの **directive** を発行する。**conductor**（`.claude/skills/aidlc/SKILL.md`。`/aidlc` から起動）は各 directive に従って動く薄い forwarding loop であり——指名された stage を実行し、人間に質問し、swarm を fan-out する——その結果を `report` で報告する。SKILL.md は control plane ではない。ルーティングの判断は engine とそれが読むコンパイル済みデータ（`tools/data/stage-graph.json`、`tools/data/scope-grid.json`）にあり、SKILL.md は engine が指名した手の内側で実行品質を担う。
+オーケストレーションは 2 つの部品に分かれている。決定論的な **engine**（`aidlc-orchestrate.ts`。サブコマンドは `next`・`continue`・`report`・`park` のちょうど 4 つ。`continue` は内部の steering 用トランスポート）が stage 間のあらゆる判断——scope 判定、stage ルーティング、ジャンプ解決、resume と init のガード、gate の状態、workflow の完了——を担い、`next` のたびに型付きの **directive** を発行する。**conductor**（`.claude/skills/aidlc/SKILL.md`。`/aidlc` から起動）は各 directive に従って動く薄い forwarding loop であり——指名された stage を実行し、人間に質問し、swarm を fan-out する——その結果を `report` で報告する。SKILL.md は control plane ではない。ルーティングの判断は engine とそれが読むコンパイル済みデータ（`tools/data/stage-graph.json`、`tools/data/scope-grid.json`）にあり、SKILL.md は engine が指名した手の内側で実行品質を担う。
 
 本章は conductor 側から見た workflow の挙動——エントリーポイント、セッション管理、scope から stage への対応、stage の実行・進行プロトコル、意図的な逸脱——を記述する。engine 内部（`next`/`report` の契約、型付き directive の union、conductor のペルソナ、複数形の skills、scope の形、swarm レフェリー）については [Engine and Skill System](17-skill-system.md) を参照。ユーザー向けのコマンド利用法は [User Guide -- CLI Commands](../guide/12-cli-commands.md) を参照。
 
@@ -319,8 +319,8 @@ sequenceDiagram
     participant S as aidlc-state.md
     participant AU as audit/ shard
 
-    O->>A: 1. Read every inline_context_paths entry
-    Note over A: Inline lead/support — mob lead-only persona + knowledge paths
+    O->>A: 1. Apply load-steering parts, then read inline_context_paths
+    Note over A: Rules arrive as content; persona and knowledge remain path-loaded
 
     O->>SF: 2. Read stage file
     Note over SF: directive.stage_file
@@ -362,7 +362,7 @@ Inline stage は orchestrator の会話の中で直接走る。ユーザーは�
 
 6 ステップのプロセス:
 
-1. **すべての inline context path を読む。** stage の作業前に、conductor は `directive.inline_context_paths` の全ファイルを読む。engine が正確な lead・support のペルソナと knowledge ファイルの一覧を供給する。エージェント名だけではコンテキストとしてロードされず、support-agent エントリを省いてはならない。
+1. **stage の steering をロードする。** `load-steering` の順序付けられたシーケンスを `run-stage` まで追う。それはアクティブ space のすべての実質的な rule をコンテンツとして届ける。その後 `inline_context_paths` の全エントリを読む。ペルソナと knowledge は path-loaded のままである。欠落・読み取り不能・無効な UTF-8 のオプションファイルはロースターから省かれ、個別または集約された `context_warnings` で報告される。
 2. **stage ファイルを読む。** conductor は正確な `directive.stage_file` を読む。
 3. **解決済み入力を読む。** conductor は `directive.consumes` の既存成果物を読み、期待どおり入力が欠けている場合は stage が文書化したフォールバックを適用する。
 4. **会話の中でステップを直接実行する。** orchestrator は stage の作業を inline で行う: 質問し、回答を分析し、成果物を生成し、ユーザーと対話する。
@@ -385,13 +385,16 @@ Workspace detection（0.2）は以前は subagent だった。今は `aidlc-util
 
 6 ステップのプロセス:
 
-1. **ルール・stage・入力を読む。** 正確な directive パスを使う。
+1. **配送された rule をロードし、stage と入力を読む。** `run-stage` の前に、順序付けられた
+   `load-steering` パートすべてを適用する。stage ファイルと成果物には正確な directive
+   パスを使う。
 2. **conductor 所有のコンテキストをロードする。** mob directive は lead の完全な
-   一覧を `inline_context_paths` に運ぶ。完全にディスパッチされる subagent/pipeline
+   パス一覧を `inline_context_paths` に運ぶ。完全にディスパッチされる subagent/pipeline
    の directive は空の一覧を運ぶ。
-3. **paths-only のブリーフを準備する。** 正確なルールと関連する成果物の
-   パス + タスク指示を渡す。名指しされた harness エージェント設定がペルソナと
-   knowledge をロードする。どちらもプロンプトにコピーしない。
+3. **ブリーフを準備する: rule はコンテンツ、成果物はパスで。** 積み上げられた steering
+   バンドルを逐語的に貼り付け、関連する成果物のパス + タスク指示を渡す。名指しされた
+   harness エージェント設定がペルソナと knowledge をロードする。どちらもプロンプトに
+   コピーしない。
 4. **トポロジーを適用する。** subagent の support には blind spoke、pipeline には
    順序付きリンク、mob には blind な support contribution + 境界付きの objection
    ラウンドを使う。
