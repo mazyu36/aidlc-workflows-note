@@ -275,6 +275,9 @@ conductor はそれを固定するために `--repo <name>` を渡す。intent �
 | キーワード重複 | どのキーワードも 2 つ以上の scope に主張されていないこと |
 | ルールドリフト | populated な org-policy の見出しと重なるチームまたはプロジェクトのルール見出しを表に出し、矛盾がないか見直せるようにする（助言 — 決して失敗しない） |
 | ペア Sensor カバレッジ | ペアの Sensor を名指すすべてのルールが、どこかの stage が実際に発火する Sensor に解決することを確認する（助言 — 決して失敗しない） |
+| ワークスペースの記録 | `aidlc/` 配下の未コミットの変更を報告する。共有される記録が 1 つのチェックアウトだけに留まらないように（助言 — 決して失敗しない） |
+| 宣言済みワークスペースリポジトリ | `repos.json` が存在する場合、その宣言済み集合とランタイムの発見がディスク上で見ている兄弟リポジトリを比較する（助言 — 決して失敗しない） |
+| ワークスペース gitignore | `repos.json` が存在する場合、管理下の `.gitignore` ブロックが宣言済みリポジトリ集合と一致することを確認する（助言 — 決して失敗しない） |
 
 **出力例:**
 
@@ -552,9 +555,95 @@ bun .codex/tools/aidlc-utility.ts codekb-path --repo <repo>
 `{space, repo, dir}`。このクエリは何も書かず、ディレクトリを作らず、audit イベントも
 発しない。reverse-engineering stage の散文がこれを直接呼び出すため、パスは手で導かれない。
 
+### `aidlc-utility codekb-scope-diff` — 再実行前にコード knowledge base を点検する
+
+これは**直接のユーティリティ呼び出し**であり、`/aidlc codekb-scope-diff` コマンドではない:
+
+```bash
+bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo <repo>
+bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo <repo> --compare <timestamp.md>
+bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo <repo> --mint --paths src/payments/,src/billing/
+```
+
+reverse-engineering の再実行ガードである。codekb ストアは space レベルで intent 間で
+共有され、再実行はそれを置き換えるので、stage は先にこれを確認する:
+
+- **ステータスモード**（既定）はストアの `reverse-engineering-timestamp.md` の
+  Scope of Analysis ブロックを読み、その解析対象パスに対するコンテンツフィンガープリントを
+  再計算する。判定: `NO_STORE`（初回スキャン）、`CURRENT`（解析対象パスが未変更 — 再利用が
+  安全）、`STALE`（解析対象パスが変更された）、`UNVERIFIED`（フィンガープリントを計算
+  できない — 例えば git work tree でない）、`UNKNOWN_SCOPE`（ストアが scope 追跡より
+  古い）。
+- **比較モード**（`--compare <incoming timestamp.md>`）は、入ってくる実行の scope が
+  ストアの scope を包含するかを答える: `COVERS`、または `NARROWER` と、上書きが失う
+  正確なパスとコンポーネント。`kind: full` の scope はリポジトリルート（`./`）を含む必要が
+  あり、full ストアを置き換えられるのは別の full scope だけで、それ以外は `NARROWER`
+  警告が出る。
+- **mint モード**（`--mint --paths <a,b,...>`）は、architect が合成時に scope ブロックへ
+  貼り付けるフィンガープリントを表示する（git work tree の外や pathspec が無効な場合は
+  `unknown`）。
+
+`--json` を足すと構造化された形になる。使用法エラーを除き常に判定を含んだ終了コード 0 を
+返す。何も書かず、audit イベントも発しない。フィンガープリントは、解析対象パスに限定した
+一時インデックス上で行う `git write-tree` であり、ワークスペースルートがリポジトリルート
+と同じ場合はフレームワークが所有する `aidlc/` ツリーを除外する。ソースの作業ツリーの
+内容を追跡し、codekb/state のアーティファクトが書かれても自身を無効化しない。履歴を書き換える
+rebase やスカッシュに騙されず、編集を取り消せば元のフィンガープリントに戻る。
+
 ### `aidlc-utility detect` — 読み取り専用のワークスペーススキャン
 
 `bun .claude/tools/aidlc-utility.ts detect --json` はワークスペーススキャン（プロジェクト種別、言語、フレームワーク、ビルドシステム、宣言された git サブモジュールとその初期化状態の `submodules` 配列）に加え、解決した scopes dir と scope グリッドのパスを表示する。純粋な読み取り。composer は現在の harness で scope データがどこにあるかを知るためにこれを走らせる。
+
+### `aidlc-workspace-sync` — 宣言済みリポジトリ集合をクローンして整合させる
+
+これは**直接のツール呼び出し**であり、`/aidlc workspace-sync` コマンドではない。
+ワークスペースルートの任意の `repos.json` マニフェスト（[リポジトリ集合の宣言](03-spaces-and-intents.md#declaring-the-repo-set-optional-manifest)を参照）に対して、マルチリポジトリのワークスペースを整合させる:
+
+```bash
+bun .claude/tools/aidlc-workspace-sync.ts [--force]
+bun .kiro/tools/aidlc-workspace-sync.ts [--force]
+bun .codex/tools/aidlc-workspace-sync.ts [--force]
+bun .aidlc/tools/aidlc-workspace-sync.ts [--force]
+```
+
+整合処理はワークスペースロックで直列化され、そのロックの現存する所有者は経年で
+回収されない。その後、クローンと生成ファイルをステージする前に読み取り専用の
+プリフライトを実行する。生成される出力は無置換のリンクと可逆な同一ファイルシステム上の
+リネームでインストールされる。ステージング中に `.gitignore` や `aidlc.code-workspace` が
+変化した場合、またはプランを読んだ後に `repos.json` が変化した場合、sync は古い状態を
+適用したり編集を上書きしたりせずに中止する。正常に置き換えられた以前の生成ファイルは、
+点検用に無視される `.aidlc-workspace-sync-recovery-*` ディレクトリ配下に残る。このツールは
+`repos.json` に宣言されているがディスクに無いリポジトリをクローンし、ワークスペースの
+`.gitignore` の管理下ブロックをリポジトリごとに 1 行の `/{name}/` へ書き換え、ルートと
+各子リポジトリを列挙した `aidlc.code-workspace` の VSCode マルチルートファイルを書く。
+宣言された `branch` は新規クローンに対してチェックアウトされる。既にディスクにある
+リポジトリは再クローンも切り替えもされない — そこでの不一致は助言のまま残る。
+
+孤立チェックアウト（ディスク上にあるが `repos.json` には無い）は実行をブロックし、
+`--force` を渡し、かつツールがローカル限定の状態が無いことを証明できた場合にのみ
+アクティブな兄弟集合から除外される。その証明は設定可能なステータスの既定を上書きし、
+未追跡・無視ファイルとディレクトリ（空ディレクトリを含む）、隠れたインデックス状態、
+stash、ref と reflog、到達不能な Git オブジェクト、リンクされた worktree、サブモジュール、
+LFS オブジェクトストアを含む。キャッシュされたリモート追跡 ref を信用する代わりに
+それぞれの実リモートへ問い合わせ、次に一致するオブジェクトグラフを分離されたプローブへ
+フェッチするので、広告されているが提供不能な OID が削除を許可することはできない。ローカル
+リモートで、そのストレージやオブジェクトの alternates がそのチェックアウトに依存している
+場合は復旧先として数えられない。
+
+ライブリモートの証明の後、そのチェックアウトはトランザクション隔離へ移り、ローカルと
+ライブリモートの証明を再度フルで受ける。隔離されたコピーは再帰的に削除されるのではなく
+無視される `.aidlc-workspace-sync-recovery-*` ディレクトリ配下に保持されるので、
+そのディレクトリを既に開いているプロセスが、証明とクリーンアップの間で遅れた書き込みを
+失うことはない。保持されたチェックアウトと生成ファイルのバックアップを点検し、不要になったら
+リカバリディレクトリを手動で削除する。何らかの不確実性があれば手動確認のためブロックする。
+終了コード: `0` 完全に同期済み、`1` ブロックまたはエラー（ライブパスは未変更）、`2` 同期済み
+だが助言的な警告が残る（例: 既存チェックアウトのブランチ不一致）。
+
+マニフェストは任意であり、ディスクを上書きすることはない: intent の誕生は宣言の有無に
+かかわらず実際に存在する兄弟リポジトリをすべて自動発見するので、このツールは宣言済み集合を
+再現し整えるだけである。`--doctor` はこれについて 3 つの助言行を運ぶ（未コミットの
+`aidlc/` レコード、`repos.json` とディスク上の食い違い、古くなった管理下 `.gitignore`
+ブロック）。すべての助言行と同様、これらは決して doctor の終了コードを変えない。
 
 ### `aidlc-utility select-plugins` — インストールのプラグイン選択
 

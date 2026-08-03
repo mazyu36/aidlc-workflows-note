@@ -426,7 +426,10 @@ Stage 2.1 は出荷される `mode: pipeline` の例——各リンクが作業�
 1. **Developer（link 1、lead）:** コードベースをスキャンし、コード構造を分析し、コンポーネントを識別し、依存を対応づけ、生の分析を返す。
 2. **Architect（link 2、最終リンク）:** developer の生分析を受け取り、`aidlc/spaces/<active-space>/codekb/<repo>/` の下の 9 つの codekb 成果物に統合する——最終リンクは pipeline 契約どおり `produces[]` 成果物を完成させて残す。
 
-Reverse Engineering には **always-rerun ポリシー** がある: brownfield プロジェクトでは、先行成果物が存在しても常に再実行され、分析が現在のコードベース状態を反映することを保証する。
+Reverse Engineering は、スキャンする前に各 brownfield リポジトリの共有 codekb を確認する。
+検証済みで最新のストアは人の選択で再利用できる。stale・未検証・legacy・intent と不一致な
+カバレッジは再スキャンされる。マルチリポジトリ intent は、stage が報告または前進する前に
+すべてのリポジトリの判断を解決する。
 
 ### Construction Execution <a id="construction-execution"></a>
 
@@ -598,7 +601,7 @@ upstream の `aidlc-workflows/` reference および v2 framework spec との以�
 | 4 | インラインの質問 | すべての質問をファイルで | 単純な 1-3 の選択肢には `AskUserQuestion` | Claude Code の構造化 UI |
 | 5 | Architecture Decision Records | 存在しない | Application Design に `decisions.md` | アーキテクチャの traceability |
 | 6 | Welcome メッセージ | より長い Unicode ベース | より短く ASCII-safe。`settings.json` の `companyAnnouncements` で描画（stage ではない） | reference 自身の ascii-diagram-standards 違反を修正 |
-| 7 | RE の always-rerun ポリシー | キャッシュした artifact を使う | brownfield では常に再実行 | 現在の codebase 分析を保証 |
+| 7 | RE の再実行ガード | キャッシュした artifact を使う | scope/フィンガープリントを検証し、再利用か再スキャンを提示 | 古い、または静かに狭くなった分析を防ぐ |
 | 8 | Session resume | ファイルベースの `[Answer]:` タグ | `AskUserQuestion` を使う | Claude Code でより自然 |
 | 9 | Clarification の質問 | 別ファイル | インラインで処理 | 通常は 1-2 の的を絞った問い合わせ |
 | 10 | Audit ログ形式 | 単一形式 | 追加で 3 つ: Error, Recovery, Change Request | 事後分析 |

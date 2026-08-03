@@ -98,15 +98,25 @@ plugin stage は、2 つの追加ルールを持つ普通の stage ファイル�
 - それが `produces:` する任意の artifact は `<plugin>-` でプレフィックスされねばならない（例:
   `test-pro-integration-test-results`）。
 
+同じ論理的な plugin 名が、所有するすべての stage・scope・agent・contribution に現れなければ
+ならない。compose はその identity を、発行される host manifest から導出する
+（host レイヤーでは `aidlc-<name>`、AIDLC frontmatter では `<name>`）。content が自分の
+package を改名したり詐称したりすることはできない。不一致は drop され `/aidlc --doctor`
+向けに記録される。
+
 `bundle:` はリネーム前の所有権キーであり、修正を名指すエラーで拒否される - `plugin:` と書く。
 この語は、将来ありうる collection-of-plugins のコンセプトのために予約されている。
 
 Stage の **identity は slug である**。重要なところ（edge、jump、解決）のすべてでそうである。
-`number:` は **表示ヒント** にすぎない — それは status 出力と SKILL.md の stage テーブルで stage を
-順序づけるが、stage のグラフ上の位置は slug ベースの `requires_stage` edge から来る。だから、
-理にかなって読める `number:` を著述する（`test-pro-integration` は `3.85`、`3.6` の
-`build-and-test` の後）が、それを挿入しても core が再番号付けされることは決してなく、範囲を
-主張することもない。
+`number:` は **表示ヒント** にすぎない — stage のグラフ上の位置は slug ベースの
+`requires_stage` edge から来て、コンパイル後の番号値はあなたではなく ENGINE が割り当てる:
+初回コンパイル時、あなたの plugin の新しい stage は自分自身の `requires_stage` edge で
+順序づけられ、あなたが著述した `number:` の値は独立した stage 間のタイブレークにのみ使われ、
+その phase の中で次に空いているインデックスが与えられる。だから、理にかなって読み、edge と
+一致する番号を著述する（`test-pro-integration` は `3.85`、`3.6` の `build-and-test` の後）
+—運ばれるのは RELATIVE な順序である— が、絶対値がグラフに載ることは決してなく、stage を
+挿入しても core が再番号付けされることは決してなく、範囲を主張することもない（これが、
+未協調の 2 つの plugin が番号で決して衝突しない理由である）。
 
 `scopes:` で stage を scope にゲートする（それ以外のあらゆる場所では SKIP である）。任意で
 `when:` 述語を宣言する。`test-pro-full-suite` は、その上流の producer がプランに載っているときに
@@ -165,9 +175,18 @@ fragments:                    # PROSE — spliced into the stage body
   到達せず、出荷される `required-sections` sensor はその期待をテンプレートから導くので、欠けた
   セクションのために stage を失敗させるものはまだ無い。今のところ、それを宣言的な intent として
   扱う。
-- `adds.requires_stage` / `adds.scopes` — ⏳ **延期**: contribution はそれらを宣言してよいが、
-  compose はマージするのではなく drops ログにそれらを記録する（それらはまだ DAG/scope edge では
-  ない）。振る舞いをゲートするためにまだそれらに頼ってはならない。
+- `adds.scopes` — ✅ 対象 stage の `scopes:` リストに set-union される。2 つのガードレールが
+  ある（違反はそれぞれ dropped-with-log であり、決してマージされない）: その scope の
+  identity ファイルがインストールされていること（`scopes/<name>.md` が同じ plugin で
+  出荷されること）、そしてそのファイルの `plugin:` frontmatter があなたの plugin を正確に
+  名指していること — core stage を core または他 plugin の scope の下に置くことはできず、
+  所有権はインストールされたファイルの宣言された所有者から読まれ、名前のプレフィックスから
+  推論されることはない。既存の core stage をあなたの plugin の scope の下にルーティングする
+  ために使う — 例えば、自身の discovery stage と core Inception 以降を運ぶ scope を持つ
+  methodology plugin。
+- `adds.requires_stage` — ⏳ **延期**: contribution はそれを宣言してよいが、compose はマージ
+  するのではなく drops ログにそれを記録する（それはまだ DAG edge ではない）。振る舞いをゲート
+  するためにまだそれに頼ってはならない。
 - `fragments` — ✅ stage の本体に継ぎ合わされる散文ブロック。各 fragment の散文は、contribution
   ファイル中の `## fragment: <anchor>` ブロックである。
 
@@ -241,9 +260,8 @@ Fragment は `(order, plugin)` によって決定論的に順序づけられる�
   plugin の scope を指名するには `freeform_default: true` を設定する。選択された core/plugin
   集合をまたいで有効な scope のうち最大 1 つだけがそれを主張でき、曖昧な集合はグラフの
   コンパイルが却下する。plugin が著述した stage のメンバーシップは、それらの
-  `scopes:` frontmatter リストである。contribution の `adds.scopes`（§3）は依然として延期され、
-  マージされるのではなく drop ログされるので、既存の core stage にあなたの scope を足すためにまだ
-  それに頼ってはならない。[Scope](04-scopes.md) を参照。
+  `scopes:` frontmatter リストである。既存の core stage にあなたの scope を足すことは、
+  contribution の `adds.scopes`（§3）を通して機能する。[Scope](04-scopes.md) を参照。
 
 ## 5. ディストリビューションとインストール
 
