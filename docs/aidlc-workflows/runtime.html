@@ -118,7 +118,7 @@ Construction and Operation stages MUST use standardized 2-option completion mess
 <h2 id="routing">次ステージの決定　グラフ × スコープ × 状態上書き</h2>
 <p>routing の中心はただ 1 つのループである。コンパイル済みグラフを現在位置から前方へ歩き、完了、スキップ済みを飛ばし、スコープ行列で最初の EXECUTE ステージを返す。行列の判定では state 側の EXECUTE/SKIP 上書きが優先される。返すものがなければワークフロー完了になる。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-lib.ts#L4704-L4716">core/tools/aidlc-lib.ts:4704-4716（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:4704" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-lib.ts#L4971-L4983">core/tools/aidlc-lib.ts:4971-4983（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:4971" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-typescript">  for (let i = currentIdx + 1; i &lt; graph.length; i++) {
     const slug = graph[i].slug;
 
