@@ -2,6 +2,6 @@
 // このファイルはページ表示時に app.js が blob/v2・tree/v2 リンクへ合成するための写しで、
 // scripts/bump-base.sh が meta.json と同時に更新する。手で編集しない。
 window.AIDLC_BASE = {
-  sha: "046a9a6c08d1553db3117d5f0c045eff7818bf38",
-  analyzedAt: "2026-08-03",
+  sha: "c73ee984972e95d0576679d0485bf2a45a673ab3",
+  analyzedAt: "2026-08-04",
 };
