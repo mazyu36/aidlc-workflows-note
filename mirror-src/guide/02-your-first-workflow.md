@@ -2,6 +2,14 @@
 
 本章では AI-DLC ワークフローの完全な 1 実行を追いながら、各ステップで何が表示され、どんな意思決定をするのかを説明する。例として、REST API を構築する `feature` scope のワークフローを使う。
 
+> **注**: 本章のトランスクリプトは **Claude Code** のものである。Kiro CLI、
+> Kiro IDE、Codex CLI、opencode でもワークフロー — stage・エージェント・
+> ゲート・アーティファクト — は同一だが、Claude 専用のウェルカムバナーと
+> カスタムの AI-DLC statusline は表示されない。Kiro と opencode では
+> `/aidlc --status` を、Codex では `$aidlc --status` とその組み込みの
+> `update_plan` 進捗表示を使う。ハーネスごとの相違点はすべて
+> [他のハーネスでの実行](harnesses/README.md) の各章に載っている。
+
 ---
 
 ## ワークフローの開始
@@ -10,7 +18,7 @@
 /aidlc Build a REST API for inventory management
 ```
 
-セッション開始時、Claude Code は `settings.json` の `companyAnnouncements` エントリ経由で AI-DLC のウェルカムメッセージを表示する。AI-DLC の仕組みを説明し、stage マップと scope の選択肢を示すものである。
+セッション開始時、Claude Code は `settings.json` の `companyAnnouncements` エントリ経由で AI-DLC のウェルカムメッセージを表示する。AI-DLC の仕組みを説明し、stage マップと scope の選択肢を示すものである。（`companyAnnouncements` は Claude Code の設定項目であり、他のハーネスに相当するものは無い — その場合バナーは表示されず、ワークフローは下記の Initialization から直接始まる。）
 
 ```
 # Welcome to AI-DLC
@@ -71,7 +79,7 @@ Initialization の後、ワークフローは Ideation に入る。ここから�
 
 ### Stage 1.1: Intent Capture（aidlc-product-agent）
 
-ターミナル下部のステータスラインが更新される:
+Claude Code では、ターミナル下部のカスタム AI-DLC ステータスラインが更新される（Kiro と opencode は `/aidlc --status` を使う。Codex は `$aidlc --status` とその組み込みの `update_plan` 進捗表示を使う）:
 
 ```
 [AIDLC] IDEATION > Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product
@@ -253,7 +261,7 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/
 
 ## ステータスライン
 
-ワークフロー全体を通じて、ターミナルのステータスラインが現在位置を示す:
+Claude Code 上ではワークフロー全体を通じて、ターミナルのカスタム AI-DLC ステータスラインが現在位置を示す（Kiro と opencode は各 gate で `/aidlc --status` と進捗行を使う。Codex は `$aidlc --status` とその組み込みの `update_plan` 進捗表示を使う）:
 
 ```
 [AIDLC] IDEATION > Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product

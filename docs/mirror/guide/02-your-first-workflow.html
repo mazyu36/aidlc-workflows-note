@@ -86,10 +86,19 @@
 <p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
 <h1 id="your-first-workflow">最初のワークフロー</h1>
 <p>本章では AI-DLC ワークフローの完全な 1 実行を追いながら、各ステップで何が表示され、どんな意思決定をするのかを説明する。例として、REST API を構築する <code>feature</code> scope のワークフローを使う。</p>
+<blockquote>
+<p><strong>注</strong>: 本章のトランスクリプトは <strong>Claude Code</strong> のものである。Kiro CLI、
+Kiro IDE、Codex CLI、opencode でもワークフロー — stage・エージェント・
+ゲート・アーティファクト — は同一だが、Claude 専用のウェルカムバナーと
+カスタムの AI-DLC statusline は表示されない。Kiro と opencode では
+<code>/aidlc --status</code> を、Codex では <code>$aidlc --status</code> とその組み込みの
+<code>update_plan</code> 進捗表示を使う。ハーネスごとの相違点はすべて
+<a href="harnesses/README.html">他のハーネスでの実行</a> の各章に載っている。</p>
+</blockquote>
 <hr>
 <h2 id="starting-the-workflow">ワークフローの開始</h2>
 <pre class="term"><code>/aidlc Build a REST API for inventory management</code></pre>
-<p>セッション開始時、Claude Code は <code>settings.json</code> の <code>companyAnnouncements</code> エントリ経由で AI-DLC のウェルカムメッセージを表示する。AI-DLC の仕組みを説明し、stage マップと scope の選択肢を示すものである。</p>
+<p>セッション開始時、Claude Code は <code>settings.json</code> の <code>companyAnnouncements</code> エントリ経由で AI-DLC のウェルカムメッセージを表示する。AI-DLC の仕組みを説明し、stage マップと scope の選択肢を示すものである。（<code>companyAnnouncements</code> は Claude Code の設定項目であり、他のハーネスに相当するものは無い — その場合バナーは表示されず、ワークフローは下記の Initialization から直接始まる。）</p>
 <pre class="term"><code><span class="t-hdr"># Welcome to AI-DLC</span>
 
 **AI-DLC** (AI-Driven Development Life Cycle) is an adaptive methodology that
@@ -126,7 +135,7 @@ Detected scope: feature (Standard depth, Standard test strategy, all 32 stages)
 <h2 id="ideation-phase-interactive">Ideation phase（対話的）</h2>
 <p>Initialization の後、ワークフローは Ideation に入る。ここから先の各 stage は、承認 gate を伴って対話的に実行される。</p>
 <h3 id="stage-11-intent-capture-aidlc-product-agent">Stage 1.1: Intent Capture（aidlc-product-agent）</h3>
-<p>ターミナル下部のステータスラインが更新される:</p>
+<p>Claude Code では、ターミナル下部のカスタム AI-DLC ステータスラインが更新される（Kiro と opencode は <code>/aidlc --status</code> を使う。Codex は <code>$aidlc --status</code> とその組み込みの <code>update_plan</code> 進捗表示を使う）:</p>
 <pre class="term"><code><span class="t-status">[AIDLC] IDEATION &gt; Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product</span></code></pre>
 <p>表示内容は、現在の phase、stage の表示名、phase 進捗バー、phase 進捗比、リードエージェントである。バーと比は同じ範囲を数える — どちらも現在の phase 内の <code>[x]</code> の stage を数えるため、比が進むたびにバーも進む。残りコンテキスト（<code>ctx:N%</code>）は常に右側に表示され、減るにつれて色分けされる。</p>
 <p>aidlc-product-agent は対話モードの選択を求める:</p>
@@ -240,7 +249,7 @@ sequenceDiagram
 <p>（チームナレッジは 1 階層上、space レベルの <code>aidlc/spaces/&lt;space&gt;/knowledge/</code> — <code>intents/</code> の兄弟 — にあり、すべての intent を横断して蓄積される。チームが確認した practices と learnings も、その隣にあるアクティブ space の memory 層 <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> にあり、同様に intent を横断して永続する。）</p>
 <hr>
 <h2 id="status-line">ステータスライン</h2>
-<p>ワークフロー全体を通じて、ターミナルのステータスラインが現在位置を示す:</p>
+<p>Claude Code 上ではワークフロー全体を通じて、ターミナルのカスタム AI-DLC ステータスラインが現在位置を示す（Kiro と opencode は各 gate で <code>/aidlc --status</code> と進捗行を使う。Codex は <code>$aidlc --status</code> とその組み込みの <code>update_plan</code> 進捗表示を使う）:</p>
 <pre class="term"><code><span class="t-status">[AIDLC] IDEATION &gt; Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product</span></code></pre>
 <table>
 <thead>

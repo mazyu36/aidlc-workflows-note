@@ -86,6 +86,14 @@
 <p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
 <h1 id="getting-started">はじめかた</h1>
 <p>本章では、この実装のインストール、環境の検証、最初のワークフローへの準備を順に進める。</p>
+<blockquote>
+<p><strong>注</strong>: 本章の説明は <strong>Claude Code</strong> を用いて進める。AI-DLC は Kiro CLI、
+Kiro IDE、Codex CLI、opencode でも動作する: メソドロジーはどのハーネス
+でも同一だが、前提条件・設定・一部の画面（ウェルカムバナー、statusline）
+は異なる。下記 <a href="#installation">インストール</a> の Step 1 に全ハーネス分の
+コピーコマンドがあり、それ以外の相違点は各ハーネスの章
+<a href="harnesses/README.html">他のハーネスでの実行</a> にある。</p>
+</blockquote>
 <hr>
 <h2 id="prerequisites">前提条件</h2>
 <p>この実装はシステムに 2 つのツールを必要とする:</p>
@@ -264,22 +272,65 @@ export AWS_PROFILE=&lt;your-profile&gt;
 <hr>
 <h2 id="installation">インストール</h2>
 <p>AI-DLC は、利用する harness 向けのディストリビューションをプロジェクトへコピーすることでインストールする。
-以下の手順は <strong>Claude Code</strong>（<code>dist/claude/.claude/</code> ツリー）を扱う。他のディストリビューションは
+下記の手順 1 に全ハーネス分のコピーコマンドがあり、本章の残りは
+<strong>Claude Code</strong>（<code>dist/claude/</code> ツリー。<code>.claude/</code> ディレクトリとして出荷される）
+で続ける。他のハーネスでは、その章でインストールを完了させる —
 <a href="harnesses/kiro-cli.html">Kiro CLI で動かす</a>、
 <a href="harnesses/kiro-ide.html">Kiro IDE で動かす</a>、
 <a href="harnesses/codex-cli.html">Codex CLI で動かす</a>、
-<a href="harnesses/opencode.html">opencode 上の AI-DLC</a> を参照。Claude Code 実装は
-プロジェクトにコピーする <code>.claude/</code> ディレクトリとして出荷される。</p>
+<a href="harnesses/opencode.html">opencode 上の AI-DLC</a> — それぞれに固有の前提条件と
+コピー後の手順が載っている。</p>
 <p>以下の <code>cp</code> コマンドは、本リポジトリを <code>v2</code> ブランチで clone した場所で実行する:</p>
 <pre><code class="language-bash">git clone https://github.com/awslabs/aidlc-workflows.git
 cd aidlc-workflows
 git checkout v2
 </code></pre>
 <h3 id="step-1-copy-the-implementation">手順 1: 実装をコピーする</h3>
+<p>利用するハーネスを展開する:</p>
+<p>&lt;details open markdown=&quot;1&quot;&gt;
+&lt;summary&gt;&lt;strong&gt;Claude Code&lt;/strong&gt;&lt;/summary&gt;</p>
 <pre><code class="language-bash">cp -r dist/claude/.claude/ your-project/.claude/
 cp -r dist/claude/aidlc/   your-project/aidlc/     # the workspace shell — a sibling of .claude/, not inside it
 </code></pre>
 <p>1 行目はエンジン — orchestrator・stage ファイル・エージェントペルソナ・hooks・knowledge ファイル・既定設定 — をコピーする。2 行目は <strong>ワークスペースシェル</strong>: エンジンが読む構築済みの <code>aidlc/spaces/default/memory/</code> メソッドツリーをコピーする。これは <code>.claude/</code> の<strong>兄弟</strong>（内側ではない）として出荷されるため、別にコピーする必要がある — もしくは <code>dist/claude/</code> ツリー全体を一度にコピーする。<code>aidlc/spaces/default/memory/</code> が無いと <code>/aidlc --doctor</code> の「workspace shell ready」チェックが失敗する。</p>
+<p>&lt;/details&gt;</p>
+<p>&lt;details markdown=&quot;1&quot;&gt;
+&lt;summary&gt;&lt;strong&gt;Kiro CLI&lt;/strong&gt;&lt;/summary&gt;</p>
+<pre><code class="language-bash">mkdir -p your-project/.kiro your-project/aidlc
+cp -R dist/kiro/.kiro/. your-project/.kiro/
+cp -R dist/kiro/aidlc/. your-project/aidlc/    # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
+cp dist/kiro/AGENTS.md your-project/AGENTS.md  # merge if you already have one
+</code></pre>
+<p>続きは <a href="harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a> で: 前提条件（Kiro CLI ≥ 2.6、Opus 4.8 には有料プランが必要）と、出荷時設定の default-agent 設定。</p>
+<p>&lt;/details&gt;</p>
+<p>&lt;details markdown=&quot;1&quot;&gt;
+&lt;summary&gt;&lt;strong&gt;Kiro IDE&lt;/strong&gt;&lt;/summary&gt;</p>
+<pre><code class="language-bash">mkdir -p your-project/.kiro your-project/aidlc
+cp -R dist/kiro-ide/.kiro/. your-project/.kiro/
+cp -R dist/kiro-ide/aidlc/. your-project/aidlc/     # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
+cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have one
+</code></pre>
+<p>続きは <a href="harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a> で: 前提条件（chat モデルとして Opus 4.8）、v2 の hook ファイル、非対話シェルでの bun の PATH に関する注意。</p>
+<p>&lt;/details&gt;</p>
+<p>&lt;details markdown=&quot;1&quot;&gt;
+&lt;summary&gt;&lt;strong&gt;Codex CLI&lt;/strong&gt;&lt;/summary&gt;</p>
+<pre><code class="language-bash">cp -r dist/codex/.codex/  your-project/.codex/
+cp -r dist/codex/.agents/ your-project/.agents/
+cp -r dist/codex/aidlc/   your-project/aidlc/      # the workspace shell (spaces/default/memory) — a sibling of .codex/, not inside it
+cp dist/codex/AGENTS.md   your-project/AGENTS.md   # or merge into yours
+</code></pre>
+<p>続きは <a href="harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a> で: プロジェクトは <strong>git リポジトリ</strong>である必要があり、その章にある <code>.gitignore</code> エントリと hook trust の事前設定を適用するまでインストールは完了しない。</p>
+<p>&lt;/details&gt;</p>
+<p>&lt;details markdown=&quot;1&quot;&gt;
+&lt;summary&gt;&lt;strong&gt;opencode&lt;/strong&gt;&lt;/summary&gt;</p>
+<pre><code class="language-bash">cp -r dist/opencode/.aidlc/    your-project/.aidlc/
+cp -r dist/opencode/.opencode/ your-project/.opencode/
+cp -r dist/opencode/aidlc/     your-project/aidlc/      # the workspace shell — a sibling of .aidlc/, not inside it
+cp dist/opencode/opencode.json your-project/opencode.json  # or merge into yours
+cp dist/opencode/AGENTS.md     your-project/AGENTS.md      # or merge into yours
+</code></pre>
+<p>続きは <a href="harnesses/opencode.html">opencode 上の AI-DLC</a> で: <code>.aidlc/</code> + <code>.opencode/</code> に分かれたレイアウト、マージ時に残すべき load-bearing な <code>opencode.json</code> のブロック、<code>.gitignore</code> エントリ。</p>
+<p>&lt;/details&gt;</p>
 <h3 id="step-2-navigate-to-your-project">手順 2: プロジェクトへ移動する</h3>
 <pre><code class="language-bash">cd your-project
 </code></pre>
