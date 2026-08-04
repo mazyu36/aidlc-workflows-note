@@ -99,9 +99,9 @@ is next; you own the quality of execution inside the move it named.</code></pre>
 </div>
 
 <h2 id="protocol">ステージプロトコル　32 ステージが従う共通契約</h2>
-<p>各ステージは 1 枚の .md ファイルである。YAML frontmatter は 14 の authored フィールドを持つ。slug / phase / lead_agent / mode / produces / consumes / requires_stage がその一部である。本文は Steps / Sensors / Learn の順序が固定される。成果物のパスをステージファイルにハードコードすることは禁じられ、エンジンが directive 発行時に record dir の実パスへ解決する。全ステージの振る舞いは 1,153 行の stage-protocol.md が統べ、その中核が承認ゲートの HARD STOP 規則になる。</p>
+<p>各ステージは 1 枚の .md ファイルである。YAML frontmatter は 14 の authored フィールドを持つ。slug / phase / lead_agent / mode / produces / consumes / requires_stage がその一部である。本文は Steps / Sensors / Learn の順序が固定される。成果物のパスをステージファイルにハードコードすることは禁じられ、エンジンが directive 発行時に record dir の実パスへ解決する。全ステージの振る舞いは 1,166 行の stage-protocol.md が統べ、その中核が承認ゲートの HARD STOP 規則になる。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/aidlc-common/protocols/stage-protocol.md#L30-L35">core/aidlc-common/protocols/stage-protocol.md:30-35</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-protocol.md:30" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/aidlc-common/protocols/stage-protocol.md#L43-L48">core/aidlc-common/protocols/stage-protocol.md:43-48</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-protocol.md:43" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-markdown">### HARD STOP RULE (non-negotiable)
 
 When you present an approval gate question, you MUST end your turn immediately and wait for the user's explicit response. Do NOT call any tool until the user has typed their choice in a new message. An approval gate is a mandatory human checkpoint that cannot be inferred, auto-approved, or skipped.
@@ -110,7 +110,10 @@ When you present an approval gate question, you MUST end your turn immediately a
 Construction and Operation stages MUST use standardized 2-option completion messages. DO NOT create 3-option menus or other emergent navigation patterns. Only IDEATION and INCEPTION stages may conditionally include a 3rd option (to add a previously skipped stage). Any deviation from these patterns is a protocol violation.</code></pre>
   <p class="excerpt-note">動作: ゲート提示後は即ターンを終え、ユーザーの新規メッセージまでツール呼び出しを禁じる。承認の推測、自動化、スキップを「交渉不能」と明記し、完了メッセージの形まで標準化して創発的なナビゲーションを塞ぐ。</p>
 </figure>
+<p>質問の提示形式も同じファイルが縛る。質問はプロトコル側では <code>```question</code> フェンス（prompt / header / multiSelect / options）の仕様として書かれ、ハーネスのツール名は一切現れない。仕様を実機構へ結ぶのは、各ハーネスの question-rendering annex 1 枚だけである。Claude Code は AskUserQuestion へ 1:1 で写し、ネイティブの質問ツールを持たないハーネスは番号付き散文へ落とす。フェンスをそのままチャットへ書き出すことはプロトコル違反と明記される。生の仕様を貼ると、答えられない文字列の塊になり、選択肢と「Other」の逃げ道が消えるからである。</p>
 <div class="refrow"><span class="label">参照:</span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/aidlc-common/protocols/stage-protocol.md#L15-L26">core/aidlc-common/protocols/stage-protocol.md:15-26（フェンスを写さない規定）</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-protocol.md:15" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/harness/claude/skills/aidlc/question-rendering.md#L9-L28">harness/claude/skills/aidlc/question-rendering.md:9-28（Claude の annex）</a><button class="copy" type="button" data-copy="harness/claude/skills/aidlc/question-rendering.md:9" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/aidlc-common/protocols/stage-definition.md">core/aidlc-common/protocols/stage-definition.md（frontmatter 仕様）</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-definition.md" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/aidlc-common/stages/inception/user-stories.md">stages/inception/user-stories.md（mob 実行の例）</a><button class="copy" type="button" data-copy="core/aidlc-common/stages/inception/user-stories.md" aria-label="パスをコピー">⧉</button></span>
 </div>

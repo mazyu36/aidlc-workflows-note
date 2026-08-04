@@ -222,7 +222,8 @@ sequenceDiagram
 
 <h3 id="harness-parity">ハーネスごとの制約差はないのか</h3>
 <p>コアはバイト同一だが、シェル側の制約は実在し、docs が実測ベースで明記している。Codex CLI は 0.145.0 以上をピンし、/aidlc --doctor が強制する。opencode は *.ts の自動インポートがエンジンスクリプトでクラッシュするため、エンジンツリーを .aidlc/ に隔離する 2 ディレクトリ構成をとる（1.17.18 でライブ再現の上での設計）。Kiro IDE は世代で hook のペイロードチャネルが違い、probe による実証リファレンスが同梱されている。制約を隠さず版数と再現条件つきで書いてあるのがこのリポジトリの流儀である。</p>
-<p>出典: <a href="../mirror/guide/harnesses/codex-cli.html">guide/harnesses Codex CLI</a>・<a href="../mirror/guide/harnesses/opencode.html">guide/harnesses opencode</a>・<a href="../mirror/reference/kiro-ide-hook-payload.html">reference Kiro IDE hook payload</a></p>
+<p>UI 面の差も guide 本体が明示する。ステージ、エージェント、ゲート、成果物は 5 ハーネスで同一だが、起動時のウェルカムバナー（settings.json の companyAnnouncements）と AI-DLC 独自ステータスラインは Claude Code 専用である。Kiro と opencode は <code>/aidlc --status</code>、Codex は <code>$aidlc --status</code> とネイティブの update_plan 表示で位置を確認する。</p>
+<p>出典: <a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a>・<a href="../mirror/guide/02-your-first-workflow.html">guide/02 Your First Workflow</a>・<a href="../mirror/guide/harnesses/codex-cli.html">guide/harnesses Codex CLI</a>・<a href="../mirror/guide/harnesses/opencode.html">guide/harnesses opencode</a>・<a href="../mirror/reference/kiro-ide-hook-payload.html">reference Kiro IDE hook payload</a></p>
 
 <h3 id="models">モデルは何を使うのか</h3>
 <p>ハーネスの設定に従う。エージェント定義は tier を宣言し、ハーネスごとに model + effort へ射影される。Codex 配布物の同梱 config.toml は既定が Amazon Bedrock で、OpenAI 認証への切り替えもできる。</p>
