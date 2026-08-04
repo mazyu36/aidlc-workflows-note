@@ -252,6 +252,35 @@ practices・ナレッジは、すべて切り替え先の space から来る。<
 <p>リポジトリを記録しない intent は、通常の単一リポジトリのケースである。record dir の
 詳細は <a href="14-artifacts-reference.html">成果物リファレンス</a>、用語集の
 <a href="glossary.html">Multi-repo intent</a> を参照。</p>
+<h3 id="declaring-the-repo-set-optional-manifest">リポジトリ集合の宣言（任意のマニフェスト）</h3>
+<p>自動発見は、兄弟リポジトリが既にクローンされていることを前提とする。共有ワークスペースを
+新規チェックアウトした直後はまだクローンされていないので、チームメイトはどのリポジトリを
+どこにクローンすればよいかを知っている必要がある。ワークスペースルートに置く<strong>任意の</strong>
+<code>repos.json</code> マニフェストがその期待される集合を記録し、1 コマンドで再現できるようにする:</p>
+<pre><code class="language-json">{
+  &quot;org&quot;: &quot;your-github-org&quot;,
+  &quot;repos&quot;: [
+    { &quot;name&quot;: &quot;checkout-api&quot;, &quot;branch&quot;: &quot;main&quot; },
+    { &quot;name&quot;: &quot;checkout-web&quot; }
+  ]
+}
+</code></pre>
+<p><code>org</code> は既定のクローン先ホストを与える（<code>url</code> を指定しないリポジトリは
+<code>git@github.com:&lt;org&gt;/&lt;name&gt;.git</code> からクローンされる。エントリに <code>url</code> を設定すれば
+上書きできる）。<code>branch</code> は新規クローン時のチェックアウト先を選び、既にディスク上にある
+リポジトリに対しては助言的な期待値になる。省略した場合はリポジトリ自身の既定ブランチを
+使う。リポジトリ名は安全な単一パスセグメントでなければならず、これはランタイムの
+直下子発見モデルに合致する。<a href="12-cli-commands.html#aidlc-workspace-sync-clone-and-reconcile-the-declared-repo-set">CLI コマンド</a>
+ガイドは、このファイルを読んで不足しているリポジトリをクローンし、gitignore ブロックを
+最新に保ち、VSCode マルチルートワークスペースを生成する <code>aidlc-workspace-sync</code> ツールを
+説明している。</p>
+<p>このマニフェストは便宜であり、第 2 の正となるものではない。<strong>実行時はディスクが勝つ</strong>:
+intent の誕生は宣言の有無にかかわらず実際に存在する兄弟をすべて自動発見するので、
+リポジトリは宣言されているかどうかにかかわらずクローンされた瞬間に機能し、クローンされて
+いない宣言済みリポジトリは単にその集合の一部にならない。マニフェストが駆動するのは
+sync ツールと、宣言済み集合とディスクが食い違ったときにそれを示す助言的な <code>--doctor</code> の
+行だけである。（この「ワークスペースマニフェスト」は、パッケージングファイルである
+harness の <code>manifest.ts</code> とは無関係である。）</p>
 <hr>
 <h2 id="whats-committed-and-whats-not">何がコミットされ、何がされないか</h2>
 <p><code>aidlc/</code> は git にチェックインされ、チームは作業を<strong>共有</strong>する — メソッド、intent

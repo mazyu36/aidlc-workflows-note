@@ -152,9 +152,10 @@ git ポリシーの完全なリファレンスである。</p>
 （<code>architecture.md</code>、<code>code-structure.md</code>、<code>technology-stack.md</code>、…）は 1 階層上、
 space レベルのリポジトリごとの CodeKB —
 <code>aidlc/spaces/&lt;space&gt;/codekb/&lt;repo&gt;/</code> — に落ちる。intent ごとのコピーではなく、
-リポジトリごとに 1 つのストアである。スナップショットではない: stage の条件は
-「鮮度のために常に再実行」なので、当てはまるすべての brownfield intent がスキャンを
-再実行し、その 9 ファイルを上書きする。最後の書き込みが勝つ
+リポジトリごとに 1 つのストアである。当てはまる brownfield intent ごとに、stage は
+まずストアの記録済み scope と working-tree フィンガープリントを確認する。検証済みで
+最新のストアで、そのカバレッジが intent に合っているものは人の選択によって再利用できる。
+それ以外の場合は full または focused なスキャンがその 9 ファイルを上書きする
 （<code>reverse-engineering-timestamp.md</code> が最後にいつスキャンが走り、何をカバーしたかを
 記録する）。したがって intent はリポジトリの最新スキャンを読む — 自分自身の record dir が
 作られた時点のものではない。record dir が実際に得るのは、stage 自身の <code>memory.md</code>
@@ -291,7 +292,7 @@ flowchart LR
 </thead>
 <tbody><tr>
 <td>2.1 Reverse Engineering</td>
-<td><code>architecture.md</code>・<code>code-structure.md</code>・<code>technology-stack.md</code> を含む 9 ファイル（space レベルの <code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> へ書かれる — リポジトリごとに 1 つのストアで、brownfield の再実行ごとに上書きされる。intent の記録に入るのは stage の <code>memory.md</code> 日誌だけ）</td>
+<td><code>architecture.md</code>・<code>code-structure.md</code>・<code>technology-stack.md</code> を含む 9 ファイル（space レベルの <code>aidlc/spaces/&lt;active-space&gt;/codekb/&lt;repo&gt;/</code> へ書かれる — リポジトリごとに 1 つの共有ストアで、検証済みで最新なら再利用され、人が選んだ再スキャンで置き換えられる。intent の記録に入るのは stage の <code>memory.md</code> 日誌だけ）</td>
 <td>brownfield のみ</td>
 </tr>
 <tr>

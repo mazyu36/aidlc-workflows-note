@@ -93,7 +93,7 @@
 <thead><tr><th>層</th><th>構成要素</th><th>役割</th><th>従わせる力</th></tr></thead>
 <tbody>
 <tr><td>人間の判断</td><td>承認ゲート（AskUserQuestion）・ladder prompt・halt-and-ask</td><td>進行可否の最終判断。機械検査できない部分の引き受け先</td><td>人間</td></tr>
-<tr><td>決定論</td><td>engine（aidlc-orchestrate.ts、サブコマンドは next / report / park）・hook 14 本・ツール 32 本・コンパイル済み表（stage-graph.json / scope-grid.json）・実行系 bun</td><td>ルーティング・状態遷移・audit・並列の審判・ループ強制。判断は型付き directive として発行</td><td>絶対（コード実行）</td></tr>
+<tr><td>決定論</td><td>engine（aidlc-orchestrate.ts、サブコマンドは next / report / park）・hook 14 本・ツール 35 本・コンパイル済み表（stage-graph.json / scope-grid.json）・実行系 bun</td><td>ルーティング・状態遷移・audit・並列の審判・ループ強制。判断は型付き directive として発行</td><td>絶対（コード実行）</td></tr>
 <tr><td>ステアリング</td><td>SKILL.md（conductor）・stage-protocol.md + stage 定義 32・agent 定義 14・knowledge 59・scope 宣言 9・rules / practices</td><td>LLM への手順・ペルソナ・知識・規範の供給</td><td>確率的。結果はゲートと事後条件で検査</td></tr>
 <tr><td>記録</td><td>aidlc-state.md・audit シャード・record dir の成果物・codekb・runtime-graph.json</td><td>ワークフローの正。再開・復旧・実績グラフの源</td><td>書き込み経路をツールに限定</td></tr>
 </tbody>
@@ -129,7 +129,7 @@ sequenceDiagram
 <p>出典: <a href="../mirror/reference/03-orchestrator.html">reference/03 Orchestrator</a>・<a href="../mirror/reference/04-stage-protocol.html">reference/04 Stage Protocol</a></p>
 
 <h3 id="bun-invocation">bun は何を実行していて、誰がいつ呼ぶのか</h3>
-<p>bun は 14 本の hook と 32 本のツール（すべて TypeScript）の実行系である。職務は状態管理、audit 記録、sensor ディスパッチ、runtime-graph のコンパイル、ループ強制、状態遷移と reviewer スコープの強制、statusline、human-turn の記録で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。</p>
+<p>bun は 14 本の hook と 35 本のツール（すべて TypeScript）の実行系である。職務は状態管理、audit 記録、sensor ディスパッチ、runtime-graph のコンパイル、ループ強制、状態遷移と reviewer スコープの強制、statusline、human-turn の記録で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。</p>
 <p>呼び出し経路は 2 つある。経路 A はハーネスが呼ぶ。Claude Code のライフサイクルイベント（SessionStart、SessionEnd、コンパクション直前ほか）が settings.json にプロジェクト全体で登録された hook を必ず実行し、LLM は介在できない。各 hook は self-gate していて、アクティブなワークフローが無ければ即終了するため、AI-DLC の外の通常利用では no-op になる。</p>
 <p>経路 B は LLM が CLI として呼ぶ。conductor が bun で engine（aidlc-orchestrate.ts）の next を実行して directive を受け取り、stage 実行後に report で結果を返す。状態と audit の書き込みも専用ツール経由に限られる。経路 B の呼び忘れや逸脱は経路 A の hook（状態遷移とループの強制）が検査するので、LLM のサボりで工程管理は破綻しない。</p>
 <p>出典: <a href="../mirror/reference/06-hooks-and-tools.html">reference/06 Hooks and Tools</a>・<a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a></p>
@@ -184,7 +184,17 @@ sequenceDiagram
 
 <h3 id="reverse-engineering">Reverse Engineering は何をしているのか</h3>
 <p>brownfield プロジェクト限定の Stage 2.1 で、initialization の決定論スキャナ（ルールベース。プロジェクト直下と既知のソースディレクトリを走査）が brownfield と判定した場合だけ走る。実行は 2 リンクの pipeline で、developer エージェントがコードベース全体をスキャンし、architect エージェントが結果を 9 個の成果物へ統合する。内訳は business-overview、architecture（相互作用図つき）、code-structure、api-documentation、component-inventory、technology-stack、dependencies、code-quality-assessment、reverse-engineering-timestamp である。</p>
-<p>出力先は intent の外の永続ストア aidlc/spaces/&lt;space&gt;/codekb/&lt;repo&gt;/ で、以後の Inception、Construction 全 stage の土台になる。成果物が既にあっても毎回再実行する always-rerun ポリシーを持ち、古いスナップショットに基づく設計を防ぐ。</p>
+<p>出力先は intent の外の永続ストア aidlc/spaces/&lt;space&gt;/codekb/&lt;repo&gt;/ で、以後の Inception、Construction 全 stage の土台になる。ストアは space 内の全 intent が共有し、再実行は中身を置き換える。だから Step 1 に再実行ガードが立つ。<code>codekb-scope-diff</code> がリポジトリごとに前回の分析対象パスと作業ツリーの fingerprint を照合し、判定を 5 値で返す。</p>
+<table>
+<thead><tr><th>判定</th><th>意味</th><th>提示する選択肢</th></tr></thead>
+<tbody>
+<tr><td>NO_STORE</td><td>初回スキャン</td><td>問わずスキャンへ</td></tr>
+<tr><td>CURRENT</td><td>前回の分析対象パスが未変更</td><td>再利用 / 全体再スキャン / 範囲限定スキャン</td></tr>
+<tr><td>STALE / UNVERIFIED / UNKNOWN_SCOPE</td><td>変更あり・検証不能・スコープ記録以前</td><td>全体再スキャン / 範囲限定スキャン（再利用は出さない）</td></tr>
+</tbody>
+</table>
+<p>再利用するかは人間が決める。CURRENT でも今回の intent が分析対象外のコードを触るなら、再利用の選択肢は出さない。マルチリポ intent では全リポジトリの判定を確定してから、初めて stage が report・advance する。スキャン後には決定論の裏取りが入る。「全体再スキャン」を選んだのに範囲限定で済ませた実行は、承認ゲートの前に NARROWER として露出する。</p>
+<div class="refrow"><span class="label">参照:</span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-utility.ts">core/tools/aidlc-utility.ts（codekb-scope-diff の実装）</a><button class="copy" type="button" data-copy="core/tools/aidlc-utility.ts" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/aidlc-common/stages/inception/reverse-engineering.md">stages/inception/reverse-engineering.md（Step 1 のガード）</a><button class="copy" type="button" data-copy="core/aidlc-common/stages/inception/reverse-engineering.md" aria-label="パスをコピー">⧉</button></span></div>
 <p>出典: <a href="../mirror/reference/04-stages/inception.html">reference/04-stages Inception</a>・<a href="../mirror/guide/02-your-first-workflow.html">guide/02 Your First Workflow</a></p>
 
 <h2 id="operation">導入と運用</h2>
@@ -225,7 +235,7 @@ sequenceDiagram
 <p>awslabs の OSS で、ライセンスは MIT-0（MIT No Attribution）である。AWS のサービスではないので SLA やサポートは無い。v2 は v2.x タグのリリースラインだが開発が活発で、docs はほぼ毎日動く。導入するならタグかコミットで固定し、追随を計画的に行うのが現実的である。</p>
 
 <h3 id="getting-started">まず何をすれば試せるのか</h3>
-<p>前提ツールは対応ハーネスのどれか 1 つと bun である。bun は 14 本の hook と 32 本のツール（すべて TypeScript）の実行系で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。配布物をプロジェクトにコピーすれば始められ、MCP サーバーや Bedrock 連携は任意になる。最初は poc か feature scope で小さく 1 周回すことを勧める。</p>
+<p>前提ツールは対応ハーネスのどれか 1 つと bun である。bun は 14 本の hook と 35 本のツール（すべて TypeScript）の実行系で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。配布物をプロジェクトにコピーすれば始められ、MCP サーバーや Bedrock 連携は任意になる。最初は poc か feature scope で小さく 1 周回すことを勧める。</p>
 <p>出典: <a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a></p>
 
 </main>

@@ -142,14 +142,23 @@ sensor</strong>（その manifest は <code>sensors/</code> に + そのスク�
 <li>それが <code>produces:</code> する任意の artifact は <code>&lt;plugin&gt;-</code> でプレフィックスされねばならない（例:
 <code>test-pro-integration-test-results</code>）。</li>
 </ul>
+<p>同じ論理的な plugin 名が、所有するすべての stage・scope・agent・contribution に現れなければ
+ならない。compose はその identity を、発行される host manifest から導出する
+（host レイヤーでは <code>aidlc-&lt;name&gt;</code>、AIDLC frontmatter では <code>&lt;name&gt;</code>）。content が自分の
+package を改名したり詐称したりすることはできない。不一致は drop され <code>/aidlc --doctor</code>
+向けに記録される。</p>
 <p><code>bundle:</code> はリネーム前の所有権キーであり、修正を名指すエラーで拒否される - <code>plugin:</code> と書く。
 この語は、将来ありうる collection-of-plugins のコンセプトのために予約されている。</p>
 <p>Stage の <strong>identity は slug である</strong>。重要なところ（edge、jump、解決）のすべてでそうである。
-<code>number:</code> は <strong>表示ヒント</strong> にすぎない — それは status 出力と SKILL.md の stage テーブルで stage を
-順序づけるが、stage のグラフ上の位置は slug ベースの <code>requires_stage</code> edge から来る。だから、
-理にかなって読める <code>number:</code> を著述する（<code>test-pro-integration</code> は <code>3.85</code>、<code>3.6</code> の
-<code>build-and-test</code> の後）が、それを挿入しても core が再番号付けされることは決してなく、範囲を
-主張することもない。</p>
+<code>number:</code> は <strong>表示ヒント</strong> にすぎない — stage のグラフ上の位置は slug ベースの
+<code>requires_stage</code> edge から来て、コンパイル後の番号値はあなたではなく ENGINE が割り当てる:
+初回コンパイル時、あなたの plugin の新しい stage は自分自身の <code>requires_stage</code> edge で
+順序づけられ、あなたが著述した <code>number:</code> の値は独立した stage 間のタイブレークにのみ使われ、
+その phase の中で次に空いているインデックスが与えられる。だから、理にかなって読み、edge と
+一致する番号を著述する（<code>test-pro-integration</code> は <code>3.85</code>、<code>3.6</code> の <code>build-and-test</code> の後）
+—運ばれるのは RELATIVE な順序である— が、絶対値がグラフに載ることは決してなく、stage を
+挿入しても core が再番号付けされることは決してなく、範囲を主張することもない（これが、
+未協調の 2 つの plugin が番号で決して衝突しない理由である）。</p>
 <p><code>scopes:</code> で stage を scope にゲートする（それ以外のあらゆる場所では SKIP である）。任意で
 <code>when:</code> 述語を宣言する。<code>test-pro-full-suite</code> は、その上流の producer がプランに載っているときに
 だけ走ることが <em>意図されている</em>:</p>
@@ -200,9 +209,18 @@ set-union される。</li>
 到達せず、出荷される <code>required-sections</code> sensor はその期待をテンプレートから導くので、欠けた
 セクションのために stage を失敗させるものはまだ無い。今のところ、それを宣言的な intent として
 扱う。</li>
-<li><code>adds.requires_stage</code> / <code>adds.scopes</code> — ⏳ <strong>延期</strong>: contribution はそれらを宣言してよいが、
-compose はマージするのではなく drops ログにそれらを記録する（それらはまだ DAG/scope edge では
-ない）。振る舞いをゲートするためにまだそれらに頼ってはならない。</li>
+<li><code>adds.scopes</code> — ✅ 対象 stage の <code>scopes:</code> リストに set-union される。2 つのガードレールが
+ある（違反はそれぞれ dropped-with-log であり、決してマージされない）: その scope の
+identity ファイルがインストールされていること（<code>scopes/&lt;name&gt;.md</code> が同じ plugin で
+出荷されること）、そしてそのファイルの <code>plugin:</code> frontmatter があなたの plugin を正確に
+名指していること — core stage を core または他 plugin の scope の下に置くことはできず、
+所有権はインストールされたファイルの宣言された所有者から読まれ、名前のプレフィックスから
+推論されることはない。既存の core stage をあなたの plugin の scope の下にルーティングする
+ために使う — 例えば、自身の discovery stage と core Inception 以降を運ぶ scope を持つ
+methodology plugin。</li>
+<li><code>adds.requires_stage</code> — ⏳ <strong>延期</strong>: contribution はそれを宣言してよいが、compose はマージ
+するのではなく drops ログにそれを記録する（それはまだ DAG edge ではない）。振る舞いをゲート
+するためにまだそれに頼ってはならない。</li>
 <li><code>fragments</code> — ✅ stage の本体に継ぎ合わされる散文ブロック。各 fragment の散文は、contribution
 ファイル中の <code>## fragment: &lt;anchor&gt;</code> ブロックである。</li>
 </ul>
@@ -299,9 +317,8 @@ plugin はそれを出荷しない。<a href="07-team-knowledge.html">チーム 
 plugin の scope を指名するには <code>freeform_default: true</code> を設定する。選択された core/plugin
 集合をまたいで有効な scope のうち最大 1 つだけがそれを主張でき、曖昧な集合はグラフの
 コンパイルが却下する。plugin が著述した stage のメンバーシップは、それらの
-<code>scopes:</code> frontmatter リストである。contribution の <code>adds.scopes</code>（§3）は依然として延期され、
-マージされるのではなく drop ログされるので、既存の core stage にあなたの scope を足すためにまだ
-それに頼ってはならない。<a href="04-scopes.html">Scope</a> を参照。</li>
+<code>scopes:</code> frontmatter リストである。既存の core stage にあなたの scope を足すことは、
+contribution の <code>adds.scopes</code>（§3）を通して機能する。<a href="04-scopes.html">Scope</a> を参照。</li>
 </ul>
 <h2 id="5-distribution-install">5. ディストリビューションとインストール</h2>
 <p>packager はあなたの plugin を <strong>本物の host plugin</strong> として emit する（harness ごとに 1 つの射影

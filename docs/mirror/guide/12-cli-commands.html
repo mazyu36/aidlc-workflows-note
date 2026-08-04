@@ -423,6 +423,18 @@ conductor はそれを固定するために <code>--repo &lt;name&gt;</code> を
 <td>ペア Sensor カバレッジ</td>
 <td>ペアの Sensor を名指すすべてのルールが、どこかの stage が実際に発火する Sensor に解決することを確認する（助言 — 決して失敗しない）</td>
 </tr>
+<tr>
+<td>ワークスペースの記録</td>
+<td><code>aidlc/</code> 配下の未コミットの変更を報告する。共有される記録が 1 つのチェックアウトだけに留まらないように（助言 — 決して失敗しない）</td>
+</tr>
+<tr>
+<td>宣言済みワークスペースリポジトリ</td>
+<td><code>repos.json</code> が存在する場合、その宣言済み集合とランタイムの発見がディスク上で見ている兄弟リポジトリを比較する（助言 — 決して失敗しない）</td>
+</tr>
+<tr>
+<td>ワークスペース gitignore</td>
+<td><code>repos.json</code> が存在する場合、管理下の <code>.gitignore</code> ブロックが宣言済みリポジトリ集合と一致することを確認する（助言 — 決して失敗しない）</td>
+</tr>
 </tbody></table>
 <p><strong>出力例:</strong></p>
 <pre class="term"><code><span class="t-ok">✓ bun installed (required for CLI tools and hooks)</span>
@@ -613,8 +625,81 @@ bun .codex/tools/aidlc-utility.ts codekb-path --repo &lt;repo&gt;
 <code>aidlc/spaces/&lt;space&gt;/codekb/&lt;repo&gt;/</code> パスを表示する。<code>--json</code> を足すと
 <code>{space, repo, dir}</code>。このクエリは何も書かず、ディレクトリを作らず、audit イベントも
 発しない。reverse-engineering stage の散文がこれを直接呼び出すため、パスは手で導かれない。</p>
+<h3 id="aidlc-utility-codekb-scope-diff-check-the-code-knowledge-base-before-a-rerun"><code>aidlc-utility codekb-scope-diff</code> — 再実行前にコード knowledge base を点検する</h3>
+<p>これは<strong>直接のユーティリティ呼び出し</strong>であり、<code>/aidlc codekb-scope-diff</code> コマンドではない:</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo &lt;repo&gt;
+bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo &lt;repo&gt; --compare &lt;timestamp.md&gt;
+bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo &lt;repo&gt; --mint --paths src/payments/,src/billing/
+</code></pre>
+<p>reverse-engineering の再実行ガードである。codekb ストアは space レベルで intent 間で
+共有され、再実行はそれを置き換えるので、stage は先にこれを確認する:</p>
+<ul>
+<li><strong>ステータスモード</strong>（既定）はストアの <code>reverse-engineering-timestamp.md</code> の
+Scope of Analysis ブロックを読み、その解析対象パスに対するコンテンツフィンガープリントを
+再計算する。判定: <code>NO_STORE</code>（初回スキャン）、<code>CURRENT</code>（解析対象パスが未変更 — 再利用が
+安全）、<code>STALE</code>（解析対象パスが変更された）、<code>UNVERIFIED</code>（フィンガープリントを計算
+できない — 例えば git work tree でない）、<code>UNKNOWN_SCOPE</code>（ストアが scope 追跡より
+古い）。</li>
+<li><strong>比較モード</strong>（<code>--compare &lt;incoming timestamp.md&gt;</code>）は、入ってくる実行の scope が
+ストアの scope を包含するかを答える: <code>COVERS</code>、または <code>NARROWER</code> と、上書きが失う
+正確なパスとコンポーネント。<code>kind: full</code> の scope はリポジトリルート（<code>./</code>）を含む必要が
+あり、full ストアを置き換えられるのは別の full scope だけで、それ以外は <code>NARROWER</code>
+警告が出る。</li>
+<li><strong>mint モード</strong>（<code>--mint --paths &lt;a,b,...&gt;</code>）は、architect が合成時に scope ブロックへ
+貼り付けるフィンガープリントを表示する（git work tree の外や pathspec が無効な場合は
+<code>unknown</code>）。</li>
+</ul>
+<p><code>--json</code> を足すと構造化された形になる。使用法エラーを除き常に判定を含んだ終了コード 0 を
+返す。何も書かず、audit イベントも発しない。フィンガープリントは、解析対象パスに限定した
+一時インデックス上で行う <code>git write-tree</code> であり、ワークスペースルートがリポジトリルート
+と同じ場合はフレームワークが所有する <code>aidlc/</code> ツリーを除外する。ソースの作業ツリーの
+内容を追跡し、codekb/state のアーティファクトが書かれても自身を無効化しない。履歴を書き換える
+rebase やスカッシュに騙されず、編集を取り消せば元のフィンガープリントに戻る。</p>
 <h3 id="aidlc-utility-detect-read-only-workspace-scan"><code>aidlc-utility detect</code> — 読み取り専用のワークスペーススキャン</h3>
 <p><code>bun .claude/tools/aidlc-utility.ts detect --json</code> はワークスペーススキャン（プロジェクト種別、言語、フレームワーク、ビルドシステム、宣言された git サブモジュールとその初期化状態の <code>submodules</code> 配列）に加え、解決した scopes dir と scope グリッドのパスを表示する。純粋な読み取り。composer は現在の harness で scope データがどこにあるかを知るためにこれを走らせる。</p>
+<h3 id="aidlc-workspace-sync-clone-and-reconcile-the-declared-repo-set"><code>aidlc-workspace-sync</code> — 宣言済みリポジトリ集合をクローンして整合させる</h3>
+<p>これは<strong>直接のツール呼び出し</strong>であり、<code>/aidlc workspace-sync</code> コマンドではない。
+ワークスペースルートの任意の <code>repos.json</code> マニフェスト（<a href="03-spaces-and-intents.html#declaring-the-repo-set-optional-manifest">リポジトリ集合の宣言</a>を参照）に対して、マルチリポジトリのワークスペースを整合させる:</p>
+<pre><code class="language-bash">bun .claude/tools/aidlc-workspace-sync.ts [--force]
+bun .kiro/tools/aidlc-workspace-sync.ts [--force]
+bun .codex/tools/aidlc-workspace-sync.ts [--force]
+bun .aidlc/tools/aidlc-workspace-sync.ts [--force]
+</code></pre>
+<p>整合処理はワークスペースロックで直列化され、そのロックの現存する所有者は経年で
+回収されない。その後、クローンと生成ファイルをステージする前に読み取り専用の
+プリフライトを実行する。生成される出力は無置換のリンクと可逆な同一ファイルシステム上の
+リネームでインストールされる。ステージング中に <code>.gitignore</code> や <code>aidlc.code-workspace</code> が
+変化した場合、またはプランを読んだ後に <code>repos.json</code> が変化した場合、sync は古い状態を
+適用したり編集を上書きしたりせずに中止する。正常に置き換えられた以前の生成ファイルは、
+点検用に無視される <code>.aidlc-workspace-sync-recovery-*</code> ディレクトリ配下に残る。このツールは
+<code>repos.json</code> に宣言されているがディスクに無いリポジトリをクローンし、ワークスペースの
+<code>.gitignore</code> の管理下ブロックをリポジトリごとに 1 行の <code>/{name}/</code> へ書き換え、ルートと
+各子リポジトリを列挙した <code>aidlc.code-workspace</code> の VSCode マルチルートファイルを書く。
+宣言された <code>branch</code> は新規クローンに対してチェックアウトされる。既にディスクにある
+リポジトリは再クローンも切り替えもされない — そこでの不一致は助言のまま残る。</p>
+<p>孤立チェックアウト（ディスク上にあるが <code>repos.json</code> には無い）は実行をブロックし、
+<code>--force</code> を渡し、かつツールがローカル限定の状態が無いことを証明できた場合にのみ
+アクティブな兄弟集合から除外される。その証明は設定可能なステータスの既定を上書きし、
+未追跡・無視ファイルとディレクトリ（空ディレクトリを含む）、隠れたインデックス状態、
+stash、ref と reflog、到達不能な Git オブジェクト、リンクされた worktree、サブモジュール、
+LFS オブジェクトストアを含む。キャッシュされたリモート追跡 ref を信用する代わりに
+それぞれの実リモートへ問い合わせ、次に一致するオブジェクトグラフを分離されたプローブへ
+フェッチするので、広告されているが提供不能な OID が削除を許可することはできない。ローカル
+リモートで、そのストレージやオブジェクトの alternates がそのチェックアウトに依存している
+場合は復旧先として数えられない。</p>
+<p>ライブリモートの証明の後、そのチェックアウトはトランザクション隔離へ移り、ローカルと
+ライブリモートの証明を再度フルで受ける。隔離されたコピーは再帰的に削除されるのではなく
+無視される <code>.aidlc-workspace-sync-recovery-*</code> ディレクトリ配下に保持されるので、
+そのディレクトリを既に開いているプロセスが、証明とクリーンアップの間で遅れた書き込みを
+失うことはない。保持されたチェックアウトと生成ファイルのバックアップを点検し、不要になったら
+リカバリディレクトリを手動で削除する。何らかの不確実性があれば手動確認のためブロックする。
+終了コード: <code>0</code> 完全に同期済み、<code>1</code> ブロックまたはエラー（ライブパスは未変更）、<code>2</code> 同期済み
+だが助言的な警告が残る（例: 既存チェックアウトのブランチ不一致）。</p>
+<p>マニフェストは任意であり、ディスクを上書きすることはない: intent の誕生は宣言の有無に
+かかわらず実際に存在する兄弟リポジトリをすべて自動発見するので、このツールは宣言済み集合を
+再現し整えるだけである。<code>--doctor</code> はこれについて 3 つの助言行を運ぶ（未コミットの
+<code>aidlc/</code> レコード、<code>repos.json</code> とディスク上の食い違い、古くなった管理下 <code>.gitignore</code>
+ブロック）。すべての助言行と同様、これらは決して doctor の終了コードを変えない。</p>
 <h3 id="aidlc-utility-select-plugins-install-plugin-selection"><code>aidlc-utility select-plugins</code> — インストールのプラグイン選択</h3>
 <p><code>/aidlc plugin list</code> はインストール済みプラグイン名と各々の有効／無効を表示する。
 <code>select-plugins</code> は<strong>直接のユーティリティ呼び出し</strong>であり、<code>/aidlc select-plugins</code> コマンドではない。

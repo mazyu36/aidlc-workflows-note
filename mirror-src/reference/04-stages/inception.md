@@ -37,8 +37,8 @@ User Stories の mob である。
   （2.2 Practices Discovery）、その後 inline の要件 stage、mob の story stage、そして
   4 つの inline の設計/計画 stage が続く。
 - Stage 2.1 は 2-link の pipeline を使う: aidlc-developer-agent がコードをスキャンし、続いて
-  aidlc-architect-agent がスキャンを 9 個の構造化された成果物へと統合する。brownfield
-  プロジェクトに対する always-rerun ポリシーを持つ。
+  aidlc-architect-agent がスキャンを 9 個の構造化された成果物へと統合する。人が再利用・
+  full rescan・focused scan を選ぶ前に、各 brownfield リポジトリの既存ストアを確認する。
 - Stage 2.2 は greenfield と brownfield の作業で同じトポロジを走らせる:
   pipeline-deploy の lead draft、相互に盲目な quality/developer/devsecops の spoke、
   human interview、続いて lead integration である。affirmation されると、コンテンツは
@@ -92,7 +92,7 @@ User Stories の mob である。
 |------------------|------------------------------------------------------------------------|
 | Phase            | Inception                                                              |
 | Stage #          | 2.1                                                                    |
-| 条件             | CONDITIONAL -- brownfield が検出された; freshness のため常に再実行       |
+| 条件             | CONDITIONAL -- brownfield; 検証済みで最新のストアは再利用できる       |
 | Lead Agent       | aidlc-developer-agent                                                        |
 | Support Agents   | aidlc-architect-agent                                                        |
 | モード           | pipeline（2-link チェーン: aidlc-developer-agent がスキャンし、aidlc-architect-agent が統合して書き出す） |
@@ -106,9 +106,11 @@ Reverse Engineering は、brownfield プロジェクトの既存コードベー�
 された成果物へと統合して書き出す。これらの成果物は、後続のすべての Inception および
 Construction stage が土台とする技術的基盤を提供する。
 
-**Always-rerun ポリシー:** Reverse Engineering は、以前の成果物が存在する場合でも
-brownfield プロジェクトに対して常に再実行される。これにより、成果物が古いスナップショットで
-はなくコードベースの現在の状態を反映することが保証される。
+**再実行ガード:** Reverse Engineering は、スキャンする前に各リポジトリの記録された scope
+と working-tree フィンガープリントを確認する。人は、そのカバレッジが intent に合っている
+検証済み最新ストアを再利用してよい。stale・未検証・legacy・不一致なストアは full または
+focused な再スキャンを必要とする。マルチリポジトリ intent では、1 つの stage レベルの
+lifecycle レポートの前にすべての判断が解決される。
 
 ### 入力
 
@@ -183,9 +185,9 @@ brownfield プロジェクトに対して常に再実行される。これによ
 
 ### 注記
 
-- **Always-rerun ポリシー:** この stage は、以前の成果物が存在する場合でも brownfield
-  プロジェクトに対して常に再実行される。これは upstream リファレンスからの意図的な逸脱で
-  あり、SKILL.md の "Deliberate Deviations" セクションに文書化されている。
+- **再実行ガード:** この stage は、人が再利用か再スキャンを選ぶ前に、各 brownfield
+  リポジトリの記録された scope とフィンガープリントを検証する。これは upstream リファレンス
+  からの意図的な逸脱であり、SKILL.md の "Deliberate Deviations" セクションに文書化されている。
 - **2-link pipeline:** aidlc-developer-agent が生のコードスキャンを行い（link 1、lead）、
   続いて aidlc-architect-agent がスキャンを構造化された成果物へと統合して書き出す（link 2、
   最終 link）。この分離により、スキャンが徹底的（developer の視点）であり、統合が
@@ -1190,6 +1192,6 @@ Bolt は依存グラフが許す限り並列バッチで走れる; walking-skele
   ドキュメント
 - **Construction Phase**: Construction stage は、Stage 2.8 が生成した delivery plan に
   従って実行される
-- **Deliberate Deviations**: SKILL.md は、always-rerun の RE ポリシー、aidlc-design-agent の
-  support 追加、ADR 成果物、Delivery Planning の拡張を含む、upstream リファレンスからの
-  意図的な差異を文書化している
+- **Deliberate Deviations**: SKILL.md は、RE の scope/フィンガープリント再実行ガード、
+  aidlc-design-agent の support 追加、ADR 成果物、Delivery Planning の拡張を含む、
+  upstream リファレンスからの意図的な差異を文書化している
