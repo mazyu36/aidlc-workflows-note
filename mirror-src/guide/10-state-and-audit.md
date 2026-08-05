@@ -77,7 +77,7 @@ stateDiagram-v2
 
 audit トレイルは intent の record dir の `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/audit/` に住む。**クローンごとのシャード**（`<host>-<clone>.md`）として書かれる追記専用のイベントログで、各クローンは自分のシャードにだけ追記するため、兄弟 worktree からの並行追記が git コンフリクトを起こすことは決してない。読む側は `audit/*.md` を glob し、ISO タイムスタンプでマージソートして、決定とイベントの完全な時系列を再構成する。
 
-### 74 イベントの分類
+### 76 イベントの分類
 
 イベントは 19 カテゴリに編成される:
 
@@ -89,10 +89,10 @@ audit トレイルは intent の record dir の `aidlc/spaces/<space>/intents/<Y
 | **Session** | 5 | `SESSION_STARTED`、`SESSION_RESUMED`、`SESSION_COMPACTED`、`SESSION_ENDED`、`HUMAN_TURN`（hook が発行） |
 | **Initialization** | 3 | `WORKSPACE_SCAFFOLDED`、`WORKSPACE_SCANNED`、`WORKSPACE_INITIALISED` |
 | **Navigation** | 6 | `SCOPE_CHANGED`、`SCOPE_DETECTED`、`DEPTH_CHANGED`、`TEST_STRATEGY_CHANGED`、`RECOMPOSED`、`PLUGIN_SELECTION_CHANGED` |
-| **Interaction** | 6 | `DECISION_RECORDED`、`GATE_APPROVED`、`GATE_REJECTED`、`QUESTION_ANSWERED`、`REVIEW_REQUESTED`、`REVIEW_COMPLETED` |
+| **Interaction** | 7 | `DECISION_RECORDED`、`GATE_APPROVED`、`GATE_REJECTED`、`QUESTION_ANSWERED`、`SUMMARY_CONFIRMATION_RECORDED`、`REVIEW_REQUESTED`、`REVIEW_COMPLETED` |
 | **Artifact** | 3 | `ARTIFACT_CREATED`、`ARTIFACT_UPDATED`（audit-logger hook）、`ARTIFACT_REUSED` |
 | **Subagent** | 1 | `SUBAGENT_COMPLETED`（log-subagent hook） |
-| **Reviewer Scope** | 1 | `REVIEWER_SCOPE_BLOCKED`（reviewer-scope hook） |
+| **Reviewer Enforcement** | 2 | `REVIEWER_SCOPE_BLOCKED`（reviewer-scope hook）、`REVIEW_FREEZE_BLOCKED`（review-freeze hook） |
 | **Utility** | 1 | `HEALTH_CHECKED` |
 | **Error/Recovery** | 2 | `ERROR_LOGGED`、`RECOVERY_COMPLETED` |
 | **Construction Bolt** | 4 | `BOLT_STARTED`、`BOLT_COMPLETED`、`BOLT_FAILED`、`AUTONOMY_MODE_SET` |
@@ -117,7 +117,7 @@ audit トレイルは intent の record dir の `aidlc/spaces/<space>/intents/<Y
 各エントリは次のフィールドを持つ構造化形式に従う:
 
 - **Timestamp** — ISO 8601 タイムスタンプ
-- **Event** - 74 イベント種別のいずれか
+- **Event** - 76 イベント種別のいずれか
 - **Details** — イベント固有のデータ（stage 名、決定、成果物パス 等）
 
 エントリは時系列に追記される。特定の stage の履歴を確認するには、その `STAGE_STARTED` と `STAGE_COMPLETED` のエントリと、その間のすべてを探す。

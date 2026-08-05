@@ -182,7 +182,7 @@ session hook は、発行の前にアクティブな intent の `aidlc-state.md`
 
 ## Audit event taxonomy
 
-**74 イベント**。以下では 17 カテゴリにグループ化している（標準の `audit-format.md` レジストリは同じ 74 を 19 に分割する - グループ化は提示上のものであり、不変なのはイベント集合である）。すべてのイベントはツールまたは hook の emitter をちょうど 1 つ持つ。ただし、次期リリース向けに事前登録され、Emitter セルが `Reserved (v0.4.0 PR N)`、`Reserved (v0.5.0 PR N)`、`Reserved (v0.6.0 PR N)` と書かれているイベントは例外である - これらは、consumer PR が emitter を出荷するまで drift test の forward チェックでスキップされる。drift test `tests/integration/t48-audit-event-emitters.test.ts` は、この章の表とコードの間の forward/reverse/tertiary/pairing/MD-MD の一貫性を強制する。
+**76 イベント**。以下では 17 カテゴリにグループ化している（標準の `audit-format.md` レジストリは同じ 76 を 19 に分割する - グループ化は提示上のものであり、不変なのはイベント集合である）。すべてのイベントはツールまたは hook の emitter をちょうど 1 つ持つ。ただし、次期リリース向けに事前登録され、Emitter セルが `Reserved (v0.4.0 PR N)`、`Reserved (v0.5.0 PR N)`、`Reserved (v0.6.0 PR N)` と書かれているイベントは例外である - これらは、consumer PR が emitter を出荷するまで drift test の forward チェックでスキップされる。drift test `tests/integration/t48-audit-event-emitters.test.ts` は、この章の表とコードの間の forward/reverse/tertiary/pairing/MD-MD の一貫性を強制する。
 
 ### Workflow lifecycle
 
@@ -226,8 +226,9 @@ session hook は、発行の前にアクティブな intent の `aidlc-state.md`
 |---|---|---|
 | `DECISION_RECORDED` | `tools/aidlc-log.ts` | gate ではない `AskUserQuestion` の前に発火し、選択肢を捉える |
 | `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | gate ではない質問への応答の後に発火する; 承認の選択は `report` が所有するライフサイクルイベントである |
+| `SUMMARY_CONFIRMATION_RECORDED` | `tools/aidlc-log.ts` | human に裏付けられた統合サマリの receipt; questions-file のダイジェストに束縛され、public な audit 追記から予約される |
 | `REVIEW_REQUESTED` | `tools/aidlc-log.ts` | conductor が §12a reviewer サブエージェントを dispatch したときに発火する |
-| `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` の reviewer verdict が読まれたときに発火する。すべての完了系の状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在の workflow attempt からの、かつ最新の関連する declared-artifact の書き込み以降の、一致する receipt を要求する。per-unit stage は、適用可能な unit ごとに 1 つと、その unit への scope artifact 無効化を要求する。autonomous swarm の finalization はさらに、設定された各 unit の Bolt 開始後の receipt を要求する。 |
+| `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` の reviewer verdict が読まれたときに発火し、宣言された出力パスとバイトにわたる `Artifact Fingerprint` を記録する。すべての完了系の状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在の workflow attempt からの、かつそのフィンガープリントがなお合致する、一致する receipt を要求する。per-unit stage は、適用可能な unit ごとに 1 つと、その unit への scope 無効化を要求する。autonomous swarm の finalization はさらに、設定された各 unit の Bolt 開始後の一致する receipt と、その Bolt worktree にファイルとして存在するすべての適用可能な必須成果物を要求する; 不在の任意出力は有効なフィンガープリントエントリのままである。 |
 
 ### Scope and configuration
 
@@ -268,6 +269,7 @@ session hook は、発行の前にアクティブな intent の `aidlc-state.md`
 | `HUMAN_TURN` | `hooks/aidlc-mint-presence.ts` (+ per-harness prompt-submit adapters) | 実際の人間のプロンプトまたは回答済みの質問ウィジェットにつき 1 つ。approval/interview gate は最後の gate 解決以降に 1 つを要求する |
 | `SUBAGENT_COMPLETED` | `hooks/aidlc-log-subagent.ts` | SubagentStop hook 経由で subagent の完了を記録する |
 | `REVIEWER_SCOPE_BLOCKED` | `hooks/aidlc-reviewer-scope.ts` | per-unit reviewer のツール呼び出しが、兄弟 unit の `construction/` パスに手を伸ばしたために拒否された（§12a の read-scope 境界）。拒否 1 つにつき 1 行 |
+| `REVIEW_FREEZE_BLOCKED` | `hooks/aidlc-review-freeze.ts` | file ツールまたはシェルの `produces[]` 書き込みが、gate の前に fresh な READY レビュー receipt を無効化してしまうために拒否された（§12a の終端 receipt 順序）。拒否 1 つにつき 1 行 |
 
 ### Diagnostics and workspace
 

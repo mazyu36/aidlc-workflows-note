@@ -192,7 +192,7 @@ stateDiagram-v2
 <hr>
 <h2 id="audit-trail-audit">audit トレイル（<code>audit/</code>）</h2>
 <p>audit トレイルは intent の record dir の <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/audit/</code> に住む。<strong>クローンごとのシャード</strong>（<code>&lt;host&gt;-&lt;clone&gt;.md</code>）として書かれる追記専用のイベントログで、各クローンは自分のシャードにだけ追記するため、兄弟 worktree からの並行追記が git コンフリクトを起こすことは決してない。読む側は <code>audit/*.md</code> を glob し、ISO タイムスタンプでマージソートして、決定とイベントの完全な時系列を再構成する。</p>
-<h3 id="74-event-taxonomy">74 イベントの分類</h3>
+<h3 id="76-event-taxonomy">76 イベントの分類</h3>
 <p>イベントは 19 カテゴリに編成される:</p>
 <table>
 <thead>
@@ -234,8 +234,8 @@ stateDiagram-v2
 </tr>
 <tr>
 <td><strong>Interaction</strong></td>
-<td align="right">6</td>
-<td><code>DECISION_RECORDED</code>、<code>GATE_APPROVED</code>、<code>GATE_REJECTED</code>、<code>QUESTION_ANSWERED</code>、<code>REVIEW_REQUESTED</code>、<code>REVIEW_COMPLETED</code></td>
+<td align="right">7</td>
+<td><code>DECISION_RECORDED</code>、<code>GATE_APPROVED</code>、<code>GATE_REJECTED</code>、<code>QUESTION_ANSWERED</code>、<code>SUMMARY_CONFIRMATION_RECORDED</code>、<code>REVIEW_REQUESTED</code>、<code>REVIEW_COMPLETED</code></td>
 </tr>
 <tr>
 <td><strong>Artifact</strong></td>
@@ -248,9 +248,9 @@ stateDiagram-v2
 <td><code>SUBAGENT_COMPLETED</code>（log-subagent hook）</td>
 </tr>
 <tr>
-<td><strong>Reviewer Scope</strong></td>
-<td align="right">1</td>
-<td><code>REVIEWER_SCOPE_BLOCKED</code>（reviewer-scope hook）</td>
+<td><strong>Reviewer Enforcement</strong></td>
+<td align="right">2</td>
+<td><code>REVIEWER_SCOPE_BLOCKED</code>（reviewer-scope hook）、<code>REVIEW_FREEZE_BLOCKED</code>（review-freeze hook）</td>
 </tr>
 <tr>
 <td><strong>Utility</strong></td>
@@ -311,7 +311,7 @@ stateDiagram-v2
 <p>各エントリは次のフィールドを持つ構造化形式に従う:</p>
 <ul>
 <li><strong>Timestamp</strong> — ISO 8601 タイムスタンプ</li>
-<li><strong>Event</strong> - 74 イベント種別のいずれか</li>
+<li><strong>Event</strong> - 76 イベント種別のいずれか</li>
 <li><strong>Details</strong> — イベント固有のデータ（stage 名、決定、成果物パス 等）</li>
 </ul>
 <p>エントリは時系列に追記される。特定の stage の履歴を確認するには、その <code>STAGE_STARTED</code> と <code>STAGE_COMPLETED</code> のエントリと、その間のすべてを探す。</p>

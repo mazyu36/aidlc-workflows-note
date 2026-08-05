@@ -23,13 +23,13 @@ AI-DLC を**使って**ソフトウェアを構築する立場なら、まず [�
 | [Stage プロトコル](04-stage-protocol.md) | 振る舞いの契約: 承認 gate、コンプライアンスチェックリスト |
 | [Stages](04-stages/) | phase ごとの stage ドキュメント（5 ファイル） |
 | [Agent System](05-agent-system.md) | agent の構造、frontmatter の契約、設定マトリクス |
-| [Hook とツール](06-hooks-and-tools.md) | hook システム、CLI ツール、74 イベントの audit 分類体系 |
+| [Hook とツール](06-hooks-and-tools.md) | hook システム、CLI ツール、76 イベントの audit 分類体系 |
 | [Sensor System](07-sensor-system.md) | sensor manifest スキーマ、PULL インポート、発火モデル、default severity |
 | [Rule System](08-rule-system.md) | rule ファイルのレイアウト、scope の導出、layer-chain resolver、競合 gate |
 | [テスト](09-testing.md) | テストピラミッド、tier、スタブ、フィクスチャ、テストレジストリ |
 | [Knowledge System](10-knowledge-system.md) | 2 層アーキテクチャ、ロード順、テンプレート |
 | [Contributing](11-contributing.md) | 開発ワークフロー、ユーティリティハンドラのチェックリスト、ドキュメントポリシー |
-| [状態機械](12-state-machine.md) | workflow / phase / stage の機械、74 イベントの分類体系、audit-first のルール |
+| [状態機械](12-state-machine.md) | workflow / phase / stage の機械、76 イベントの分類体系、audit-first のルール |
 | [Runtime Graph](13-runtime-graph.md) | コンパイル済みの `runtime-graph.json` 成果物: stage graph の data-plane ミラー |
 | [Harness プリミティブの対応](14-claude-features.md) | 各 AI-DLC 概念が harness のネイティブプリミティブにどう対応するか（Claude Code を深く） |
 | [Stage 定義](15-stage-definition.md) | YAML frontmatter の契約、3 区画の本体、コンパイル pipeline |

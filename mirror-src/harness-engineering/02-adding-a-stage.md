@@ -78,6 +78,7 @@ frontmatter はグラフエッジと実行契約を宣言する。構造的な�
 | `support_agents` | conductor が率いる者の後にロードする任意の視点 |
 | `mode` | `inline`、`subagent`、`pipeline`、`mob`、または予約済みの `agent-team` |
 | `for_each` | 任意 — インスタンスが反復を駆動する成果物を名指す |
+| `summary_confirmation` | 任意 — ファイルに裏付けられた回答を常に収集する stage には `required`、条件付きの質問フローには `if-present` |
 
 本体は `## Steps` で開く — 率いる agent が従う命令形の散文。
 `## Sensors` と `## Learn` の区画はその後に来る。完全な
