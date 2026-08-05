@@ -257,7 +257,7 @@ conductor はそれを固定するために `--repo <name>` を渡す。intent �
 | チェック | 何を検証するか |
 |-------|-------------------|
 | 前提条件 | `bun` がインストールされ PATH にあること |
-| Hook の存在 | `settings.json` が束ねるすべての hook（`hooks` ブロック + `statusLine` コマンド — フレームワークの 14 hook 全部）が `.claude/hooks/` に存在すること。束ねたのに欠けた hook は大きな音で失敗する。想定される名簿を `settings.json` から取ることで、そこに hook を足せば自動で確認される |
+| Hook の存在 | `settings.json` が束ねるすべての hook（`hooks` ブロック + `statusLine` コマンド — フレームワークの 16 hook 全部）が `.claude/hooks/` に存在すること。束ねたのに欠けた hook は大きな音で失敗する。想定される名簿を `settings.json` から取ることで、そこに hook を足せば自動で確認される |
 | プロジェクト構造 | `.claude/settings.json` が存在すること（ファイルの存在のみ、内容検証はしない） |
 | ワークスペースシェル | `.claude/` + `aidlc/spaces/default/memory/` が存在すること（同梱のシェル） |
 | サブモジュール | `.gitmodules` があれば、宣言されたサブモジュールパス数と未初期化数を報告し、未初期化があれば `git submodule update --init --recursive` を挙げる（助言 — 決して失敗しない） |

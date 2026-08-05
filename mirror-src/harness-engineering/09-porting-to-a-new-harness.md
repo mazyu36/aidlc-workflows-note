@@ -90,14 +90,14 @@ adapter を harness のイベントに、harness 自身のやり方で結線す�
 ターゲットを登録する; Codex は `hooks.json` を emit する。実際の core-hook 消費者があるイベント
 だけを登録する。
 
-3 つの hook はフローを変えるもので、単にパイプするだけでなく、その block チャネルを転送する
-必要がある: Stop hook は stdout で `{"decision":"block"}` を返し、一方 PreToolUse の
-reviewer-scope と state-transition のガードは stderr で exit 2 と理由を返す（adapter がその exit
-コードを中継するとき、そのツール呼び出しは拒否されねばならない）。新しい harness が自身の
-pre-tool seam からツール呼び出しをハードブロックできないなら、reviewer-scope の登録を省き、
-死んだ hook を結線するのではなくギャップを文書化する - stage-protocol §12a に束縛された散文が
-依然そこを統べる。harness のペイロードが subagent の identity を運ばないときは、harness が agent
-ごとの hook をサポートする場所で、reviewer agent 自身に登録をスコープする（Kiro CLI のパターン:
+5 つの hook はフローを変えるもので、単にパイプするだけでなく、その制御チャネルを転送する
+必要がある。Stop hook は stdout で `{"decision":"block"}` を返す; dispatch-rules は委譲された
+プロンプトを書き換える; そして PreToolUse の reviewer-scope、review-freeze、state-transition の
+ガードは stderr で exit 2 と理由を返す（adapter がその exit コードを中継するとき、そのツール呼び出しは
+拒否されねばならない）。新しい harness が自身の pre-tool seam からツール呼び出しをハードブロックできないなら、
+reviewer-scope と review-freeze の登録を省き、死んだ hook 群を結線するのではなくギャップを文書化する - stage-protocol §12a に
+束縛された散文が依然そこを統べる。harness のペイロードが subagent の identity を運ばないときは、harness が agent
+ごとの hook をサポートする場所で、reviewer-scope の登録を reviewer agent 自身にスコープする（Kiro CLI のパターン:
 adapter はそのとき `agent_type` に合致させる代わりに `scoped_registration` をアサートする）。
 
 > **唯一認可された `core/` の編集: doctor アーム。** `/aidlc --doctor`

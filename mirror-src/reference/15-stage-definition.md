@@ -108,6 +108,23 @@ stage。このプリミティブは workflow-engine として汎用であり; Co
 後に 1 回走り、それらの集約された出力を消費する。明示的な `fan_in` や集約フィールドは無い —
 グラフ走査がそれを解き明かす。
 
+### `summary_confirmation`
+
+stage の質問フローについて決定論的な生成前チェックポイントを制御する任意の enum:
+
+- `required` は、実行のたびに質問ファイルを作成し、成果物生成の前に統合された
+  **Looks correct** の確認を得なければならないことを意味する。
+- `if-present` は、条件付きの質問フローが質問ファイルを作成したときだけ、同じ強制を
+  適用する。
+
+receipt は markdown だけから推論されるのではない。`aidlc-log.ts` は、一致するプロンプト
+記録とその後の human turn の後に、予約された `SUMMARY_CONFIRMATION_RECORDED` イベントを
+記録し、それを questions-file の SHA-256 に束縛する。完了は、欠落または陳腐化した receipt、
+変更された questions ファイル、または receipt の後にネイティブな書き込みの無い宣言済み
+成果物を拒否する。per-unit stage は、適用可能な Unit ごとに 1 つの unit スコープの receipt
+を要求する; 分離実行は、その `single-stage:<slug>` の workflow identity を使って同じチェック
+を使う。
+
 ### `workspace_requires`
 
 ブール値、既定 `false`。intent ごとの record dir の下の計画文書だけでなく、**ソースコードを

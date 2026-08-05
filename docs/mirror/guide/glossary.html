@@ -107,7 +107,7 @@
 </tr>
 <tr>
 <td><strong>Audit trail</strong></td>
-<td>intent の record dir の <code>audit/</code> にある追記専用イベントログ。クローン別シャード（<code>&lt;host&gt;-&lt;clone&gt;.md</code>）として書かれ、読む側が glob してタイムスタンプでマージする。intent から本番までの完全なトレーサビリティのため、74 のイベント種別を ISO タイムスタンプ付きで記録する。</td>
+<td>intent の record dir の <code>audit/</code> にある追記専用イベントログ。クローン別シャード（<code>&lt;host&gt;-&lt;clone&gt;.md</code>）として書かれ、読む側が glob してタイムスタンプでマージする。intent から本番までの完全なトレーサビリティのため、76 のイベント種別を ISO タイムスタンプ付きで記録する。</td>
 </tr>
 <tr>
 <td><strong>CLI tool</strong></td>
@@ -171,7 +171,7 @@
 </tr>
 <tr>
 <td><strong>Hook</strong></td>
-<td>イベントに応じて Claude Code が自動実行する TypeScript スクリプト。この実装は 14 の hook を使い、すべて <code>settings.json</code> にプロジェクト全体で登録される: ワークフローの背骨（audit ログ、sensor ディスパッチ、runtime グラフのコンパイル、statusline 同期、コンパクション時の状態検証、subagent 追跡、ターン終端のループ強制）に加え、セッションライフサイクル、human-turn の記録、厳密な dispatch-rule 配送、状態遷移と reviewer スコープのガード、statusline コマンド。それぞれ自己判定し、ワークフローが無ければ no-op になる。</td>
+<td>イベントに応じて Claude Code が自動実行する TypeScript スクリプト。この実装は 16 の hook を使い、すべて <code>settings.json</code> にプロジェクト全体で登録される: ワークフローの背骨（audit ログ、sensor ディスパッチ、runtime グラフのコンパイル、statusline 同期、token 使用量の折り込み、コンパクション時の状態検証、subagent 追跡、ターン終端のループ強制）に加え、セッションライフサイクル、human-turn の記録、厳密な dispatch-rule 配送、状態遷移・reviewer スコープ・review-freeze のガード、statusline コマンド。それぞれ自己判定し、ワークフローが無ければ no-op になる。</td>
 </tr>
 <tr>
 <td><strong>Inline execution</strong></td>

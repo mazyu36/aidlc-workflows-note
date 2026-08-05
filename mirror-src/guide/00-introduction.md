@@ -52,7 +52,7 @@ AI-DLC の*振る舞いそのもの*を作り変えるには — stage やエー
 | Scope | 9（enterprise から workshop まで）+ 自動検出 |
 | Depth レベル | 3（Minimal、Standard、Comprehensive） |
 | テスト戦略レベル | 3（Minimal、Standard、Comprehensive） |
-| Audit イベントタイプ | 74 |
+| Audit イベントタイプ | 76 |
 
 ## ガイドマップ
 

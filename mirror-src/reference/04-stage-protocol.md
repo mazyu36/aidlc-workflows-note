@@ -276,9 +276,11 @@ stage が質問を通じてユーザー入力を集めるとき、プロトコ�
 ### Tri-Mode システム
 
 **Step 1: 質問ファイルを作成する** — 選択肢 A-E を持つ `[Answer]:` タグ形式で、適切な
-`<record>/` ディレクトリに。すべての質問は `X. Other (please specify)` で終わらねばならない
-— 例外なし。すべての `[Answer]:` タグは空白で始まる。複数選択の質問は質問テキストに
-"(select all that apply)" を加える; 回答形式: `[Answer]: A, B, E`。
+`<record>/` ディレクトリに。すべての通常の質問は `X. Other (please specify)` で終わらねば
+ならない。専用の Consolidated Summary Confirmation だけが唯一の例外で、その **Looks
+correct / Request changes** の選択肢には文字が付かない。すべての `[Answer]:` タグは
+空白で始まる。複数選択の質問は質問テキストに "(select all that apply)" を加える; 回答形式:
+`[Answer]: A, B, E`。
 
 **Step 2: モード選択を提示する:**
 
@@ -312,14 +314,20 @@ AskUserQuestion({
 - 統合された回答サマリを提示し、続けて **Looks correct** と **Request changes** の選択肢
   を持つ構造化された確認を行う。確認を裸の散文として求めてはならない。提示する前に、両方の
   選択肢と空白の `[Answer]:` を持つ専用の **Consolidated Summary Confirmation** エントリ
-  を stage の質問ファイルに追記またはリセットする; それは human の応答からのみ埋める。
-  変更の要求は、再プロンプトの前にその確認を空白にリセットする。
+  を stage の質問ファイルに追記またはリセットする。プロンプトを
+  `aidlc-log.ts decision --checkpoint summary-confirmation --questions-file <path>` で
+  記録し、human のために停止し、正確な選択を書き、対応する `aidlc-log.ts answer` コマンドで
+  それを記録する。この receipt は human turn を questions-file の正確なダイジェストに束縛する。
+  **Request changes** の場合、**"What should change?"** と尋ね、いずれかの回答を編集する前に
+  再度停止する; フィードバックと修正の後、再プロンプトの前にその確認を空白にリセットする。
 
 #### Edit File（セルフガイドモード）
 
 - ユーザーに伝える: "Edit the file at `[file path]`. When done, send **done** or
   **ready** and I'll continue."
 - 完了シグナルを待つ。シグナルされるまでファイルを読んだり進んだりしない。
+- 統合サマリを提示し、Guide Me と同じ、永続化され receipt に裏付けられた確認を使う。
+  セルフガイドの編集は確認を免除しない。
 
 #### Chat（フリーフォームモード）
 
@@ -928,6 +936,10 @@ reviewer（宣言されていれば）→ learnings → gate。
    `reviewer_max_iterations`（既定 2）を下回って残っている NOT-READY → lead agent が
    findings に対処するため再実行し、reviewer が再チェックする。イテレーションを使い果たした
    NOT-READY → 未解決の findings を書き留めたうえで gate へ進む。
+   記録された receipt は終端であり、`produces[]` の成果物への後続の書き込みはそれを無効化し、
+   engine は gate を拒否する。したがって修正はイテレーションループの内側で起き、終端の
+   receipt の後には決して起きない。READY 評決に乗った提案は、適用されるのではなく、gate で
+   human に向けて引用される。
 
 reviewer は決してブロックしない — human は常に gate で最終決定権を持つ — し、`reviewer`
 フィールドの無い stage では発火しない。[Stage Definition](15-stage-definition.md) の

@@ -359,7 +359,7 @@ stateDiagram-v2
 <p><code>aidlc-state.ts resume</code> は audit の末尾を走査し、最新の <code>SESSION_COMPACTED</code> を探す。それに続く stage 活動（<code>STAGE_STARTED</code>、<code>STAGE_COMPLETED</code>、<code>GATE_APPROVED</code>、<code>SESSION_RESUMED</code>、<code>RECOVERY_COMPLETED</code>）がなければ、resume は <code>compaction_pending: true</code> を返し、conductor は続行の前に 3 択のプロンプト（continue / review / restart）を提示する。<code>RECOVERY_COMPLETED</code> は、user が選択肢を 1 つ選ぶと <code>acknowledge-compaction</code> が発行し、activity gate を満たすので、以降の compaction は新しい境界を検出する。</p>
 <hr>
 <h2 id="audit-event-taxonomy">Audit event taxonomy</h2>
-<p><strong>74 イベント</strong>。以下では 17 カテゴリにグループ化している（標準の <code>audit-format.md</code> レジストリは同じ 74 を 19 に分割する - グループ化は提示上のものであり、不変なのはイベント集合である）。すべてのイベントはツールまたは hook の emitter をちょうど 1 つ持つ。ただし、次期リリース向けに事前登録され、Emitter セルが <code>Reserved (v0.4.0 PR N)</code>、<code>Reserved (v0.5.0 PR N)</code>、<code>Reserved (v0.6.0 PR N)</code> と書かれているイベントは例外である - これらは、consumer PR が emitter を出荷するまで drift test の forward チェックでスキップされる。drift test <code>tests/integration/t48-audit-event-emitters.test.ts</code> は、この章の表とコードの間の forward/reverse/tertiary/pairing/MD-MD の一貫性を強制する。</p>
+<p><strong>76 イベント</strong>。以下では 17 カテゴリにグループ化している（標準の <code>audit-format.md</code> レジストリは同じ 76 を 19 に分割する - グループ化は提示上のものであり、不変なのはイベント集合である）。すべてのイベントはツールまたは hook の emitter をちょうど 1 つ持つ。ただし、次期リリース向けに事前登録され、Emitter セルが <code>Reserved (v0.4.0 PR N)</code>、<code>Reserved (v0.5.0 PR N)</code>、<code>Reserved (v0.6.0 PR N)</code> と書かれているイベントは例外である - これらは、consumer PR が emitter を出荷するまで drift test の forward チェックでスキップされる。drift test <code>tests/integration/t48-audit-event-emitters.test.ts</code> は、この章の表とコードの間の forward/reverse/tertiary/pairing/MD-MD の一貫性を強制する。</p>
 <h3 id="workflow-lifecycle">Workflow lifecycle</h3>
 <table>
 <thead>
@@ -500,6 +500,11 @@ stateDiagram-v2
 <td>gate ではない質問への応答の後に発火する; 承認の選択は <code>report</code> が所有するライフサイクルイベントである</td>
 </tr>
 <tr>
+<td><code>SUMMARY_CONFIRMATION_RECORDED</code></td>
+<td><code>tools/aidlc-log.ts</code></td>
+<td>human に裏付けられた統合サマリの receipt; questions-file のダイジェストに束縛され、public な audit 追記から予約される</td>
+</tr>
+<tr>
 <td><code>REVIEW_REQUESTED</code></td>
 <td><code>tools/aidlc-log.ts</code></td>
 <td>conductor が §12a reviewer サブエージェントを dispatch したときに発火する</td>
@@ -507,7 +512,7 @@ stateDiagram-v2
 <tr>
 <td><code>REVIEW_COMPLETED</code></td>
 <td><code>tools/aidlc-log.ts</code></td>
-<td><code>READY</code> または <code>NOT-READY</code> の reviewer verdict が読まれたときに発火する。すべての完了系の状態遷移（<code>approve</code>、<code>advance</code>、<code>finalize</code>、<code>complete-workflow</code>）は、現在の workflow attempt からの、かつ最新の関連する declared-artifact の書き込み以降の、一致する receipt を要求する。per-unit stage は、適用可能な unit ごとに 1 つと、その unit への scope artifact 無効化を要求する。autonomous swarm の finalization はさらに、設定された各 unit の Bolt 開始後の receipt を要求する。</td>
+<td><code>READY</code> または <code>NOT-READY</code> の reviewer verdict が読まれたときに発火し、宣言された出力パスとバイトにわたる <code>Artifact Fingerprint</code> を記録する。すべての完了系の状態遷移（<code>approve</code>、<code>advance</code>、<code>finalize</code>、<code>complete-workflow</code>）は、現在の workflow attempt からの、かつそのフィンガープリントがなお合致する、一致する receipt を要求する。per-unit stage は、適用可能な unit ごとに 1 つと、その unit への scope 無効化を要求する。autonomous swarm の finalization はさらに、設定された各 unit の Bolt 開始後の一致する receipt と、その Bolt worktree にファイルとして存在するすべての適用可能な必須成果物を要求する; 不在の任意出力は有効なフィンガープリントエントリのままである。</td>
 </tr>
 </tbody></table>
 <h3 id="scope-and-configuration">Scope and configuration</h3>
@@ -648,6 +653,11 @@ stateDiagram-v2
 <td><code>REVIEWER_SCOPE_BLOCKED</code></td>
 <td><code>hooks/aidlc-reviewer-scope.ts</code></td>
 <td>per-unit reviewer のツール呼び出しが、兄弟 unit の <code>construction/</code> パスに手を伸ばしたために拒否された（§12a の read-scope 境界）。拒否 1 つにつき 1 行</td>
+</tr>
+<tr>
+<td><code>REVIEW_FREEZE_BLOCKED</code></td>
+<td><code>hooks/aidlc-review-freeze.ts</code></td>
+<td>file ツールまたはシェルの <code>produces[]</code> 書き込みが、gate の前に fresh な READY レビュー receipt を無効化してしまうために拒否された（§12a の終端 receipt 順序）。拒否 1 つにつき 1 行</td>
 </tr>
 </tbody></table>
 <h3 id="diagnostics-and-workspace">Diagnostics and workspace</h3>

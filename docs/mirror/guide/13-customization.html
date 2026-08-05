@@ -195,7 +195,7 @@
 <h2 id="statusline-claude-code-only">ステータスライン（Claude Code のみ）</h2>
 <p><strong>Claude Code</strong> では、この実装はターミナルのステータスバーにワークフロー進捗を示すステータスラインを表示する。他の harness にステータスラインは無い — ワークフローの位置は <code>/aidlc --status</code>（Kiro・opencode）や、<code>update_plan</code> のタスク進捗項目 + <code>$aidlc --status</code>（Codex）で表示する:</p>
 <pre class="term"><code><span class="t-status">[AIDLC] IDEATION [▓▓▓▓▓░░░░░] 4/7 &gt; Intent Capture -- Product Agent</span></code></pre>
-<p>表示は順に: 現在の phase、phase の進捗（バーと比 — どちらも現在 phase の範囲）、stage の表示名、リードエージェント。コンテキスト使用量は右側に現れ（例: <code>ctx:15%</code>）、残りが減るにつれて色分けされる。</p>
+<p>表示は順に: 現在の phase、phase の進捗（バーと比 — どちらも現在 phase の範囲）、stage の表示名、リードエージェント。コンテキスト使用量は右側に現れ（例: <code>ctx:15%</code>）、残りが減るにつれて色分けされる。Claude の使用量台帳にデータがある場合、<code>↑&lt;in&gt; ↓&lt;out&gt; $&lt;usd&gt;</code> が続き、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークフローとセッションは除外される。</p>
 <h3 id="configuration">設定</h3>
 <p>ステータスラインは <code>.claude/settings.json</code> で設定される:</p>
 <pre><code class="language-json">&quot;statusLine&quot;: {
