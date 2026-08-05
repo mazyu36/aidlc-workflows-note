@@ -41,20 +41,20 @@
   <div class="stat"><div class="stat-label">ライフサイクル</div><div class="stat-value">5 / 32</div><div class="stat-detail">フェーズ / ステージ</div></div>
   <div class="stat"><div class="stat-label">エージェント</div><div class="stat-value">14</div><div class="stat-detail">専門家 11 + レビュアー 2 + composer 1</div></div>
   <div class="stat"><div class="stat-label">スコープ</div><div class="stat-value">9</div><div class="stat-detail">bugfix 7 〜 enterprise 32 ステージ</div></div>
-  <div class="stat"><div class="stat-label">監査イベント</div><div class="stat-value">74</div><div class="stat-detail">19 カテゴリ・追記専用</div></div>
+  <div class="stat"><div class="stat-label">監査イベント</div><div class="stat-value">76</div><div class="stat-detail">19 カテゴリ・追記専用</div></div>
   <div class="stat"><div class="stat-label">配布ハーネス</div><div class="stat-value">5</div><div class="stat-detail">エンジンはバイト同一</div></div>
-  <div class="stat"><div class="stat-label">フック / ツール</div><div class="stat-value">14 / 35</div><div class="stat-detail">core の TypeScript 機構</div></div>
+  <div class="stat"><div class="stat-label">フック / ツール</div><div class="stat-value">16 / 37</div><div class="stat-detail">core の TypeScript 機構</div></div>
 </div>
 
 <h2 id="map">リポジトリの三層構造</h2>
-<p>手書きの正（core/ + harness/）→ パッケージャ（scripts/package.ts）→ コミット済み生成物（dist/）の一方通行。dist を書き換える PR は CI の --check が落とす。テストは 360 ファイルで、TUI、SDK、ACP の 3 方式で実ハーネスを駆動する e2e まで持つ。</p>
-<div class="tree-view"><span class="dir">core/</span>       <span class="comment"># 正: stages 32 / agents 14 / hooks 14 / tools 35 / knowledge 59 / scopes 9 / sensors 5</span>
+<p>手書きの正（core/ + harness/）→ パッケージャ（scripts/package.ts）→ コミット済み生成物（dist/）の一方通行。dist を書き換える PR は CI の --check が落とす。テストは 366 ファイルで、TUI、SDK、ACP の 3 方式で実ハーネスを駆動する e2e まで持つ。</p>
+<div class="tree-view"><span class="dir">core/</span>       <span class="comment"># 正: stages 32 / agents 14 / hooks 16 / tools 37 / knowledge 59 / scopes 9 / sensors 5</span>
 <span class="dir">harness/</span>    <span class="comment"># 5 ハーネスの投影レシピ（manifest.ts）+ adapter</span>
 <span class="dir">dist/</span>       <span class="comment"># 生成物（コミット済み・--check でドリフト検知）: claude / codex / kiro / kiro-ide / opencode / plugins</span>
 <span class="dir">plugins/</span>    <span class="comment"># サンプルプラグイン test-pro</span>
 <span class="dir">scripts/</span>    <span class="comment"># package.ts（パッケージャ）ほか</span>
 <span class="dir">docs/</span>       <span class="comment"># 公式ドキュメント 91 md（guide 37 / harness-engineering 11 / reference 41）</span>
-<span class="dir">tests/</span>      <span class="comment"># 360 テストファイル（smoke / unit / integration / e2e）</span>
+<span class="dir">tests/</span>      <span class="comment"># 366 テストファイル（smoke / unit / integration / e2e）</span>
 </div>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2">リポジトリルート（基点コミット）</a><button class="copy" type="button" data-copy="." aria-label="パスをコピー">⧉</button></span>
@@ -77,7 +77,7 @@
   </a>
   <a class="card" href="aidlc-workflows/runtime.html">
     <div class="card-head"><span class="card-name">実行モデル</span></div>
-    <p><span class="card-role">決定論エンジンと forwarding loop。</span>1 ステージ実行のシーケンス、ステージプロトコル、状態機械と監査、14 フック、CLI 面、再開とジャンプ。</p>
+    <p><span class="card-role">決定論エンジンと forwarding loop。</span>1 ステージ実行のシーケンス、ステージプロトコル、状態機械と監査、16 フック、CLI 面、再開とジャンプ。</p>
   </a>
   <a class="card" href="aidlc-workflows/quality.html">
     <div class="card-head"><span class="card-name">エージェントと検証</span></div>

@@ -42,7 +42,7 @@
   <a href="#protocol">ステージプロトコル</a>
   <a href="#routing">次ステージの決定</a>
   <a href="#state">状態機械と監査</a>
-  <a href="#hooks">フック 14 本</a>
+  <a href="#hooks">フック 16 本</a>
   <a href="#cli">CLI 面</a>
   <a href="#resume">再開・ジャンプ・復旧</a>
 </nav>
@@ -94,12 +94,12 @@ is next; you own the quality of execution inside the move it named.</code></pre>
 </figure>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/harness/claude/skills/aidlc/SKILL.md#L38-L44">harness/claude/skills/aidlc/SKILL.md:38-44（ループ擬似コード）</a><button class="copy" type="button" data-copy="harness/claude/skills/aidlc/SKILL.md:38" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-orchestrate.ts">core/tools/aidlc-orchestrate.ts（4,703 行）</a><button class="copy" type="button" data-copy="core/tools/aidlc-orchestrate.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-orchestrate.ts">core/tools/aidlc-orchestrate.ts（4,754 行）</a><button class="copy" type="button" data-copy="core/tools/aidlc-orchestrate.ts" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-directive.ts">core/tools/aidlc-directive.ts（directive の型）</a><button class="copy" type="button" data-copy="core/tools/aidlc-directive.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="protocol">ステージプロトコル　32 ステージが従う共通契約</h2>
-<p>各ステージは 1 枚の .md ファイルである。YAML frontmatter は 14 の authored フィールドを持つ。slug / phase / lead_agent / mode / produces / consumes / requires_stage がその一部である。本文は Steps / Sensors / Learn の順序が固定される。成果物のパスをステージファイルにハードコードすることは禁じられ、エンジンが directive 発行時に record dir の実パスへ解決する。全ステージの振る舞いは 1,166 行の stage-protocol.md が統べ、その中核が承認ゲートの HARD STOP 規則になる。</p>
+<p>各ステージは 1 枚の .md ファイルである。YAML frontmatter は 16 の authored フィールドを持つ。slug / phase / lead_agent / mode / produces / consumes / requires_stage がその一部である。質問を伴うステージは <code>summary_confirmation</code> で生成前の確認を宣言する。32 ステージのうち 26 が <code>required</code> を掲げ、抽出した回答の要約に人間が Looks correct と答えるまで成果物生成へ進めない。受領証、質問ファイルのダイジェスト、書き込みの前後関係までエンジンが機械的に検査する。本文は Steps / Sensors / Learn の順序が固定される。成果物のパスをステージファイルにハードコードすることは禁じられ、エンジンが directive 発行時に record dir の実パスへ解決する。全ステージの振る舞いは 1,202 行の stage-protocol.md が統べ、その中核が承認ゲートの HARD STOP 規則になる。</p>
 <figure class="excerpt">
   <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/aidlc-common/protocols/stage-protocol.md#L43-L48">core/aidlc-common/protocols/stage-protocol.md:43-48</a><button class="copy" type="button" data-copy="core/aidlc-common/protocols/stage-protocol.md:43" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-markdown">### HARD STOP RULE (non-negotiable)
@@ -121,7 +121,7 @@ Construction and Operation stages MUST use standardized 2-option completion mess
 <h2 id="routing">次ステージの決定　グラフ × スコープ × 状態上書き</h2>
 <p>routing の中心はただ 1 つのループである。コンパイル済みグラフを現在位置から前方へ歩き、完了、スキップ済みを飛ばし、スコープ行列で最初の EXECUTE ステージを返す。行列の判定では state 側の EXECUTE/SKIP 上書きが優先される。返すものがなければワークフロー完了になる。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-lib.ts#L4971-L4983">core/tools/aidlc-lib.ts:4971-4983（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:4971" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-lib.ts#L5827-L5839">core/tools/aidlc-lib.ts:5827-5839（nextInScopeStage）</a><button class="copy" type="button" data-copy="core/tools/aidlc-lib.ts:5827" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-typescript">  for (let i = currentIdx + 1; i &lt; graph.length; i++) {
     const slug = graph[i].slug;
 
@@ -164,9 +164,10 @@ compiled stage in that phase:
 - **Last Updated**: [ISO 8601 timestamp]</code></pre>
   <p class="excerpt-note">動作: 状態ファイルは frontmatter ではなく H2 セクション + チェックボックス行の Markdown。人間がそのまま読める形式で、6 状態の凡例と Current Status のフィールド群（自律モード含む）が仕様として固定されている。</p>
 </figure>
-<p>監査はイベント 74 種、19 カテゴリの追記専用ログである。書き込み先は <code>audit/&lt;host&gt;-&lt;clone&gt;.md</code> というクローンごとのシャードになる。読む側が全シャードを glob してタイムスタンプでマージするので、並列 worktree からの追記でも git コンフリクトが起きない。実行時に生成されるワークスペースの全体像は次のとおり。</p>
+<p>監査はイベント 76 種、19 カテゴリの追記専用ログである。書き込み先は <code>audit/&lt;host&gt;-&lt;clone&gt;.md</code> というクローンごとのシャードになる。読む側が全シャードを glob してタイムスタンプでマージするので、並列 worktree からの追記でも git コンフリクトが起きない。<code>STAGE_COMPLETED</code> と <code>WORKFLOW_COMPLETED</code> はトークン数とコストのロールアップを任意フィールドとして載せる。イベント種は増えず、値は台帳の読み取りだけで作られる。実行時に生成されるワークスペースの全体像は次のとおり。</p>
 <div class="tree-view"><span class="dir">aidlc/</span>                                  <span class="comment"># ワークスペース（git コミット対象）</span>
 ├── active-space                         <span class="comment"># カーソル（gitignore・ユーザー毎）</span>
+├── <span class="dir">.aidlc-sessions/</span>                     <span class="comment"># トークン使用量台帳（gitignore・Claude のみ）</span>
 └── <span class="dir">spaces/&lt;space&gt;/</span>
     ├── <span class="dir">memory/</span>                          <span class="comment"># ルール層: org / team / project / phases/*</span>
     ├── <span class="dir">knowledge/</span> <span class="dir">codekb/&lt;repo&gt;/</span>        <span class="comment"># チームナレッジ / 逆解析の成果（9 成果物）</span>
@@ -180,19 +181,21 @@ compiled stage in that phase:
             └── runtime-graph.json       <span class="comment"># データプレーンの読み取りモデル（gitignore）</span>
 </div>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-state.ts">core/tools/aidlc-state.ts（3,503 行・唯一の遷移実行者）</a><button class="copy" type="button" data-copy="core/tools/aidlc-state.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/knowledge/aidlc-shared/audit-format.md">core/knowledge/aidlc-shared/audit-format.md（74 イベントの台帳）</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/audit-format.md" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-state.ts">core/tools/aidlc-state.ts（3,425 行・唯一の遷移実行者）</a><button class="copy" type="button" data-copy="core/tools/aidlc-state.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/knowledge/aidlc-shared/audit-format.md">core/knowledge/aidlc-shared/audit-format.md（76 イベントの台帳）</a><button class="copy" type="button" data-copy="core/knowledge/aidlc-shared/audit-format.md" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/docs/guide/10-state-and-audit.md">docs/guide/10-state-and-audit.md</a><button class="copy" type="button" data-copy="docs/guide/10-state-and-audit.md" aria-label="パスをコピー">⧉</button></span>
 </div>
 
-<h2 id="hooks">フック 14 本　ハーネスイベントへの接続</h2>
-<p>Claude Code では settings.json が 8 イベント種に 14 本のフックを束線する。10 本は記録専用で流れを止めない。流れを変えるのは 4 本だけである。state-transition-guard が状態ファイルへの直接書き込みを拒否し、reviewer-scope がレビュー中の越境読み取りを拒否する。dispatch-rules は Task 呼び出しの入力そのものを書き換え、アクティブステージのルール本文をサブエージェントのブリーフへ差し込む。4 本目の Stop フックは、ゲート、park、done 以外でターンを終えられなくする。Stop フックは停止のたびに <code>orchestrate next</code> を裏で回し、途中なら decision:block で directive を注入してループを続けさせる。forwarding loop の「繰り返し」は、この Stop フックが機械的に強制している。</p>
+<h2 id="hooks">フック 16 本　ハーネスイベントへの接続</h2>
+<p>Claude Code では settings.json が 8 イベント種に 15 本を束線し、statusline 1 本を統計行キーで束線する。11 本は記録専用で流れを止めない。流れを変えるのは 5 本だけである。state-transition-guard が状態ファイルへの直接書き込みを拒否し、reviewer-scope がレビュー中の越境読み取りを拒否する。review-freeze は、鮮度のあるレビュー受領証を無効化してしまう produces[] への書き込みをゲート前に拒否する。dispatch-rules は Task 呼び出しの入力そのものを書き換え、アクティブステージのルール本文をサブエージェントのブリーフへ差し込む。5 本目の Stop フックは、ゲート、park、done 以外でターンを終えられなくする。Stop フックは停止のたびに <code>orchestrate next</code> を裏で回し、途中なら decision:block で directive を注入してループを続けさせる。forwarding loop の「繰り返し」は、この Stop フックが機械的に強制している。</p>
 <table>
   <thead><tr><th>イベント</th><th>フック</th><th>役割</th></tr></thead>
   <tbody>
     <tr><td>PreToolUse（Task/Agent）</td><td>aidlc-dispatch-rules.ts</td><td>サブエージェントのブリーフへルール本文を注入（流れを変える）</td></tr>
     <tr><td>PreToolUse（Read/Write/Bash ほか）</td><td>aidlc-state-transition-guard.ts</td><td>状態遷移の直接実行を exit 2 で拒否（流れを変える）</td></tr>
     <tr><td>PreToolUse（Read/Write/Bash ほか）</td><td>aidlc-reviewer-scope.ts</td><td>レビュアーの読み取り境界を強制（流れを変える）</td></tr>
+    <tr><td>PreToolUse（Read/Write/Bash ほか）</td><td>aidlc-review-freeze.ts</td><td>受領証を無効化する produces[] 書き込みを exit 2 で拒否（流れを変える）</td></tr>
+    <tr><td>PreToolUse / PostToolUse（全ツール）</td><td>aidlc-fold-usage.ts</td><td>トークン使用量を台帳へ畳み込む（Claude 専用・観測のみ）</td></tr>
     <tr><td>UserPromptSubmit / PostToolUse（AskUserQuestion）</td><td>aidlc-mint-presence.ts</td><td>本物の人間ターンを HUMAN_TURN として記録</td></tr>
     <tr><td>SessionStart / SessionEnd</td><td>aidlc-session-start.ts / aidlc-session-end.ts</td><td>セッションイベント記録 + 再開時の文脈注入</td></tr>
     <tr><td>PostToolUse（Write|Edit）</td><td>aidlc-audit-logger.ts / aidlc-sensor-fire.ts</td><td>成果物イベント記録 + センサー発火（助言）</td></tr>
@@ -200,18 +203,18 @@ compiled stage in that phase:
     <tr><td>PostToolUse（Bash）</td><td>aidlc-runtime-compile.ts</td><td>遷移イベント検知で runtime-graph.json を再構築</td></tr>
     <tr><td>PreCompact / SubagentStop</td><td>aidlc-validate-state.ts / aidlc-log-subagent.ts</td><td>復旧ブレッドクラム / サブエージェント完了記録</td></tr>
     <tr><td>Stop</td><td>aidlc-stop.ts</td><td>境界外での停止をブロックしループを強制（流れを変える）</td></tr>
-    <tr><td>statusLine</td><td>aidlc-statusline.ts</td><td>ターミナルに進捗を常時表示</td></tr>
+    <tr><td>statusLine</td><td>aidlc-statusline.ts</td><td>ターミナルに進捗を常時表示（台帳にデータがあれば <code>↑in ↓out $cost</code> を付す）</td></tr>
   </tbody>
 </table>
-<p>非 Claude ハーネスは同じ 14 本をバイト同一のまま使う。authored な adapter 1 枚がネイティブイベントを Claude 形式の stdin へ正規化し、子プロセスとして実行する。写像はハーネスごとに違う。Codex の apply_patch はファイルごとの Write/Edit に展開され、Kiro の todo_list は TaskUpdate に対応する。opencode はフックレジストリ自体を持たないので、プラグインのハンドラ関数として同じ変換を行う。exit 2 と decision:block という流れを変えるチャネルも、各ハーネスのネイティブなブロック手段へ透過的に転送される。dispatch-rules の入力書き換えだけは全ハーネスで揃わない。Claude と Codex は updatedInput をそのまま消費し、opencode は adapter が args を書き換える。Kiro CLI には書き換えチャネルがないのでネイティブの resources 先読みに委ね、Kiro IDE はツール引数を露出できないため常時同梱の steering 経由でアクティブメモリを先読みする。</p>
+<p>非 Claude ハーネスは同じ 16 本をバイト同一のまま使う。authored な adapter 1 枚がネイティブイベントを Claude 形式の stdin へ正規化し、子プロセスとして実行する。写像はハーネスごとに違う。Codex の apply_patch はファイルごとの Write/Edit に展開され、Kiro の todo_list は TaskUpdate に対応する。opencode はフックレジストリ自体を持たないので、プラグインのハンドラ関数として同じ変換を行う。exit 2 と decision:block という流れを変えるチャネルも、各ハーネスのネイティブなブロック手段へ透過的に転送される。dispatch-rules の入力書き換えだけは全ハーネスで揃わない。Claude と Codex は updatedInput をそのまま消費し、opencode は adapter が args を書き換える。Kiro CLI には書き換えチャネルがないのでネイティブの resources 先読みに委ね、Kiro IDE はツール引数を露出できないため常時同梱の steering 経由でアクティブメモリを先読みする。揃わない例が 2 つある。review-freeze は Kiro IDE だけ登録されず、そこではプロトコル §12a の散文が順序を統べる。fold-usage の transcript 読み取りは Claude Code の形式に固有なので、他の 4 ハーネスには producer が存在しない。使用量台帳が空のまま残り、統計行のコスト表示も監査のロールアップも黙って消える。</p>
 <div class="refrow"><span class="label">参照:</span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/harness/claude/settings.json#L155-L165">harness/claude/settings.json:155-165（Stop フックの束線）</a><button class="copy" type="button" data-copy="harness/claude/settings.json:155" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/hooks">core/hooks/（14 本の実体）</a><button class="copy" type="button" data-copy="core/hooks" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/harness/claude/settings.json#L177-L187">harness/claude/settings.json:177-187（Stop フックの束線）</a><button class="copy" type="button" data-copy="harness/claude/settings.json:177" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/hooks">core/hooks/（16 本の実体）</a><button class="copy" type="button" data-copy="core/hooks" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/harness/codex/hooks/aidlc-codex-adapter.ts">harness/codex/hooks/aidlc-codex-adapter.ts（adapter の例）</a><button class="copy" type="button" data-copy="harness/codex/hooks/aidlc-codex-adapter.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 
 <h2 id="cli">CLI 面　1 つのディスパッチャと 20 のツール</h2>
-<p><code>aidlc.ts</code>（1,134 行）はルーティング専用のシムである。受ける形は 2 系統ある。<code>aidlc &lt;verb&gt;</code> は 14 のトップレベル動詞を取る（next / continue / report / park / compose / status / doctor / init ほか）。<code>aidlc &lt;noun&gt; &lt;verb&gt;</code> は 20 の名詞を取る（state / audit / graph / runtime / sensor / swarm / bolt / worktree / jump / learnings ほか）。いずれも 20 の兄弟ツールへ委譲する。エンジン中枢の orchestrate が公開するのは next / continue / report / park の 4 動詞だけで、state は 24 動詞を持つ。「決める者は書かず、書く者は決めない」の分離が、CLI の面にもそのまま現れている。</p>
+<p><code>aidlc.ts</code>（1,139 行）はルーティング専用のシムである。受ける形は 2 系統ある。<code>aidlc &lt;verb&gt;</code> は 14 のトップレベル動詞を取る（next / continue / report / park / compose / status / doctor / init ほか）。<code>aidlc &lt;noun&gt; &lt;verb&gt;</code> は 20 の名詞を取る（state / audit / graph / runtime / sensor / swarm / bolt / worktree / jump / learnings ほか）。いずれも 20 の兄弟ツールへ委譲する。エンジン中枢の orchestrate が公開するのは next / continue / report / park の 4 動詞だけで、state は 24 動詞を持つ。「決める者は書かず、書く者は決めない」の分離が、CLI の面にもそのまま現れている。</p>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc.ts#L53-L74">core/tools/aidlc.ts:53-74（TOOLS 対応表）</a><button class="copy" type="button" data-copy="core/tools/aidlc.ts:53" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/docs/guide/12-cli-commands.md">docs/guide/12-cli-commands.md</a><button class="copy" type="button" data-copy="docs/guide/12-cli-commands.md" aria-label="パスをコピー">⧉</button></span>
