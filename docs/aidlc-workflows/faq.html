@@ -52,7 +52,7 @@
 <h2 id="positioning">位置づけ</h2>
 
 <h3 id="what-is">AI-DLC Workflows とは何か</h3>
-<p>AWS が定義する AI 主導開発の方法論 AI-DLC の公式実装で、awslabs の OSS である。開発ライフサイクルを 5 フェーズ（initialization、ideation、inception、construction、operation）、32 ステージに構造化し、承認ゲート付きで coding agent に実行させる。単一の core/ から Claude Code、Kiro CLI、Kiro IDE、Codex CLI、opencode の 5 配布物を生成する。</p>
+<p>AWS が定義する AI 主導開発の方法論 AI-DLC の公式実装で、awslabs の OSS である。開発ライフサイクルを 5 フェーズ（initialization、ideation、inception、construction、operation）、32 ステージに構造化し、承認ゲート付きで coding agent に実行させる。単一の core/ から Claude Code、Codex CLI、GitHub Copilot、Cursor、Kiro CLI、Kiro IDE、opencode の 7 配布物を生成する。</p>
 <div class="refrow"><span class="label">参照:</span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core">core/</a><button class="copy" type="button" data-copy="core" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/harness">harness/</a><button class="copy" type="button" data-copy="harness" aria-label="パスをコピー">⧉</button></span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/dist">dist/</a><button class="copy" type="button" data-copy="dist" aria-label="パスをコピー">⧉</button></span></div>
 
 <h3 id="vs-claude-md">CLAUDE.md とスキルを整備すれば同じことができるのでは</h3>
@@ -64,7 +64,7 @@
 <p>出典: <a href="../mirror/guide/04-phases-and-stages.html">guide/04 Phases and Stages</a></p>
 
 <h3 id="harnesses">Claude Code 専用か</h3>
-<p>5 ハーネス対応で、移植ではなく生成である。決定論的な core/ が 1 つあり、scripts/package.ts が各配布物を生成する。エンジン、状態機械、audit、グラフ、swarm レフェリー、learnings ゲートは全配布物でバイト同一で、docs は「異なるのはシェルだけ」と述べる。dist/ を手で編集すると CI のドリフトガードが落ちる。</p>
+<p>7 ハーネス対応で、移植ではなく生成である。決定論的な core/ が 1 つあり、scripts/package.ts が各配布物を生成する。エンジン、状態機械、audit、グラフ、swarm レフェリー、learnings ゲートは全配布物でバイト同一で、docs は「異なるのはシェルだけ」と述べる。dist/ を手で編集すると CI のドリフトガードが落ちる。</p>
 <div class="refrow"><span class="label">参照:</span> <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/scripts/package.ts">scripts/package.ts</a><button class="copy" type="button" data-copy="scripts/package.ts" aria-label="パスをコピー">⧉</button></span></div>
 <p>出典: <a href="../mirror/guide/harnesses/README.html">guide/harnesses</a>・<a href="architecture.html">解説: リポジトリ構成</a></p>
 
@@ -93,7 +93,7 @@
 <thead><tr><th>層</th><th>構成要素</th><th>役割</th><th>従わせる力</th></tr></thead>
 <tbody>
 <tr><td>人間の判断</td><td>承認ゲート（AskUserQuestion）・ladder prompt・halt-and-ask</td><td>進行可否の最終判断。機械検査できない部分の引き受け先</td><td>人間</td></tr>
-<tr><td>決定論</td><td>engine（aidlc-orchestrate.ts、サブコマンドは next / report / park）・hook 16 本・ツール 37 本・コンパイル済み表（stage-graph.json / scope-grid.json）・実行系 bun</td><td>ルーティング・状態遷移・audit・並列の審判・ループ強制。判断は型付き directive として発行</td><td>絶対（コード実行）</td></tr>
+<tr><td>決定論</td><td>engine（aidlc-orchestrate.ts、サブコマンドは next / report / park）・hook 17 本・ツール 37 本・コンパイル済み表（stage-graph.json / scope-grid.json）・実行系 bun</td><td>ルーティング・状態遷移・audit・並列の審判・ループ強制。判断は型付き directive として発行</td><td>絶対（コード実行）</td></tr>
 <tr><td>ステアリング</td><td>SKILL.md（conductor）・stage-protocol.md + stage 定義 32・agent 定義 14・knowledge 59・scope 宣言 9・rules / practices</td><td>LLM への手順・ペルソナ・知識・規範の供給</td><td>確率的。結果はゲートと事後条件で検査</td></tr>
 <tr><td>記録</td><td>aidlc-state.md・audit シャード・record dir の成果物・codekb・runtime-graph.json</td><td>ワークフローの正。再開・復旧・実績グラフの源</td><td>書き込み経路をツールに限定</td></tr>
 </tbody>
@@ -129,17 +129,17 @@ sequenceDiagram
 <p>出典: <a href="../mirror/reference/03-orchestrator.html">reference/03 Orchestrator</a>・<a href="../mirror/reference/04-stage-protocol.html">reference/04 Stage Protocol</a></p>
 
 <h3 id="bun-invocation">bun は何を実行していて、誰がいつ呼ぶのか</h3>
-<p>bun は 16 本の hook と 37 本のツール（すべて TypeScript）の実行系である。職務は状態管理、audit 記録、sensor ディスパッチ、runtime-graph のコンパイル、ループ強制、状態遷移とレビュー受領証と reviewer スコープの強制、トークン使用量の記録、statusline、human-turn の記録で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。</p>
+<p>bun は 17 本の hook と 37 本のツール（すべて TypeScript）の実行系である。職務は状態管理、audit 記録、sensor ディスパッチ、runtime-graph のコンパイル、ループ強制、状態遷移とレビュー受領証と reviewer スコープの強制、トークン使用量の記録、statusline、human-turn の記録で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。</p>
 <p>呼び出し経路は 2 つある。経路 A はハーネスが呼ぶ。Claude Code のライフサイクルイベント（SessionStart、SessionEnd、コンパクション直前ほか）が settings.json にプロジェクト全体で登録された hook を必ず実行し、LLM は介在できない。各 hook は self-gate していて、アクティブなワークフローが無ければ即終了するため、AI-DLC の外の通常利用では no-op になる。</p>
 <p>経路 B は LLM が CLI として呼ぶ。conductor が bun で engine（aidlc-orchestrate.ts）の next を実行して directive を受け取り、stage 実行後に report で結果を返す。状態と audit の書き込みも専用ツール経由に限られる。経路 B の呼び忘れや逸脱は経路 A の hook（状態遷移とループの強制）が検査するので、LLM のサボりで工程管理は破綻しない。</p>
 <p>出典: <a href="../mirror/reference/06-hooks-and-tools.html">reference/06 Hooks and Tools</a>・<a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a></p>
 
 <h3 id="cc-mapping">素の Claude Code の設定機構とはどう対応するのか</h3>
-<p>Claude Code ユーザーが普段使う機構が、そのまま AI-DLC の部品として使われている。対応は次のとおりで、他ハーネスでは hook の配線先だけが差し替わり（Kiro CLI = agents/aidlc.json、Kiro IDE = .kiro/hooks/、Codex = .codex/hooks.json、opencode = plugin）、決定論層のコードはバイト同一のまま動く。</p>
+<p>Claude Code ユーザーが普段使う機構が、そのまま AI-DLC の部品として使われている。対応は次のとおりで、他ハーネスでは hook の配線先だけが差し替わり（Kiro CLI = agents/aidlc.json、Kiro IDE = .kiro/hooks/、Codex = .codex/hooks.json、Copilot = .github/hooks/aidlc.json、Cursor = .cursor/hooks.json、opencode = plugin）、決定論層のコードはバイト同一のまま動く。</p>
 <table>
 <thead><tr><th>Claude Code の機構</th><th>AI-DLC v2 での使い道</th></tr></thead>
 <tbody>
-<tr><td>hooks（settings.json 登録）</td><td>強制の土台。16 本すべてをプロジェクト全体に登録し、self-gate で AI-DLC 外では no-op</td></tr>
+<tr><td>hooks（settings.json 登録）</td><td>強制の土台。17 本すべてをプロジェクト全体に登録し、self-gate で AI-DLC 外では no-op</td></tr>
 <tr><td>skills</td><td>conductor（SKILL.md、/aidlc で起動）と stage-protocol・32 stage ファイル。エントリポイント兼実行手順</td></tr>
 <tr><td>subagents</td><td>14 の役割 agent。tier 宣言をハーネスごとに model + effort へ射影</td></tr>
 <tr><td>permissions</td><td>組み込みツールの事前承認。ワークフロー中の許可プロンプトを消す</td></tr>
@@ -217,12 +217,12 @@ sequenceDiagram
 <p>出典: <a href="../mirror/guide/09-rules-and-the-learning-loop.html">guide/09 Rules and the Learning Loop</a>・<a href="../mirror/reference/08-rule-system.html">reference/08 Rule System</a></p>
 
 <h3 id="customize">自社の開発プロセスに合わせて拡張できるか</h3>
-<p>Harness Engineering ガイドに公式手順がある。stage 追加、エージェント追加、scope、sensor の追加、新しいハーネスへの移植、プラグイン作成まで章立てされており、core/ を 1 箇所直せば 5 配布物すべてに反映される。</p>
+<p>Harness Engineering ガイドに公式手順がある。stage 追加、エージェント追加、scope、sensor の追加、新しいハーネスへの移植、プラグイン作成まで章立てされており、core/ を 1 箇所直せば 7 配布物すべてに反映される。</p>
 <p>出典: <a href="../mirror/harness-engineering/00-overview.html">harness-engineering/00 Overview</a></p>
 
 <h3 id="harness-parity">ハーネスごとの制約差はないのか</h3>
 <p>コアはバイト同一だが、シェル側の制約は実在し、docs が実測ベースで明記している。Codex CLI は 0.145.0 以上をピンし、/aidlc --doctor が強制する。opencode は *.ts の自動インポートがエンジンスクリプトでクラッシュするため、エンジンツリーを .aidlc/ に隔離する 2 ディレクトリ構成をとる（1.17.18 でライブ再現の上での設計）。Kiro IDE は世代で hook のペイロードチャネルが違い、probe による実証リファレンスが同梱されている。制約を隠さず版数と再現条件つきで書いてあるのがこのリポジトリの流儀である。</p>
-<p>UI 面の差も guide 本体が明示する。ステージ、エージェント、ゲート、成果物は 5 ハーネスで同一だが、起動時のウェルカムバナー（settings.json の companyAnnouncements）と AI-DLC 独自ステータスラインは Claude Code 専用である。Kiro と opencode は <code>/aidlc --status</code>、Codex は <code>$aidlc --status</code> とネイティブの update_plan 表示で位置を確認する。</p>
+<p>UI 面の差も guide 本体が明示する。ステージ、エージェント、ゲート、成果物は 7 ハーネスで同一だが、起動時のウェルカムバナー（settings.json の companyAnnouncements）と AI-DLC 独自ステータスラインは Claude Code 専用である。Kiro と opencode と Copilot は <code>/aidlc --status</code>、Codex は <code>$aidlc --status</code> とネイティブの update_plan 表示で位置を確認する。Cursor はユーティリティをネイティブスキルに落としているので <code>/aidlc-status</code> でも同じ位置が出る。</p>
 <p>出典: <a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a>・<a href="../mirror/guide/02-your-first-workflow.html">guide/02 Your First Workflow</a>・<a href="../mirror/guide/harnesses/codex-cli.html">guide/harnesses Codex CLI</a>・<a href="../mirror/guide/harnesses/opencode.html">guide/harnesses opencode</a>・<a href="../mirror/reference/kiro-ide-hook-payload.html">reference Kiro IDE hook payload</a></p>
 
 <h3 id="models">モデルは何を使うのか</h3>
@@ -232,14 +232,14 @@ sequenceDiagram
 <h3 id="cost">トークン消費はどれくらい増えるのか</h3>
 <p>公式の実測値は示されていないが、自分の実行では測れる。多段の成果物生成と役割別エージェントのぶん、素の 1 セッションより確実に増える。制御レバーは scope、depth、テスト戦略で、小タスクに enterprise scope を使わないことが実務上の答えになる。</p>
 <p>計測は 2.5.40 で入った。Claude Code では fold-usage フックが transcript のトークン使用量を gitignore された <code>aidlc/.aidlc-sessions/usage-ledger.json</code> へ畳み込み、ステージ別、モデル別、エージェント別に積む。statusline が現在のワークフローとセッションについて <code>↑in ↓out $cost</code> を表示し、<code>STAGE_COMPLETED</code> と <code>WORKFLOW_COMPLETED</code> の監査行がトークンとコストのロールアップを持つ。単価表は 3 層で、同梱の <code>tools/data/model-rates.json</code> と環境変数 <code>AIDLC_MODEL_RATES</code> が公開価格の既定を上書きできる。価格が引けないモデルはトークンだけを記録し、コストは <code>null</code> になる。偽の 0 ドルは出さない。</p>
-<p>既定はすべて無害な追加である。外部への送信は <code>AIDLC_METRICS_ENDPOINT</code> を設定したときだけ起き、未設定なら監査経路はバイト単位で以前と同じままになる。Claude 以外の 4 ハーネスには producer が無いので台帳は空で、コスト表示もロールアップも出ない。</p>
+<p>既定はすべて無害な追加である。外部への送信は <code>AIDLC_METRICS_ENDPOINT</code> を設定したときだけ起き、未設定なら監査経路はバイト単位で以前と同じままになる。Claude 以外の 6 ハーネスには producer が無いので台帳は空で、コスト表示もロールアップも出ない。</p>
 <p>出典: <a href="../mirror/reference/06-hooks-and-tools.html">reference/06 Hooks and Tools</a></p>
 
 <h3 id="license">ライセンスと本番利用の位置づけは</h3>
 <p>awslabs の OSS で、ライセンスは MIT-0（MIT No Attribution）である。AWS のサービスではないので SLA やサポートは無い。v2 は v2.x タグのリリースラインだが開発が活発で、docs はほぼ毎日動く。導入するならタグかコミットで固定し、追随を計画的に行うのが現実的である。</p>
 
 <h3 id="getting-started">まず何をすれば試せるのか</h3>
-<p>前提ツールは対応ハーネスのどれか 1 つと bun である。bun は 16 本の hook と 37 本のツール（すべて TypeScript）の実行系で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。配布物をプロジェクトにコピーすれば始められ、MCP サーバーや Bedrock 連携は任意になる。最初は poc か feature scope で小さく 1 周回すことを勧める。</p>
+<p>前提ツールは対応ハーネスのどれか 1 つと bun である。bun は 17 本の hook と 37 本のツール（すべて TypeScript）の実行系で、起動約 20ms、追加依存なし、macOS / Linux / Windows で同一に動く。配布物をプロジェクトにコピーすれば始められ、MCP サーバーや Bedrock 連携は任意になる。最初は poc か feature scope で小さく 1 周回すことを勧める。</p>
 <p>出典: <a href="../mirror/guide/01-getting-started.html">guide/01 Getting Started</a></p>
 
 </main>

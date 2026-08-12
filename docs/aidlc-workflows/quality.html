@@ -96,7 +96,7 @@
 <h2 id="reviewers">レビュアーの敵対的契約　REFUTE から始める</h2>
 <p>レビュアー 2 体は成果物を作らない。ステージが reviewer を宣言していると、ゲート前に敵対的レビューが挟まる。指示は「この成果物を反証せよ」で、READY は探し尽くして到達できなかったときの結論であり、出発点ではない。NOT-READY ならリード単独が修正し、再レビューへ入る（既定で最大 2 往復）。エンジンは新しい REVIEW_COMPLETED の領収書が監査に載るまで、ステージ完了を拒む。READY の領収書は終端である。領収書は成果物のパスとバイト列の SHA-256 指紋を持ち、指紋が合わなくなった領収書は完了の根拠として認められない。領収書のあとに produces[] を書き換える動きは、PreToolUse フック（<code>aidlc-review-freeze.ts</code>）が exit 2 で先に止める。自分の領収書を無効化してレビューと修正を往復し続けるループが実際に観測されたための機構である。レビュアーを宣言するステージは 12 ある。ワークフロー最初のステージ 1.1 intent-capture もその 1 つで、product-lead が出典の裏づけを専門に反証する。</p>
 <figure class="excerpt">
-  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/agents/aidlc-product-lead-agent.md#L1-L14">core/agents/aidlc-product-lead-agent.md:1-14</a><button class="copy" type="button" data-copy="core/agents/aidlc-product-lead-agent.md:1" aria-label="パスをコピー">⧉</button></span></figcaption>
+  <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/agents/aidlc-product-lead-agent.md#L1-L20">core/agents/aidlc-product-lead-agent.md:1-20</a><button class="copy" type="button" data-copy="core/agents/aidlc-product-lead-agent.md:1" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-markdown">---
 name: aidlc-product-lead-agent
 display_name: Product Lead
@@ -108,10 +108,16 @@ tier: balanced
 
 **IMPORTANT: Do NOT use the Task tool. You operate as a delegated reviewer and must not spawn sub-agents.**
 
+You are not the workflow conductor. Do not call lifecycle or routing commands
+(`aidlc-orchestrate.ts next`, `report`, or `park`; mutating
+`aidlc-state.ts` verbs including `unpark`; jump/configuration execution), and
+do not present approval gates or resume menus. Return only the review verdict
+and findings to the invoking orchestrator.
+
 # Product Lead
 
 You are a senior product leader — the person who signs off before work goes to engineering. You review, you don't build. You represent the customer and the business at the quality gate.</code></pre>
-  <p class="excerpt-note">動作: レビュアーの frontmatter。「作らない、挑む」を宣言し、tier: balanced（中型モデル固定）と Task 禁止を持つ。応答の 1 行目に自分の名前を書く Output Contract があり、監査がどのレビュアーが走ったかを機械的に記録できる。</p>
+  <p class="excerpt-note">動作: レビュアーの frontmatter と役割宣言。「作らない、挑む」を掲げ、tier: balanced（中型モデル固定）と Task 禁止を持つ。冒頭 2 段落がライフサイクル動詞の呼び出しとゲート提示を明文で禁じ、返すものをレビュー判定と指摘だけに絞る。</p>
 </figure>
 <p>architecture-reviewer には読み取り境界もある。担当 Unit の外、つまり他 Unit の <code>construction/</code> ディレクトリはどのツールでも読めない。この境界は約束ではなく、PreToolUse フック（<code>aidlc-reviewer-scope.ts</code>）が exit 2 で機械的に拒否する。</p>
 <p>レビュアーのチェックリストは実行時に読ませない。レビュアーは常に dispatch されるので、確実に届く経路は定義本文だけである。そこでパッケージャがビルド時に <code>core/knowledge/&lt;agent&gt;/</code> の中身を各レビュアーの <code>.md</code> 本文へ吸収する。手書きの正はナレッジファイル側に残り、吸収後の本文は dist と同じ生成物になる。対象レビュアーはステージ frontmatter の <code>reviewer:</code> 行から導出するので、新しいレビュアーを宣言するステージが増えれば自動で追随する。</p>
@@ -161,7 +167,7 @@ timeout_seconds: 30
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/sensors/aidlc-claim-sources.md">core/sensors/aidlc-claim-sources.md（検査項目の宣言）</a><button class="copy" type="button" data-copy="core/sensors/aidlc-claim-sources.md" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-sensor-claim-sources.ts">core/tools/aidlc-sensor-claim-sources.ts（実装）</a><button class="copy" type="button" data-copy="core/tools/aidlc-sensor-claim-sources.ts" aria-label="パスをコピー">⧉</button></span>
-  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/hooks/aidlc-sensor-fire.ts">core/hooks/aidlc-sensor-fire.ts（発火経路）</a><button class="copy" type="button" data-copy="core/hooks/aidlc-sensor-fire.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/hooks/aidlc-run-sensors.ts">core/hooks/aidlc-run-sensors.ts（発火経路）</a><button class="copy" type="button" data-copy="core/hooks/aidlc-run-sensors.ts" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/tools/aidlc-sensor.ts">core/tools/aidlc-sensor.ts（判定の真理表）</a><button class="copy" type="button" data-copy="core/tools/aidlc-sensor.ts" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/docs/reference/07-sensor-system.md">docs/reference/07-sensor-system.md</a><button class="copy" type="button" data-copy="docs/reference/07-sensor-system.md" aria-label="パスをコピー">⧉</button></span>
 </div>
