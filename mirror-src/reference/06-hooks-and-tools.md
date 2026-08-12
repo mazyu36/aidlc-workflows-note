@@ -1,6 +1,6 @@
 # Hooks and Tools
 
-この章は、hook システムのアーキテクチャ、14 個すべての hook スクリプト、audit イベントの分類体系、CLI ツールの構成、そして決定論的なユーティリティツールを文書化する。
+この章は、hook システムのアーキテクチャ、16 個すべての hook スクリプト、audit イベントの分類体系、CLI ツールの構成、そして決定論的なユーティリティツールを文書化する。
 
 > **パス規約。** 状態・audit・成果物は、アクティブな intent の **record dir** の下に住む — `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`、以下では `<record>/` と書く（record dir が時系列でソートされるよう、コンパクトな UTC 日付プレフィックスと短い kebab-case ラベルを付す; 正規の id は `intents.json` レジストリ行の UUIDv7 である）。audit トレイルは単一ファイルではなく、`<record>/audit/` の下の clone ごとのシャードのディレクトリである。
 
@@ -8,9 +8,9 @@
 
 ## Hook システムのアーキテクチャ
 
-この実装は `.claude/hooks/` にある 14 個の hook スクリプトを使う。14 個すべてが TypeScript である（`bun` で走る）。14 個すべてが **project-wide** である — `settings.json` に登録され（statusline はトップレベルの `statusLine` キーで、残る 13 個は `hooks` ブロックで）、どの skill がアクティブかに関わらず発火する。以前は分割されていた（6 個は skill スコープとして `aidlc/SKILL.md` frontmatter に宣言され、残りは project-wide だった）; v0.6.0 で skill スコープの 6 個を `settings.json` に移し、すべてのエントリポイント — orchestrator、各同梱の scope/stage runner、および手書きの顧客 runner — が runner ごとの `hooks:` ブロック無しで決定論的なスパインを継承するようにした。
+この実装は `.claude/hooks/` にある 16 個の hook スクリプトを使う。16 個すべてが TypeScript である（`bun` で走る）。16 個すべてが **project-wide** である — `settings.json` に登録され（statusline はトップレベルの `statusLine` キーで、残る 15 個は `hooks` ブロックで）、どの skill がアクティブかに関わらず発火する。以前は分割されていた（6 個は skill スコープとして `aidlc/SKILL.md` frontmatter に宣言され、残りは project-wide だった）; v0.6.0 で skill スコープの 6 個を `settings.json` に移し、すべてのエントリポイント — orchestrator、各同梱の scope/stage runner、および手書きの顧客 runner — が runner ごとの `hooks:` ブロック無しで決定論的なスパインを継承するようにした。
 
-14 個のうち 10 個は **非ブロッキング** である。4 個は **フロー変更** である: `Stop` hook はフォワーディングループを走らせ続け、dispatch-rules hook は harness が入力の書き換えをサポートする場合に厳密な active-stage の rule を subagent のブリーフに添付し、reviewer-scope hook は兄弟 unit の reviewer アクセスを拒否し、state-transition guard は `aidlc-orchestrate.ts report` を迂回する直接のライフサイクル呼び出しを拒否する。
+16 個のうち 11 個は **非ブロッキング** である。5 個は **フロー変更** である: `Stop` hook はフォワーディングループを走らせ続け、dispatch-rules hook は harness が入力の書き換えをサポートする場合に厳密な active-stage の rule を subagent のブリーフに添付し、reviewer-scope hook は兄弟 unit の reviewer アクセスを拒否し、review-freeze hook は gate の前に fresh な READY レビュー receipt を無効化する produces[] 書き込みを拒否し、state-transition guard は `aidlc-orchestrate.ts report` を迂回する直接のライフサイクル呼び出しを拒否する。
 
 ```
 .claude/hooks/
@@ -18,10 +18,12 @@
 +-- dispatch-rules.ts    # PreToolUse Task|Agent (project-wide, settings.json, TypeScript, flow-altering)
 +-- state-transition-guard.ts # PreToolUse Bash (project-wide, settings.json, TypeScript, flow-altering)
 +-- reviewer-scope.ts    # PreToolUse file/search/shell tools (project-wide, settings.json, TypeScript, flow-altering)
++-- review-freeze.ts     # PreToolUse file-write tools (project-wide, settings.json, TypeScript, flow-altering)
 +-- audit-logger.ts      # PostToolUse Write|Edit (project-wide, settings.json, TypeScript)
 +-- sensor-fire.ts       # PostToolUse Write|Edit (project-wide, settings.json, TypeScript)
 +-- sync-statusline.ts   # PostToolUse TaskUpdate (project-wide, settings.json, TypeScript)
 +-- runtime-compile.ts   # PostToolUse Bash (project-wide, settings.json, TypeScript)
++-- fold-usage.ts        # PreToolUse + PostToolUse (project-wide, settings.json, TypeScript, Claude-only producer)
 +-- validate-state.ts    # PreCompact (project-wide, settings.json, TypeScript)
 +-- log-subagent.ts      # SubagentStop (project-wide, settings.json, TypeScript)
 +-- aidlc-stop.ts        # Stop (project-wide, settings.json, TypeScript, flow-altering)
@@ -38,10 +40,12 @@
 | `dispatch-rules.ts` | PreToolUse | Project-wide (settings.json) | `Task\|Agent` | **フロー変更。** ディスパッチされた stage の実質的なアクティブ space の rule を解決し、その正確なバイトをすべての AI-DLC subagent ブリーフに追記する。Claude、Codex、opencode の入力を書き換える; Kiro CLI はツール引数を書き換えられないため、不完全なブリーフは advisory の警告付きで進む（Kiro CLI agent は `resources` を通じてアクティブな memory ツリーをプリロードする; ロードできない必須 rule はそれでも repair guidance 付きでブロックする）。Kiro IDE はライブの memory-file 参照を持つ常時包含のワークスペース steering を使う。完全な bundle が既に存在する場合は idempotent である |
 | `state-transition-guard.ts` | PreToolUse | Project-wide (settings.json) | `Bash` | **フロー変更。** 直接の `aidlc-state.ts` ライフサイクル動詞を拒否し、conductor を `aidlc-orchestrate.ts report` へリダイレクトする; 読み取り専用および特殊な recovery/構成の動詞は利用可能なまま残る |
 | `reviewer-scope.ts` | PreToolUse | Project-wide (settings.json) | `Read\|Edit\|Write\|Glob\|Grep\|Bash` | **フロー変更。** unit ごとの reviewer 読み取りスコープ境界（stage-protocol §12a）を決定論的に強制する: conductor の reviewer ディスパッチ記録（`<record>/.aidlc-reviewer-dispatch.json`）が新鮮な間、ディスパッチされた reviewer のツール呼び出しのうち兄弟 unit の `construction/` パスに手を伸ばすもの — ファイル読み書きと兄弟にまたがる grep/glob/shell パターン — は拒否される（exit 2 + リダイレクトする stderr の理由）、ただし対象が記録の免除リストにある場合を除く。各拒否は `REVIEWER_SCOPE_BLOCKED` を発する。あらゆる曖昧さで fail-open する; `AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1` は強制を無効化する |
+| `review-freeze.ts` | PreToolUse | Project-wide (settings.json) | `Read\|Edit\|Write\|Glob\|Grep\|Bash`（自身をミューテーション可能な呼び出しへ絞り込む） | **フロー変更。** §12a の終端 receipt 順序を決定論的に強制する: reviewer を持つ、まだ完了していない stage の宣言済み `produces[]` 成果物を対象とする Write/Edit またはシェルのミューテーションは、fresh な READY レビュー receipt がそれをカバーしている間、拒否される（exit 2 + リダイレクトする stderr の理由）。シェルの書き込みは Write/Edit の audit フィードを通らず、変更されたバイトの上に古い receipt を残してしまうため、実行前に検査される。engine の正確な receipt スキャン（`aidlc-lib.ts` の `freshReviewReceipts`）を共有するので、記録された gate の reject、jump、ワークフローの再起動は自動的に freeze を解除し、NOT-READY の評決は決して freeze しない。各拒否は `REVIEW_FREEZE_BLOCKED` を発する。あらゆる曖昧さで fail-open する; `AIDLC_DISABLE_REVIEW_FREEZE_HOOK=1` は強制を無効化する |
 | `audit-logger.ts` | PostToolUse | Project-wide (settings.json) | `Write\|Edit` | 成果物の書き込みを `audit/` シャードに自動ログする |
 | `sensor-fire.ts` | PostToolUse | Project-wide (settings.json) | `Write\|Edit` | 合致する書き込みで、アクティブな stage の解決済み Sensor を発火する（advisory; 決してブロックしない） |
 | `sync-statusline.ts` | PostToolUse | Project-wide (settings.json) | `TaskUpdate` | stage タスクのアクティベーション時に状態ファイルを自動同期する |
 | `runtime-compile.ts` | PostToolUse | Project-wide (settings.json) | `Bash` | transition クラスの audit 発行時に `runtime-graph.json` を再コンパイルする |
+| `fold-usage.ts` | PreToolUse + PostToolUse | Project-wide (settings.json) | (空) | **Claude 専用。** トランスクリプトの新しい token 使用量を、llm 呼び出しごとに永続的な使用量台帳へ折り込む: PreToolUse は完了しつつあるメインの呼び出しを封じ、engine の境界の前には完了したすべての subagent 呼び出しも封じるので、ライフサイクルの roll-up が最新のまま保たれる; PostToolUse は通常のホールドバックのフォールバックを供給する。観察のみで決してブロックしない。Claude-Code のトランスクリプトリーダーは Claude harness にのみ結線されるので、Kiro/Codex/opencode では producer が走らず台帳は空のままになる（すべての使用量コンシューマは no-data に劣化する）。下の「Token 使用量とコスト追跡」を参照 |
 | `validate-state.ts` | PreCompact | Project-wide (settings.json) | (空) | 状態ファイルを検証し、recovery ブレッドクラムを書く |
 | `log-subagent.ts` | SubagentStop | Project-wide (settings.json) | (空) | subagent 完了イベントをログする |
 | `aidlc-stop.ts` | Stop | Project-wide (settings.json) | (空) | **フロー変更。** ターン終了時にフォワーディングループを強制する: `aidlc-orchestrate next` を走らせ; `done` または `parked` では stop を許し、保留中の directive では stop をブロックして `reason` 経由で次の一手を注入し戻す。次のときは stop を許す（human-wait 免除）: 現在の stage が承認待ち（`[?]`）、修正中（`[R]`）、正規または アクティブな unit ごとの `<slug>-questions.md` に未回答の質問があって `[-]` 進行中、または終了しつつあるターンが会話的だった（人間の最後のプロンプトがワークフローエンジン呼び出し無しで応答された、harness トランスクリプトから読み取る）とき — 最後の 2 つは自律 Construction 下では抑制される。再帰境界あり（no-progress カウンタ + `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` 下の `stop_hook_active`; 既定はインタラクティブ実行で 2、自律 Construction 下で 8）。AIDLC ワークフローの外では no-op |
@@ -51,13 +55,13 @@
 
 ### 共通の性質
 
-14 個の TypeScript hook すべて:
+16 個の TypeScript hook すべて:
 
 - TypeScript で書かれ、`bun` で走る
 - 実行権限を必要としない — macOS、Linux、ネイティブ Windows PowerShell で同一に動く
 - Claude Code から stdin で JSON を受け取る
 - ネイティブの JSON パースを使う（`jq` 依存なし）
-- 成功時またはスキップ時に code 0 で exit する（`Stop` hook はブロックするときも 0 で exit する — ブロックは stdout の `{"decision":"block"}` JSON オブジェクトで通知される; 3 つの PreToolUse 制御 hook は回復不能または再試行可能な拒否を exit 2 + stderr の理由で通知する）
+- 成功時またはスキップ時に code 0 で exit する（`Stop` hook はブロックするときも 0 で exit する — ブロックは stdout の `{"decision":"block"}` JSON オブジェクトで通知される; 4 つの PreToolUse 制御 hook は回復不能または再試行可能な拒否を exit 2 + stderr の理由で通知する）
 - 複数のフォールバック手法で `$CLAUDE_PROJECT_DIR` を解決する
 - ロックとユーティリティ関数を `lib.ts` から共有する
 
@@ -225,7 +229,7 @@ Workspace 検出（0.2）はかつて subagent だった; 今は `aidlc-utility 
 **トリガー:** conductor がターンを終えようとするとき（matcher: 空 = 常時、`/aidlc` がアクティブな間）
 **目的:** インタラクティブなフォワーディングループを強制する — engine がワークフローを `done` と報告するまで走らせ続ける
 
-これはフレームワークの 4 つのフロー変更 hook の 1 つであり、dispatch-rules・state-transition・reviewer-scope の 3 つの PreToolUse 制御と並ぶ。ターンの終了を止めるために `{"decision":"block"}` を返しうる; 他の 10 個の hook は観察して exit 0 する。gate 付きの会話的な経路では conductor（LLM）がループを保持する、なぜなら人間に質問できるのはそれだけだからである — だから engine を参照し忘れると、ワークフローは漂流する。この hook はその LLM の勤勉さへの依存を取り除く: ループは harness によって強制される。
+これはフレームワークの 5 つのフロー変更 hook の 1 つであり、dispatch-rules・state-transition・reviewer-scope・review-freeze の 4 つの PreToolUse 制御と並ぶ。ターンの終了を止めるために `{"decision":"block"}` を返しうる; 他の 11 個の hook は観察して exit 0 する。gate 付きの会話的な経路では conductor（LLM）がループを保持する、なぜなら人間に質問できるのはそれだけだからである — だから engine を参照し忘れると、ワークフローは漂流する。この hook はその LLM の勤勉さへの依存を取り除く: ループは harness によって強制される。
 
 **処理ステップ:**
 
@@ -290,7 +294,7 @@ recovery/構成の動詞は利用可能なまま残る。state CLI は独立に�
 **トリガー:** file/search/shell ツール呼び出しの前（`Read`、`NotebookRead`、`Edit`、`MultiEdit`、`Write`、`NotebookEdit`、`LS`、`Glob`、`Grep`、または `Bash`; matcher: `"Read|NotebookRead|Edit|MultiEdit|Write|NotebookEdit|LS|Glob|Grep|Bash"`）
 **目的:** unit ごとの reviewer 読み取りスコープ境界（stage-protocol §12a）を決定論的に強制する
 
-これはフレームワークの 4 つのフロー変更 hook の 1 つであり、3 つの `PreToolUse` 制御の 1 つである。§12a の散文の境界は、1 つの unit にディスパッチされた reviewer は兄弟 unit の `construction/<other-unit>/` の内容をどのツールでも読んではならないと言う — フィールドのトランスクリプトは、勤勉な reviewer が cross-unit glob（`construction/*/*/*.md`）を運ぶ再帰的な grep で散文を迂回し、unit ごとのレビューコストを unit 数に対して超線形に育てるのを示した。フレームワークのレイヤリング（決定論はツールと hook に属する）に従い、この hook は境界を自己強制させる。
+これはフレームワークの 5 つのフロー変更 hook の 1 つであり、4 つの `PreToolUse` 制御の 1 つである。§12a の散文の境界は、1 つの unit にディスパッチされた reviewer は兄弟 unit の `construction/<other-unit>/` の内容をどのツールでも読んではならないと言う — フィールドのトランスクリプトは、勤勉な reviewer が cross-unit glob（`construction/*/*/*.md`）を運ぶ再帰的な grep で散文を迂回し、unit ごとのレビューコストを unit 数に対して超線形に育てるのを示した。フレームワークのレイヤリング（決定論はツールと hook に属する）に従い、この hook は境界を自己強制させる。
 
 **ディスパッチをどう学ぶか。** conductor は §12a ステップ 1（unit ごとの stage のみ）で `<record>/.aidlc-reviewer-dispatch.json` を書く — `{reviewer, stage, unit, exempt[]}`、ここで `exempt` は解決済みの `consumes` 契約パス、stage ファイル、Q&A ファイル、そして（現在の unit の設計が統合ポイントを明示的に名指すとき）その 1 つの所有する兄弟ファイルを運ぶ — そしてステップ 3 で判定が読まれるときそれを削除する。この記録が強制のウィンドウである; 6 時間より古い記録はクラッシュしたレビューからの孤児であり、無視され janitor される（compose-marker の陳腐化規律）。
 
@@ -299,6 +303,26 @@ recovery/構成の動詞は利用可能なまま残る。state CLI は独立に�
 **Decision。** matcher（`evaluateReviewerScope`、`t220` で固定されたエクスポートされた純関数）はパスフィールドとコマンド/パターンテキストを `construction/<seg>` トークンについて走査する: ディスパッチされた unit は通過し、ワイルドカードや裸の sweep ルートはブロックし、具体的な兄弟は、完全なトークンが免除エントリの `construction/` サフィックスに正確に合致しない限りブロックする。現在の unit の grep、共有の inception 契約、および validation ツールの実行は決して触られない。ブロックは `REVIEWER_SCOPE_BLOCKED` audit 行（Tool、Target、Stage、Unit）を発し、**exit 2 + リダイレクトする stderr の理由** で通知する — harness の PreToolUse reject 契約 — それはスコープを名指し、reviewer を通過した契約へ指し戻す。
 
 **あらゆる箇所で fail-open。** 記録無し、古いまたは不正な記録、非 reviewer agent、未知のツール、不正な stdin、またはあらゆる内部エラーは呼び出しを許す; ディスパッチ記録の無い reviewer-agent の目撃は `--doctor` 用の advisory ドロップを記録する（conductor がステップ 1 の書き込みを忘れた）。決定論的なオフスイッチ `AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1` は強制を完全に無効化する。
+
+---
+
+### PreToolUse: aidlc-review-freeze.ts
+
+**ソース:** `.claude/hooks/aidlc-review-freeze.ts`
+**トリガー:** file-write とシェルのツール呼び出しの前（`Write`、`Edit`、`MultiEdit`、`NotebookEdit`、`Bash`; 共有の PreToolUse matcher グループに登録され、自身をミューテーション可能な呼び出しへ絞り込む）
+**目的:** §12a の終端 receipt 順序を決定論的に強制する - READY レビュー receipt と gate の間の write-freeze
+
+これはフレームワークの 5 つのフロー変更 hook の 1 つであり、4 つの `PreToolUse` 制御の 1 つである。各 `REVIEW_COMPLETED` 行は、宣言された成果物パスとバイトの SHA-256 フィンガープリントを記録する。完了の前提条件は、そのフィンガープリントがなお合致する間だけ receipt を受け入れる — どの harness やツールがファイルを変更したかに関わらず; 既存の audit-event の下限はなお早期の無効化シグナルとして残る。自律的な swarm の finalization もまた、あらゆる適用可能な必須成果物が Bolt worktree にファイルとして存在することを要求する（不在の任意出力は有効なフィンガープリントエントリのままである）。フィールドのトランスクリプトは散文が順序の競争に負けるのを示した: conductor が終端の receipt を記録した *後で* reviewer の提案を適用し、自分自身の receipt を無効化し、再レビューし、再編集し、gate で行き詰まるまで揺れ動いたライブセッションがあった。この hook は認識可能な書き込みをそれが起きる前に拒否する一方、コンテンツのフィンガープリントは harness に依存しない正しさの下限である。
+
+**Decision。** 各書き込み対象について、hook は状態ファイルの中でまだ完了またはスキップされていない、reviewer を持つすべての stage に対してチェックする: パスは宣言された `produces[]`/`optional_produces[]` 成果物（engine 自身のサフィックスマッチャ `producesArtifactUnit`）に合致するか、そして fresh な READY receipt がそれを現在カバーしているか（`freshReviewReceipts` - engine の完了の前提条件が読む **同じ** スキャン、`aidlc-lib.ts` で共有され、freeze ウィンドウと拒否ウィンドウが分岐できないようにする）？ Freshness は audit の時系列と正確な現在の成果物フィンガープリントの両方を要求する。unit ごとの stage は、レビューされた unit の成果物だけを freeze する; 曖昧な unit ごとのパスは、いずれかの unit が READY receipt を持てば freeze する。NOT-READY の評決は決して freeze しない（修復ループは編集せねばならない）、そして記録された gate の reject、jump、ワークフローの再起動、audit された書き込み、またはコンテンツの不一致は receipt を無効化する。ブロックは `REVIEW_FREEZE_BLOCKED` audit 行（Tool、Target、Stage、任意で Unit）を発し、認可された経路を名指す **exit 2 + リダイレクトする stderr の理由** で通知する: gate を提示して提案をそこで引用するか、成果物を再オープンするために gate で reject する。
+
+**シェルの書き込み。** engine の無効化スキャンを養う audit-logger hook は Write/Edit の PostToolUse hook なので、シェルコマンドとして届いたファイルのミューテーションはさもなければ不可視であり、変更されたバイトをカバーする古い READY receipt を残してしまう。だから freeze は、Bash が実行される前に、一般的なミューテーションコマンドの出力リダイレクト対象とオペランドを抽出する。読み取り専用のシェル呼び出しは対象を生まず通過する。
+
+**Identity: 無し。** reviewer-scope と異なり agent の関門は無い - conductor が提案を適用する、再ディスパッチされた lead、または迷い込んだ subagent など、誰が行うかに関わらず、あらゆる produces[] の書き込みは fresh な READY receipt を無効化する。
+
+**あらゆる箇所で fail-open。** audit 台帳無し（あらゆる状態読み取りの前に決定される、非 AIDLC の一般的なケース）、読めない状態または stage グラフ、未知のツール、不正な stdin、またはあらゆる内部エラーは呼び出しを許す。決定論的なオフスイッチ `AIDLC_DISABLE_REVIEW_FREEZE_HOOK=1` は強制を完全に無効化する。
+
+**harness ごと。** Claude Code: `settings.json`、共有の PreToolUse matcher グループの 3 番目のエントリ。Codex: adapter target `review-freeze`、Bash を転送し、`apply_patch` を触れたファイルごとに分配する（Delete File / Move to は含まれる）。Kiro CLI: conductor とすべての書き込み可能な delegate に対し `fs_write` と `execute_bash` に登録される; 委譲された `fs_write` はその後 `audit-and-sensors` も走らせるので、通常の無効化は完全なままである。opencode: プラグインの `bash`/`write`/`edit`/`apply_patch` 用の `tool.execute.before`。Kiro IDE: 登録無し（PreToolUse のツール入力はそこでは一様に利用できない）; §12a の散文の順序が統べる。
 
 ---
 
@@ -362,7 +386,7 @@ Next Action: resume current stage
 2. **Ready フォールバック:** 状態ファイルが存在しないか phase が空なら `[AIDLC] ready` を出力する。
 3. **状態抽出:** 状態ファイルから Phase、Stage、Agent を単一ファイルの regex で読む。stage slug を表示名にマップする。`-agent` サフィックスを剥ぐ。
 4. **Phase スコープの進捗:** 現在の phase 見出し（`### <Lifecycle Phase> PHASE`）の下の `[x]` チェックボックスを数え、SKIP と `[S]`（jump-skip）stage を除く。`{done, total}` を生成し、これが 10 文字の unicode バー（`floor(done·10/total)` 経由で `▓`/`░`）と `done/total` 比（例: `4/7`）の両方を養う。バーと比は 1 つのスコープを共有するので一緒に進む。
-5. **Model + context:** stdin JSON から model ID と context パーセンテージを抽出する。Bedrock プレフィックスを `BR:` に略し、context を緑/黄/赤に着色する。
+5. **Model + context + usage:** stdin JSON から model ID、context パーセンテージ、トランスクリプトパスを抽出する。Bedrock プレフィックスを `BR:` に略し、context を緑/黄/赤に着色する。任意の `↑<in> ↓<out> $<usd>` セグメントは台帳のアクティブなワークフロー/現在のセッションの集計を読む; 累積ワークスペース診断合計を決して表示しない。
 6. **Complete 検出:** Status が `Completed` なら、`[AIDLC] COMPLETE [bar]` を出力する。
 7. **グレースフルな劣化:** 各セグメントは値を持つときだけ追記される。
 
@@ -382,10 +406,10 @@ audit トレイル（intent の `audit/` シャード）は、`.claude/knowledge
 | **Stage** | 6 | `STAGE_STARTED`, `STAGE_AWAITING_APPROVAL`, `STAGE_REVISING`, `STAGE_COMPLETED`, `STAGE_SKIPPED`, `STAGE_JUMPED` | `aidlc-orchestrate.ts report`（内部の状態 emitter）、`aidlc-jump.ts` |
 | **Initialization** | 3 | `WORKSPACE_SCAFFOLDED`, `WORKSPACE_SCANNED`, `WORKSPACE_INITIALISED` | `aidlc-utility.ts intent-birth` |
 | **Navigation** | 4 | `SCOPE_CHANGED`, `SCOPE_DETECTED`, `DEPTH_CHANGED`, `TEST_STRATEGY_CHANGED` | `aidlc-utility.ts` |
-| **Interaction** | 6 | `DECISION_RECORDED`, `GATE_APPROVED`, `GATE_REJECTED`, `QUESTION_ANSWERED`, `REVIEW_REQUESTED`, `REVIEW_COMPLETED` | `aidlc-log.ts`, `aidlc-state.ts` |
+| **Interaction** | 7 | `DECISION_RECORDED`, `GATE_APPROVED`, `GATE_REJECTED`, `QUESTION_ANSWERED`, `SUMMARY_CONFIRMATION_RECORDED`, `REVIEW_REQUESTED`, `REVIEW_COMPLETED` | `aidlc-log.ts`, `aidlc-state.ts` |
 | **Artifact** | 3 | `ARTIFACT_CREATED`, `ARTIFACT_UPDATED`, `ARTIFACT_REUSED` | audit-logger hook, `aidlc-state.ts reuse-artifact` |
 | **Subagent** | 1 | `SUBAGENT_COMPLETED` | log-subagent hook |
-| **Reviewer scope** | 1 | `REVIEWER_SCOPE_BLOCKED` | reviewer-scope hook |
+| **Reviewer enforcement** | 2 | `REVIEWER_SCOPE_BLOCKED`, `REVIEW_FREEZE_BLOCKED` | reviewer-scope hook, review-freeze hook |
 | **Utility** | 1 | `HEALTH_CHECKED` | `aidlc-utility.ts doctor` |
 | **Error/Recovery** | 2 | `ERROR_LOGGED`, `RECOVERY_COMPLETED` | `lib.ts emitError`, `aidlc-state.ts acknowledge-compaction` |
 | **Construction Bolt** | 4 | `BOLT_STARTED`, `BOLT_COMPLETED`, `BOLT_FAILED`, `AUTONOMY_MODE_SET` | `aidlc-bolt.ts` |
@@ -427,6 +451,7 @@ skip として報告された stage は `STAGE_COMPLETED` の代わりに `STAGE
 | `audit-logger.ts` | `ARTIFACT_CREATED` / `ARTIFACT_UPDATED` | intent の record dir へのすべての Write/Edit（`audit/` シャードを除く） |
 | `log-subagent.ts` | `SUBAGENT_COMPLETED` | あらゆる subagent の stop |
 | `reviewer-scope.ts` | `REVIEWER_SCOPE_BLOCKED` | unit ごとの reviewer のツール呼び出しが兄弟 unit アクセスで拒否された（PreToolUse） |
+| `review-freeze.ts` | `REVIEW_FREEZE_BLOCKED` | gate の前に fresh な READY レビュー receipt を無効化する `produces[]` 書き込みが拒否された（PreToolUse） |
 | `session-start.ts` | `SESSION_STARTED` / `SESSION_RESUMED` | Claude Code SessionStart hook 入力の `source` フィールドに応じて |
 | `session-end.ts` | `SESSION_ENDED` | Claude Code SessionEnd hook |
 | `validate-state.ts` | `SESSION_COMPACTED` | Claude Code PreCompact hook |
@@ -560,9 +585,62 @@ intent の `runtime-graph.json`、`stage-graph.json` のデータ plane の鏡�
 
 ---
 
+## Token 使用量とコスト追跡
+
+AI-DLC は stage ごとの token 使用量と（値付け可能なとき）コストを記録し、現在のワークフローとセッションを statusline に表面化し、外部コレクタへ token/コストのメトリクスを発行できる。ここにあるものはすべて **追加的で既定オフ** である: 手を加えないインストールはメトリクスを何も書かず、Claude Code 以外のあらゆる harness では台帳も statusline のコストセグメントも生まない。
+
+### seam（`aidlc-usage.ts`）
+
+1 つのモジュールが rate テーブル、Claude-Code のトランスクリプトリーダー、純粋なコスト計算、そして永続的な台帳を所有する。すべてのコンシューマ（audit の roll-up、statusline のセグメント、メトリクスの magnitude 行）はこのモジュールを読み、トランスクリプトを自分で再パースすることは決してない。
+
+- **頑健性。** 不正なまたは欠落した入力で例外は投げない; 半分だけ書かれたトランスクリプト行とそれより前の関連しうるグループは次の fold のために保留のまま残り、不在/破損した台帳は新鮮な空のものを生み、**未知のモデルはその token を `null` のコストとともに記録する** — 決して捏造された数値ではない。
+- **分割行の重複排除 + ファイルごとのカーソル。** Claude Code は 1 回の llm 呼び出しを、`message.id` を共有する複数の連続する JSONL 行として書く; リーダーは各連続を 1 行に畳んで、使用量が一度だけ数えられるようにする。Sub-agent はメインのトランスクリプトの `uuid` と衝突する `uuid` を持つ別の `subagents/agent-<id>.jsonl` ファイルを書くので、台帳のインクリメンタルなカーソルは、グローバルな uuid ではなく **ソースファイルごとに**（`(file, byteOffset)`）キー付けされる — これが並行する sub-agent のターンが捨てられたり二重計上されたりしないようにするものである。
+
+### 永続的な台帳
+
+producer の hook は、トランスクリプトの使用量を gitignore された `aidlc/.aidlc-sessions/usage-ledger.json`（スキーマ版管理付き; 現行スキーマより古い台帳は追加されるのではなく破棄されて再構築される）へ折り込む。そのトップレベルの累積ワークスペース集計は診断目的のみである。ランタイムのコンシューマは、stage/フルワークフローの audit roll-up には正規の `workflows[<intent>]` 集計を、statusline の現在のワークフロー/現在のセッションビューにはその `sessions[<transcript>]` 子を使う。各集計は `totals`、stage スコープの `byStage`、`byModel` / `byAgent` の内訳を運ぶ; ソースファイルごとのカーソルにより、各 fold は前回以降に追記されたバイトだけを読む。
+
+同じ Claude 専用の `aidlc-fold-usage.ts` スクリプトが、すべてのツール呼び出しの両側に登録される。通常の PreToolUse は、完了しつつあるメイントランスクリプトのメッセージを現在の stage の下で封じる; ワークフローエンジン呼び出しの前には、完了したすべての subagent グループも閉じるので、stage/ワークフロー完了のスナップショットは各 delegate の最終呼び出しを含む。PostToolUse は通常の遅延書き込みの fold を実行し、各ソースファイルの最後の未完了メッセージ id グループを保留する。`Stop` hook はターン終了時にすべての残りのメインと subagent のグループをフラッシュする。保留されたグループは、境界の前に捕捉された stage、ワークフロー、セッションの所有権を保持するので、後の fold がそれらを新しいライフサイクル位置に帰属させることはできない。
+
+### Rate テーブルとオーバーライド
+
+Rate は 100 万 token あたりの USD で、**モデル世代ごとに**（`opus-5`、`opus-4-8`、`sonnet-5`、`haiku-4-5`、`fable-5`、…）キー付けされるので、新しい世代が古いファミリーの行に静かに誤って値付けされることは決してない。Bedrock/converse のモデル id（`converse/us.anthropic.claude-opus-4-8`、リージョン接頭辞付きの形、`[1m]` の settings エイリアス）は lookup の前に正規化される。テーブルは 3 層で構築され、各層が前の層を **モデルごとに** 上書きする（部分ファイルはそれが名指すモデルだけを変える）:
+
+1. `aidlc-usage.ts` のハードコードされた既定値 — PUBLIC な Anthropic のリスト価格、既定値として出荷され、下限として使われる。
+2. 出荷される `<harness>/tools/data/model-rates.json` — インストールが編集できるフレームワークの既定値。
+3. `$AIDLC_MODEL_RATES` — ユーザー/プロジェクトが提供する rate ファイル(同じ形)で上に重ねられる。
+
+public なリスト価格は既定値であり、あなたが課金される内容についての主張ではない; 異なる価格を持つゲートウェイやパートナープラットフォームは、層 2 か 3 でそれを上書きする。不正な rate ファイルは何も貢献しない（下の層が立つ）。
+
+### Statusline セグメント
+
+statusline は roll-up 済みの台帳だけを読み（トランスクリプトは決して読まない）、アクティブなワークフローと現在のトランスクリプト/セッションの交差を選び、その集計にデータがあるとき `↑<in> ↓<out> $<usd>` を追記する。台帳の累積ワークスペース診断合計や他のワークフロー/セッションを表示することは決してない。コストが不明なとき（未知の価格のモデルだけのとき）は token だけを表示する — 決して偽の `$0` ではない — そして合致する台帳集計が存在しないとき(非 Claude harness、または最初の fold の前の Claude セッション)は何も描画しない、なのでこの機能の前とバイト単位で変わらない行になる。
+
+### Audit roll-up フィールド
+
+`STAGE_COMPLETED` と `WORKFLOW_COMPLETED` は、**audit ロックが開く前に** 台帳から計算された任意のフィールドを得る（台帳の読み取りであり、トランスクリプト I/O では決してなく、try/catch されるので使用量が完了イベントを決してブロックまたは遅延させない）。`STAGE_COMPLETED` はアクティブなワークフロー内の完了した stage バケットを読む; `WORKFLOW_COMPLETED` はそのセッション全体にわたるフルワークフロー/intent 集計を読み、累積ワークスペース診断合計は決して読まない。フィールドは `Tokens In`、`Tokens Out`、`Cache Read`、`Cache Write`、`Cost USD`（そのスコープが未知価格のモデルだけを使ったときはリテラルの `null`）、そして `By Model` / `By Agent` のコスト内訳に加え `Tokens By Model` / `Tokens By Agent` の token 四つ組（`input/output/cacheRead/cacheWrite`、コンパクトな形）である。これらは **既存イベントへのフィールド** である — 新しいイベント型は無いので、audit の分類体系の数は変わらない。
+
+### メトリクス発行（オプトイン、`aidlc-metrics.ts`）
+
+単一とバッチの両方の構造化 audit 追記パスで使われる共有のタップが、detached で fire-and-forget な Bun worker を通じて StatsD ライン形式の HTTP ボディを POST する。worker は同じ `aidlc-metrics.ts` モジュールを走らせ、Bun のネイティブな `fetch()` を使うので、追加の HTTP 実行ファイルやパッケージは不要である。**`AIDLC_METRICS_ENDPOINT` が設定されていない限り無効** である — どの harness の settings にもエンドポイントは出荷されないので、その変数が未設定なら audit パスはバイト単位で無変更であり、何もマシンから出ていかない。audit の書き込みへ例外を投げることは決してない。環境の seam:
+
+| 環境変数 | 効果 |
+|---------|------|
+| `AIDLC_METRICS_ENDPOINT` | HTTP コレクタの URL。**未設定 = メトリクス無効**（既定）。 |
+| `AIDLC_METRICS_PREFIX` | StatsD のメトリクス名プレフィックス（既定 `aidlc`、例 `aidlc.tokens.input`）。 |
+| `AIDLC_METRICS_HEADERS` | 任意の追加 HTTP ヘッダ、1 行に 1 つの `Header-Name: value`。エンドポイント、ヘッダ、ボディは 1 つの JSON エンベロープで stdin 経由で detached な Bun worker に渡される; エンドポイントとヘッダは子プロセスの環境から取り除かれ、機密なものはプロセス引数に入らない。 |
+
+すべての audit イベントは `<prefix>.<event_type>:1|c` カウンタを発する; `STAGE_COMPLETED` / `WORKFLOW_COMPLETED` はさらに token カウンタとコストの gauge（集計に加えモデルごと・agent ごとのバリアント）を発し、事前計算された roll-up フィールドから純粋にパースされる — メトリクスパスにはトランスクリプト I/O も台帳の読み取りも無いので、audit ロックの下で安価なままである。
+
+### Harness のスコープ
+
+トランスクリプトリーダーは **Claude-Code フォーマット固有** であり、Claude harness だけが producer を結線する（PreToolUse と PostToolUse の両方の fold hook、それに Stop-hook のフラッシュ）。Kiro、Codex、opencode は producer を結線しない: それらの台帳は決して書かれないので、statusline はコストセグメントを表示せず、audit の roll-up はフィールドを追加せず、メトリクスパス（エンドポイントが設定されていれば）はイベントごとのカウンタは発するが token/コストの magnitude 行は発しない。すべてのコンシューマは、エラーになるのではなく静かに no-data へ劣化する。
+
+---
+
 ## 前提条件
 
-1. **bun** -- 14 個すべての hook とすべての CLI ツール（`aidlc-utility.ts`、`aidlc-state.ts`、`aidlc-jump.ts`、`aidlc-orchestrate.ts`、`aidlc-audit.ts`、`aidlc-validate.ts`、`aidlc-graph.ts`、`aidlc-sensor.ts`、`aidlc-learnings.ts`、`aidlc-runtime.ts`）に必須。`curl -fsSL https://bun.sh/install | bash` でインストール。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 | iex"`。非対話シェルのために PATH に在らねばならない。
+1. **bun** -- 16 個すべての hook とすべての CLI ツール（`aidlc-utility.ts`、`aidlc-state.ts`、`aidlc-jump.ts`、`aidlc-orchestrate.ts`、`aidlc-audit.ts`、`aidlc-validate.ts`、`aidlc-graph.ts`、`aidlc-sensor.ts`、`aidlc-learnings.ts`、`aidlc-runtime.ts`）に必須。`curl -fsSL https://bun.sh/install | bash` でインストール。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 | iex"`。非対話シェルのために PATH に在らねばならない。
 2. **$CLAUDE_PROJECT_DIR** -- Claude Code がプロジェクトルートに設定する。すべての hook がこれを使って `aidlc/` workspace（およびその中のアクティブな intent の record dir）を特定する。
 
 他の前提条件は無い: すべての hook とツールは bun で走る TypeScript なので、どのプラットフォームでも `jq`、`sed`、`awk`、Git Bash、WSL は不要である。

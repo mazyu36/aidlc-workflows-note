@@ -94,7 +94,7 @@
 </div>
 
 <h2 id="reviewers">レビュアーの敵対的契約　REFUTE から始める</h2>
-<p>レビュアー 2 体は成果物を作らない。ステージが reviewer を宣言していると、ゲート前に敵対的レビューが挟まる。指示は「この成果物を反証せよ」で、READY は探し尽くして到達できなかったときの結論であり、出発点ではない。NOT-READY ならリード単独が修正し、再レビューへ入る（既定で最大 2 往復）。エンジンは新しい REVIEW_COMPLETED の領収書が監査に載るまで、ステージ完了を拒む。レビュアーを宣言するステージは 12 ある。ワークフロー最初のステージ 1.1 intent-capture もその 1 つで、product-lead が出典の裏づけを専門に反証する。</p>
+<p>レビュアー 2 体は成果物を作らない。ステージが reviewer を宣言していると、ゲート前に敵対的レビューが挟まる。指示は「この成果物を反証せよ」で、READY は探し尽くして到達できなかったときの結論であり、出発点ではない。NOT-READY ならリード単独が修正し、再レビューへ入る（既定で最大 2 往復）。エンジンは新しい REVIEW_COMPLETED の領収書が監査に載るまで、ステージ完了を拒む。READY の領収書は終端である。領収書は成果物のパスとバイト列の SHA-256 指紋を持ち、指紋が合わなくなった領収書は完了の根拠として認められない。領収書のあとに produces[] を書き換える動きは、PreToolUse フック（<code>aidlc-review-freeze.ts</code>）が exit 2 で先に止める。自分の領収書を無効化してレビューと修正を往復し続けるループが実際に観測されたための機構である。レビュアーを宣言するステージは 12 ある。ワークフロー最初のステージ 1.1 intent-capture もその 1 つで、product-lead が出典の裏づけを専門に反証する。</p>
 <figure class="excerpt">
   <figcaption><span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/agents/aidlc-product-lead-agent.md#L1-L14">core/agents/aidlc-product-lead-agent.md:1-14</a><button class="copy" type="button" data-copy="core/agents/aidlc-product-lead-agent.md:1" aria-label="パスをコピー">⧉</button></span></figcaption>
   <pre><code class="language-markdown">---
@@ -118,6 +118,7 @@ You are a senior product leader — the person who signs off before work goes to
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/agents/aidlc-architecture-reviewer-agent.md">aidlc-architecture-reviewer-agent.md</a><button class="copy" type="button" data-copy="core/agents/aidlc-architecture-reviewer-agent.md" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/core/hooks/aidlc-reviewer-scope.ts">core/hooks/aidlc-reviewer-scope.ts</a><button class="copy" type="button" data-copy="core/hooks/aidlc-reviewer-scope.ts" aria-label="パスをコピー">⧉</button></span>
+  <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2/core/hooks">core/hooks/（review-freeze の実体）</a><button class="copy" type="button" data-copy="core/hooks" aria-label="パスをコピー">⧉</button></span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/blob/v2/scripts/agent-knowledge.ts">scripts/agent-knowledge.ts（ビルド時の吸収）</a><button class="copy" type="button" data-copy="scripts/agent-knowledge.ts" aria-label="パスをコピー">⧉</button></span>
 </div>
 

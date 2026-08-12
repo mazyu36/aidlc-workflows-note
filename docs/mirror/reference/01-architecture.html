@@ -516,7 +516,7 @@ engine が <em>ランタイムに読み書きする</em> すべては、プロ�
 </li>
 <li><p><strong>phase 境界の verification</strong> -- トレーサビリティチェックが phase 遷移（Initialization-&gt;Ideation の auto-proceed、Ideation-&gt;Inception、Inception-&gt;Construction、Construction-&gt;Operation）で自動的に走る。これは、下流の stage が不完全な基礎の上に構築する前に、欠けた requirements-to-design のリンク、孤立した artifact、そして不整合を捕まえる。</p>
 </li>
-<li><p><strong>hook ベースの audit ロギング</strong> -- Write/Edit 操作の PostToolUse hook が、artifact の作成と変更を intent の <code>audit/</code> シャードへ自動的にログする。PreCompact hook が、コンテキストの compaction の前に state ファイルの構造を検証する。SubagentStop hook が subagent の完了をログする。74 イベントの分類（<code>knowledge/aidlc-shared/audit-format.md</code> で定義される; emitter レジストリについては <a href="12-state-machine.html">State Machine</a> を参照）が事後分析を可能にする -- 主要なイベントには <code>STAGE_STARTED</code>、<code>STAGE_COMPLETED</code>、<code>DECISION_RECORDED</code>、<code>SCOPE_CHANGED</code>、<code>RULE_LEARNED</code> が含まれる。</p>
+<li><p><strong>hook ベースの audit ロギング</strong> -- Write/Edit 操作の PostToolUse hook が、artifact の作成と変更を intent の <code>audit/</code> シャードへ自動的にログする。PreCompact hook が、コンテキストの compaction の前に state ファイルの構造を検証する。SubagentStop hook が subagent の完了をログする。76 イベントの分類（<code>knowledge/aidlc-shared/audit-format.md</code> で定義される; emitter レジストリについては <a href="12-state-machine.html">State Machine</a> を参照）が事後分析を可能にする -- 主要なイベントには <code>STAGE_STARTED</code>、<code>STAGE_COMPLETED</code>、<code>DECISION_RECORDED</code>、<code>SCOPE_CHANGED</code>、<code>RULE_LEARNED</code> が含まれる。</p>
 </li>
 <li><p><strong>ネストした委譲は無い</strong> -- conductor（SKILL.md）がすべての agent Task 呼び出しを行う。agent が互いを呼び出したり subagent を spawn したりすることは決してない。これは委譲グラフをフラットでデバッグ可能に保つ。</p>
 </li>
@@ -563,7 +563,7 @@ engine が <em>ランタイムに読み書きする</em> すべては、プロ�
 <tr>
 <td><strong>Unit</strong> (L1)</td>
 <td><code>tests/unit/</code></td>
-<td>14 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。</td>
+<td>16 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。</td>
 </tr>
 <tr>
 <td><strong>Integration</strong> (L2)</td>

@@ -456,7 +456,7 @@ aidlc/                                    # neutral, harness-independent, commit
 
 11. **phase 境界の verification** -- トレーサビリティチェックが phase 遷移（Initialization->Ideation の auto-proceed、Ideation->Inception、Inception->Construction、Construction->Operation）で自動的に走る。これは、下流の stage が不完全な基礎の上に構築する前に、欠けた requirements-to-design のリンク、孤立した artifact、そして不整合を捕まえる。
 
-12. **hook ベースの audit ロギング** -- Write/Edit 操作の PostToolUse hook が、artifact の作成と変更を intent の `audit/` シャードへ自動的にログする。PreCompact hook が、コンテキストの compaction の前に state ファイルの構造を検証する。SubagentStop hook が subagent の完了をログする。74 イベントの分類（`knowledge/aidlc-shared/audit-format.md` で定義される; emitter レジストリについては [State Machine](12-state-machine.md) を参照）が事後分析を可能にする -- 主要なイベントには `STAGE_STARTED`、`STAGE_COMPLETED`、`DECISION_RECORDED`、`SCOPE_CHANGED`、`RULE_LEARNED` が含まれる。
+12. **hook ベースの audit ロギング** -- Write/Edit 操作の PostToolUse hook が、artifact の作成と変更を intent の `audit/` シャードへ自動的にログする。PreCompact hook が、コンテキストの compaction の前に state ファイルの構造を検証する。SubagentStop hook が subagent の完了をログする。76 イベントの分類（`knowledge/aidlc-shared/audit-format.md` で定義される; emitter レジストリについては [State Machine](12-state-machine.md) を参照）が事後分析を可能にする -- 主要なイベントには `STAGE_STARTED`、`STAGE_COMPLETED`、`DECISION_RECORDED`、`SCOPE_CHANGED`、`RULE_LEARNED` が含まれる。
 
 13. **ネストした委譲は無い** -- conductor（SKILL.md）がすべての agent Task 呼び出しを行う。agent が互いを呼び出したり subagent を spawn したりすることは決してない。これは委譲グラフをフラットでデバッグ可能に保つ。
 
@@ -497,7 +497,7 @@ tests/
 | Level | Directory | What It Covers |
 |-------|-----------|----------------|
 | **Smoke** (L1) | `tests/smoke/` | ファイルの存在、agent/stage/protocol の構造、SKILL.md グラフの整合性、settings.json スキーマ。欠けた、または名前を誤ったファイルを捕まえる高速な構造チェック。LLM なし。 |
-| **Unit** (L1) | `tests/unit/` | 14 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。 |
+| **Unit** (L1) | `tests/unit/` | 16 個の hook、CLI tool、stage/agent の frontmatter、knowledge のインベントリ、orchestration-engine のハンドラ、その他の単一コンポーネントの契約。各テストは 1 つのコンポーネントを隔離する。LLM なし。 |
 | **Integration** (L2) | `tests/integration/` | コンポーネント横断の契約（scope-to-stage のマッピング、stage-agent のクロスチェック、protocol の準拠、audit/runtime-graph の end-to-end）と、`claude` CLI または SDK を通じて駆動される live な stage/CLI ユーティリティ。live ファイルは `claude` が無いときクリーンにスキップする。 |
 | **E2E** (L3) | `tests/e2e/` | 完全なライフサイクルと worktree のプリミティブ、加えて、実際の AskUserQuestion gate に答えることがディスク state を前進させることを証明するレンダリングされたターミナル（`tui-drive.ts`）の journey。live な journey は `claude` + Bedrock creds を要し、`AIDLC_TUI_LIVE=1` の背後で gate される。 |
 

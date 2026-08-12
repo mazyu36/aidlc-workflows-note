@@ -137,7 +137,7 @@ Detected scope: feature (Standard depth, Standard test strategy, all 32 stages)
 <h3 id="stage-11-intent-capture-aidlc-product-agent">Stage 1.1: Intent Capture（aidlc-product-agent）</h3>
 <p>Claude Code では、ターミナル下部のカスタム AI-DLC ステータスラインが更新される（Kiro と opencode は <code>/aidlc --status</code> を使う。Codex は <code>$aidlc --status</code> とその組み込みの <code>update_plan</code> 進捗表示を使う）:</p>
 <pre class="term"><code><span class="t-status">[AIDLC] IDEATION &gt; Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product</span></code></pre>
-<p>表示内容は、現在の phase、stage の表示名、phase 進捗バー、phase 進捗比、リードエージェントである。バーと比は同じ範囲を数える — どちらも現在の phase 内の <code>[x]</code> の stage を数えるため、比が進むたびにバーも進む。残りコンテキスト（<code>ctx:N%</code>）は常に右側に表示され、減るにつれて色分けされる。</p>
+<p>表示内容は、現在の phase、stage の表示名、phase 進捗バー、phase 進捗比、リードエージェントである。バーと比は同じ範囲を数える — どちらも現在の phase 内の <code>[x]</code> の stage を数えるため、比が進むたびにバーも進む。残りコンテキスト（<code>ctx:N%</code>）は常に右側に表示され、減るにつれて色分けされる。Claude Code では、最初の使用量折り込み後に <code>↑&lt;in&gt; ↓&lt;out&gt; $&lt;usd&gt;</code> も表示され、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークスペース活動は含まない。</p>
 <p>aidlc-product-agent は対話モードの選択を求める:</p>
 <pre class="term"><code><span class="t-prompt">▸ Choose interaction mode:</span>
   (1) Guide Me — agent asks structured questions
@@ -281,6 +281,10 @@ sequenceDiagram
 <tr>
 <td><code>ctx:N%</code></td>
 <td>残りコンテキスト（常に表示。減るにつれて色分け）</td>
+</tr>
+<tr>
+<td><code>↑&lt;in&gt; ↓&lt;out&gt; $&lt;usd&gt;</code></td>
+<td>現在のワークフローと現在のトランスクリプト/セッションについての token 使用量と課金可能なコスト（Claude Code のみ。使用量が利用可能になるまでは省略される）</td>
 </tr>
 </tbody></table>
 <hr>

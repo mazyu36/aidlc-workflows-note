@@ -440,6 +440,6 @@ Bolt 単位の runtime-graph fragment ファイルは `<worktree>/<record>/runti
   [Plane アーキテクチャ](02-plane-architecture.md) を参照。
 - **compile を起動するライフサイクル** — その audit 発行が compile hook を駆動する、
   workflow / phase / stage の遷移。[状態機械](12-state-machine.md) を参照。
-- **このグラフが導出される元の audit ログ** - 74 イベントの分類と emitter レジストリ。
+- **このグラフが導出される元の audit ログ** - 76 イベントの分類と emitter レジストリ。
   [状態機械](12-state-machine.md) と、ユーザーガイドの
   [状態と Audit トレイル](../guide/10-state-and-audit.md) を参照。

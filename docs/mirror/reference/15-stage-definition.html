@@ -175,6 +175,21 @@ stage。このプリミティブは workflow-engine として汎用であり; Co
 ある — それは 5 つの Construction <code>for_each</code> stage すべてが Unit を跨いでイテレートし終えた
 後に 1 回走り、それらの集約された出力を消費する。明示的な <code>fan_in</code> や集約フィールドは無い —
 グラフ走査がそれを解き明かす。</p>
+<h3 id="summary_confirmation"><code>summary_confirmation</code></h3>
+<p>stage の質問フローについて決定論的な生成前チェックポイントを制御する任意の enum:</p>
+<ul>
+<li><code>required</code> は、実行のたびに質問ファイルを作成し、成果物生成の前に統合された
+<strong>Looks correct</strong> の確認を得なければならないことを意味する。</li>
+<li><code>if-present</code> は、条件付きの質問フローが質問ファイルを作成したときだけ、同じ強制を
+適用する。</li>
+</ul>
+<p>receipt は markdown だけから推論されるのではない。<code>aidlc-log.ts</code> は、一致するプロンプト
+記録とその後の human turn の後に、予約された <code>SUMMARY_CONFIRMATION_RECORDED</code> イベントを
+記録し、それを questions-file の SHA-256 に束縛する。完了は、欠落または陳腐化した receipt、
+変更された questions ファイル、または receipt の後にネイティブな書き込みの無い宣言済み
+成果物を拒否する。per-unit stage は、適用可能な Unit ごとに 1 つの unit スコープの receipt
+を要求する; 分離実行は、その <code>single-stage:&lt;slug&gt;</code> の workflow identity を使って同じチェック
+を使う。</p>
 <h3 id="workspace_requires"><code>workspace_requires</code></h3>
 <p>ブール値、既定 <code>false</code>。intent ごとの record dir の下の計画文書だけでなく、<strong>ソースコードを
 workspace ルートに</strong> 書かねばならない stage に <code>true</code> を設定する。</p>

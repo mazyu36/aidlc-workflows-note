@@ -11,7 +11,7 @@
 ## 前提条件
 
 - **Claude Code** -- ネイティブインストール（推奨、自動更新）: macOS/Linux/WSL は `curl -fsSL https://claude.ai/install.sh | bash`; Windows PowerShell は `irm https://claude.ai/install.ps1 | iex`。あるいは `brew install --cask claude-code`。（[Claude Code docs](https://code.claude.com/docs/en/quickstart) を参照）
-- **bun** -- すべての CLI ツールと 14 個すべての hook に必須。`curl -fsSL https://bun.sh/install | bash` でインストールする。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 | iex"`。非対話シェルでは PATH 上に在る必要がある（zsh は `~/.zshenv`、bash / Windows の Git Bash は `~/.bashrc`）。
+- **bun** -- すべての CLI ツールと 16 個すべての hook に必須。`curl -fsSL https://bun.sh/install | bash` でインストールする。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 | iex"`。非対話シェルでは PATH 上に在る必要がある（zsh は `~/.zshenv`、bash / Windows の Git Bash は `~/.bashrc`）。
 - **timeout**（GNU coreutils）-- LLM テストのタイムアウト（L2/L3）のためにテストスイートが必要とする。Linux にはプリインストール済み。macOS: `brew install coreutils` の後、gnubin を PATH に足す: `export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"`（`~/.zshenv` または `~/.zshrc` で）。
 - **Bash** -- POSIX 互換ラッパー（`tests/run-tests.sh`）向けに任意。主要なテストランナーは `bun tests/run-tests.ts` である; 実行時には、配布される hook のいずれも Bash を必要としない。
 - **Bedrock access** -- ライブの integration および e2e テスト（L2/L3）を走らせるのに必須。L1 の protocol テストには不要。

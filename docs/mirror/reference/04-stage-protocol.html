@@ -362,9 +362,11 @@ flowchart TD
 <p><em>(Protocol Section 3)</em></p>
 <h3 id="tri-mode-system">Tri-Mode システム</h3>
 <p><strong>Step 1: 質問ファイルを作成する</strong> — 選択肢 A-E を持つ <code>[Answer]:</code> タグ形式で、適切な
-<code>&lt;record&gt;/</code> ディレクトリに。すべての質問は <code>X. Other (please specify)</code> で終わらねばならない
-— 例外なし。すべての <code>[Answer]:</code> タグは空白で始まる。複数選択の質問は質問テキストに
-&quot;(select all that apply)&quot; を加える; 回答形式: <code>[Answer]: A, B, E</code>。</p>
+<code>&lt;record&gt;/</code> ディレクトリに。すべての通常の質問は <code>X. Other (please specify)</code> で終わらねば
+ならない。専用の Consolidated Summary Confirmation だけが唯一の例外で、その <strong>Looks
+correct / Request changes</strong> の選択肢には文字が付かない。すべての <code>[Answer]:</code> タグは
+空白で始まる。複数選択の質問は質問テキストに &quot;(select all that apply)&quot; を加える; 回答形式:
+<code>[Answer]: A, B, E</code>。</p>
 <p><strong>Step 2: モード選択を提示する:</strong></p>
 <pre class="term"><code>AskUserQuestion({
   questions: [{
@@ -392,14 +394,20 @@ flowchart TD
 <li>統合された回答サマリを提示し、続けて <strong>Looks correct</strong> と <strong>Request changes</strong> の選択肢
 を持つ構造化された確認を行う。確認を裸の散文として求めてはならない。提示する前に、両方の
 選択肢と空白の <code>[Answer]:</code> を持つ専用の <strong>Consolidated Summary Confirmation</strong> エントリ
-を stage の質問ファイルに追記またはリセットする; それは human の応答からのみ埋める。
-変更の要求は、再プロンプトの前にその確認を空白にリセットする。</li>
+を stage の質問ファイルに追記またはリセットする。プロンプトを
+<code>aidlc-log.ts decision --checkpoint summary-confirmation --questions-file &lt;path&gt;</code> で
+記録し、human のために停止し、正確な選択を書き、対応する <code>aidlc-log.ts answer</code> コマンドで
+それを記録する。この receipt は human turn を questions-file の正確なダイジェストに束縛する。
+<strong>Request changes</strong> の場合、<strong>&quot;What should change?&quot;</strong> と尋ね、いずれかの回答を編集する前に
+再度停止する; フィードバックと修正の後、再プロンプトの前にその確認を空白にリセットする。</li>
 </ul>
 <h4 id="edit-file-self-guided-mode">Edit File（セルフガイドモード）</h4>
 <ul>
 <li>ユーザーに伝える: &quot;Edit the file at <code>[file path]</code>. When done, send <strong>done</strong> or
 <strong>ready</strong> and I&#39;ll continue.&quot;</li>
 <li>完了シグナルを待つ。シグナルされるまでファイルを読んだり進んだりしない。</li>
+<li>統合サマリを提示し、Guide Me と同じ、永続化され receipt に裏付けられた確認を使う。
+セルフガイドの編集は確認を免除しない。</li>
 </ul>
 <h4 id="chat-freeform-mode">Chat（フリーフォームモード）</h4>
 <ul>
@@ -1211,7 +1219,11 @@ builder の <code>memory.md</code> や plan は決して渡さず、reviewer が
 <li><strong>Verdict.</strong> READY → learnings の儀式、続けて gate へ進む。イテレーションが
 <code>reviewer_max_iterations</code>（既定 2）を下回って残っている NOT-READY → lead agent が
 findings に対処するため再実行し、reviewer が再チェックする。イテレーションを使い果たした
-NOT-READY → 未解決の findings を書き留めたうえで gate へ進む。</li>
+NOT-READY → 未解決の findings を書き留めたうえで gate へ進む。
+記録された receipt は終端であり、<code>produces[]</code> の成果物への後続の書き込みはそれを無効化し、
+engine は gate を拒否する。したがって修正はイテレーションループの内側で起き、終端の
+receipt の後には決して起きない。READY 評決に乗った提案は、適用されるのではなく、gate で
+human に向けて引用される。</li>
 </ol>
 <p>reviewer は決してブロックしない — human は常に gate で最終決定権を持つ — し、<code>reviewer</code>
 フィールドの無い stage では発火しない。<a href="15-stage-definition.html">Stage Definition</a> の

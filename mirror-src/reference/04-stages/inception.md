@@ -395,9 +395,9 @@ comprehensive である。
    例外的に明確かつ完全でない限り、常に明確化のための質問を生成する。
    `[Answer]:` タグ形式を使って
    `<record>/inception/requirements-analysis/requirements-analysis-questions.md`
-   を作成する。A〜E のオプションを伴う、文脈に応じた質問を含める。すべての質問は
-   最終オプションとして `X. Other (please specify)` で終わらねばならない。すべての
-   `[Answer]:` タグは空白のままにする。
+   を作成する。A〜E のオプションを伴う、文脈に応じた質問を含める。すべての通常の
+   明確化のための質問は最終オプションとして `X. Other (please specify)` で終わらねば
+   ならない。すべての `[Answer]:` タグは空白のままにする。
 
    3 モードの質問フローを提供する: Guide Me / Edit File / Chat。
 
