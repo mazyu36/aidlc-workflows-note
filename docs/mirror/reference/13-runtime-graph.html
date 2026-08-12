@@ -128,7 +128,7 @@ milestone 14 の doctor、v0.10.0 の cross-workflow observer）が、照会の�
 }
 
 interface BoltDag {
-  units: { name: string; depends_on: string[]; kind?: string }[]; // verbatim from the authored edge block; kind (service|spec|ui|packaging|library) present only when the edge block tags the unit
+  units: { name: string; depends_on: string[]; kind?: string }[]; // verbatim from the authored edge block; new names use lowercase kebab-case, while safe legacy single-segment names beginning with a digit or containing uppercase letters, underscores, or dots remain accepted (the swarm derives a separate internal Bolt slug); kind (service|spec|ui|packaging|library) present only when the edge block tags the unit
   batches: string[][];            // topological levels; each level = units whose deps are all satisfied by prior levels; level entries sorted lexicographically (deterministic)
 }
 
@@ -214,7 +214,7 @@ gate の背後）が、hook 発火の <code>compile</code> を再実行でバイ
 <hr>
 <h2 id="3-compile-lifecycle">3. Compile のライフサイクル</h2>
 <p>compile は、遷移クラスの audit 発行のたびに PostToolUse Bash hook
-（<code>.claude/hooks/aidlc-runtime-compile.ts</code>）によって起動される。この hook は
+（<code>.claude/hooks/aidlc-rebuild-stage-graph.ts</code>）によって起動される。この hook は
 conductor からのすべての <code>Bash</code> ツール呼び出しで発火し、安価にフィルタする:</p>
 <ol>
 <li><strong>Command filter</strong> — <code>bun .claude/tools/aidlc-(state|jump|bolt|utility).ts</code>
@@ -223,7 +223,7 @@ conductor からのすべての <code>Bash</code> ツール呼び出しで発火
 <code>aidlc-worktree.ts</code> は WORKTREE_* イベントのみを発行する。</li>
 <li><strong>Audit-existence guard</strong> — intent の <code>audit/</code> シャードがまだ存在しなければ exit する。</li>
 <li><strong>Heartbeat</strong> — doctor の silent-hook 検出のために
-<code>&lt;record&gt;/.aidlc-hooks-health/runtime-compile.last</code> を書く。</li>
+<code>&lt;record&gt;/.aidlc-hooks-health/rebuild-stage-graph.last</code> を書く。</li>
 <li><strong>Last-3-block tail-read</strong> — <code>audit.md</code> を <code>\n---\n</code> で分割し、最後の 3 エントリを
 取る。</li>
 <li><strong>Event-class filter</strong> —
@@ -471,7 +471,7 @@ spawn SIGTERM には <code>fragment-merge-timeout</code>）; fragment ファイ�
 <a href="02-plane-architecture.html">Plane アーキテクチャ</a> を参照。</li>
 <li><strong>compile を起動するライフサイクル</strong> — その audit 発行が compile hook を駆動する、
 workflow / phase / stage の遷移。<a href="12-state-machine.html">状態機械</a> を参照。</li>
-<li><strong>このグラフが導出される元の audit ログ</strong> - 76 イベントの分類と emitter レジストリ。
+<li><strong>このグラフが導出される元の audit ログ</strong> - 82 イベントの分類と emitter レジストリ。
 <a href="12-state-machine.html">状態機械</a> と、ユーザーガイドの
 <a href="../guide/10-state-and-audit.html">状態と Audit トレイル</a> を参照。</li>
 </ul>

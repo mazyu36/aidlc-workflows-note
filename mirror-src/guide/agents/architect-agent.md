@@ -4,7 +4,7 @@
 
 aidlc-architect-agent はあなたのソリューションアーキテクトである。要件を堅牢なシステムアーキテクチャへ翻訳し、Architecture Decision Record（ADR）を作り、ドメインモデルを設計し、プロジェクトを実装可能な unit of work に分解する。パターンとトレードオフで考え、開発者が直接実装できる設計を生む。
 
-aidlc-architect-agent は、ライフサイクルの単一エージェントとして最多の stage — 計 6 つ、Ideation・Inception・Construction にまたがる — をリードする。設計の第一の権威であり、他の 7 つの高判断エージェントとともに `judgment` tier を持つため、特定のモデルを固定せず、セッション自身のモデルと effort を継承する。`templated` tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro では全 tier がセッションのモデルと effort を継承）を持つのは delivery・pipeline-deploy・operations だけである。その出力が支配的に定型だからだ。
+aidlc-architect-agent は、ライフサイクルの単一エージェントとして最多の stage — 計 6 つ、Ideation・Inception・Construction にまたがる — をリードする。設計の第一の権威であり、他の 7 つの高判断エージェントとともに `judgment` tier を持つため、特定のモデルを固定せず、セッション自身のモデルと effort を継承する。`templated` tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro・Cursor・Copilot では全 tier がセッションのモデルと effort を継承）を持つのは delivery・pipeline-deploy・operations だけである。その出力が支配的に定型だからだ。
 
 ## リードする stage
 

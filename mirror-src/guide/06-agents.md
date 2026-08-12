@@ -123,7 +123,7 @@ aidlc-delivery-agent はエンジニアリングマネージャーとして振�
 
 **ドメイン:** アプリケーション設計、ドメインモデリング、NFR、コンポーネント分解
 
-aidlc-architect-agent は設計の中心的権威である。stage への関与が最も広く（3 phase にわたる 9 stage）、`judgment` tier を持つ — 他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と同様である。judgment のエージェントはセッション自身のモデルと effort を継承するため、あなたが選んだものより下げられることはない。delivery・pipeline-deploy・operations の 3 体だけが `templated` tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro では全 tier がセッションのモデルと effort を継承）を持つ。その出力が定型的な計画・CI/CD の YAML・runbook の雛形に支配されているためである。
+aidlc-architect-agent は設計の中心的権威である。stage への関与が最も広く（3 phase にわたる 9 stage）、`judgment` tier を持つ — 他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と同様である。judgment のエージェントはセッション自身のモデルと effort を継承するため、あなたが選んだものより下げられることはない。delivery・pipeline-deploy・operations の 3 体だけが `templated` tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro・Cursor・Copilot では全 tier がセッションのモデルと effort を継承）を持つ。その出力が定型的な計画・CI/CD の YAML・runbook の雛形に支配されているためである。
 
 - **リード:** feasibility、application-design、units-generation、functional-design、nfr-requirements、nfr-design
 - **支援:** intent-capture、reverse-engineering（統合）、delivery-planning
@@ -167,7 +167,7 @@ aidlc-developer-agent は 3 つの phase にまたがる — Inception のリバ
 - **リード:** reverse-engineering（コードスキャン）、code-generation
 - **支援:** practices-discovery、user-stories、functional-design、deployment-execution
 
-ワークスペース検出（workspace-detection）はかつて aidlc-developer-agent の subagent だったが、いまはルールベースのファイル・マニフェスト検出を使って `aidlc-utility intent-birth` の中で決定論的に実行される。
+ワークスペース検出（workspace-detection）はかつて aidlc-developer-agent の subagent だったが、いまはルールベースのファイル・マニフェスト検出を使って `aidlc-utility intent-create` の中で決定論的に実行される。
 - **特別なツール:** Bash（ビルド・実行コマンド用）
 
 ### [aidlc-quality-agent](agents/quality-agent.md)
@@ -275,10 +275,20 @@ lead は `rough-mockups`・`refined-mockups`・`requirements-analysis`・
 conductor は名指しされたレビュアーを**独立した sub-agent** として起動する。レビュアーは
 stage 定義・Q&A・成果物を読み（ビルダーの `memory.md` や計画は決して読まない —
 独立の判断を形成する）、**READY** または **NOT-READY** の判定を付けた `## Review`
-セクションを追記する。NOT-READY ならビルダーが指摘に対処するため再実行し、レビュアーが
-再確認する。このループは `reviewer_max_iterations` 回（既定 2）まで。上限後も指摘が残る場合、
-未解決の指摘を注記した上でワークフローは承認 gate へ進む — レビュアーは決してブロックせず、
-最終決定権は常に人間にある。
+セクションを追記する。判定の扱いは stage の review class によって決まる:
+
+- **Advisory**（人間が gate する ideation/inception の prose stage）: 判定にかかわらず
+  レビューは 1 回だけ行う。指摘は承認 gate でそのまま引用され、重大度順に並べて判断材料
+  として示される — トリアージするのはあなたであり、gate での Request Changes が指摘を
+  修正につなげる唯一の経路である。
+- **Adversarial**（Construction の設計・実装 stage）: NOT-READY ならビルダーが指摘に対処する
+  ため再実行し、レビュアーが再確認する。このループは `reviewer_max_iterations` 回
+  （既定 2、engine が強制）まで。上限後も指摘が残る場合、未解決の指摘を注記した上で
+  ワークフローは承認 gate へ進む。
+
+scope は class を上限できる（`bugfix`・`poc`・`workshop` はすべての stage を advisory に
+制限する）し、`/aidlc --review <class>` は実行ごとに上限を設定できる。いずれの場合も
+レビュアーは決してブロックせず、最終決定権は常に人間にある。
 
 （重要: エージェント名は示したとおりバッククォートの素の名前で使うこと — markdown リンクにしないこと。レビュアーのエージェント別ドキュメントページはまだ存在しない。）
 

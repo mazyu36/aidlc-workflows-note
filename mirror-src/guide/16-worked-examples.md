@@ -42,7 +42,7 @@ conductor が何を直したいかを尋ねる:
 
 ### Initialization（stage 0.1-0.3）— 自動進行
 
-3 つの Initialization stage は単一の決定論的ツール呼び出し（`aidlc-utility intent-birth`）として、ユーザーの対話なしに 1 秒未満で走る:
+3 つの Initialization stage は単一の決定論的ツール呼び出し（`aidlc-utility intent-create`）として、ユーザーの対話なしに 1 秒未満で走る:
 
 - **0.1 Workspace Scaffold** — 最初の intent を自動 birth し、record dir を `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`（以下 `<record>/` と表記）に作成する — `<YYMMDD>` は記録が時系列に並ぶコンパクトな UTC 日付プレフィクス、`<label>` は conductor が付ける要望の短いケバブケースの本質で、正準の id は `intents.json` レジストリ行が運ぶ UUIDv7 である
 - **0.2 Workspace Detection** — ルールベースのスキャンが Java 17・Spring Boot 3.2・Maven・brownfield プロジェクトを特定する
@@ -189,7 +189,7 @@ aidlc/spaces/default/
 
 ### Initialization（stage 0.1-0.3）— 自動進行
 
-3 つの Initialization stage が `aidlc-utility intent-birth` の中で自動実行される。Workspace Detection が特定する: TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク・ユーザーサービスを持つ brownfield プロジェクト。
+3 つの Initialization stage が `aidlc-utility intent-create` の中で自動実行される。Workspace Detection が特定する: TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク・ユーザーサービスを持つ brownfield プロジェクト。
 
 > Progress: 3/32 overall | Scope: feature, Depth: Standard
 

@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -112,7 +114,7 @@ Kiro IDE、Codex CLI、opencode でも動作する: メソドロジーはどの�
 </tr>
 <tr>
 <td><strong>bun</strong></td>
-<td>すべての CLI ツールと全 16 hooks（状態管理・audit ログ・sensor ディスパッチ・runtime-graph コンパイル・ループ強制・厳密な dispatch-rule 配送・状態遷移・reviewer スコープ・review-freeze の強制・statusline・human-turn の記録・token 使用量の折り込み）に必要。すべて TypeScript で bun により実行される（起動 約 20ms）。追加依存なし — macOS・Linux・ネイティブ Windows PowerShell で同一に動作する。</td>
+<td>すべての CLI ツールと全 17 hooks（状態管理・audit ログ・sensor ディスパッチ・runtime-graph コンパイル・ループ強制・厳密な dispatch-rule 配送・状態遷移・reviewer スコープ・review-freeze・plan-approval の強制・statusline・human-turn の記録・token 使用量の折り込み）に必要。すべて TypeScript で bun により実行される（起動 約 20ms）。追加依存なし — macOS・Linux・ネイティブ Windows PowerShell で同一に動作する。</td>
 <td><code>curl -fsSL https://bun.sh/install | bash</code>（<a href="https://bun.sh">docs</a>）。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code></td>
 </tr>
 </tbody></table>
@@ -278,7 +280,9 @@ export AWS_PROFILE=&lt;your-profile&gt;
 <a href="harnesses/kiro-cli.html">Kiro CLI で動かす</a>、
 <a href="harnesses/kiro-ide.html">Kiro IDE で動かす</a>、
 <a href="harnesses/codex-cli.html">Codex CLI で動かす</a>、
-<a href="harnesses/opencode.html">opencode 上の AI-DLC</a> — それぞれに固有の前提条件と
+<a href="harnesses/cursor.html">Cursor 上の AI-DLC</a>、
+<a href="harnesses/opencode.html">opencode 上の AI-DLC</a>、
+<a href="harnesses/copilot.html">GitHub Copilot 上の AI-DLC</a> — それぞれに固有の前提条件と
 コピー後の手順が載っている。</p>
 <p>以下の <code>cp</code> コマンドは、本リポジトリを <code>v2</code> ブランチで clone した場所で実行する:</p>
 <pre><code class="language-bash">git clone https://github.com/awslabs/aidlc-workflows.git
@@ -320,6 +324,12 @@ cp -r dist/codex/aidlc/   your-project/aidlc/      # the workspace shell (spaces
 cp dist/codex/AGENTS.md   your-project/AGENTS.md   # or merge into yours
 </code></pre>
 <p>続きは <a href="harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a> で: プロジェクトは <strong>git リポジトリ</strong>である必要があり、その章にある <code>.gitignore</code> エントリと hook trust の事前設定を適用するまでインストールは完了しない。</p>
+<p>&lt;/details&gt;</p>
+<p>&lt;details markdown=&quot;1&quot;&gt;
+&lt;summary&gt;&lt;strong&gt;Cursor&lt;/strong&gt;&lt;/summary&gt;</p>
+<pre><code class="language-bash">bun dist/cursor/install.ts your-project
+</code></pre>
+<p>続きは <a href="harnesses/cursor.html">Cursor 上の AI-DLC</a> で: IDE と CLI での使い方、hook の挙動、permissions、インストーラの再実行ルール。</p>
 <p>&lt;/details&gt;</p>
 <p>&lt;details markdown=&quot;1&quot;&gt;
 &lt;summary&gt;&lt;strong&gt;opencode&lt;/strong&gt;&lt;/summary&gt;</p>
@@ -418,8 +428,8 @@ init コマンドを実行することはない。</p>
 </tbody></table>
 <h3 id="example-output">出力例</h3>
 <pre class="term"><code><span class="t-ok">✓ bun installed (required for CLI tools and hooks)</span>
-<span class="t-ok">✓ aidlc-audit-logger.ts present</span>
-<span class="t-ok">✓ aidlc-sync-statusline.ts present</span>
+<span class="t-ok">✓ aidlc-write-audit-log.ts present</span>
+<span class="t-ok">✓ aidlc-sync-workflow-state.ts present</span>
 <span class="t-ok">✓ aidlc-validate-state.ts present</span>
 <span class="t-ok">✓ aidlc-log-subagent.ts present</span>
 <span class="t-ok">✓ aidlc-session-start.ts present</span>

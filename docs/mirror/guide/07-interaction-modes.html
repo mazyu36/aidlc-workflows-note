@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -84,10 +86,12 @@
 <h1 id="interaction-modes">対話モード</h1>
 <p>AI-DLC は、stage の中でエージェントと対話する 3 つの方法と、あらゆる意思決定ポイントで制御を保つ承認 gate を提供する。</p>
 <blockquote>
-<p><strong>Harness に関する注記。</strong> gate と質問の描画は harness ごとに異なる: Claude Code は
-<code>AskUserQuestion</code> ウィジェットを使い、他の harness は番号付きの散文の選択肢を描画する
-（番号か自由文で回答）。questions ファイルが正である。gate がいつ発火し、何を尋ね、
-あなたが制御を保つという<em>意味論</em>はエンジン側にあるため同一である。
+<p><strong>Harness に関する注記。</strong> gate と質問の描画は harness ごとに異なる。Claude
+Code はネイティブの question picker を使い、Codex は有効化されていればその picker を使う。
+Kiro・opencode・GitHub Copilot は番号付きの散文の選択肢を描画する（Copilot の
+picker の結果は信頼済みの human-presence イベントを発火しない）。questions ファイルが
+正であり続ける。gate がいつ発火し、何を尋ね、あなたが制御を保つという<em>意味論</em>は
+エンジン側にあるため同一である。
 <a href="harnesses/README.html">他の harness で動かす</a> を参照。</p>
 </blockquote>
 <hr>
@@ -134,7 +138,7 @@
 進捗行を表示して、次の stage へ進む</li>
 <li><strong>Request Changes</strong> は具体的なフィードバックを渡せる。エージェントが作業を修正して承認 gate を再提示する</li>
 </ul>
-<p>gate は本物の人間の応答を要求する: プロンプトの入力や <code>AskUserQuestion</code> ウィジェットへの回答は、audit の台帳に human turn（<code>HUMAN_TURN</code> イベント）を記録し、承認（および明確化質問への回答）は、直近の gate 解決以降に human turn が 1 つも記録されていなければ拒否される — つまり autopilot で走るモデルが、人間が何も行動していないのに承認を捏造することはできない。gate ウィジェットが human turn を記録しない harness では、一度だけ短いメッセージ（例えば「approve」）を打って記録を残す。（台帳にまだ human turn が無い harness では、gate は fail open となりこれを要求しない。）</p>
+<p>gate は本物の人間の応答を要求する: プロンプトの入力やネイティブの question picker への回答は、audit の台帳に human turn（<code>HUMAN_TURN</code> イベント）を記録し、承認（および明確化質問への回答）は、直近の gate 解決以降に human turn が 1 つも記録されていなければ拒否される — つまり autopilot で走るモデルが、人間が何も行動していないのに承認を捏造することはできない。picker が human turn を記録しない harness では、一度だけ短いメッセージ（例えば「approve」）を打って記録を残す。（台帳にまだ human turn が無い harness では、gate は fail open となりこれを要求しない。）</p>
 <h3 id="approval-gate-flow">承認 gate のフロー</h3>
 <pre class="mermaid">
 flowchart TD

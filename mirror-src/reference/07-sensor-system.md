@@ -117,7 +117,7 @@ outputs: ...
 4. manifest の `matches` filter を逐語で解決済みの `sensors_applicable[]` エントリにコピーする。
 5. stage ごとの解決済み配列を正準の `data/stage-graph.json` に発する（FIELD_ORDER 固定: `rules_in_context` の後）。
 
-ランタイムの PostToolUse hook（`aidlc-sensor-fire.ts`）は `sensors_applicable` をグラフノードから読む — 決して manifest を開き直さない。`matches` は compile でスナップショットされる: ワークフロー中の manifest 編集は、進行中のワークフローの書き込みで発火するものを変えない（BGP 安定性の性質 — [Plane アーキテクチャ](02-plane-architecture.md) を参照）。
+ランタイムの PostToolUse hook（`aidlc-run-sensors.ts`）は `sensors_applicable` をグラフノードから読む — 決して manifest を開き直さない。`matches` は compile でスナップショットされる: ワークフロー中の manifest 編集は、進行中のワークフローの書き込みで発火するものを変えない（BGP 安定性の性質 — [Plane アーキテクチャ](02-plane-architecture.md) を参照）。
 
 ### stage ごとの sensor マトリクス（32 の framework stage）
 
@@ -145,7 +145,7 @@ fork は stage の `sensors:` リストを直接編集することで stage を�
 | `aidlc-linter.md` | `**/*.{ts,js}` |
 | `aidlc-type-check.md` | `**/*.{ts,tsx}` |
 
-`matches` **こそが** fire filter である — 実質的に任意ではない。hook は書き込まれるパスを glob と比較し、合致するときだけ発火する; `matches` glob を **持たない** エントリは一切発火しない（`aidlc-sensor-fire.ts`: `if (!entry.matches) continue`）。だから 5 つの同梱 manifest はすべて 1 つを宣言する — provenance と 2 つの document-shape sensor は artifact tree にスコープされ（同梱 manifest は上に示した `matches` 値を運ぶ）、2 つの code-quality sensor はそれぞれの言語 glob にスコープされる。compile resolver は `matches` を逐語で stage ごとの `sensors_applicable[]` エントリにコピーする; hook はスナップショットされた値をグラフノードから読む。
+`matches` **こそが** fire filter である — 実質的に任意ではない。hook は書き込まれるパスを glob と比較し、合致するときだけ発火する; `matches` glob を **持たない** エントリは一切発火しない（`aidlc-run-sensors.ts`: `if (!entry.matches) continue`）。だから 5 つの同梱 manifest はすべて 1 つを宣言する — provenance と 2 つの document-shape sensor は artifact tree にスコープされ（同梱 manifest は上に示した `matches` 値を運ぶ）、2 つの code-quality sensor はそれぞれの言語 glob にスコープされる。compile resolver は `matches` を逐語で stage ごとの `sensors_applicable[]` エントリにコピーする; hook はスナップショットされた値をグラフノードから読む。
 
 空文字列（`matches: ""`）は parse 時に拒否される。glob が無いことは sensor が決して発火しないことを意味するので、manifest は自身が適用される glob 形状を宣言せねばならない — 「すべてで発火する」モードは無い。
 

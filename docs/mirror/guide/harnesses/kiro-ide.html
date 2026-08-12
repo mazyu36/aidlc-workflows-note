@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../../guide/harnesses/kiro-ide.html" class="here">Kiro IDE で AI-DLC を動かす</a>
   <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -118,13 +120,23 @@ cd aidlc-workflows
 git checkout v2
 </code></pre>
 <pre><code class="language-bash">mkdir -p your-project/.kiro your-project/aidlc
+# Safe on fresh installs; required when upgrading from v2.5.56 or earlier.
+for retired_hook in \
+  audit-logger block mint runtime-compile stop sync-statusline
+do
+  rm -f \
+    &quot;your-project/.kiro/hooks/aidlc-${retired_hook}.json&quot; \
+    &quot;your-project/.kiro/hooks/aidlc-${retired_hook}.kiro.hook&quot;
+done
 cp -R dist/kiro-ide/.kiro/. your-project/.kiro/
 cp -R dist/kiro-ide/aidlc/. your-project/aidlc/     # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
 cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have one
 </code></pre>
-<p><code>cp -R &lt;src&gt;/. &lt;dst&gt;/</code> の形はツリーの<strong>中身</strong>をコピーする — <code>your-project/.kiro</code> が
-既にある場合（アップグレード）も無い場合（新規インストール）も同じに動く。素の
-<code>cp -r dist/kiro-ide/.kiro your-project/.kiro</code> は既存の <code>.kiro/</code> の中に 2 つ目の
+<p>削除ループは v2.5.57 の hook 名マイグレーションである。overlay コピーは廃止された
+登録を削除できない。そのまま残せば旧名と新名の両方が登録されてしまう。このループは
+新規インストールでは no-op である。そのクリーンアップの後、<code>cp -R &lt;src&gt;/. &lt;dst&gt;/</code> の形は
+ツリーの<strong>中身</strong>をコピーする — <code>your-project/.kiro</code> が既にある場合も無い場合も同じである。
+素の <code>cp -r dist/kiro-ide/.kiro your-project/.kiro</code> は既存の <code>.kiro/</code> の中に 2 つ目の
 <code>.kiro</code> を入れ子にし、IDE は新しいファイルを決して見ない。</p>
 <p><code>aidlc/</code> ディレクトリはワークスペースシェルである — エンジンが読む構築済みの
 <code>aidlc/spaces/default/memory/</code> メソッドツリーを同梱する。<code>.kiro/</code> の<strong>兄弟</strong>なので
@@ -159,19 +171,26 @@ trigger）で hook を登録する（エージェント JSON 内の <code>hooks<
 とは別の機構）。各 hook は共有の <code>aidlc-kiro-adapter.ts</code> シムを経由するコマンドを
 実行し、シムが IDE の hook イベントをバイト共有の core hook が期待する形に正規化する。</p>
 <p>Kiro IDE 1.x は hook のコンテキストを <strong>stdin 上の JSON</strong>（snake_case:
-<code>{ tool_name, tool_input, tool_response }</code>）で渡す。より古い 0.12 ビルドは代わりに
+<code>{ session_id, tool_name, tool_input, tool_response }</code>）で渡す。より古い 0.12 ビルドは代わりに
 <code>USER_PROMPT</code> 環境変数を camelCase の等価物で設定し、アダプタは両方を受け入れる）。
 捕捉される PostToolUse の write / shell イベントは、どちらのチャネルでもツールの
 input を空のままにするので、書かれたパスは結果テキストから復元する必要があり、
-ペイロードの無い hook（<code>runtime-compile</code>・<code>sync-statusline</code>）は audit トレイルから
-走る。より新しい 1.x ビルドは一部の PreToolUse と委譲の input を populate する。
+audit tail の hook（<code>rebuild-stage-graph</code>・<code>sync-workflow-state</code>）は audit トレイルから
+走る。graph-rebuild の経路はさらに shell の結果とセッション identity を保持するので、
+成功した <code>intent-create</code> が呼び出したセッションに束縛される: モダンなイベントは
+正確な <code>session_id</code> を運び、レガシーチャネルは SessionStart が保持する合成 identity を
+再利用する。モダンな Stop も同様に自身の event-local な <code>session_id</code> を優先し、
+並走する一方のチャットが他方のチャットの post-create 引き渡し receipt を消費して
+しまうのを防ぐ。レガシーの agentStop は保持された identity へフォールバックする。
+より新しい 1.x ビルドは一部の PreToolUse と委譲の input を populate する。
 アダプタはそれらのフィールドに依存せずに保持する。</p>
 <p>ペイロードの取得は<strong>ペイロードに依存するターゲットに限定してゲートされる</strong>
-（<code>audit-and-sensors</code>・<code>log-subagent</code>）。0.12 ビルド（一度も書き込まずに stdin を開く）
-では、空でない <code>USER_PROMPT</code> が即座に消費される。それ以外では、アダプタは 2 秒の
-broken-channel 上限付きで 1.x の stdin チャネルを読む。他のすべてのターゲット —
-すべての <code>PreToolUse</code> で発火する <code>block</code> を含む — はどちらのチャネルにも触れず、
-ゼロレイテンシの経路を保つ。</p>
+（<code>audit-and-sensors</code>・<code>log-subagent</code>・<code>rebuild-stage-graph</code>）に加え、モダンな
+<code>session_id</code> のための <code>session-start</code> と <code>continue-workflow</code>。0.12 ビルド（一度も
+書き込まずに stdin を開く）では、空でない <code>USER_PROMPT</code> が即座に消費される。それ以外では、
+アダプタは 2 秒の broken-channel 上限付きで 1.x の stdin チャネルを読む。他のすべての
+ターゲット — すべての <code>PreToolUse</code> で発火する <code>block</code> を含む — はどちらのチャネルにも
+触れず、ゼロレイテンシの経路を保つ。</p>
 <table>
 <thead>
 <tr>
@@ -191,7 +210,7 @@ broken-channel 上限付きで 1.x の stdin チャネルを読む。他のす�
 <td>すべてのプロンプトで human-turn イベントを記録（human-presence gate）</td>
 </tr>
 <tr>
-<td><code>aidlc-stop</code></td>
+<td><code>aidlc-continue-workflow</code></td>
 <td><code>Stop</code></td>
 <td>forwarding loop の audit（助言のみ。IDE では Stop の trigger はブロックできない — 強制は conductor 自身の Stop プロトコルに依る）</td>
 </tr>
@@ -201,7 +220,7 @@ broken-channel 上限付きで 1.x の stdin チャネルを読む。他のす�
 <td>承認 gate が開いていて以降に人間が行動していない間、ツール呼び出しをハードブロック（human-presence の床）</td>
 </tr>
 <tr>
-<td><code>aidlc-audit-logger</code></td>
+<td><code>aidlc-write-audit-log</code></td>
 <td><code>PostToolUse</code>（<code>fs_write|str_replace|fs_append</code>）</td>
 <td>成果物の作成 / 更新を記録し、続けて適用される sensor を発火（パスはツールの結果から）</td>
 </tr>
@@ -211,12 +230,12 @@ broken-channel 上限付きで 1.x の stdin チャネルを読む。他のす�
 <td>委譲先の identity 付きで <code>SUBAGENT_COMPLETED</code> を記録。matcher が広いのでどの委譲名もアダプタに届く。アダプタは補助的な <code>subagent_response</code> シェルを捨てる</td>
 </tr>
 <tr>
-<td><code>aidlc-runtime-compile</code></td>
+<td><code>aidlc-rebuild-stage-graph</code></td>
 <td><code>PostToolUse</code>（<code>execute_bash</code>）</td>
 <td>runtime グラフを再コンパイル（audit 末尾で判定）</td>
 </tr>
 <tr>
-<td><code>aidlc-sync-statusline</code></td>
+<td><code>aidlc-sync-workflow-state</code></td>
 <td><code>PostToolUse</code>（<code>execute_bash</code>）</td>
 <td>audit の最新 <code>STAGE_STARTED</code> から <code>Current Stage</code> を前方専用で同期（IDE は解析できる task ペイロードを一切出さない）</td>
 </tr>
@@ -321,7 +340,7 @@ subagent のツールを agent-v1 の JSON ではなく <code>.md</code> frontma
 <li><a href="../05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> — 実行の適切なサイズ選び。</li>
 <li><a href="../glossary.html">用語集</a> — すべての用語の定義。</li>
 </ul>
-<p>他の harness: <a href="codex-cli.html">Codex CLI 上の AI-DLC</a> · <a href="README.html">harness ファミリーの索引</a>。</p>
+<p>他の harness: <a href="codex-cli.html">Codex CLI 上の AI-DLC</a> · <a href="cursor.html">Cursor 上の AI-DLC</a> · <a href="README.html">harness ファミリーの索引</a>。</p>
 
 <footer class="meta">
   原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/v2/docs/guide/harnesses/kiro-ide.md"><code>docs/guide/harnesses/kiro-ide.md</code></a>（基点コミット <span class="gh-hash">v2</span> に固定）· 逐語日本語訳

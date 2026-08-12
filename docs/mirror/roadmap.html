@@ -34,19 +34,24 @@
 <nav class="pagetoc" aria-label="このページの目次">
   <div class="group">このページの目次</div>
   <a href="#north-star-reference">North Star（参照）</a>
+  <a href="#strategic-delivery-pillars">戦略的デリバリー支柱</a>
   <a href="#goal-scorecard">ゴールスコアカード</a>
   <a href="#delivered">提供済み</a>
-  <a href="#in-flight-ours-open">進行中（当方・オープン）</a>
-  <a href="#outstanding-planned-minors">未着手（計画済みマイナー）</a>
-  <a href="#community-prs-advancing-goals-open-need-shepherding">ゴールを前進させるコミュニティ PR（オープン・シェパーディング要）</a>
-  <a href="#known-gaps-not-on-the-minor-ladder">マイナーのはしごに載っていない既知のギャップ</a>
+  <a href="#in-flight">進行中</a>
+  <a href="#directional-themes">方向性のテーマ</a>
+  <a href="#known-gaps">既知のギャップ</a>
 </nav>
 
 <main>
 <p class="eyebrow">AI-DLC DOCS 日本語版 / DOCS</p>
 <h1 id="ai-dlc-workflows-20-roadmap">AI-DLC Workflows 2.0 - ロードマップ</h1>
-<p>2026-07-13 時点のステータス。現在のリリース版: <strong>2.3.4</strong>（origin/v2 tip 3c768787）。
-Full GA は <strong>2.4.0</strong> で宣言される。</p>
+<p>2026-08-10 時点のステータス。</p>
+<ul>
+<li>現在の v2 バージョンは <strong>2.5.62</strong>（<code>origin/v2</code> tip <code>18bcc468</code>）である。バージョン番号はコミット済みの framework ツリーを表し、GitHub Releases ではない。</li>
+<li>AI-DLC Workflows 2.0 は <strong>GA</strong> である。README での発表は、reviewer-as-verifier と 3 ロールアンサンブルのマイルストーンが出荷された後、#627 で行われた。</li>
+<li>リリース公開は v2 ブランチとまだ揃っていない: GitHub は依然として <code>v1.0.1</code> を Latest としており、#635 で追跡している。パッケージングとリリース配布は #722 で再検討中である。</li>
+</ul>
+<p>以下のバージョン番号は、作業が v2 ブランチのどこに着地したかを示す。今後のテーマとオープンな pull request は方向性であり、確定したリリースの約束ではない。</p>
 <h2 id="north-star-reference">North Star（参照）</h2>
 <p>AI-DLC Workflows 2.0 North Star の 7 つの機能ゴール。意図を忠実に写す:</p>
 <ol>
@@ -58,6 +63,12 @@ Full GA は <strong>2.4.0</strong> で宣言される。</p>
 <li><strong>成果物トレーサビリティの保持</strong> - 下流 stage は、切り離された成果物を生むのではなく上流の成果物を豊かにする。</li>
 <li><strong>プロジェクトローカルでない、組織の成果物リポジトリ</strong> - プロジェクト・intent・リポジトリを横断する共有の組織ナレッジ層。6 つの名前付きシナリオ。</li>
 </ol>
+<h2 id="strategic-delivery-pillars">戦略的デリバリー支柱</h2>
+<p>North Star がユーザーに届き、進化していく方法を、2 つの戦略的支柱が形作る:</p>
+<ul>
+<li><strong>プロダクト化と配布（#722）</strong> - サポートされる harness 横断で、AI-DLC のインストール・設定・アップグレード・リリース・ロールバックを容易にする。</li>
+<li><strong>プラグインエコシステムとマーケットプレイス（#723）</strong> - 信頼された拡張を発見可能・インストール可能・再利用可能にし、外部プラグインから第一級機能への明確な道筋を用意する。</li>
+</ul>
 <h2 id="goal-scorecard">ゴールスコアカード</h2>
 <table>
 <thead>
@@ -66,57 +77,57 @@ Full GA は <strong>2.4.0</strong> で宣言される。</p>
 <th>ゴール</th>
 <th>状態</th>
 <th>提供したもの</th>
-<th>残りの着地先</th>
+<th>残りの作業</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>1</td>
 <td>実世界のアンサンブル</td>
-<td>部分達成</td>
-<td>2.0.x のロール + 2.1.8 の reviewer 配線</td>
-<td>2.5.0</td>
+<td>達成</td>
+<td>2.5.0 の独立した collaborator と選択可能なトポロジー（#568）; reviewer receipt の強制（#569）</td>
+<td>ネイティブの live-team トランスポートと unit 単位の並列ウェーブは拡張として残る（#617）</td>
 </tr>
 <tr>
 <td>2</td>
 <td>カスタマイズ</td>
-<td>達成</td>
-<td>2.0.x の rules スタック + 2.3.0 の plugins</td>
-<td>plugin の未提供サーフェス、stage の rules 層</td>
+<td>達成（フォローアップあり）</td>
+<td>2.3.0 の plugin seam、2.3.5 のコンテンツ投影・選択（#550）、決定論的な rule 配信（#658）、plugin scopes（#664）</td>
+<td>stage 単位の rules、<code>when:</code> の評価、リモートディスカバリーとマーケットプレイス（#723）</td>
 </tr>
 <tr>
 <td>3</td>
 <td>適応性</td>
 <td>達成</td>
-<td>2.2.0 の composer + スケールイン</td>
-<td>（境界の自動評価は意図的に人間起点のまま）</td>
+<td>2.2.0 の composer、エントロピースコアによる composition（#595）、決定論的 ARS（#644）、unit-major な Code Generation（#705）</td>
+<td>境界の変更は設計上、人間の承認を要するまま</td>
 </tr>
 <tr>
 <td>4</td>
 <td>敵対者としての Verifier</td>
-<td>部分達成</td>
-<td>2.0.x の reviewer ループ、2.3.1 のモデル分離</td>
-<td>2.4.0</td>
+<td>達成</td>
+<td>2.4.0 の敵対的な証拠契約（#566）、completion-path の強制（#569）、reviewer-class のコストダイヤル（#718）</td>
+<td>sensor のブロッキング重大度は隣接するフォローアップ（#431）</td>
 </tr>
 <tr>
 <td>5</td>
 <td>循環フロー</td>
 <td>部分達成</td>
-<td>stage 内レビューループ、HITL の強化</td>
-<td>2.6.0</td>
+<td>stage 内のレビュー/修正ループ、境界付きの復旧機構、明示的に人間が許可した前方/後方/やり直しの stage ジャンプ</td>
+<td>stage 起点で統制された stage 間フィードバックループは未実装のまま; #616 はより狭い Build &amp; Test の巻き戻し</td>
 </tr>
 <tr>
 <td>6</td>
 <td>トレーサビリティ</td>
 <td>部分達成</td>
-<td>成果物グラフ + upstream-coverage sensor</td>
-<td>2.7.0（+ 下記のコミュニティ PR）</td>
+<td>成果物グラフ、upstream coverage、claim の provenance（#647, #686）、共有 CodeKB の保護策（#670）</td>
+<td>漸進的なインプレースエンリッチメント、陳腐化結果の伝播（#716）、source に紐づいた receipt（#646）、stage 単位の強制（#401）、unit 横断のディスカバリー</td>
 </tr>
 <tr>
 <td>7</td>
 <td>組織リポジトリ</td>
 <td>達成</td>
-<td>2.1.0 の spaces / intents / org-KB</td>
-<td>完了</td>
+<td>2.1.0 の spaces/intents/org-KB、宣言的なマルチリポジトリ manifest と同期（#674）、clone に安全な active-space カーソル（#709）</td>
+<td>ドキュメント検索と監査可能な補助ナレッジは現在進行中の拡張（#694, #714, #731）</td>
 </tr>
 </tbody></table>
 <h2 id="delivered">提供済み</h2>
@@ -133,7 +144,7 @@ Full GA は <strong>2.4.0</strong> で宣言される。</p>
 <td>2.0.0 - 2.0.2</td>
 <td>GA プレビュー: reviewer 機構、複数 harness 対応の core、agent 一覧</td>
 <td>1, 4</td>
-<td>（v2 ベースライン）</td>
+<td>v2 ベースライン</td>
 </tr>
 <tr>
 <td>2.1.0</td>
@@ -143,174 +154,277 @@ Full GA は <strong>2.4.0</strong> で宣言される。</p>
 </tr>
 <tr>
 <td>2.1.2</td>
-<td>unit 単位の for_each 反復</td>
+<td>unit 単位の <code>for_each</code> 反復</td>
 <td>3</td>
 <td>#444</td>
 </tr>
 <tr>
-<td>2.1.3 - 2.1.7</td>
-<td>ループ整合性の強化: artifact gate、stop-hook、human-presence、宙吊り consumes</td>
-<td>4, 5</td>
-<td>#443, #466, #482</td>
+<td>2.1.3 - 2.1.8</td>
+<td>ループ整合性と harness 横断の reviewer 配線</td>
+<td>1, 4, 5</td>
+<td>#405, #443, #466, #482</td>
 </tr>
 <tr>
-<td>2.1.8</td>
-<td>全 harness への reviewer 配線</td>
+<td>2.2.0 - 2.2.19</td>
+<td>適応的ワークフロー、composer、スケールインと Construction の強化</td>
+<td>3</td>
+<td>#477, #491, #509-#512, #520-#522, #525</td>
+</tr>
+<tr>
+<td>2.3.0 - 2.3.5</td>
+<td>plugin 機構、agent tier、インストール時の plugin 選択とコンテンツ投影</td>
+<td>2, 4</td>
+<td>#475, #546, #550</td>
+</tr>
+<tr>
+<td>2.3.6 - 2.3.11</td>
+<td>Phase progress、引用を認識する upstream coverage、pin 済み lint と gate のアカウンティング</td>
+<td>4, 6</td>
+<td>#562, #563, #572, #573</td>
+</tr>
+<tr>
+<td>2.4.0</td>
+<td>Reviewer-as-verifier: 敵対的で証拠に基づく review</td>
+<td>4</td>
+<td>#566</td>
+</tr>
+<tr>
+<td>2.4.2 - 2.4.6</td>
+<td>ルート全体のパッケージング、ネイティブディスパッチャ/バイナリ、ドキュメントのパリティと opencode harness</td>
+<td>1, 2</td>
+<td>#560, #571, #577, #578, #581</td>
+</tr>
+<tr>
+<td>2.5.0</td>
+<td>3 ロールのアンサンブル: 独立した collaborator、pipeline、mob、hub-and-spoke</td>
+<td>1</td>
+<td>#568</td>
+</tr>
+<tr>
+<td>2.5.1, 2.5.25</td>
+<td>エントロピースコアによる最小ワークフロー composition と決定論的 ARS</td>
+<td>3</td>
+<td>#595, #644</td>
+</tr>
+<tr>
+<td>2.5.2</td>
+<td>マスク済みの <code>/aidlc --doctor --export</code> 診断バンドル</td>
+<td>-</td>
+<td>#576</td>
+</tr>
+<tr>
+<td>2.5.5, 2.5.39, 2.5.41, 2.5.54-2.5.55</td>
+<td>reviewer receipt、review freeze、plan-before-code ガード、reviewer class と authorization receipt</td>
 <td>1, 4</td>
-<td>#405</td>
+<td>#569, #677, #692, #702, #718</td>
 </tr>
 <tr>
-<td>2.2.0</td>
-<td>適応的ワークフロー: composer、スケールインのトリアージ、実行中の recompose</td>
+<td>2.5.11, 2.5.38, 2.5.57-2.5.58</td>
+<td>claim の provenance、生成前確認と project 言語のグラウンディング</td>
+<td>6</td>
+<td>#647, #686, #703, #707</td>
+</tr>
+<tr>
+<td>2.5.33 - 2.5.36</td>
+<td>決定論的な steering 配信、plugin scopes、CodeKB の保存とワークスペース manifest/同期</td>
+<td>2, 7</td>
+<td>#658, #664, #670, #674</td>
+</tr>
+<tr>
+<td>2.5.40, 2.5.53</td>
+<td>stage 単位のトークン/コストアカウンティング、opt-in のメトリクスと使用状況トラッキングの kill switch</td>
+<td>-</td>
+<td>#673, #720</td>
+</tr>
+<tr>
+<td>2.5.56</td>
+<td>Code Generation が unit-major な Construction ウォークに加わる</td>
 <td>3</td>
-<td>#477</td>
+<td>#705</td>
 </tr>
 <tr>
-<td>2.2.1 - 2.2.19</td>
-<td>強化ライン: unit kinds、unit 単位の reviewer スコープ、Kiro IDE hooks、任意 produces、パスのクォート</td>
-<td>-</td>
-<td>#491, #509 - #512, #520 - #522, #525, #537, #538, #471, #544</td>
-</tr>
-<tr>
-<td>2.3.0</td>
-<td>拡張: plugin 機構（plugins/&lt;name&gt;/、harness 別出力、compose の継ぎ目）</td>
-<td>2</td>
-<td>#475</td>
-</tr>
-<tr>
-<td>2.3.1</td>
-<td>調整可能な agent tier（judgment / balanced / templated）</td>
-<td>4</td>
-<td>#546</td>
-</tr>
-<tr>
-<td>2.3.2 - 2.3.3</td>
-<td>doctor が hook のドロップを表示; autonomy 下の scope 変更を拒否</td>
-<td>-</td>
-<td>#541, #542</td>
-</tr>
-<tr>
-<td>2.3.4</td>
-<td>reviewer の読み取りスコープを PreToolUse で決定論的に強制</td>
-<td>4</td>
-<td>#545</td>
+<td>2.5.60</td>
+<td>Copilot CLI と VS Code の agent mode 向け GitHub Copilot harness</td>
+<td>1, 2</td>
+<td>#657</td>
 </tr>
 </tbody></table>
-<h2 id="in-flight-ours-open">進行中（当方・オープン）</h2>
-<table>
-<thead>
-<tr>
-<th>バージョン主張</th>
-<th>作業</th>
-<th>PR</th>
-<th>状態</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>2.3.5</td>
-<td>plugin コンテンツバケット + インストール時の plugin 選択</td>
-<td>#550</td>
-<td>オープン、tier は green、マージは gate 待ち</td>
-</tr>
-<tr>
-<td>2.3.5 - 2.3.6</td>
-<td>単一コマンドの CLI ディスパッチャ（ダークローンチ）</td>
-<td>#560</td>
-<td>ドラフト、#550 に積み上げ; #550 マージ後に rebase + retarget</td>
-</tr>
-<tr>
-<td>2.3.7</td>
-<td>Phase Progress の行を phase 境界で前進させる</td>
-<td>#562</td>
-<td>オープン</td>
-</tr>
-<tr>
-<td>2.3.8</td>
-<td>upstream-coverage が実際の引用形にマッチするようにする</td>
-<td>#563</td>
-<td>オープン</td>
-</tr>
-<tr>
-<td>2.3.17</td>
-<td>opencode harness（5 番目の harness）</td>
-<td>#571</td>
-<td>オープン、v2 へ rebase 済み、マージは gate 待ち</td>
-</tr>
-</tbody></table>
-<p>バージョンスロットは複数主張される。後にマージする側が rebase して再バンプする（t68 が漏れを検出する）。</p>
-<h2 id="outstanding-planned-minors">未着手（計画済みマイナー）</h2>
-<h3 id="240-reviewer-as-verifier-declares-full-ga">2.4.0 - Verifier としての reviewer（Full GA を宣言）</h3>
-<p>解釈は 2026-07-13 に確定: <strong>プロンプトのみの変更</strong>。ゴール 4 の 4 文のうち、
-「異なる LLM」は提供済み（2.3.1 の tier 分離）、予算も提供済み
-（<code>reviewer_max_iterations</code> + HITL エスカレーション。「iterations / tokens」は
-or として読む）。残るのは:</p>
-<ul>
-<li>敵対的フレーミング: refute-not-confirm + 証拠グラウンディングの共有契約を stage-protocol のセクション 12a に一度だけ書き、2 つの reviewer ペルソナ（<code>aidlc-product-lead-agent</code>、<code>aidlc-architecture-reviewer-agent</code>）にドメインの声を短く 1 行ずつ足す。</li>
-<li>証拠グラウンディングは第 3 文を取り込む: reviewer は既存の機械チェック（列挙された検証ツール、テスト、lint、typecheck、受け入れ基準、consume した契約）を実行する。意見のみの指摘は提案であって NOT-READY ではない。</li>
-<li>明示的にスコープ外: トークン予算、専用のドメイン検証ツール、新しい stage スキーマのフィールド。これらのスコープ判断は changelog エントリに記録する。</li>
-<li>新しい agent は作らない: 既存の 2 reviewer が reviewer 宣言のある全 11 stage をカバーする。stage 単位の <code>reviewer:</code> フィールドは後から追加できる形になっている。</li>
-</ul>
-<h3 id="250-three-role-ensemble-goal-1">2.5.0 - 3 ロールのアンサンブル（ゴール 1）</h3>
-<ul>
-<li>Collaborator を、conductor が inline で纏う声ではなく独立した subagent にする。</li>
-<li>コラボレーションパターン（pipeline / swarm / review-loop / mob）を stage 単位で選択可能なノブにする。</li>
-</ul>
-<h3 id="260-governed-cyclic-flows-goal-5">2.6.0 - 統制された循環フロー（ゴール 5）</h3>
-<ul>
-<li>stage 間の後方エッジ: 下流 stage が上流のギャップを露見させたとき、統制された engine 管理の巻き戻しを発火する。今日のグラフコンパイルはすべてのサイクルを拒否し、<code>requires_stage</code> は前方のみ。</li>
-</ul>
-<h3 id="270-progressive-enrichment-goal-6">2.7.0 - 漸進的エンリッチメント（ゴール 6）</h3>
-<ul>
-<li>下流 stage が、リンクされた別ファイルを出すのではなく、同じ上流成果物をその場で豊かにする。</li>
-<li>ADR を core の設計成果物にする。</li>
-</ul>
-<h2 id="community-prs-advancing-goals-open-need-shepherding">ゴールを前進させるコミュニティ PR（オープン・シェパーディング要）</h2>
+<h2 id="in-flight">進行中</h2>
+<p>選定されたオープンな作業をバージョン主張なしに列挙する。マージ可否は頻繁に変わるため、リンクされた各 pull request を正とする。</p>
 <table>
 <thead>
 <tr>
 <th>PR</th>
 <th>作業</th>
-<th>ゴール</th>
+<th>テーマ</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>#401</td>
-<td>stage 単位のトレーサビリティ強制、決定論的 JSON sensor</td>
-<td>6</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/731">#731</a></td>
+<td>DocumentKB S1: agent による引用のためにチームドキュメントをインデックスする</td>
+<td>ナレッジと組織リポジトリ</td>
 </tr>
 <tr>
-<td>#402 / #403 / #404</td>
-<td>設計対コードの衛生、ユニットテスト重複排除、可観測性 NFR の一貫性</td>
-<td>6</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/716">#716</a></td>
+<td>陳腐化した stage 結果を投影・伝播する</td>
+<td>トレーサビリティと妥当性</td>
 </tr>
 <tr>
-<td>#432</td>
-<td>V2 拡張機構（2.3.0 の plugins に置き換えられた可能性が高い; クローズするか継ぎ目に rebase）</td>
-<td>2</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/661">#661</a></td>
+<td>Cursor harness</td>
+<td>harness の拡張</td>
 </tr>
 <tr>
-<td>#526</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/617">#617</a></td>
+<td>バッチ並列な unit 単位ウェーブとフォアグラウンド reviewer</td>
+<td>アンサンブルと実行</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/616">#616</a></td>
+<td>境界付きの Build &amp; Test から Code Generation への巻き戻し</td>
+<td>循環フロー</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/646">#646</a></td>
+<td>Code Generation の review receipt をワークスペースの source 状態に紐づける</td>
+<td>トレーサビリティと妥当性</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/653">#653</a></td>
+<td>Kiro IDE ネイティブの agent と settings サーフェス</td>
+<td>harness のパリティ</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/526">#526</a></td>
 <td>Ideation でのプロダクトディスカバリー</td>
-<td>3</td>
+<td>プロダクトディスカバリー</td>
 </tr>
 <tr>
-<td>#535</td>
-<td>インプレースアップグレードのサブコマンド</td>
-<td>-</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/401">#401</a></td>
+<td>stage 単位のトレーサビリティ強制 sensor</td>
+<td>トレーサビリティ</td>
 </tr>
 <tr>
-<td>#552 / #553</td>
-<td>コールドスタートの scope ルーティング; Codex の構造化選択を human turn として扱う</td>
-<td>-</td>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/402">#402</a> / <a href="https://github.com/awslabs/aidlc-workflows/pull/403">#403</a> / <a href="https://github.com/awslabs/aidlc-workflows/pull/404">#404</a></td>
+<td>設計/コードの境界、テストの所有権と可観測性の一貫性</td>
+<td>成果物の品質</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/712">#712</a></td>
+<td>ガイド付き初回実行のための tutorial scope</td>
+<td>導入</td>
+</tr>
+<tr>
+<td><a href="https://github.com/awslabs/aidlc-workflows/pull/730">#730</a></td>
+<td>composed workflow の決定性とテストスイートの強化</td>
+<td>信頼性</td>
 </tr>
 </tbody></table>
-<h2 id="known-gaps-not-on-the-minor-ladder">マイナーのはしごに載っていない既知のギャップ</h2>
+<h2 id="directional-themes">方向性のテーマ</h2>
+<p>これらのテーマはオープンな RFC・issue・実装 pull request に支えられているが、確定したリリースバージョンはまだない。</p>
+<h3 id="traceability-and-progressive-enrichment">トレーサビリティと漸進的エンリッチメント</h3>
 <ul>
-<li>stage レベルの rules 層（<code>aidlc-stage-&lt;slug&gt;.md</code>）: 予約済み・未実装（ゴール 2）。</li>
-<li>plugin の未提供サーフェス: agents / scopes / memory / knowledge の投影、<code>when:</code> の評価、マーケットプレイス（ゴール 2）。</li>
-<li>sensor のブロッキング重大度（#431): sensor は助言のみで、機械チェックが gate を止めることはできない（ゴール 4 に隣接。2.4.0 からは意図的に外す）。</li>
-<li>conductor の健全性クラスタ（#547, #548, #551）と Kiro IDE 1.0 クラスタ（#543, #555）: GA 前の品質であり、ゴールには対応しない。どちらの IDE issue も OPEN のままである: 2.5.10 が #555 の hook 登録の半分（v2 スキーマ）を出荷し、2.5.12 が #543 のコンテキストチャネルを出荷したが、#555 の agent / settings のサーフェスは依然として未対応である。これらの issue は手で閉じる必要がある — <code>v2</code> をターゲットにした PR の <code>Fixes</code> トレイラーはそれらを自動クローズしない。</li>
-<li>unit 横断のディスカバリー伝播（ゴール 6）: 依然として実在する v2 のギャップだが、唯一のオープン PR（#300）は退役した v1 ツリー（<code>aidlc-rules/</code>、base main、2026-05）を対象にしている。rebase ではなく v2 での新規実装が必要。</li>
+<li>stage 単位の upstream トレーサビリティを強制し
+(<a href="https://github.com/awslabs/aidlc-workflows/pull/401">#401</a>)、review の証拠を
+source 状態に紐づけ
+(<a href="https://github.com/awslabs/aidlc-workflows/pull/646">#646</a>)、陳腐化した
+stage 結果を伝播する
+(<a href="https://github.com/awslabs/aidlc-workflows/pull/716">#716</a>)。</li>
+<li>Code Generation の review receipt に unit 単位の帰属を定義し
+(<a href="https://github.com/awslabs/aidlc-workflows/issues/662">#662</a>)、unit 横断の
+ディスカバリー伝播には v2 での新規実装を行う
+(<a href="https://github.com/awslabs/aidlc-workflows/issues/299">#299</a>/<a href="https://github.com/awslabs/aidlc-workflows/pull/300">#300</a>)。</li>
+<li>漸進的エンリッチメントを North Star の到達点として維持する: 下流 stage が上流
+成果物をその場で豊かにし、ADR を core の設計成果物とする。</li>
+<li>commit 単位の provenance は未解決の設計課題のまま残る。現在の audit chain は、
+任意の source commit からその intent と workflow への永続的な逆引きを提供しない。</li>
+</ul>
+<h3 id="governed-feedback-loops">統制されたフィードバックループ</h3>
+<ul>
+<li><a href="https://github.com/awslabs/aidlc-workflows/pull/616">#616</a> は
+<a href="https://github.com/awslabs/aidlc-workflows/issues/611">#611</a> に対して、
+境界付きの Build &amp; Test から Code Generation への戻りパスを 1 つ実装する。
+これは漸進的なループであり、汎用の循環グラフエンジンではない。</li>
+<li>汎用の stage 間後方エッジには、依然として engine レベルの統制、陳腐化成果物の
+処理、明示的な人間による許可が必要である。</li>
+</ul>
+<h3 id="plugins-and-marketplace">プラグインとマーケットプレイス</h3>
+<ul>
+<li>plugin 機構、コンテンツ投影、選択、plugin が提供する scopes は出荷済みである。</li>
+<li>リモートディスカバリー、信頼、第一級のマーケットプレイス、graduation の道筋は
+<a href="https://github.com/awslabs/aidlc-workflows/issues/723">#723</a> で提案されている。
+プロダクトディスカバリー
+(<a href="https://github.com/awslabs/aidlc-workflows/issues/652">#652</a>) とデザイン
+(<a href="https://github.com/awslabs/aidlc-workflows/issues/527">#527</a>) は第一級 plugin
+の候補である。</li>
+</ul>
+<h3 id="knowledge-and-documents">ナレッジとドキュメント</h3>
+<ul>
+<li><a href="https://github.com/awslabs/aidlc-workflows/issues/714">#714</a> は DocumentKB を
+定義し、<a href="https://github.com/awslabs/aidlc-workflows/pull/731">#731</a> がその最初
+のインデックス化スライスを実装する。</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/issues/694">#694</a> は、stage トポロ
+ジー横断で監査可能な補助ナレッジの選択と配信を提案する。</li>
+</ul>
+<h3 id="product-discovery">プロダクトディスカバリー</h3>
+<ul>
+<li>core の Ideation デリバリーは
+<a href="https://github.com/awslabs/aidlc-workflows/pull/526">#526</a> でレビュー中で
+あり、外部ハンドオーバーの契約は
+<a href="https://github.com/awslabs/aidlc-workflows/issues/586">#586</a>、plugin 形の
+代替案は
+<a href="https://github.com/awslabs/aidlc-workflows/issues/652">#652</a> にある。</li>
+<li>デリバリーサーフェス、つまり core か第一級 plugin かは、まだ決着していない。</li>
+</ul>
+<h3 id="installation-upgrades-and-releases">インストール・アップグレード・リリース</h3>
+<ul>
+<li><a href="https://github.com/awslabs/aidlc-workflows/issues/722">#722</a> はバイナリ
+パッケージング、インストーラ、npm、リリース自動化、ロールバック、インストール
+後セットアップを扱う。<a href="https://github.com/awslabs/aidlc-workflows/issues/399">#399</a>
+は Bun への強い依存を追跡する。</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/issues/636">#636</a> は第一級の
+アップグレード契約を追跡する。以前の実装 PR である
+<a href="https://github.com/awslabs/aidlc-workflows/pull/535">#535</a> はマージされずに
+クローズした。</li>
+<li><a href="https://github.com/awslabs/aidlc-workflows/issues/635">#635</a> は、v2 の GA
+発表と、依然として <code>v1.0.1</code> を指す GitHub の Latest リリースとの不一致を
+追跡する。</li>
+</ul>
+<h3 id="harness-expansion-and-parity">harness の拡張とパリティ</h3>
+<ul>
+<li>GitHub Copilot 対応は
+<a href="https://github.com/awslabs/aidlc-workflows/pull/657">#657</a> で出荷済みである;
+その RFC である
+<a href="https://github.com/awslabs/aidlc-workflows/issues/472">#472</a> は依然として
+整合が必要である。</li>
+<li>Cursor 対応は
+<a href="https://github.com/awslabs/aidlc-workflows/pull/661">#661</a> でオープン中で
+あり、Kiro IDE ネイティブのサーフェスは
+<a href="https://github.com/awslabs/aidlc-workflows/pull/653">#653</a> でオープンのまま
+残る。</li>
+<li>Antigravity のセットアップは
+<a href="https://github.com/awslabs/aidlc-workflows/issues/690">#690</a> で提案されている。</li>
+</ul>
+<h3 id="evaluation-and-operations">評価と運用</h3>
+<ul>
+<li><a href="https://github.com/awslabs/aidlc-workflows/issues/684">#684</a> は AI-DLC の成果
+を測定するための再現可能なベンチマークを提案する;
+<a href="https://github.com/awslabs/aidlc-workflows/issues/223">#223</a> は、まず
+Claude Code と Kiro を対象にした自動 harness 評価を追跡する。</li>
+<li>Operations フェーズの steering は要望されている方向性のまま残り
+(<a href="https://github.com/awslabs/aidlc-workflows/issues/221">#221</a>,
+<a href="https://github.com/awslabs/aidlc-workflows/issues/473">#473</a>)、アクティブな
+v2 実装ストリームではない。</li>
+</ul>
+<h2 id="known-gaps">既知のギャップ</h2>
+<ul>
+<li>stage 単位の rules（<code>aidlc-stage-&lt;slug&gt;.md</code>）は予約済みだが未実装である。</li>
+<li>plugin の <code>when:</code> 評価、リモートディスカバリー、マーケットプレイスの信頼はオープンのまま残る。</li>
+<li>sensor の失敗は助言的なものであり、ブロッキングの重大度は #431 でオープンのまま残る。</li>
+<li>汎用の stage 間サイクルと漸進的なインプレースの成果物エンリッチメントは、North Star のギャップのまま残る。</li>
+<li>Kiro IDE の issue #543 はクローズ済みだが、#555/#653 は依然としてネイティブの agent/settings サーフェスを追跡している。</li>
+<li>いくつかの古いコミュニティ PR がオープンのまま残り、rebase または処理が必要である: #401-#404、#526、#553。PR #432、#535、#552 はマージされずにクローズした。</li>
+<li>Copilot の RFC #472 と決定論的 ARS の issue #618 は、実装がそれぞれ #657 と #644 で出荷済みであるにもかかわらずオープンのまま残る; issue の状態を整合させるべきである。</li>
 </ul>
 
 <footer class="meta">

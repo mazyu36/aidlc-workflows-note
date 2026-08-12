@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -161,7 +163,7 @@ stage のフロー・gate・成果物はどの harness でも同一で、異な�
 </tr>
 </tbody></table>
 <h3 id="initialization-stages-01-03-auto-proceed">Initialization（stage 0.1-0.3）— 自動進行</h3>
-<p>3 つの Initialization stage は単一の決定論的ツール呼び出し（<code>aidlc-utility intent-birth</code>）として、ユーザーの対話なしに 1 秒未満で走る:</p>
+<p>3 つの Initialization stage は単一の決定論的ツール呼び出し（<code>aidlc-utility intent-create</code>）として、ユーザーの対話なしに 1 秒未満で走る:</p>
 <ul>
 <li><strong>0.1 Workspace Scaffold</strong> — 最初の intent を自動 birth し、record dir を <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（以下 <code>&lt;record&gt;/</code> と表記）に作成する — <code>&lt;YYMMDD&gt;</code> は記録が時系列に並ぶコンパクトな UTC 日付プレフィクス、<code>&lt;label&gt;</code> は conductor が付ける要望の短いケバブケースの本質で、正準の id は <code>intents.json</code> レジストリ行が運ぶ UUIDv7 である</li>
 <li><strong>0.2 Workspace Detection</strong> — ルールベースのスキャンが Java 17・Spring Boot 3.2・Maven・brownfield プロジェクトを特定する</li>
@@ -305,7 +307,7 @@ mvn verify<span class="t-comment">               # Integration tests pass</span>
 <p>A notification service for our task management app. Users should receive in-app notifications and optional email digests when tasks are assigned, due dates approach, or comments are posted. Support notification preferences per user.</p>
 </blockquote>
 <h3 id="initialization-stages-01-03-auto-proceed-1">Initialization（stage 0.1-0.3）— 自動進行</h3>
-<p>3 つの Initialization stage が <code>aidlc-utility intent-birth</code> の中で自動実行される。Workspace Detection が特定する: TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク・ユーザーサービスを持つ brownfield プロジェクト。</p>
+<p>3 つの Initialization stage が <code>aidlc-utility intent-create</code> の中で自動実行される。Workspace Detection が特定する: TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク・ユーザーサービスを持つ brownfield プロジェクト。</p>
 <blockquote>
 <p>Progress: 3/32 overall | Scope: feature, Depth: Standard</p>
 </blockquote>

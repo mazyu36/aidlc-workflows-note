@@ -198,7 +198,7 @@ swarm が物理的にどうファンアウトするかは環境変数によっ�
 
 どちらの driver も同じ 5 つの Unit ごとの stage を走らせ、同じプロジェクトのチェックに対して
 収束する。違いは純粋に、並列の仕事がどうディスパッチされるかである。暴走の歯止めは、swarm ツール
-自身の外、harness の **Stop-hook の上限**（`core/hooks/aidlc-stop.ts`、`blockCap()` /
+自身の外、harness の **Stop-hook の上限**（`core/hooks/aidlc-continue-workflow.ts`、`blockCap()` /
 `defaultBlockCap()` のペア、`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` として露出）に住む。この
 autonomous-Construction の経路では既定の上限は **8 ブロック** である（インタラクティブの既定は
 2; 明示的な `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` は両方を上書きする）。driver の継ぎ目の契約は

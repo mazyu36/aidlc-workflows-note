@@ -153,4 +153,4 @@ core の `.ts` ファイルは `core/tools/` と `core/hooks/` のソースと�
 - [Scope・Depth・テスト戦略](../05-scopes-and-depth.md) — 実行の適切なサイズ選び。
 - [用語集](../glossary.md) — すべての用語の定義。
 
-他の harness: [Kiro IDE で AI-DLC を動かす](kiro-ide.md) · [harness ファミリーの索引](README.md)。
+他の harness: [Kiro IDE で AI-DLC を動かす](kiro-ide.md) · [Cursor 上の AI-DLC](cursor.md) · [harness ファミリーの索引](README.md)。

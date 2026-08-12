@@ -4,7 +4,7 @@
 
 ## AI-DLC とは
 
-AI-DLC（AI-Driven Development Life Cycle）は、AI 支援によるソフトウェア開発を、再現可能で追跡可能な phase に構造化するための方法論である。これは [AWS AI-DLC methodology](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/) を起源とする。本リポジトリはこれを単一の harness 非依存なコアからネイティブに実装しており、すでに利用している CLI harness の中で動作する。現時点では Claude Code、Kiro CLI、Kiro IDE、Codex CLI、opencode である。本ガイドは harness 非依存であり、harness ごとに詳細が異なる箇所ではその旨を明記し、対応する harness の章へ誘導する（[他の harness で実行する](harnesses/README.md) を参照）。特に断りがない限り、例は Claude Code で示す。
+AI-DLC（AI-Driven Development Life Cycle）は、AI 支援によるソフトウェア開発を、再現可能で追跡可能な phase に構造化するための方法論である。これは [AWS AI-DLC methodology](https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/) を起源とする。本リポジトリはこれを単一の harness 非依存なコアからネイティブに実装しており、すでに利用している CLI harness の中で動作する。現時点では Claude Code、Kiro CLI、Kiro IDE、Codex CLI、Cursor、opencode、GitHub Copilot である。本ガイドは harness 非依存であり、harness ごとに詳細が異なる箇所ではその旨を明記し、対応する harness の章へ誘導する（[他の harness で実行する](harnesses/README.md) を参照）。特に断りがない限り、例は Claude Code で示す。
 
 呼び出しは単一のコマンドで行う:
 
@@ -52,7 +52,7 @@ AI-DLC の*振る舞いそのもの*を作り変えるには — stage やエー
 | Scope | 9（enterprise から workshop まで）+ 自動検出 |
 | Depth レベル | 3（Minimal、Standard、Comprehensive） |
 | テスト戦略レベル | 3（Minimal、Standard、Comprehensive） |
-| Audit イベントタイプ | 76 |
+| Audit イベントタイプ | 82 |
 
 ## ガイドマップ
 
@@ -77,5 +77,5 @@ AI-DLC の*振る舞いそのもの*を作り変えるには — stage やエー
 | [実例集](16-worked-examples.md) | bugfix と feature の完全なウォークスルー |
 | [スキルとランナーコマンド](17-skills.md) | `/aidlc-*` の stage ランナー・scope ランナーコマンドと、独自ランナー作成の道筋 |
 | [Workshop モード](workshop-mode.md) | workshop scope 向けのマルチ開発者手動レシピ（git push による claim セマンティクス） |
-| [他の harness で実行する](harnesses/README.md) | Kiro CLI、Kiro IDE、Codex CLI、opencode でのインストールと実行、および harness ごとの差異 |
+| [他の harness で実行する](harnesses/README.md) | Kiro CLI、Kiro IDE、Codex CLI、Cursor、opencode、GitHub Copilot でのインストールと実行、および harness ごとの差異 |
 | [用語集](glossary.md) | 全用語の定義 |

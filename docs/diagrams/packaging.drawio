@@ -9,15 +9,15 @@
         <mxCell id="zsrc" value="手書きソース（ハーネス非依存の正 + 薄いハーネス別オーバーレイ）" style="rounded=1;html=0;fillColor=#10141d;strokeColor=#2c3850;dashed=1;verticalAlign=top;align=left;spacing=10;fontColor=#aab6cc;fontSize=12;fontStyle=1" vertex="1" parent="1">
           <mxGeometry x="20" y="20" width="1200" height="190" as="geometry" />
         </mxCell>
-        <mxCell id="core" value="core/ — 単一の正&#10;stages 32 ・ agents 14 ・ conductor + protocols&#10;hooks 16 ・ tools 37 ・ knowledge 59&#10;scopes 9 ・ sensors 5 ・ memory ・ templates" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+        <mxCell id="core" value="core/ — 単一の正&#10;stages 32 ・ agents 14 ・ conductor + protocols&#10;hooks 17 ・ tools 37 ・ knowledge 59&#10;scopes 9 ・ sensors 5 ・ memory ・ templates" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#b895ff;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
           <mxGeometry x="45" y="60" width="560" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="hov" value="harness/&lt;name&gt;/ × 5 — 投影レシピ&#10;manifest.ts（coreDirs / harnessDir / tierFlavor / rulesRename）&#10;onboarding.fills.ts ・ 認可済み skills / settings&#10;adapter（codex / kiro / kiro-ide / opencode）・ emit.ts（任意）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
+        <mxCell id="hov" value="harness/&lt;name&gt;/ × 7 — 投影レシピ&#10;manifest.ts（coreDirs / harnessDir / tierFlavor / rulesRename）&#10;onboarding.fills.ts ・ 認可済み skills / settings&#10;adapter（Claude 以外の 6 ハーネス）・ emit.ts（任意）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#8492ac;fontColor=#e8ecf4;fontSize=12;align=left;spacing=12;verticalAlign=middle" vertex="1" parent="1">
           <mxGeometry x="645" y="60" width="550" height="125" as="geometry" />
         </mxCell>
 
         <!-- package.ts -->
-        <mxCell id="pkg" value="scripts/package.ts — buildTree()（ハーネスごとに実行・manifest.ts の走査で自動発見）&#10;1  core/ を変換して &lt;harnessDir&gt;/ へ: {{HARNESS_DIR}} 置換 ・ rules/ リネーム ・ tier: → model / effort 投影&#10;2  authored ファイルのコピー（Kiro は JSON にも tier 投影）&#10;2b onboarding.md を描画 → CLAUDE.md / AGENTS.md&#10;2c–2e ワークスペースの雛形: aidlc/spaces/default/memory ・ active-space ・ memory-seed&#10;3  aidlc-graph.ts compile → stage-graph.json / scope-grid.json（+ harness.json）&#10;4  aidlc-runner-gen → skills/ ランナー生成&#10;5  emit() プラグイン（codex / opencode のみ）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=12;align=left;spacing=14;verticalAlign=middle" vertex="1" parent="1">
+        <mxCell id="pkg" value="scripts/package.ts — buildTree()（ハーネスごとに実行・manifest.ts の走査で自動発見）&#10;1  core/ を変換して &lt;harnessDir&gt;/ へ: {{HARNESS_DIR}} 置換 ・ rules/ リネーム ・ tier: → model / effort 投影&#10;2  authored ファイルのコピー（Kiro は JSON にも tier 投影）&#10;2b onboarding.md を描画 → CLAUDE.md / AGENTS.md&#10;2c–2e ワークスペースの雛形: aidlc/spaces/default/memory ・ active-space ・ memory-seed&#10;3  aidlc-graph.ts compile → stage-graph.json / scope-grid.json（+ harness.json）&#10;4  aidlc-runner-gen → skills/ ランナー生成&#10;5  emit() プラグイン（codex / copilot / opencode のみ）" style="rounded=1;html=0;fillColor=#1e2736;strokeColor=#f2b35c;fontColor=#e8ecf4;fontSize=12;align=left;spacing=14;verticalAlign=middle" vertex="1" parent="1">
           <mxGeometry x="170" y="280" width="900" height="215" as="geometry" />
         </mxCell>
 

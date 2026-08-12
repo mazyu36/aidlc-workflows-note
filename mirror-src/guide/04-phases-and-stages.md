@@ -67,7 +67,7 @@ phase は順に実行される。各 phase 境界（Initialization → Ideation 
 
 **目的:** ワークスペースのブートストラップ — docs ディレクトリのスキャフォールド、ワークスペースの検出、状態の初期化。ウェルカムメッセージはセッション開始時に `settings.json` の `companyAnnouncements` エントリ経由で表示される（stage ではない）。
 
-Initialization の stage は承認 gate なしで**自動的に**実行される。3 つすべてが単一の決定論的ツール呼び出し（`aidlc-utility intent-birth`）の中で実行され、1 秒未満で完了する。
+Initialization の stage は承認 gate なしで**自動的に**実行される。3 つすべてが単一の決定論的ツール呼び出し（`aidlc-utility intent-create`）の中で実行され、1 秒未満で完了する。
 
 | # | Stage | リード | 主要成果物 | 条件 |
 |---|-------|------|---------------|-----------|
@@ -76,7 +76,7 @@ Initialization の stage は承認 gate なしで**自動的に**実行される
 | 0.3 | State Initialization | orchestrator | `aidlc-state.md`、`audit/` シャード | ALWAYS |
 
 **実行に関する注記:**
-- 3 stage すべてが `aidlc-utility intent-birth` の中で inline に実行される — LLM subagent への委譲も、stage ごとのプロンプトも無い。
+- 3 stage すべてが `aidlc-utility intent-create` の中で inline に実行される — LLM subagent への委譲も、stage ごとのプロンプトも無い。
 - ワークスペース検出はルールベースのスキャナ（ファイル拡張子・既知の設定ファイル名・パッケージマニフェスト）である。
 - この phase でユーザーの対話は不要。
 
@@ -407,7 +407,7 @@ flowchart TD
 
 | モード | Stage | ユーザーとの対話 | 説明 |
 |------|--------|-----------------|-------------|
-| Inline（自動進行） | 0.1、0.2、0.3 | なし | `aidlc-utility intent-birth` の中で決定論的に実行。承認 gate なし |
+| Inline（自動進行） | 0.1、0.2、0.3 | なし | `aidlc-utility intent-create` の中で決定論的に実行。承認 gate なし |
 | Inline | 28 stage | あり | エージェントが会話の中で作業し、末尾に承認 gate |
 | Subagent | 2.2、3.5 | 2.2 は practices インタビュー + 最終 gate、3.5 は承認 gate | hub-and-spoke の Practices Discovery、集中実行の Code Generation |
 | Pipeline（2 リンク） | 2.1 | 承認 gate のみ | developer のスキャン、次いで architect の統合と書き出し |

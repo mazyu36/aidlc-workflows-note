@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -93,7 +95,7 @@ intent を開始し、切り替えるだけだ。本章の残りでその仕組�
 <h2 id="one-workspace-organized-by-what-youre-working-on">1 つのワークスペース、作業対象で整理する</h2>
 <p>AI-DLC をインストールするとき、エンジンをプロジェクトにコピーする — harness 固有の
 ディレクトリ 1 つ（Claude Code なら <code>.claude/</code>、Kiro なら <code>.kiro/</code>、
-Codex なら <code>.codex/</code>）である。harness によって異なるのはレイアウトの中で
+Codex なら <code>.codex/</code>、opencode と GitHub Copilot なら <code>.aidlc/</code>）である。harness によって異なるのはレイアウトの中で
 そのディレクトリ<em>だけ</em>だ。以後、AI-DLC が生み出すすべてはプロジェクトルートの
 中立な <code>aidlc/</code> ディレクトリの下に住む — どの harness で動かしているかではなく、
 <em>何に取り組んでいるか</em>で整理される。ブラウズするのは <code>aidlc/</code> であり、
@@ -295,10 +297,10 @@ harness の <code>manifest.ts</code> とは無関係である。）</p>
 </thead>
 <tbody><tr>
 <td><code>aidlc/active-space</code>、<code>…/intents/active-intent</code></td>
-<td>カーソル — 「いま自分はどこか」。コミットすると <code>/aidlc</code> のたびにツリーが汚れ、切り替えのたびにチームメイトがカーソルを取り合うことになる。</td>
+<td>カーソル — 「いま自分はどこか」。コミットすると個人ごとのナビゲーションが共有リポジトリの状態になってしまい、intent の birth やカーソルの切り替えのたびにチームメイトが競合することになる。</td>
 </tr>
 <tr>
-<td><code>…/intents/&lt;id&gt;/runtime-graph.json</code>、<code>.aidlc-*</code>、<code>aidlc/.aidlc-sessions/</code></td>
+<td><code>…/intents/&lt;id&gt;/runtime-graph.json</code>、<code>.aidlc-*</code>、<code>aidlc/.aidlc-sessions/</code>、<code>aidlc/.aidlc-active-space-*.tmp</code></td>
 <td>導出された、マシンローカルのランタイム状態。</td>
 </tr>
 </tbody></table>

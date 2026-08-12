@@ -2,7 +2,7 @@
 
 > 対象読者: Tier 2/3（team adopter、framework contributor）。
 
-> **パス規約。** 以下の `<harness-dir>/` = harness のランタイムディレクトリ（`.claude` / `.codex` / `.kiro`）; `plugins/<name>/` = 著述された plugin ソース; `dist/plugins/<name>/<harness>/` = emit された、インストール可能な host plugin。
+> **パス規約。** 以下の `<harness-dir>/` = harness のランタイムディレクトリ（`.claude` / `.codex` / `.kiro` / `.aidlc`）; `plugins/<name>/` = 著述された plugin ソース; `dist/plugins/<name>/<harness>/` = emit された、インストール可能な host plugin。
 
 この章は **AIDLC plugin** システムの正典リファレンスである: 任意で、所有され、バージョン付けされた contribution の集合 — 新しい stage、agent、scope、method/rules、sensor、そして *既存の core stage への追加的な変更* — であり、harness 中立なツリーとして一度だけ著述され、各 harness のために **本物の host plugin として emit される**。plugin は決して `core/` を編集しない; すべての plugin を無効にすれば、インストールは素の core とバイト同一である。このシステムは、実証済みの唯一の編集不要な seam（追加的に compose される phase rule）をあらゆるサーフェスへ一般化し、それを専用のインストーラーではなく各 host 自身の plugin 機構を通して届ける。[ステージ定義](15-stage-definition.md)（plugin が著述する stage frontmatter、`plugin`/`number`/`when` を含む）、[Engine と Skill システム](17-skill-system.md)（composer が供給し orchestrator が経路を決めるグラフ）、[Artifact Vocabulary](16-artifact-vocabulary.md)（名前空間化のルール）、そして著述のウォークスルー [Plugin を著述する](../harness-engineering/10-authoring-a-plugin.md) を相互参照せよ。
 
@@ -31,7 +31,7 @@ plugin は、宣言的な manifest と core 形状のサブツリーを持つデ
 - **組合せ爆発。** N 個の plugin は最大で 2ⁿ の有効サブセットを生む; 中央ビルドはすべての組合せを事前 compose できない。事前ビルドする価値のある唯一の成果物は **bare core**（空集合）であり、それは全員にとって同一である。
 - **遅延解決。** 正しい plugin の集合 — そして 2 つの plugin の同じ stage への contribution がどうマージされるか — は、それらを選んだインストールの上でのみ知り得る。
 
-配送手段は、専用の AIDLC インストーラーではなく **host 自身の plugin システム** である。フレームワークが対象とするあらゆる harness は、すでに manifest ファースト・git 配布の plugin モデルを出荷している（Claude Code `.claude-plugin/`、Codex `.codex-plugin/`）; AIDLC plugin は *その一つ* である。これが **ハイブリッド** である: store が存在するところ（Claude、Codex）では本物の host plugin、store を持たない一つ（Kiro）では folder-drop。その帰結:
+配送手段は、専用の AIDLC インストーラーではなく **host 自身の plugin システム** である。フレームワークが対象とするあらゆる harness は、すでに manifest ファースト・git 配布の plugin モデルを出荷している（Claude Code `.claude-plugin/`、Codex `.codex-plugin/`）; AIDLC plugin は *その一つ* である。これが **ハイブリッド** である: store が存在するところ（Claude、Codex、opencode、そして「store」的なレイアウトとして扱われる Copilot のプロジェクト）では本物の host plugin、store を持たない一つ（Kiro）では folder-drop。その帰結:
 
 - **我々はディストリビューションインフラを一切運用しない。** 顧客が自身の plugin リポジトリをホストする（git + semver タグ + `marketplace.json`）。1 つの marketplace エントリが、混成フリートに向けて 1 つの plugin をリストする。
 - **信頼は host-native である。** org の制限は host のマネージド allowlist を使う（Claude `strictKnownMarketplaces`、ユーザーが上書き不可; Codex hash でピン留めされた trust）。AIDLC は trust レイヤーを一切作らない。
@@ -105,7 +105,7 @@ composer は `bare core + {chosen plugins}` の上で一度走り、実効イン
 3. **contribution をマージ（Merge contributions）** — stage への各アクティブな contribution が、対象 stage のソースに折り込まれる（§6）: 構造的サーフェスは set-union、散文フラグメントはそのアンカーで splice される。
 4. **コンパイル（Compile）** — `aidlc-graph compile` が `stage-graph.json` + `scope-grid.json` を再生成する; orchestrator は完全にそれらから経路を決めるので、plugin stage は compose された瞬間に走る — 散文や skill の編集は不要である。
 
-composition は 1 つの N-way マージであり（独立した overlay の列ではない）ので、**同じ stage に両方が contribute する 2 つの plugin は本当にマージされる** — 構造的追加は set-union され、散文フラグメントは決定論的に順序づけられる — のであって、一方が静かに他方を上書きするのではない。ランタイムは composition に関して **read-only** のままである: すべてのマージは compose 時に起こり、決してセッションごとではない。マージは **stage ソース**（コンパイル済み JSON ではない）を編集するので、後のあらゆる `aidlc-graph compile`（例えば runtime-compile hook）にわたって **durable** であり、かつ **冪等（idempotent）** である — 毎 SessionStart で再実行しても新しくは何も compose しない。
+composition は 1 つの N-way マージであり（独立した overlay の列ではない）ので、**同じ stage に両方が contribute する 2 つの plugin は本当にマージされる** — 構造的追加は set-union され、散文フラグメントは決定論的に順序づけられる — のであって、一方が静かに他方を上書きするのではない。ランタイムは composition に関して **read-only** のままである: すべてのマージは compose 時に起こり、決してセッションごとではない。マージは **stage ソース**（コンパイル済み JSON ではない）を編集するので、後のあらゆる `aidlc-graph compile`（例えば rebuild-stage-graph hook）にわたって **durable** であり、かつ **冪等（idempotent）** である — 毎 SessionStart で再実行しても新しくは何も compose しない。
 
 ## 5. 選択（Selection）
 
@@ -247,7 +247,7 @@ Kiro CLI/IDE、Codex、OpenCode では、engine ロスター中の Markdown ペ�
 
 ## 9. As-built: emission、インストール、そして具体例
 
-`bun scripts/package.ts` は `plugins/<name>/`（`.aidlc-plugin/plugin.json` を持つ任意のディレクトリ）を発見し、`dist/plugins/<name>/<harness>/` に harness ごとの host plugin を emit する — 4 つの harness ツリーと並ぶ、もう 1 つの射影ターゲットである。各射影は、host ネイティブの manifest（`.claude-plugin/` / `.codex-plugin/` / `.kiro-plugin/`）、`marketplace.json`、compose hook、そして plugin のコンテンツ（`number`/`plugin`/`when` の完全な frontmatter を持つ stage — スキーマはそれらをネイティブに受理する）を運ぶ。compose hook は、単一のポータブルな `compose.ts`（bun — GNU 固有のシェル無し）であり、**harness 非依存** である: plugin ルートは `CLAUDE_PLUGIN_ROOT | PLUGIN_ROOT | AIDLC_PLUGIN_ROOT` から、プロジェクトディレクトリは `CLAUDE_PROJECT_DIR | AIDLC_PROJECT_DIR | PWD` から（Codex はプロジェクトディレクトリの var を未設定のまま残す — PWD がフォールバック）、そして harness のリーフは `AIDLC_HARNESS_DIR` から解決され、それは各 host の hook コマンドが export する。それは新しい stage/scope/agent/knowledge/sensor/tool を上書きせずにコピーし、seam を冪等にマージし（content-hash された sentinel splice、書き込み前比較）、ドロップせざるを得ない任意の contribution（欠けた target、不正なアンカー、インストール済みの engine が受理しないキー）を plugin ごとの `<hooksHealthDir>/plugin-compose-<key>.drops` ファイル — core hook が書き込み、`/aidlc --doctor` がスキャンするのと同じ space ごとの health ディレクトリ — に記録する。セッションを失敗させはしない。Sensor の manifest は、コピー時にもう 1 つの防御を運ぶ: 発見は `sensors/` をフラットにスキャンし、`aidlc-<id>.md` にマッチする basename だけを索引する。したがって他の名前の plugin manifest（またはサブディレクトリにネストされたもの）は compose されても決して発火しない。Compose はそのような manifest を却下し、ファイルと必須の形を名指す degraded drop を記録する。より古い compose hook が既に同じ形で同じものを着地させていた場合は、次の実行で 1 件だけ報告するので、名前を誤った sensor がディスク上で静かに死んだままになることは決してない。
+`bun scripts/package.ts` は `plugins/<name>/`（`.aidlc-plugin/plugin.json` を持つ任意のディレクトリ）を発見し、`dist/plugins/<name>/<harness>/` に harness ごとの host plugin を emit する — あらゆる harness ツリーと並ぶ、もう 1 つの射影ターゲットである。各射影は、host ネイティブの manifest（`.claude-plugin/` / `.codex-plugin/` / Copilot `.plugin/` / `.kiro-plugin/` / `.opencode-plugin/` / `.cursor-plugin/`)、`marketplace.json`、compose hook、そして plugin のコンテンツ（`number`/`plugin`/`when` の完全な frontmatter を持つ stage — スキーマはそれらをネイティブに受理する）を運ぶ。Cursor は plugin-agent の compose 入力を、Cursor が自動発見するルート `agents/` の外の `aidlc/agents/` の下に保つ; compose は harness トークンを解決し名前付きの model ピンを取り除いた上で、その単一のネイティブコピーをインストール済みの `.cursor/agents/` ロースターへ射影する。compose hook は、単一のポータブルな `compose.ts`（bun — GNU 固有のシェル無し）であり、**harness 非依存** である: plugin ルートは `CLAUDE_PLUGIN_ROOT | PLUGIN_ROOT | AIDLC_PLUGIN_ROOT` から解決され、無ければ emit された hook の場所にフォールバックする; プロジェクトディレクトリは `CLAUDE_PROJECT_DIR | AIDLC_PROJECT_DIR | PWD` から（Codex はプロジェクトディレクトリの var を未設定のまま残す — PWD がフォールバック）; そして harness のリーフは `AIDLC_HARNESS_DIR` から解決され、それは各 host コマンドまたは Cursor のランチャーが供給する。Cursor のランチャーはさらに SessionStart の `workspace_roots` をパースし、AI-DLC の Cursor インストールを運ぶ唯一のルートを選び、`AIDLC_PROJECT_DIR` が 1 つを選ばない限り複数の合致するルートを拒否する。それは新しい stage/scope/agent/knowledge/sensor/tool を上書きせずにコピーし、seam を冪等にマージし（content-hash された sentinel splice、書き込み前比較）、ドロップせざるを得ない任意の contribution（欠けた target、不正なアンカー、インストール済みの engine が受理しないキー）を plugin ごとの `<hooksHealthDir>/plugin-compose-<key>.drops` ファイル — core hook が書き込み、`/aidlc --doctor` がスキャンするのと同じ space ごとの health ディレクトリ — に記録する。セッションを失敗させはしない。Sensor の manifest は、コピー時にもう 1 つの防御を運ぶ: 発見は `sensors/` をフラットにスキャンし、`aidlc-<id>.md` にマッチする basename だけを索引する。したがって他の名前の plugin manifest（またはサブディレクトリにネストされたもの）は compose されても決して発火しない。Compose はそのような manifest を却下し、ファイルと必須の形を名指す degraded drop を記録する。より古い compose hook が既に同じ形で同じものを着地させていた場合は、次の実行で 1 件だけ報告するので、名前を誤った sensor がディスク上で静かに死んだままになることは決してない。
 
 emit される host manifest は plugin identity にとって権威がある: compose は host パッケージ
 ID `aidlc-<name>` を論理的な `<name>` に写し戻し、その `plugin:` フィールドが異なる所有
@@ -258,7 +258,9 @@ stage・scope・agent・contribution のコンテンツを却下する。着信�
 ロックを保持する; グラフのコンパイルが失敗した場合、新しくコピーされたファイルと contribution
 の書き込みは、再試行マーカーが書かれる前に復元される。
 
-emit された SessionStart コマンドは、まず `PATH` 上の `aidlc` を探り、利用可能なら `aidlc plugin sync` を走らせる。`aidlc` バイナリが見つからなければ、直接の bun `hooks/compose.ts` 起動にフォールバックし、どちらの実行可能ファイルも利用不可のときでもなお 0 で終了する。
+emit された SessionStart コマンドは、まず `PATH` 上の `aidlc` を探り、利用可能なら `aidlc plugin sync` を走らせる。ポータブルなランチャーは、CLI が利用不可なとき直接の bun `hooks/compose.ts` 起動にフォールバックする。
+
+Cursor の emit された hook は Cursor のフラットな camelCase スキーマ(`hooks.sessionStart[].command`)を使い、`./hooks/aidlc-plugin-compose.ts .cursor` を呼び出す。その Bun ランチャーは `Bun.which` と `process.execPath` を使って `aidlc` を探り、ネイティブの Windows で `sh -c` に依存せず、ポータブルに隣接する `compose.ts` を走らせる。
 
 **host ごとのインストール:**
 
@@ -285,7 +287,7 @@ AIDLC_PLUGIN_ROOT="$PLUGIN_ROOT" AIDLC_PROJECT_DIR="<project>" \
 
 その後 `/aidlc plugin list` と `/aidlc --doctor` が有効な集合を反映し（例えば `core + test-pro` の 34-stage グラフ、または `select-plugins` がそれを絞ったときのフィルタ済みグラフ）、scope 付きの実行（`/aidlc --scope enterprise`）が、plugin の stage をその scope が経路上に置くところへどこへでも経路づける。
 
-**具体例 — 混成フリートにわたる test-pro。** プラットフォームチームが `test-pro` を一度公開する（`core/` に対して著述し、`bun scripts/package.ts`、`<plugin>--v<version>` タグを push、`marketplace.json` を drop）。Claude チームは `/plugin install`; Codex チームは `codex plugin add`（一度だけ trust を承認）; Kiro チームは `git pull` + composer を明示的に走らせる（上記）。いずれの場合も、composer は test-pro の 2 つの新しい stage **と** その `build-and-test`/`nfr-requirements`/`nfr-design`/`performance-validation` への contribution をマージする — 同じ、豊かにされた、34-stage の、doctor がクリーンなインストールである。4 つすべての harness 射影（Claude、Codex、Kiro CLI、Kiro IDE）にわたって検証済み。
+**具体例 — 混成フリートにわたる test-pro。** プラットフォームチームが `test-pro` を一度公開する（`core/` に対して著述し、`bun scripts/package.ts`、`<plugin>--v<version>` タグを push、`marketplace.json` を drop）。Claude チームは `/plugin install`; Codex チームは `codex plugin add`（一度だけ trust を承認）; Kiro チームは `git pull` + composer を明示的に走らせる（上記）。いずれの場合も、composer は test-pro の 2 つの新しい stage **と** その `build-and-test`/`nfr-requirements`/`nfr-design`/`performance-validation` への contribution をマージする — 同じ、豊かにされた、34-stage の、doctor がクリーンなインストールである。7 つすべての harness 射影（Claude、Codex、Cursor、Kiro CLI、Kiro IDE、opencode、GitHub Copilot）にわたって検証済み。
 
 **Status。** 実装済みかつ検証済み: `number`/`name`/`plugin`/`when` のスキーマサポート（`aidlc-stage-schema.ts`）; 著述された `plugin` 所有権のコンパイル済み stage ノードへの compile 側キャリースルー（core はフィールドを省く）; `harness.json` + `select-plugins` を通じたインストール時の選択、完全グラフの永続化、フィルタ済みのランタイムロード、closure チェック、runner の刈り込み、doctor 行、compose advisory ドロップを含む; `aidlc plugin list` と `aidlc plugin sync`; plugin 名前空間化された stage/scope runner の生成; packager emitter（発見されたあらゆる harness 射影）; plugin の `stages/`、`scopes/`、`agents/`、`knowledge/`、`sensors/`、`tools/` の射影と no-clobber compose; harness 非依存の compose hook（`scripts/plugin-hooks-template/compose.ts`）; `produces` / `consumes` / `sensors` / `scopes`（自 plugin のみ、インストール済みファイルでガード）/ `required_sections` + 散文フラグメント（content-hash 済み、冪等、順序決定論的）の contribution seam。`tests/integration/t188-plugin-compose.test.ts`（compose メカニズム）、`tests/integration/t224-plugin-selection.test.ts`（選択）、そして各 plugin 自身の `tests/`（コンテンツ; integration tier に結線される）でガードされる。**延期 / まだ結線されていない:** plugin の `memory/` サブツリーの射影/マージ; `adds.requires_stage` のマージ（宣言 → ログ）; `when:` 述語の評価（パースされるが engine 消費者無し）; マージされた `required_sections` の機械強制（フィールドはマージ + 検証されるがコンパイル済みノードに届かず、出荷される required-sections sensor はその期待をテンプレートから導くので、欠けた宣言済みセクションのために stage を失敗させるものはまだ無い）; `after-questions` フラグメントアンカー（`locateAnchor` にケースが無い — "unknown anchor" を drop-log する; `after-step:<n>` を使う）; そして `aidlc.contributes` / 任意の lockfile / `dependencies` の読み取り。新しい slug の番号シードは edge-aware である: 初回コンパイルは各 phase の新しい stage のバッチをそれ自身の `requires_stage` edge で順序づけ（タイは著述された `number:` ヒントで、続いて slug で破られる）、その順序で次に空いている連続インデックスを割り当てる — engine がすべての番号値を所有する（著者は何も主張しないので、非協調な plugin が衝突することはない）、マルチ stage の plugin のサブ DAG はファイル名にかかわらずフロー順にシードされる、そして既にピン留めされた行はその JSON の値を保つ。著述された `name:` は新しい slug の表示名をシードする。
 
@@ -295,7 +297,7 @@ AIDLC_PLUGIN_ROOT="$PLUGIN_ROOT" AIDLC_PROJECT_DIR="<project>" \
 - **追加のみ。** contribution は足す; 決して override も削除もしない。
 - **オフのとき inert。** すべての plugin を無効にすると、素の core が、バイト同一で得られる。
 - **1 つの composer、host トリガー。** 同じコードが、走るところどこでも compose する; 中央で事前ビルドされる唯一の成果物は bare core である。
-- **plugin は host plugin で「ある」。** packager は本物の `.claude-plugin/` / `.codex-plugin/` / `.kiro-plugin/` manifest を emit し、host のネイティブコマンドを通してインストールされる。AIDLC はディストリビューションインフラを一切運用しない。
+- **plugin は host plugin で「ある」。** packager は本物の `.claude-plugin/` / `.codex-plugin/` / Copilot `.plugin/` / `.kiro-plugin/` / `.opencode-plugin/` / `.cursor-plugin/` manifest を emit し、host のネイティブコマンドを通してインストールされる。AIDLC はディストリビューションインフラを一切運用しない。
 - **slug identity、表示専用の番号。** plugin stage を挿入しても core が再番号付けされることは決してない。
 - **信頼は host-native である。** org の制限は host のマネージド allowlist を使う; AIDLC は trust レイヤーを一切作らない。
 - **ゲートキーピング無し。** ファーストパーティとサードパーティの plugin は機構的に等しい; 出所が唯一の違いである。

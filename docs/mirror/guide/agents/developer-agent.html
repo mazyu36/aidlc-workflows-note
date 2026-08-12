@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -85,7 +87,7 @@
 </blockquote>
 <p>aidlc-developer-agent はあなたのシニアソフトウェア開発者である。アーキテクチャ設計と unit の仕様を、本番品質のコードへ翻訳する。リバースエンジニアリングでは、aidlc-architect-agent が統合する深いコードスキャンを実行する。</p>
 <p>aidlc-developer-agent は Reverse Engineering のコードスキャンと Code Generation をリードし、Inception の両アンサンブルで dispatch される協働者でもある: Practices Discovery の hub-and-spoke ではコードパターンの証拠を検分し、User Stories の mob では実装可能性の声を担う。Code Generation は集中実行の subagent として走る。ビルドツール・パッケージマネージャ・テストコマンドを実行するための Bash アクセスを持つ。</p>
-<p>Workspace Detection（0.2）はかつて aidlc-developer-agent が subagent としてリードしていたが、いまはルールベースのスキャナとして <code>aidlc-utility intent-birth</code> の中で決定論的に実行される。aidlc-developer-agent はもう Initialization に関与しない。</p>
+<p>Workspace Detection（0.2）はかつて aidlc-developer-agent が subagent としてリードしていたが、いまはルールベースのスキャナとして <code>aidlc-utility intent-create</code> の中で決定論的に実行される。aidlc-developer-agent はもう Initialization に関与しない。</p>
 <h2 id="stages-led">リードする stage</h2>
 <table>
 <thead>

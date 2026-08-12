@@ -6,7 +6,7 @@ aidlc-developer-agent はあなたのシニアソフトウェア開発者であ�
 
 aidlc-developer-agent は Reverse Engineering のコードスキャンと Code Generation をリードし、Inception の両アンサンブルで dispatch される協働者でもある: Practices Discovery の hub-and-spoke ではコードパターンの証拠を検分し、User Stories の mob では実装可能性の声を担う。Code Generation は集中実行の subagent として走る。ビルドツール・パッケージマネージャ・テストコマンドを実行するための Bash アクセスを持つ。
 
-Workspace Detection（0.2）はかつて aidlc-developer-agent が subagent としてリードしていたが、いまはルールベースのスキャナとして `aidlc-utility intent-birth` の中で決定論的に実行される。aidlc-developer-agent はもう Initialization に関与しない。
+Workspace Detection（0.2）はかつて aidlc-developer-agent が subagent としてリードしていたが、いまはルールベースのスキャナとして `aidlc-utility intent-create` の中で決定論的に実行される。aidlc-developer-agent はもう Initialization に関与しない。
 
 ## リードする stage
 

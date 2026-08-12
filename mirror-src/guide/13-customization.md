@@ -7,12 +7,16 @@ AI-DLC はチームのニーズへ適応するように設計されている。�
 >（`settings.json` / `settings.local.json`、statusline コマンド、`$CLAUDE_PROJECT_DIR`、
 > ツール権限ブロック）は **Claude Code 固有**である。Kiro は同等物を
 > `.kiro/settings/cli.json` + エージェント設定で、Codex は `.codex/config.toml`
-> + Starlark rules で、opencode はプロジェクトルートの `opencode.json` で構成する —
-> 各 harness のサーフェスは
+> + Starlark rules で、Cursor は `.cursor/hooks.json` + `.cursor/cli.json`
+>（permissions のみ）で、opencode はプロジェクトルートの `opencode.json` で、Copilot は
+> `.github/hooks/aidlc.json`（hook の配線）+ `~/.copilot/config.json`（folder trust）で
+> 構成する — 各 harness のサーフェスは
 > [Kiro CLI で動かす](harnesses/kiro-cli.md)、
 > [Kiro IDE で動かす](harnesses/kiro-ide.md)、
 > [Codex CLI で動かす](harnesses/codex-cli.md)、
-> [opencode 上の AI-DLC](harnesses/opencode.md) を参照。
+> [Cursor 上の AI-DLC](harnesses/cursor.md)、
+> [opencode 上の AI-DLC](harnesses/opencode.md)、
+> [GitHub Copilot 上の AI-DLC](harnesses/copilot.md) を参照。
 
 ---
 
@@ -34,7 +38,7 @@ cp .claude/settings.local.json.example .claude/settings.local.json
 
 ## エージェントのモデルと effort（tier）
 
-同梱エージェントは `tier:`（`judgment` | `balanced` | `templated`）付きで書かれており、ビルドが各 harness ネイティブの model / effort キーへ投影する — judgment のエージェントはセッションのモデルと effort を継承し、balanced のエージェントは中型モデルを固定し（Claude Code・Codex・opencode。Kiro では全 tier がセッションモデルを継承）、templated のエージェントは同じ非 Kiro harness で effort も下げる。完全な投影表は [エージェントシステム](../reference/05-agent-system.md) を参照。
+同梱エージェントは `tier:`（`judgment` | `balanced` | `templated`）付きで書かれており、ビルドが各 harness ネイティブの model / effort キーへ投影する — judgment のエージェントはセッションのモデルと effort を継承し、balanced のエージェントは中型モデルを固定し（Claude Code・Codex・opencode。Kiro・Cursor・Copilot では全 tier がセッションモデルを継承）、templated のエージェントは同じモデル固定 harness で effort も下げる。完全な投影表は [エージェントシステム](../reference/05-agent-system.md) を参照。
 
 インストール済みコピーで 1 体のエージェントだけ挙動を変えるには、投影された値を直接編集する — 例えば Claude のエージェント `.claude/agents/aidlc-*-agent.md` の frontmatter に `model: opus` を設定する。Kiro ではサーフェスが harness に依存する: Kiro CLI ではエージェントの `.kiro/agents/aidlc-*-agent.json` に `"model"` フィールドを足し、Kiro IDE ではエージェントの `.kiro/agents/aidlc-*-agent.md` frontmatter に `model:` 行を設定する（エージェントの JSON ファイルは CLI 専用 — IDE は spawn 時に `.md` frontmatter を読む）。どちらの場合もインストールで有効なモデル ID を使うこと。Kiro のエージェントはモデル固定なしで出荷されるため、既定ではセッションモデルを継承する。この編集は `dist/<harness>/` シェルを再コピーするまで生き残る。ソースから自分のディストリビューションをビルドする際に全エージェントへ上限を掛けるには、`core/memory/org.md`/`project.md` の frontmatter に `tier_cap:` を設定するか、パッケージャを `AIDLC_TIER_CAP=<tier>` で実行する — どちらも `bun scripts/package.ts` のパック時のノブであり、ランタイム設定ではない。
 
@@ -131,13 +135,13 @@ stage の振る舞いを変えるには、その stage ファイルを直接編�
 
 ## ステータスライン（Claude Code のみ）
 
-**Claude Code** では、この実装はターミナルのステータスバーにワークフロー進捗を示すステータスラインを表示する。他の harness にステータスラインは無い — ワークフローの位置は `/aidlc --status`（Kiro・opencode）や、`update_plan` のタスク進捗項目 + `$aidlc --status`（Codex）で表示する:
+**Claude Code** では、この実装はターミナルのステータスバーにワークフロー進捗を示すステータスラインを表示する。他の harness にステータスラインは無い — ワークフローの位置は `/aidlc --status`（Kiro・Cursor・opencode）や、`update_plan` のタスク進捗項目 + `$aidlc --status`（Codex）で表示する:
 
 ```
 [AIDLC] IDEATION [▓▓▓▓▓░░░░░] 4/7 > Intent Capture -- Product Agent
 ```
 
-表示は順に: 現在の phase、phase の進捗（バーと比 — どちらも現在 phase の範囲）、stage の表示名、リードエージェント。コンテキスト使用量は右側に現れ（例: `ctx:15%`）、残りが減るにつれて色分けされる。Claude の使用量台帳にデータがある場合、`↑<in> ↓<out> $<usd>` が続き、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークフローとセッションは除外される。
+表示は順に: 現在の phase、phase の進捗（バーと比 — どちらも現在 phase の範囲）、stage の表示名、リードエージェント。コンテキスト使用量は右側に現れ（例: `ctx:15%`）、残りが減るにつれて色分けされる。Claude の使用量台帳にデータがある場合、`↑<in> ↓<out> $<usd>` が続き、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークフローとセッションは除外される。`AIDLC_DISABLE_USAGE_TRACKING=1` を設定すると使用量追跡は完全に無効になり、このセグメントも消える。
 
 ### 設定
 
@@ -188,7 +192,7 @@ stage の振る舞いを変えるには、その stage ファイルを直接編�
 
 ### 権限の絞り込み
 
-allow リストからツールを外すと、使用のたびに手動承認が要るようになる。`Task` を外すと、4 つの dispatch される stage（2.1 Reverse Engineering の pipeline、2.2 Practices Discovery の subagent、2.4 User Stories の mob、3.5 Code Generation の subagent）が委譲のたびに許可を求めるようになる点に注意。ワークスペース検出（0.2）は `aidlc-utility intent-birth` の中で決定論的に実行される — `Task` は使わない。
+allow リストからツールを外すと、使用のたびに手動承認が要るようになる。`Task` を外すと、4 つの dispatch される stage（2.1 Reverse Engineering の pipeline、2.2 Practices Discovery の subagent、2.4 User Stories の mob、3.5 Code Generation の subagent）が委譲のたびに許可を求めるようになる点に注意。ワークスペース検出（0.2）は `aidlc-utility intent-create` の中で決定論的に実行される — `Task` は使わない。
 
 ---
 

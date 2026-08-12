@@ -3,12 +3,18 @@
 AI-DLC のコマンドはすべて orchestrator の呼び出しから始まる。この章は、あらゆる呼び出しパターンとフラグの完全なリファレンスである。
 
 > **呼び出しのプレフィックスは harness で異なる。** Claude Code・Kiro IDE・Kiro CLI・
-> opencode では `/aidlc` と打つ。Codex CLI では `$aidlc`（または `/skills` →
-> aidlc）である。以下のフラグと挙動はどちらでも同一 — 変わるのはプレフィックスだけである。
-> 例は `/aidlc` を使う。Codex では `$aidlc` に置き換える。
+> Cursor・opencode・GitHub Copilot では `/aidlc` と打つ。Codex CLI では `$aidlc`
+> （または `/skills` → aidlc）である。以下のフラグと挙動はどちらでも同一 — 変わるのは
+> プレフィックスだけである。例は `/aidlc` を使う。Codex では `$aidlc` に置き換える。
 > [Kiro CLI](harnesses/kiro-cli.md)・[Kiro IDE](harnesses/kiro-ide.md)・
 > [Codex CLI](harnesses/codex-cli.md)・
-> [opencode](harnesses/opencode.md) の harness ガイドを参照。
+> [Cursor](harnesses/cursor.md)・[opencode](harnesses/opencode.md)・
+> [GitHub Copilot](harnesses/copilot.md) の harness ガイドを参照。
+
+> **Cursor のショートカット。** Cursor はネイティブスキルとして
+> `/aidlc-status`・`/aidlc-jump --stage <slug|#>`（または `--phase <name|#>`）・
+> `/aidlc-scope <name>` も提供する。これらは以下の対応する `/aidlc` 形式をパッケージし
+> 同じエンジンを使う。別の状態経路ではなく、あくまでエイリアスである。
 
 ---
 
@@ -34,14 +40,16 @@ AI-DLC のコマンドはすべて orchestrator の呼び出しから始まる�
 | `/aidlc --scope <name>` | アクティブな scope を変更する |
 | `/aidlc --depth <level>` | depth レベルを上書きする（minimal, standard, comprehensive） |
 | `/aidlc --test-strategy <level>` | テスト戦略を上書きする（minimal, standard, comprehensive） |
-| `/aidlc config get <key>` | アクティブなワークフロー設定を表示する（`depth`, `test-strategy`） |
-| `/aidlc config set <key> <value>` | アクティブなワークフロー設定を変更する（`depth`, `test-strategy`） |
+| `/aidlc --review <class>` | この実行の stage review 上限を設定する（adversarial, advisory, none） |
+| `/aidlc config get <key>` | アクティブなワークフロー設定を表示する（`depth`, `test-strategy`, `review`） |
+| `/aidlc config set <key> <value>` | アクティブなワークフロー設定を変更する（`depth`, `test-strategy`, `review`） |
 | `/aidlc config list` | アクティブなワークフロー設定を一覧する（構造化出力は `--json`） |
+| `/aidlc plugin select [names]` | このインストールの有効プラグイン一覧を表示または設定する |
 | `/aidlc plugin list` | インストール済みプラグインと有効状態を一覧する |
 | `/aidlc plugin sync` | インストール済みのプラグインルートを現在のインストールに compose する |
 | `/aidlc --version` | フレームワークのバージョンを表示する |
 | `/aidlc --help` | 使い方を表示する |
-| `bun .claude/tools/aidlc-utility.ts select-plugins [names]` | 直接呼び出し専用: このインストールの有効プラグイン一覧を表示または設定する |
+| `bun .claude/tools/aidlc-utility.ts select-plugins [names]` | プラグイン選択の直接ユーティリティ形式 |
 
 ---
 
@@ -176,7 +184,7 @@ flowchart TD
 Workspace Detection、State Init）を 1 つの決定論的ツール呼び出しとして走らせる:
 intent の record dir を
 `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`（`audit/` シャードdir、
-phase 別の成果物 dir、`verification/`）に作り、空の space レベル
+scope が走る phase ごとの成果物 dir、`verification/`）に作り、空の space レベル
 `aidlc/knowledge/` ディレクトリを作り、ルールベースのワークスペーススキャンを走らせ、
 その intent の `aidlc-state.md` を scope 計画とともに書く。
 init シーケンスのイベント（`WORKFLOW_STARTED`、`WORKSPACE_SCAFFOLDED`、
@@ -195,7 +203,7 @@ space レベルの `aidlc/knowledge/` ディレクトリは最初の intent が�
 集合を `intents.json` の行に記録する。既定ではすべての兄弟リポを**自動発見**する。
 intent を特定の部分集合に絞るには、birth ツールが `--repos a,b`（リポのディレクトリ名の
 カンマ区切りリスト）を受け付ける。これらはエンジンがあなたのために走らせる決定論的な
-`aidlc-utility intent-birth` ステップのフラグであり、あなたが打つ `/aidlc` のフラグではない。
+`aidlc-utility intent-create` ステップのフラグであり、あなたが打つ `/aidlc` のフラグではない。
 Construction の間、各 git 操作（worktree、swarm、Bolt）は 1 つのリポを対象にする。
 conductor はそれを固定するために `--repo <name>` を渡す。intent が複数リポにまたがるときのみ
 必須である。記録リポの無い intent は単一リポの既定（git はワークスペース／プロジェクト dir で
@@ -283,8 +291,8 @@ conductor はそれを固定するために `--repo <name>` を渡す。intent �
 
 ```
 ✓ bun installed (required for CLI tools and hooks)
-✓ aidlc-audit-logger.ts present
-✓ aidlc-sync-statusline.ts present
+✓ aidlc-write-audit-log.ts present
+✓ aidlc-sync-workflow-state.ts present
 ✓ aidlc-validate-state.ts present
 ✓ aidlc-log-subagent.ts present
 ✓ aidlc-session-start.ts present
@@ -440,7 +448,7 @@ reviewer は使うが、ワークフローの learnings は走らせず、ワー
 /aidlc --scope enterprise
 ```
 
-**挙動:** `aidlc-state.md` の scope 設定を更新し、どの stage が実行され／飛ばされるべきかを再計算し、`SCOPE_CHANGED` の audit イベントをログする。新しい scope の既定 depth を上書きするために `--depth` と組み合わせられる。
+**挙動:** `aidlc-state.md` の scope 設定を更新し、どの stage が実行され／飛ばされるべきかを再計算し、`SCOPE_CHANGED` の audit イベントをログする。`--depth`・`--test-strategy`・`--review` と組み合わせられ、指定した上書きはすべて同じ変更内で適用される。
 
 自律 Construction 下（`Construction Autonomy Mode: autonomous`）では拒否される。`recompose` と同じルールである: 計画の再形成は gate に人間を要し、無人実行には人間がいない。先に gated Construction に切り替える（`aidlc-bolt set-autonomy --mode gated`）か、swarm を終わらせる。
 
@@ -503,6 +511,46 @@ depth とは独立に、テスト量の戦略を上書きする。
 /aidlc --test-strategy minimal                         Minimal testing for active workflow
 /aidlc --depth standard --test-strategy minimal        Full artifacts, minimal tests
 /aidlc --scope bugfix --test-strategy comprehensive    Bugfix with thorough testing
+```
+
+---
+
+### `/aidlc --review <class>` — この実行の stage review 上限を設定する
+
+per-run の review 上書きを設定する: アクティブなワークフローで §12a の stage review
+がどれだけ重く走るかの上限である。
+
+**構文:**
+
+```
+/aidlc --review adversarial
+/aidlc --review advisory
+/aidlc --review none
+```
+
+**挙動:** reviewer を持つ各 stage は自身の frontmatter で review クラスを宣言する
+— `adversarial`（reviewer が成果物を論破し、lead が findings を修正する。最大
+`reviewer_max_iterations` パスまで）または `advisory`（レビューは 1 パスのみ。
+findings は承認 gate であなたがトリアージするために逐語で引用される）。実効クラスは
+stage の宣言・scope の `review_cap`（bugfix・poc・workshop は `advisory` を上限とする）・
+この上書きの 3 つのうち最も低いものである — つまり `--review advisory` は残る
+adversarial ループすべてを単一の意思決定支援パスに変え、`--review none` は
+reviewer の dispatch を完全に飛ばし、`--review adversarial` は上書きを解除する
+（stage の宣言や scope の上限より上にクラスを上げることはできない）。自律 swarm の
+Construction は例外である: Bolt 内では reviewer だけが merge 前の唯一の検証なので、
+宣言されたクラスが常に適用される。`aidlc-state.md` の `Review Override` フィールドを
+更新し、`REVIEW_CLASS_CHANGED` の audit イベントをログする。ワークフローの誕生時、
+または `--scope` と併せて指定できる。scope が現在と同じ場合、review の上書きは
+破棄されずに設定変更として適用される。
+
+**有効な値:** `adversarial`、`advisory`、`none`（大文字小文字を区別しない）。
+
+**例:**
+
+```
+/aidlc --review advisory              Single-pass reviews, findings at the gate
+/aidlc --review none                  No stage reviews this run
+/aidlc --review adversarial           Clear the override (stage defaults apply)
 ```
 
 ---
@@ -648,7 +696,8 @@ LFS オブジェクトストアを含む。キャッシュされたリモート�
 ### `aidlc-utility select-plugins` — インストールのプラグイン選択
 
 `/aidlc plugin list` はインストール済みプラグイン名と各々の有効／無効を表示する。
-`select-plugins` は**直接のユーティリティ呼び出し**であり、`/aidlc select-plugins` コマンドではない。
+`/aidlc plugin select [names]` が公開コマンドである。`select-plugins` はその
+直接のユーティリティ形式であり、`/aidlc select-plugins` コマンドではない。
 `bun .claude/tools/aidlc-utility.ts select-plugins` は現在の選択
 （`plugins` キーが無ければ `all enabled (no selection)`）と既知の
 プラグイン名を表示する。カンマ区切りのリストを渡して設定する:
@@ -678,7 +727,7 @@ bun .claude/tools/aidlc-graph.ts ars --iae 0.30 --csu 0.80 --ve 0.40 --r 0.20 --
 
 ### `aidlc-graph validate-grid` — 任意グリッドの依存チェック
 
-`bun .claude/tools/aidlc-graph.ts validate-grid --proposal <path> [--strict] [--project-type <t>] [--keywords <csv>]` は、任意の `{"<stage>": "EXECUTE"|"SKIP"}` JSON グリッドを検証する。lenient モードは `validate-scope` を映す（経路外の必須プロデューサは助言）。`--strict` はそれをハード却下する（recompose の姿勢）。`--keywords` は付与された各キーワードを、既存 scope が既に主張するキーワードと照合する: 衝突は現職の scope を名指すハードエラーである（composer は gate で付与されたキーワードを書く前にこれを走らせる）。無効なときのみ exit 1。JSON 結果は stdout に着地する。
+`bun .claude/tools/aidlc-graph.ts validate-grid --proposal <path> [--strict] [--project-type <t>] [--keywords <csv>]` は、任意の `{"<stage>": "EXECUTE"|"SKIP"}` JSON グリッドを検証する。proposal はコンパイル済みの全 stage をちょうど 1 回ずつ名指さねばならない。stage の欠落・未知の stage・無効な action はエラーである。lenient モードは `validate-scope` を映す（経路外の必須プロデューサは助言）。`--strict` はそれをハード却下する（recompose の姿勢）。`--keywords` は付与された各キーワードを、既存 scope が既に主張するキーワードと照合する: 衝突は現職の scope を名指すハードエラーである（composer は gate で付与されたキーワードを書く前にこれを走らせる）。結果はさらに `nearest_stock` を運ぶ: proposal からのグリッド距離でランク付けした、graph/plugin が著述したすべての stock scope（`{scope, diff, differs}`、昇順）であり、composer が著述した scope エントリは除外され、欠落または余分なキーは差分として数えられる。front/report の合成では、マッチ済みかカスタムかの判定はこの最終 proposal 結果のみ（`diff <= 2` かつ互換な depth）に基づいてルーティングされ、モデルによる再集計や先行の機械的な ARS スクリーンには基づかない。進行中の recomposition ではこのランキングは助言として扱われ、実行中の scope と計画は保持される。無効なときのみ exit 1。JSON 結果は stdout に着地する。
 
 ### `aidlc-sensor` — Sensor の検査と発火
 

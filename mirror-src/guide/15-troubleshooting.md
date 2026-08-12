@@ -34,7 +34,7 @@
 
 ### `bun` が未インストール、または PATH に無い
 
-16 の TypeScript hook（`aidlc-mint-presence.ts`、`aidlc-dispatch-rules.ts`、`aidlc-state-transition-guard.ts`、`aidlc-reviewer-scope.ts`、`aidlc-review-freeze.ts`、`aidlc-audit-logger.ts`、`aidlc-sensor-fire.ts`、`aidlc-runtime-compile.ts`、`aidlc-fold-usage.ts`、`aidlc-log-subagent.ts`、`aidlc-stop.ts`、`aidlc-validate-state.ts`、`aidlc-sync-statusline.ts`、`aidlc-session-start.ts`、`aidlc-session-end.ts`、`aidlc-statusline.ts`）はすべて `bun` を必要とする。`bun` が無い、または非対話シェルの PATH に無い場合、これらの hook は発火しない。
+17 の TypeScript hook（`aidlc-record-human-turn.ts`、`aidlc-deliver-stage-rules.ts`、`aidlc-plan-approval-guard.ts`、`aidlc-state-transition-guard.ts`、`aidlc-reviewer-scope.ts`、`aidlc-review-freeze.ts`、`aidlc-write-audit-log.ts`、`aidlc-run-sensors.ts`、`aidlc-rebuild-stage-graph.ts`、`aidlc-fold-usage.ts`、`aidlc-log-subagent.ts`、`aidlc-continue-workflow.ts`、`aidlc-validate-state.ts`、`aidlc-sync-workflow-state.ts`、`aidlc-session-start.ts`、`aidlc-session-end.ts`、`aidlc-statusline.ts`）はすべて `bun` を必要とする。`bun` が無い、または非対話シェルの PATH に無い場合、これらの hook は発火しない。
 
 ```bash
 # macOS / Linux
@@ -53,6 +53,10 @@ bun --version
 ### レビュアーのツール呼び出しが拒否される（"reviewer read-scope: ..."）
 
 unit 単位の Construction レビュー中、reviewer-scope hook は、dispatch されたレビュアーが兄弟 unit の `construction/` パスへ届くツール呼び出しを拒否する（stage-protocol §12a の読み取りスコープ境界）。拒否メッセージはスコープ対象の unit と渡された契約パスを名指しし、各拒否は `REVIEWER_SCOPE_BLOCKED` の audit 行を記録する。自分のソースツリーに AI-DLC の unit と無関係な `construction/` ディレクトリがあり、正当なレビュアーの読み取りが拒否される場合は、`AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1` で強制を無効化できる。散文の境界は引き続き有効である。レビューが走っていないのにレビュアーが拒否される場合は古い dispatch 記録を意味する - `/aidlc --doctor` の hook ドロップカウンタ（`reviewer-scope.drops`）を確認し、`<record>/.aidlc-reviewer-dispatch.json` があれば削除する（6 時間より古い記録は無視され自動で掃除される）。
+
+### 見たくないコストセグメントがステータスラインに表示される（あるいは使用量追跡への懸念）
+
+Claude Code では、stage 単位の token 使用量とコスト追跡は既定で有効である: fold-usage hook がトランスクリプトの使用量を gitignore 済みのローカル台帳（`aidlc/.aidlc-sessions/usage-ledger.json`）に記録し、ステータスラインは `↑<in> ↓<out> $<usd>` を付け加え、完了時の audit イベントはコストの集計を持つ。どこにも送信されない（メトリクス送信は `AIDLC_METRICS_ENDPOINT` 経由で別途オプトインが必要である）。ローカル追跡をすべて無効にするには `AIDLC_DISABLE_USAGE_TRACKING=1` を設定する: 台帳の更新は止まり、ステータスラインのセグメントは消え、完了イベントに集計フィールドは追加されない。既存の台帳はディスク上に残る — 履歴も消したい場合は手動で削除する。フラグを外すと追跡は再開する。
 
 ### hook が設定されていない
 
@@ -220,7 +224,7 @@ AI-DLC のワークフローが実行中でなければ、いつ実行しても�
 /aidlc --doctor
 ```
 
-チェック内容: 前提条件（`bun`）、hook の存在（`settings.json` が束線するすべての hook — フレームワークの全 16 hook — が `.claude/hooks/` に存在すること。束線済みなのに無い hook は大きく失敗する）、プロジェクト構造（`settings.json`）、ワークスペースシェルの準備（`.claude/` + `aidlc/spaces/default/memory/`）、状態と audit の一貫性、hook のハートビート、グラフ整合性（サイクル無し・全グラフエントリにファイルがある）、全 9 scope の scope 検証、stage スキーマ + グラフ参照、scope 間のキーワード重複。合格する advisory 行には **Rule drift**、**Paired sensor coverage**、未コミットのワークスペース記録、そして `repos.json` が存在する場合の宣言済みリポジトリと管理下 `.gitignore` の drift が含まれる。**Hook drops** は条件付きである: 静かに劣化した hook（例: contribution を適用できなかった plugin compose、失敗した再コンパイル）は、重大度タグ付きの行を `<hooks-health>/<hook>.drops` に記録する。`[degraded]` のドロップは doctor を**失敗**させ（CI の gate が中途半端に適用された plugin を捕まえられる）、`[advisory]` のドロップ（想定内・無害な状態）は合格の行になる。plugin compose の hook は実行のたびに drops ファイルを書き直すため、原因を直して再 compose すれば自己クリアする。全合格で 0、いずれかの失敗で 1 で終了し、レポートはどちらでも stdout に書かれる。`--doctor` は**読み取り専用**である: intent がまだ無い新しいシェルでは何も作らない — 最初の intent が生まれる前でも安全に実行でき、何かがおかしいと感じたら最初に試すものである。intent が存在するようになると、`HEALTH_CHECKED`（と `GUARDRAIL_LOADED`）の audit 行を記録する。
+チェック内容: 前提条件（`bun`）、hook の存在（`settings.json` が束線するすべての hook — フレームワークの全 17 hook — が `.claude/hooks/` に存在すること。束線済みなのに無い hook は大きく失敗する）、プロジェクト構造（`settings.json`）、ワークスペースシェルの準備（`.claude/` + `aidlc/spaces/default/memory/`）、状態と audit の一貫性、hook のハートビート、グラフ整合性（サイクル無し・全グラフエントリにファイルがある）、全 9 scope の scope 検証、stage スキーマ + グラフ参照、scope 間のキーワード重複。合格する advisory 行には **Rule drift**、**Paired sensor coverage**、未コミットのワークスペース記録、そして `repos.json` が存在する場合の宣言済みリポジトリと管理下 `.gitignore` の drift が含まれる。**Hook drops** は条件付きである: 静かに劣化した hook（例: contribution を適用できなかった plugin compose、失敗した再コンパイル）は、重大度タグ付きの行を `<hooks-health>/<hook>.drops` に記録する。`[degraded]` のドロップは doctor を**失敗**させ（CI の gate が中途半端に適用された plugin を捕まえられる）、`[advisory]` のドロップ（想定内・無害な状態）は合格の行になる。plugin compose の hook は実行のたびに drops ファイルを書き直すため、原因を直して再 compose すれば自己クリアする。全合格で 0、いずれかの失敗で 1 で終了し、レポートはどちらでも stdout に書かれる。`--doctor` は**読み取り専用**である: intent がまだ無い新しいシェルでは何も作らない — 最初の intent が生まれる前でも安全に実行でき、何かがおかしいと感じたら最初に試すものである。intent が存在するようになると、`HEALTH_CHECKED`（と `GUARDRAIL_LOADED`）の audit 行を記録する。
 
 ワークフローに問題があるとき、`--doctor` は構造化された指摘（未解決の gate、古い・欠けた runtime グラフ、冷えた hook、その他の「前に進まない」原因）を列挙する **Workflow diagnosis** セクションも表示する — `--doctor --export` がレポートに書くのと同じ分析である。
 

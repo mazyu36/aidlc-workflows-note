@@ -26,10 +26,10 @@ bun install --frozen-lockfile
 
 ```
 core/                # Hand-authored, harness-neutral source (tools, stages, agents, rules, knowledge, hooks)
-harness/<name>/      # Per-harness authored surfaces; claude/, kiro/, kiro-ide/, codex/
+harness/<name>/      # Per-harness authored surfaces; claude/, kiro/, kiro-ide/, codex/, opencode/, copilot/
 scripts/package.ts   # The build: regenerates dist/<harness>/ from core/ + harness/ (`--check` drift-guards it)
 scripts/build-binaries.ts # Release-only compiled CLI artifacts in ignored build/binaries/ after package --check
-dist/<harness>/      # GENERATED: dist/claude/, dist/kiro/, dist/kiro-ide/, dist/codex/ — never hand-edit
+dist/<harness>/      # GENERATED: dist/claude/, dist/kiro/, dist/kiro-ide/, dist/codex/, dist/opencode/, dist/copilot/ — never hand-edit
 tests/               # All-TypeScript test suite (t*.test.ts, run via bun)
 docs/                # Documentation
   guide/             # User guide (how to use AI-DLC)
@@ -102,7 +102,7 @@ agent の推論から恩恵を受けるハンドラ（ファイルシステム�
 2. **Statusline の更新** -- アクティブな intent の `aidlc-state.md` が存在するなら、走っている utility を記述するように `Current Stage` を一時的に設定し（例: `running health check`）、完了時に元の値へ復元する。`aidlc-statusline.ts` hook はターミナルのステータスバー向けにこのフィールドを読む。
 3. **audit ログ記録** -- 適切なツールのサブコマンド（例: 内部で `appendAuditEntry` を呼ぶ `bun .claude/tools/aidlc-utility.ts <handler>`）を起動する。`**Event**:` の markdown ブロックを LLM の散文から決して手書きしない — [State Machine: Forbidden patterns](12-state-machine.md) を参照。
 
-`intent-birth` ハンドラは完全に決定論的である: 3 つの init stage すべて（workspace-scaffold、workspace-detection、state-init）が単一の `aidlc-utility intent-birth` 呼び出しの内側で走る。ウェルカムメッセージは `settings.json` の `companyAnnouncements` 経由でセッション開始時にレンダリングされ、stage ではない。
+`intent-create` ハンドラは完全に決定論的である: 3 つの init stage すべて（workspace-scaffold、workspace-detection、state-init）が単一の `aidlc-utility intent-create` 呼び出しの内側で走る。ウェルカムメッセージは `settings.json` の `companyAnnouncements` 経由でセッション開始時にレンダリングされ、stage ではない。
 
 ## Scope の追加
 
@@ -116,6 +116,7 @@ scope は、ファイル（そのアイデンティティ）に加えて stage �
    - `keywords`（任意）: `/aidlc <freeform text>` 自動検出のための NL トリガ。単語境界でマッチし、アルファベット順 scope でタイブレークする。空リストは推論からオプトアウトする。
    - `description`（任意）: `/aidlc --help` と SKILL.md のコンパイル済み scope-table でレンダリングされる 1 行の要約。
    - `testStrategy`（任意）: depth から独立して test strategy をオーバーライドする（例: workshop には `Minimal`）。既定では depth に一致する。
+   - `review_cap`（任意）: `adversarial` | `advisory` | `none`。この scope の stage review クラスを cap する; 不在は scope レベルの引き下げが無いことを意味する。cap はクラスを下げることはできるが、決して上げることはできない。自律的な swarm review は免除される。
    - `runner`（任意）: 既定の生成 runner 集合に scope を含めるには `true` に設定する。
    - `freeform_default`（任意）: 望ましい core の既定（`feature`/`poc`）が有効でないとき、この scope を指名するには `true` に設定する。有効な scope のうち最大 1 つだけがそれを主張でき、グラフのコンパイルは曖昧な選択済み plugin 集合を却下する。未知の明示的な `AWS_AIDLC_DEFAULT_SCOPE` 値は依然として検証に失敗する。
 
@@ -141,7 +142,7 @@ scope は、ファイル（そのアイデンティティ）に加えて stage �
 
 3. **再コンパイル + scope-table を再生成する** — `bun .claude/tools/aidlc-graph.ts compile` が `scopes:` タグを `tools/data/scope-grid.json` に転置する。次に `bun .claude/tools/aidlc-utility.ts scope-table` が、SKILL.md のコンパイル済み scope テーブル向けの正規の Markdown リージョンを出力する。リージョンを `<!-- BEGIN: compiled ... -->` / `<!-- END: compiled ... -->` マーカーの間で生成された状態に保ち、その後 `bun .claude/tools/aidlc-graph.ts compile --check` と `bun .claude/tools/aidlc-utility.ts scope-table --check` を走らせて exit 0（drift 無し）を確認する。
 
-4. **scope が解決することを検証する** - `bun core/tools/aidlc-utility.ts intent-birth --scope hotfix --project-dir /tmp/scope-smoke` は成功し、`Scope: hotfix` を持つ state ファイルを生成するはずである。
+4. **scope が解決することを検証する** - `bun core/tools/aidlc-utility.ts intent-create --scope hotfix --project-dir /tmp/scope-smoke` は成功し、`Scope: hotfix` を持つ state ファイルを生成するはずである。
 
 5. **`doctor` がそれを env の既定として受理することを検証する** — `AWS_AIDLC_DEFAULT_SCOPE=hotfix bun aidlc-utility.ts doctor` は env var を有効と報告するはずである。
 
@@ -223,7 +224,7 @@ Agent のメタデータ（display name、example の knowledge ファイル）�
 
 2. **agent が発見されることを検証する** — `bun -e "import { loadAgents } from 'core/tools/aidlc-lib.ts'; console.log(loadAgents().find(a => a.slug === '<slug>-agent'));"` は新しい agent のメタデータを出力するはずである。
 
-3. **intent birth が space の knowledge ディレクトリを作成することを検証する** — `bun core/tools/aidlc-utility.ts intent-birth --scope poc --project-dir /tmp/agent-smoke` は、空の space レベルの `aidlc/knowledge/` ディレクトリ（space の `intents/` の兄弟）を作成するはずである。Birth は agent ごとのサブディレクトリや README をシードしない — チームは、コンテンツができたときに `aidlc/knowledge/<slug>-agent/` 自体を作成する。
+3. **intent birth が space の knowledge ディレクトリを作成することを検証する** — `bun core/tools/aidlc-utility.ts intent-create --scope poc --project-dir /tmp/agent-smoke` は、空の space レベルの `aidlc/knowledge/` ディレクトリ（space の `intents/` の兄弟）を作成するはずである。Birth は agent ごとのサブディレクトリや README をシードしない — チームは、コンテンツができたときに `aidlc/knowledge/<slug>-agent/` 自体を作成する。
 
 4. **statusline がレンダリングされることを検証する** — `Active Agent: <slug>-agent` を持つ state ファイルをシードし、statusline hook を起動する; 出力は `--` セパレータの後に display name を含むはずである。
 

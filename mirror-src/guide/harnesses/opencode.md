@@ -71,7 +71,7 @@ git checkout v2
   レジストリが無い。`.opencode/plugin/aidlc-opencode-adapter.ts` が opencode のプラグイン
   hook の瞬間を `.aidlc/hooks/` の core hook 本体（bun のサブプロセスとして実行）へ
   対応付ける: ツール実行前の reviewer 読み取りスコープと AIDLC bash 境界、
-  write / edit / apply_patch での audit + sensor、bash での runtime-compile、
+  write / edit / apply_patch での audit + sensor、bash での rebuild-stage-graph、
   todowrite での statusline 同期、task での subagent 記録、human turn ごとの presence の
   記録、コンパクション前の状態検証。
 - **forwarding loop の強制は助言的。** Stop の継ぎ目は `session.idle` イベント —

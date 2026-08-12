@@ -8,7 +8,7 @@ rule は、エージェントがプロジェクトでどう働くかを形作る
 
 ## rule の全体像
 
-rule は、アクティブ space の memory 層 `aidlc/spaces/<active-space>/memory/` に Markdown ファイルとして住む — ワークスペースルートにある、手で編集できる単一のセットで、すべての harness がネイティブの取り込み（Claude の `@`-import スタブ、Kiro CLI の resources または IDE の steering、Codex の `AIDLC_RULES_DIR`）経由で読む。各ファイルは scope の名を持つ:
+rule は、アクティブ space の memory 層 `aidlc/spaces/<active-space>/memory/` に Markdown ファイルとして住む — ワークスペースルートにある、手で編集できる単一のセットで、すべての harness がネイティブの取り込み（Claude の `@`-import スタブ、Kiro CLI の resources または IDE の steering、Codex の `AIDLC_RULES_DIR`、opencode の `instructions` glob、Copilot の `AGENTS.md` `@`-import）経由で読む。各ファイルは scope の名を持つ:
 
 ```
 aidlc/spaces/<active-space>/memory/

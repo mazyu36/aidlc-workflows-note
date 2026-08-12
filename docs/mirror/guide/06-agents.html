@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -186,7 +188,7 @@ flowchart TD
 </ul>
 <h3 id="aidlc-architect-agent"><a href="agents/architect-agent.html">aidlc-architect-agent</a></h3>
 <p><strong>ドメイン:</strong> アプリケーション設計、ドメインモデリング、NFR、コンポーネント分解</p>
-<p>aidlc-architect-agent は設計の中心的権威である。stage への関与が最も広く（3 phase にわたる 9 stage）、<code>judgment</code> tier を持つ — 他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と同様である。judgment のエージェントはセッション自身のモデルと effort を継承するため、あなたが選んだものより下げられることはない。delivery・pipeline-deploy・operations の 3 体だけが <code>templated</code> tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro では全 tier がセッションのモデルと effort を継承）を持つ。その出力が定型的な計画・CI/CD の YAML・runbook の雛形に支配されているためである。</p>
+<p>aidlc-architect-agent は設計の中心的権威である。stage への関与が最も広く（3 phase にわたる 9 stage）、<code>judgment</code> tier を持つ — 他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と同様である。judgment のエージェントはセッション自身のモデルと effort を継承するため、あなたが選んだものより下げられることはない。delivery・pipeline-deploy・operations の 3 体だけが <code>templated</code> tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro・Cursor・Copilot では全 tier がセッションのモデルと effort を継承）を持つ。その出力が定型的な計画・CI/CD の YAML・runbook の雛形に支配されているためである。</p>
 <ul>
 <li><strong>リード:</strong> feasibility、application-design、units-generation、functional-design、nfr-requirements、nfr-design</li>
 <li><strong>支援:</strong> intent-capture、reverse-engineering（統合）、delivery-planning</li>
@@ -222,7 +224,7 @@ flowchart TD
 <li><strong>リード:</strong> reverse-engineering（コードスキャン）、code-generation</li>
 <li><strong>支援:</strong> practices-discovery、user-stories、functional-design、deployment-execution</li>
 </ul>
-<p>ワークスペース検出（workspace-detection）はかつて aidlc-developer-agent の subagent だったが、いまはルールベースのファイル・マニフェスト検出を使って <code>aidlc-utility intent-birth</code> の中で決定論的に実行される。</p>
+<p>ワークスペース検出（workspace-detection）はかつて aidlc-developer-agent の subagent だったが、いまはルールベースのファイル・マニフェスト検出を使って <code>aidlc-utility intent-create</code> の中で決定論的に実行される。</p>
 <ul>
 <li><strong>特別なツール:</strong> Bash（ビルド・実行コマンド用）</li>
 </ul>
@@ -426,10 +428,20 @@ lead は <code>rough-mockups</code>・<code>refined-mockups</code>・<code>requi
 conductor は名指しされたレビュアーを<strong>独立した sub-agent</strong> として起動する。レビュアーは
 stage 定義・Q&amp;A・成果物を読み（ビルダーの <code>memory.md</code> や計画は決して読まない —
 独立の判断を形成する）、<strong>READY</strong> または <strong>NOT-READY</strong> の判定を付けた <code>## Review</code>
-セクションを追記する。NOT-READY ならビルダーが指摘に対処するため再実行し、レビュアーが
-再確認する。このループは <code>reviewer_max_iterations</code> 回（既定 2）まで。上限後も指摘が残る場合、
-未解決の指摘を注記した上でワークフローは承認 gate へ進む — レビュアーは決してブロックせず、
-最終決定権は常に人間にある。</p>
+セクションを追記する。判定の扱いは stage の review class によって決まる:</p>
+<ul>
+<li><strong>Advisory</strong>（人間が gate する ideation/inception の prose stage）: 判定にかかわらず
+レビューは 1 回だけ行う。指摘は承認 gate でそのまま引用され、重大度順に並べて判断材料
+として示される — トリアージするのはあなたであり、gate での Request Changes が指摘を
+修正につなげる唯一の経路である。</li>
+<li><strong>Adversarial</strong>（Construction の設計・実装 stage）: NOT-READY ならビルダーが指摘に対処する
+ため再実行し、レビュアーが再確認する。このループは <code>reviewer_max_iterations</code> 回
+（既定 2、engine が強制）まで。上限後も指摘が残る場合、未解決の指摘を注記した上で
+ワークフローは承認 gate へ進む。</li>
+</ul>
+<p>scope は class を上限できる（<code>bugfix</code>・<code>poc</code>・<code>workshop</code> はすべての stage を advisory に
+制限する）し、<code>/aidlc --review &lt;class&gt;</code> は実行ごとに上限を設定できる。いずれの場合も
+レビュアーは決してブロックせず、最終決定権は常に人間にある。</p>
 <p>（重要: エージェント名は示したとおりバッククォートの素の名前で使うこと — markdown リンクにしないこと。レビュアーのエージェント別ドキュメントページはまだ存在しない。）</p>
 <hr>
 <h2 id="next-steps">次のステップ</h2>

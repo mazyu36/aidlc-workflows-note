@@ -16,7 +16,7 @@ intent を開始し、切り替えるだけだ。本章の残りでその仕組�
 
 AI-DLC をインストールするとき、エンジンをプロジェクトにコピーする — harness 固有の
 ディレクトリ 1 つ（Claude Code なら `.claude/`、Kiro なら `.kiro/`、
-Codex なら `.codex/`）である。harness によって異なるのはレイアウトの中で
+Codex なら `.codex/`、opencode と GitHub Copilot なら `.aidlc/`）である。harness によって異なるのはレイアウトの中で
 そのディレクトリ*だけ*だ。以後、AI-DLC が生み出すすべてはプロジェクトルートの
 中立な `aidlc/` ディレクトリの下に住む — どの harness で動かしているかではなく、
 *何に取り組んでいるか*で整理される。ブラウズするのは `aidlc/` であり、
@@ -268,8 +268,8 @@ harness の `manifest.ts` とは無関係である。）
 
 | gitignore（ユーザーごと・マシンローカル） | 理由 |
 |---|---|
-| `aidlc/active-space`、`…/intents/active-intent` | カーソル — 「いま自分はどこか」。コミットすると `/aidlc` のたびにツリーが汚れ、切り替えのたびにチームメイトがカーソルを取り合うことになる。 |
-| `…/intents/<id>/runtime-graph.json`、`.aidlc-*`、`aidlc/.aidlc-sessions/` | 導出された、マシンローカルのランタイム状態。 |
+| `aidlc/active-space`、`…/intents/active-intent` | カーソル — 「いま自分はどこか」。コミットすると個人ごとのナビゲーションが共有リポジトリの状態になってしまい、intent の birth やカーソルの切り替えのたびにチームメイトが競合することになる。 |
+| `…/intents/<id>/runtime-graph.json`、`.aidlc-*`、`aidlc/.aidlc-sessions/`、`aidlc/.aidlc-active-space-*.tmp` | 導出された、マシンローカルのランタイム状態。 |
 
 space 配下のそれ以外すべて — `memory/**`、`knowledge/**`、`codekb/**`、
 `intents.json`、各記録の `aidlc-state.md`、`audit/` シャード、成果物 — は

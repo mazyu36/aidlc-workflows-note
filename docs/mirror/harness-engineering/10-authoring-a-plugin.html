@@ -322,9 +322,10 @@ contribution の <code>adds.scopes</code>（§3）を通して機能する。<a 
 </ul>
 <h2 id="5-distribution-install">5. ディストリビューションとインストール</h2>
 <p>packager はあなたの plugin を <strong>本物の host plugin</strong> として emit する（harness ごとに 1 つの射影
-ターゲット: <code>.claude-plugin/plugin.json</code>、<code>.codex-plugin/plugin.json</code>、加えて Kiro のフォルダ射影）。
-あなたはその出力を semver タグと <code>marketplace.json</code> を付けて git リポジトリに公開し、チームは host
-のネイティブコマンドを通してインストールする。</p>
+ターゲットで、<code>.claude-plugin/plugin.json</code>、<code>.codex-plugin/plugin.json</code>、Copilot の
+<code>.plugin/plugin.json</code>、そして Kiro のフォルダ射影を含む）。あなたはその出力を semver タグと
+<code>marketplace.json</code> を付けて git リポジトリに公開し、チームは host のネイティブコマンドを通して
+インストールする。</p>
 <h3 id="claude-codex-host-store">Claude / Codex（host store）</h3>
 <pre><code class="language-bash"># teams run these in their host CLI:
 /plugin marketplace add &lt;your-org&gt;/&lt;your-plugin-repo&gt;    # Claude

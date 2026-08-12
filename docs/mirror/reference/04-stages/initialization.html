@@ -92,18 +92,19 @@
 <h1 id="initialization-phase-stages-01-03">Initialization Phase の Stage（0.1-0.3）</h1>
 <h2 id="phase-overview">Phase 概要</h2>
 <p>Initialization phase は AI-DLC ワークフローの 5 つの phase のうちの最初である。stage 0.1 から
-0.3 を走らせ、<strong>intent を誕生させる</strong> — その record dir を
+0.3 を走らせ、<strong>intent を誕生させる</strong>。その record dir を
 <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>（以下 <code>&lt;record&gt;/</code> と書く）に、状態ファイル、
-ディレクトリの scaffold、workspace 分類、ルーティング設定とともに鋳造する。別個の scaffold
-コマンドは無い: workspace shell は <code>dist/&lt;harness&gt;/</code> に事前ビルドされて出荷され、エンジンは
-最初の <code>/aidlc</code>（または何をビルドするかを記述したとき）で最初の intent を自動誕生させる。</p>
+in-scope の phase ごとに 1 つのディレクトリ、workspace 分類、ルーティング設定とともに鋳造する。
+別個の scaffold コマンドは無い: workspace shell は <code>dist/&lt;harness&gt;/</code> に事前ビルドされて出荷され、
+エンジンは最初の <code>/aidlc</code>（または何をビルドするかを記述したとき）で最初の intent を自動誕生
+させる。</p>
 <p>この phase の 3 つの stage すべてが、すべての scope に対して実行される — 条件付きの stage は
 無い。すべての stage は承認 gate 無しで auto-proceed する。</p>
 <p>ウェルカムメッセージはセッション開始時に <code>settings.json</code> の <code>companyAnnouncements</code> エントリを
 介してレンダリングされる。それは stage ではない — stage ファイルも、audit イベントも、
 チェックボックスも無い。</p>
 <p>3 つの stage すべては、1 秒を十分に下回って完了する単一の決定論的な
-<code>bun .claude/tools/aidlc-utility.ts intent-birth --scope &lt;scope&gt;</code> 呼び出しの内側で走る。
+<code>bun .claude/tools/aidlc-utility.ts intent-create --scope &lt;scope&gt;</code> 呼び出しの内側で走る。
 conductor は可観測性のためにサイドバーに 3 つの task（Workspace Scaffold、Workspace Detection、
 State Init）を作り、ツールが返ると、それらすべてを completed とマークする。</p>
 <h2 id="scope-driven-stage-inclusion">Scope 駆動の Stage 包含</h2>
@@ -229,7 +230,7 @@ State Init）を作り、ツールが返ると、それらすべてを completed
 <h3 id="steps">手順</h3>
 <ol>
 <li>必要なら <code>&lt;record&gt;/</code> ディレクトリを作成する</li>
-<li>5 つすべての phase 用の stage 成果物ディレクトリ + <code>&lt;record&gt;/verification/</code> を作成する</li>
+<li>scope が走らせる各 phase の成果物ディレクトリ 1 つ + <code>&lt;record&gt;/verification/</code> を作成する</li>
 <li>空の space レベルの <code>aidlc/knowledge/</code> ディレクトリを作成する（自由形式; agent ごとの
 サブディレクトリも READMEs も無い）</li>
 <li>intent の <code>audit/</code> シャード dir ヘッダを作成 + <code>WORKFLOW_STARTED</code> を emit する</li>
@@ -241,16 +242,19 @@ State Init）を作り、ツールが返ると、それらすべてを completed
 </ul>
 <h3 id="outputs">出力</h3>
 <ul>
-<li>stage サブディレクトリを伴う <code>&lt;record&gt;/initialization/</code>、<code>ideation/</code>、<code>inception/</code>、
-<code>construction/</code>、<code>operation/</code></li>
-<li><code>&lt;record&gt;/verification/</code></li>
+<li>scope が走らせる各 phase につき成果物ディレクトリ 1 つ: <code>&lt;record&gt;/initialization/</code>、
+加えて少なくとも 1 つの EXECUTE stage を持つ <code>ideation/</code>、<code>inception/</code>、<code>construction/</code>、
+<code>operation/</code> の各々。scope が除外する phase はディレクトリを得ない（bugfix の record には
+<code>ideation/</code> も <code>operation/</code> も無い）。stage ごとのサブディレクトリはここでは作られない:
+stage のディレクトリは、それが最初に成果物を書いたときに現れる</li>
+<li><code>&lt;record&gt;/verification/</code>（すべての scope で作成される）</li>
 <li>空の space レベルの <code>aidlc/knowledge/</code> ディレクトリ（space の <code>intents/</code> の兄弟）</li>
 <li>intent の <code>audit/</code> シャード dir（ヘッダ + セッション + scaffold イベント）</li>
 </ul>
 <h3 id="notes">メモ</h3>
 <ul>
 <li>冪等 — 既に存在するディレクトリとファイルをスキップする</li>
-<li>LLM を介さず、<code>aidlc-utility intent-birth</code> の内側で走る</li>
+<li>LLM を介さず、<code>aidlc-utility intent-create</code> の内側で走る</li>
 </ul>
 <hr>
 <h2 id="stage-02-workspace-detection">Stage 0.2 — Workspace Detection</h2>
@@ -320,7 +324,7 @@ NestJS）を介してフレームワークを、<code>package.json</code> の依
 </ul>
 <h3 id="notes-1">メモ</h3>
 <ul>
-<li><code>aidlc-utility intent-birth</code> の内側で決定論的なスキャナとして走る。LLM subagent の dispatch は
+<li><code>aidlc-utility intent-create</code> の内側で決定論的なスキャナとして走る。LLM subagent の dispatch は
 無い。</li>
 <li>シンボリックリンクは辿らない（<code>lstatSync</code> によるサイクル保護）</li>
 <li><code>.claude/</code>、<code>&lt;record&gt;/</code>、<code>node_modules/</code>、<code>.git/</code>、<code>dist/</code>、<code>build/</code>、<code>.next/</code>、<code>target/</code>、

@@ -275,9 +275,9 @@ judgment -&gt; <code>model: inherit</code>（effort の固定なし）、balance
 規制のエッジケース、クラウドアーキテクチャのトレードオフが、すべてこのカテゴリに
 入る。2 つの balanced reviewer は、明示的な基準に照らして新規の入力を評価する —
 チェックリストが手法を符号化するので、セッションの effort の中型モデルで足りる
-（Claude Code・Codex・opencode では; Kiro では全 tier がセッションの model と effort
-を継承する）。射影表と <code>tier_cap</code> オーバーライドは <a href="../05-agent-system.html">Agent System</a>
-を参照。</p>
+（Claude Code・Codex・opencode では; Kiro・Cursor・Copilot では全 tier がセッションの
+model と effort を継承する）。射影表と <code>tier_cap</code> オーバーライドは
+<a href="../05-agent-system.html">Agent System</a> を参照。</p>
 <hr>
 <h2 id="agent-summary-table">Agent サマリ表</h2>
 <table>
@@ -486,7 +486,7 @@ judgment -&gt; <code>model: inherit</code>（effort の固定なし）、balance
 <p><strong>観察:</strong></p>
 <ul>
 <li>aidlc-architect-agent は最も広い stage 関与を持つ（3 phase にわたる 9 stage）。設計の中心的な権威としての役割を反映している。</li>
-<li>14-agent 陣容の全体では、9 つの agent が <code>judgment</code> tier を帯び、5 つが Claude Code・Codex・opencode で格下げされる（2 つの <code>balanced</code> reviewer に加え 3 つの <code>templated</code> planner; Kiro では全 tier がセッションの model と effort を継承するため、そこではどの agent も格下げされない）; 格下げされる agent は、明示的なチェックリストに照らしたレビューか、支配的に templated な計画・CI/CD・runbook の作業を生む。上の表は 11 のドメインエキスパート agent を扱う。</li>
+<li>14-agent 陣容の全体では、9 つの agent が <code>judgment</code> tier を帯び、5 つが Claude Code・Codex・opencode で格下げされる（2 つの <code>balanced</code> reviewer に加え 3 つの <code>templated</code> planner; Kiro・Cursor・Copilot では全 tier がセッションの model と effort を継承するため、そこではどの agent も格下げされない）; 格下げされる agent は、明示的なチェックリストに照らしたレビューか、支配的に templated な計画・CI/CD・runbook の作業を生む。上の表は 11 のドメインエキスパート agent を扱う。</li>
 <li>aidlc-compliance-agent は純粋に助言的な立場で動作する（Ideation・Construction・Operation にわたる 4 つの support stage; lead stage は無し）。</li>
 <li>11 のうち 6 つの agent が、CLI 操作のために Bash を使うと想定される（インフラ、セキュリティ、開発、テスト、デプロイ、運用）。</li>
 <li>3 つの agent が、調査タスクのために WebSearch を使うと想定される（product、design、compliance）。</li>

@@ -18,7 +18,7 @@
 | 前提条件 | 目的 | インストール |
 |-------------|---------|---------|
 | **Claude Code** | この実装は Claude Code のコマンドとして動作する。orchestrator・エージェント・hooks はすべて Claude Code 内で実行される。 | ネイティブインストール（推奨・自動更新）: macOS/Linux/WSL `curl -fsSL https://claude.ai/install.sh \| bash`; Windows PowerShell `irm https://claude.ai/install.ps1 \| iex`。または `brew install --cask claude-code`。（[docs](https://code.claude.com/docs/en/quickstart)） |
-| **bun** | すべての CLI ツールと全 16 hooks（状態管理・audit ログ・sensor ディスパッチ・runtime-graph コンパイル・ループ強制・厳密な dispatch-rule 配送・状態遷移・reviewer スコープ・review-freeze の強制・statusline・human-turn の記録・token 使用量の折り込み）に必要。すべて TypeScript で bun により実行される（起動 約 20ms）。追加依存なし — macOS・Linux・ネイティブ Windows PowerShell で同一に動作する。 | `curl -fsSL https://bun.sh/install \| bash`（[docs](https://bun.sh)）。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 \| iex"` |
+| **bun** | すべての CLI ツールと全 17 hooks（状態管理・audit ログ・sensor ディスパッチ・runtime-graph コンパイル・ループ強制・厳密な dispatch-rule 配送・状態遷移・reviewer スコープ・review-freeze・plan-approval の強制・statusline・human-turn の記録・token 使用量の折り込み）に必要。すべて TypeScript で bun により実行される（起動 約 20ms）。追加依存なし — macOS・Linux・ネイティブ Windows PowerShell で同一に動作する。 | `curl -fsSL https://bun.sh/install \| bash`（[docs](https://bun.sh)）。Windows では: `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 \| iex"` |
 
 > **重要**: 非対話シェルでも `bun` が `PATH` に載っていること。Claude Code はシェルを非対話で実行するため、読み込まれるのは `~/.zshenv`（zsh）または `~/.bashrc`（bash）であり、`~/.zshrc` ではない。Windows の Git Bash では `~/.bashrc` が正しいファイルになる。Claude Code 内で `which bun` が失敗する場合は、該当ファイルに bun の PATH export を追加する。
 
@@ -147,7 +147,9 @@ AI-DLC は、利用する harness 向けのディストリビューションを�
 [Kiro CLI で動かす](harnesses/kiro-cli.md)、
 [Kiro IDE で動かす](harnesses/kiro-ide.md)、
 [Codex CLI で動かす](harnesses/codex-cli.md)、
-[opencode 上の AI-DLC](harnesses/opencode.md) — それぞれに固有の前提条件と
+[Cursor 上の AI-DLC](harnesses/cursor.md)、
+[opencode 上の AI-DLC](harnesses/opencode.md)、
+[GitHub Copilot 上の AI-DLC](harnesses/copilot.md) — それぞれに固有の前提条件と
 コピー後の手順が載っている。
 
 以下の `cp` コマンドは、本リポジトリを `v2` ブランチで clone した場所で実行する:
@@ -213,6 +215,17 @@ cp dist/codex/AGENTS.md   your-project/AGENTS.md   # or merge into yours
 ```
 
 続きは [Codex CLI 上の AI-DLC](harnesses/codex-cli.md) で: プロジェクトは **git リポジトリ**である必要があり、その章にある `.gitignore` エントリと hook trust の事前設定を適用するまでインストールは完了しない。
+
+</details>
+
+<details markdown="1">
+<summary><strong>Cursor</strong></summary>
+
+```bash
+bun dist/cursor/install.ts your-project
+```
+
+続きは [Cursor 上の AI-DLC](harnesses/cursor.md) で: IDE と CLI での使い方、hook の挙動、permissions、インストーラの再実行ルール。
 
 </details>
 
@@ -300,8 +313,8 @@ init コマンドを実行することはない。
 
 ```
 ✓ bun installed (required for CLI tools and hooks)
-✓ aidlc-audit-logger.ts present
-✓ aidlc-sync-statusline.ts present
+✓ aidlc-write-audit-log.ts present
+✓ aidlc-sync-workflow-state.ts present
 ✓ aidlc-validate-state.ts present
 ✓ aidlc-log-subagent.ts present
 ✓ aidlc-session-start.ts present

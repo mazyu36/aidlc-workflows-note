@@ -8,7 +8,7 @@ AI-DLC を**使って**ソフトウェアを構築する立場なら、まず [�
 
 > **このリファレンスにおけるパス。** AI-DLC は一度だけ著述され harness ごとに生成されるので、ファイルは意図によって 3 つの規約のいずれかで名付けられる:
 > - **`core/…`** -- 手で著述される、harness 中立な**信頼できる源泉**（例: `core/tools/aidlc-orchestrate.ts`、`core/aidlc-common/stages/`）。ここで編集する。ファイルが*著述*または*変更*される場所を名指すパスは `core/` パスである。
-> - **`dist/<harness>/…`** -- **生成され、コミットされ、drift ガードされた**ディストリビューション（`dist/claude/.claude/`、`dist/kiro/.kiro/`、`dist/kiro-ide/.kiro/`、`dist/codex/`）。決して手で編集されない; `bun scripts/package.ts` によってバイト単位で再生成される。*出荷される*ものを説明するときだけ引用される。
+> - **`dist/<harness>/…`** -- **生成され、コミットされ、drift ガードされた**ディストリビューション（`dist/claude/.claude/`、`dist/kiro/.kiro/`、`dist/kiro-ide/.kiro/`、`dist/codex/`、`dist/opencode/`、`dist/copilot/`）。決して手で編集されない; `bun scripts/package.ts` によってバイト単位で再生成される。*出荷される*ものを説明するときだけ引用される。
 > - **`<harness-dir>/…`**（例: `.claude/`、`.kiro/`、`.codex/`） -- *インストールされた*プロジェクトの中の**ランタイム**の場所であり、そこでコマンドが走り、ワークフロー中にフレームワークが読み書きする（`bun .claude/tools/aidlc-graph.ts compile`、`.claude/agents/` を読む `loadAgents()`）。このディレクトリは harness のパラメータである。
 >
 > このリファレンスが裸の `.claude/` パスを示すとき、それは特に Claude harness のランタイムの場所と読むこと; 同じファイルは `core/` で著述され、各 harness 自身のディレクトリに出荷される。
@@ -23,13 +23,13 @@ AI-DLC を**使って**ソフトウェアを構築する立場なら、まず [�
 | [Stage プロトコル](04-stage-protocol.md) | 振る舞いの契約: 承認 gate、コンプライアンスチェックリスト |
 | [Stages](04-stages/) | phase ごとの stage ドキュメント（5 ファイル） |
 | [Agent System](05-agent-system.md) | agent の構造、frontmatter の契約、設定マトリクス |
-| [Hook とツール](06-hooks-and-tools.md) | hook システム、CLI ツール、76 イベントの audit 分類体系 |
+| [Hook とツール](06-hooks-and-tools.md) | hook システム、CLI ツール、82 イベントの audit 分類体系 |
 | [Sensor System](07-sensor-system.md) | sensor manifest スキーマ、PULL インポート、発火モデル、default severity |
 | [Rule System](08-rule-system.md) | rule ファイルのレイアウト、scope の導出、layer-chain resolver、競合 gate |
 | [テスト](09-testing.md) | テストピラミッド、tier、スタブ、フィクスチャ、テストレジストリ |
 | [Knowledge System](10-knowledge-system.md) | 2 層アーキテクチャ、ロード順、テンプレート |
 | [Contributing](11-contributing.md) | 開発ワークフロー、ユーティリティハンドラのチェックリスト、ドキュメントポリシー |
-| [状態機械](12-state-machine.md) | workflow / phase / stage の機械、76 イベントの分類体系、audit-first のルール |
+| [状態機械](12-state-machine.md) | workflow / phase / stage の機械、82 イベントの分類体系、audit-first のルール |
 | [Runtime Graph](13-runtime-graph.md) | コンパイル済みの `runtime-graph.json` 成果物: stage graph の data-plane ミラー |
 | [Harness プリミティブの対応](14-claude-features.md) | 各 AI-DLC 概念が harness のネイティブプリミティブにどう対応するか（Claude Code を深く） |
 | [Stage 定義](15-stage-definition.md) | YAML frontmatter の契約、3 区画の本体、コンパイル pipeline |

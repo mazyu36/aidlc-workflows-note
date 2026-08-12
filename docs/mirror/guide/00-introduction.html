@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -85,7 +87,7 @@
 <p><a href="../README.html">AI-DLC ドキュメント</a> の一部 · <strong>ユーザーガイド</strong> · <a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a> · <a href="../reference/00-overview.html">開発者リファレンス</a></p>
 </blockquote>
 <h2 id="what-is-ai-dlc">AI-DLC とは</h2>
-<p>AI-DLC（AI-Driven Development Life Cycle）は、AI 支援によるソフトウェア開発を、再現可能で追跡可能な phase に構造化するための方法論である。これは <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AWS AI-DLC methodology</a> を起源とする。本リポジトリはこれを単一の harness 非依存なコアからネイティブに実装しており、すでに利用している CLI harness の中で動作する。現時点では Claude Code、Kiro CLI、Kiro IDE、Codex CLI、opencode である。本ガイドは harness 非依存であり、harness ごとに詳細が異なる箇所ではその旨を明記し、対応する harness の章へ誘導する（<a href="harnesses/README.html">他の harness で実行する</a> を参照）。特に断りがない限り、例は Claude Code で示す。</p>
+<p>AI-DLC（AI-Driven Development Life Cycle）は、AI 支援によるソフトウェア開発を、再現可能で追跡可能な phase に構造化するための方法論である。これは <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AWS AI-DLC methodology</a> を起源とする。本リポジトリはこれを単一の harness 非依存なコアからネイティブに実装しており、すでに利用している CLI harness の中で動作する。現時点では Claude Code、Kiro CLI、Kiro IDE、Codex CLI、Cursor、opencode、GitHub Copilot である。本ガイドは harness 非依存であり、harness ごとに詳細が異なる箇所ではその旨を明記し、対応する harness の章へ誘導する（<a href="harnesses/README.html">他の harness で実行する</a> を参照）。特に断りがない限り、例は Claude Code で示す。</p>
 <p>呼び出しは単一のコマンドで行う:</p>
 <pre class="term"><code>/aidlc Build a REST API for inventory management</code></pre>
 <p>その後 AI-DLC は、intent の捕捉から要件・設計・実装・テスト・デプロイに至る構造化されたワークフローを通じて利用者を導きつつ、あらゆる意思決定ポイントで制御を利用者の手に残す。</p>
@@ -144,7 +146,7 @@
 </tr>
 <tr>
 <td>Audit イベントタイプ</td>
-<td>76</td>
+<td>82</td>
 </tr>
 </tbody></table>
 <h2 id="guide-map">ガイドマップ</h2>
@@ -233,7 +235,7 @@
 </tr>
 <tr>
 <td><a href="harnesses/README.html">他の harness で実行する</a></td>
-<td>Kiro CLI、Kiro IDE、Codex CLI、opencode でのインストールと実行、および harness ごとの差異</td>
+<td>Kiro CLI、Kiro IDE、Codex CLI、Cursor、opencode、GitHub Copilot でのインストールと実行、および harness ごとの差異</td>
 </tr>
 <tr>
 <td><a href="glossary.html">用語集</a></td>

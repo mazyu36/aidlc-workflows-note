@@ -286,7 +286,7 @@ stage に束ねられる。sensor は各書き込みで発火する助言的な�
 </tbody></table>
 <p>どちらの driver も同じ 5 つの Unit ごとの stage を走らせ、同じプロジェクトのチェックに対して
 収束する。違いは純粋に、並列の仕事がどうディスパッチされるかである。暴走の歯止めは、swarm ツール
-自身の外、harness の <strong>Stop-hook の上限</strong>（<code>core/hooks/aidlc-stop.ts</code>、<code>blockCap()</code> /
+自身の外、harness の <strong>Stop-hook の上限</strong>（<code>core/hooks/aidlc-continue-workflow.ts</code>、<code>blockCap()</code> /
 <code>defaultBlockCap()</code> のペア、<code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code> として露出）に住む。この
 autonomous-Construction の経路では既定の上限は <strong>8 ブロック</strong> である（インタラクティブの既定は
 2; 明示的な <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code> は両方を上書きする）。driver の継ぎ目の契約は

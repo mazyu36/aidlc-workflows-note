@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -192,8 +194,8 @@ stateDiagram-v2
 <hr>
 <h2 id="audit-trail-audit">audit トレイル（<code>audit/</code>）</h2>
 <p>audit トレイルは intent の record dir の <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/audit/</code> に住む。<strong>クローンごとのシャード</strong>（<code>&lt;host&gt;-&lt;clone&gt;.md</code>）として書かれる追記専用のイベントログで、各クローンは自分のシャードにだけ追記するため、兄弟 worktree からの並行追記が git コンフリクトを起こすことは決してない。読む側は <code>audit/*.md</code> を glob し、ISO タイムスタンプでマージソートして、決定とイベントの完全な時系列を再構成する。</p>
-<h3 id="76-event-taxonomy">76 イベントの分類</h3>
-<p>イベントは 19 カテゴリに編成される:</p>
+<h3 id="82-event-taxonomy">82 イベントの分類</h3>
+<p>イベントは 21 カテゴリに編成される:</p>
 <table>
 <thead>
 <tr>
@@ -229,8 +231,8 @@ stateDiagram-v2
 </tr>
 <tr>
 <td><strong>Navigation</strong></td>
-<td align="right">6</td>
-<td><code>SCOPE_CHANGED</code>、<code>SCOPE_DETECTED</code>、<code>DEPTH_CHANGED</code>、<code>TEST_STRATEGY_CHANGED</code>、<code>RECOMPOSED</code>、<code>PLUGIN_SELECTION_CHANGED</code></td>
+<td align="right">7</td>
+<td><code>SCOPE_CHANGED</code>、<code>SCOPE_DETECTED</code>、<code>DEPTH_CHANGED</code>、<code>TEST_STRATEGY_CHANGED</code>、<code>REVIEW_CLASS_CHANGED</code>、<code>RECOMPOSED</code>、<code>PLUGIN_SELECTION_CHANGED</code></td>
 </tr>
 <tr>
 <td><strong>Interaction</strong></td>
@@ -238,9 +240,14 @@ stateDiagram-v2
 <td><code>DECISION_RECORDED</code>、<code>GATE_APPROVED</code>、<code>GATE_REJECTED</code>、<code>QUESTION_ANSWERED</code>、<code>SUMMARY_CONFIRMATION_RECORDED</code>、<code>REVIEW_REQUESTED</code>、<code>REVIEW_COMPLETED</code></td>
 </tr>
 <tr>
+<td><strong>Unit Lifecycle</strong></td>
+<td align="right">4</td>
+<td><code>UNIT_STARTED</code>、<code>UNIT_PAUSED</code>、<code>UNIT_RESUMED</code>、<code>UNIT_COMPLETED</code></td>
+</tr>
+<tr>
 <td><strong>Artifact</strong></td>
 <td align="right">3</td>
-<td><code>ARTIFACT_CREATED</code>、<code>ARTIFACT_UPDATED</code>（audit-logger hook）、<code>ARTIFACT_REUSED</code></td>
+<td><code>ARTIFACT_CREATED</code>、<code>ARTIFACT_UPDATED</code>（write-audit-log hook）、<code>ARTIFACT_REUSED</code></td>
 </tr>
 <tr>
 <td><strong>Subagent</strong></td>
@@ -251,6 +258,11 @@ stateDiagram-v2
 <td><strong>Reviewer Enforcement</strong></td>
 <td align="right">2</td>
 <td><code>REVIEWER_SCOPE_BLOCKED</code>（reviewer-scope hook）、<code>REVIEW_FREEZE_BLOCKED</code>（review-freeze hook）</td>
+</tr>
+<tr>
+<td><strong>Plan Approval</strong></td>
+<td align="right">1</td>
+<td><code>PLAN_APPROVAL_BLOCKED</code>（plan-approval-guard hook）</td>
 </tr>
 <tr>
 <td><strong>Utility</strong></td>
@@ -301,7 +313,7 @@ stateDiagram-v2
 <h3 id="what-gets-logged-and-when">何がいつ記録されるか</h3>
 <ul>
 <li><strong>すべての stage の開始と完了</strong>が <code>STAGE_STARTED</code> と <code>STAGE_COMPLETED</code> イベントで記録される</li>
-<li>intent の record dir への<strong>すべてのファイル書き込み</strong>（<code>audit/</code> シャード自身を除く）が audit-logger hook により自動記録される</li>
+<li>intent の record dir への<strong>すべてのファイル書き込み</strong>（<code>audit/</code> シャード自身を除く）が write-audit-log hook により自動記録される</li>
 <li><strong>すべての承認 gate の決定</strong>（承認・変更要求・accept-as-is）が記録される</li>
 <li>あなたが与えた<strong>すべての質問回答</strong>が記録される</li>
 <li><strong>すべての subagent の完了</strong>が log-subagent hook により記録される</li>
@@ -311,7 +323,7 @@ stateDiagram-v2
 <p>各エントリは次のフィールドを持つ構造化形式に従う:</p>
 <ul>
 <li><strong>Timestamp</strong> — ISO 8601 タイムスタンプ</li>
-<li><strong>Event</strong> - 76 イベント種別のいずれか</li>
+<li><strong>Event</strong> - 82 イベント種別のいずれか</li>
 <li><strong>Details</strong> — イベント固有のデータ（stage 名、決定、成果物パス 等）</li>
 </ul>
 <p>エントリは時系列に追記される。特定の stage の履歴を確認するには、その <code>STAGE_STARTED</code> と <code>STAGE_COMPLETED</code> のエントリと、その間のすべてを探す。</p>

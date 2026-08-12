@@ -40,14 +40,24 @@ git checkout v2
 
 ```bash
 mkdir -p your-project/.kiro your-project/aidlc
+# Safe on fresh installs; required when upgrading from v2.5.56 or earlier.
+for retired_hook in \
+  audit-logger block mint runtime-compile stop sync-statusline
+do
+  rm -f \
+    "your-project/.kiro/hooks/aidlc-${retired_hook}.json" \
+    "your-project/.kiro/hooks/aidlc-${retired_hook}.kiro.hook"
+done
 cp -R dist/kiro-ide/.kiro/. your-project/.kiro/
 cp -R dist/kiro-ide/aidlc/. your-project/aidlc/     # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
 cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have one
 ```
 
-`cp -R <src>/. <dst>/` の形はツリーの**中身**をコピーする — `your-project/.kiro` が
-既にある場合（アップグレード）も無い場合（新規インストール）も同じに動く。素の
-`cp -r dist/kiro-ide/.kiro your-project/.kiro` は既存の `.kiro/` の中に 2 つ目の
+削除ループは v2.5.57 の hook 名マイグレーションである。overlay コピーは廃止された
+登録を削除できない。そのまま残せば旧名と新名の両方が登録されてしまう。このループは
+新規インストールでは no-op である。そのクリーンアップの後、`cp -R <src>/. <dst>/` の形は
+ツリーの**中身**をコピーする — `your-project/.kiro` が既にある場合も無い場合も同じである。
+素の `cp -r dist/kiro-ide/.kiro your-project/.kiro` は既存の `.kiro/` の中に 2 つ目の
 `.kiro` を入れ子にし、IDE は新しいファイルを決して見ない。
 
 `aidlc/` ディレクトリはワークスペースシェルである — エンジンが読む構築済みの
@@ -89,31 +99,38 @@ trigger）で hook を登録する（エージェント JSON 内の `hooks` ブ�
 実行し、シムが IDE の hook イベントをバイト共有の core hook が期待する形に正規化する。
 
 Kiro IDE 1.x は hook のコンテキストを **stdin 上の JSON**（snake_case:
-`{ tool_name, tool_input, tool_response }`）で渡す。より古い 0.12 ビルドは代わりに
+`{ session_id, tool_name, tool_input, tool_response }`）で渡す。より古い 0.12 ビルドは代わりに
 `USER_PROMPT` 環境変数を camelCase の等価物で設定し、アダプタは両方を受け入れる）。
 捕捉される PostToolUse の write / shell イベントは、どちらのチャネルでもツールの
 input を空のままにするので、書かれたパスは結果テキストから復元する必要があり、
-ペイロードの無い hook（`runtime-compile`・`sync-statusline`）は audit トレイルから
-走る。より新しい 1.x ビルドは一部の PreToolUse と委譲の input を populate する。
+audit tail の hook（`rebuild-stage-graph`・`sync-workflow-state`）は audit トレイルから
+走る。graph-rebuild の経路はさらに shell の結果とセッション identity を保持するので、
+成功した `intent-create` が呼び出したセッションに束縛される: モダンなイベントは
+正確な `session_id` を運び、レガシーチャネルは SessionStart が保持する合成 identity を
+再利用する。モダンな Stop も同様に自身の event-local な `session_id` を優先し、
+並走する一方のチャットが他方のチャットの post-create 引き渡し receipt を消費して
+しまうのを防ぐ。レガシーの agentStop は保持された identity へフォールバックする。
+より新しい 1.x ビルドは一部の PreToolUse と委譲の input を populate する。
 アダプタはそれらのフィールドに依存せずに保持する。
 
 ペイロードの取得は**ペイロードに依存するターゲットに限定してゲートされる**
-（`audit-and-sensors`・`log-subagent`）。0.12 ビルド（一度も書き込まずに stdin を開く）
-では、空でない `USER_PROMPT` が即座に消費される。それ以外では、アダプタは 2 秒の
-broken-channel 上限付きで 1.x の stdin チャネルを読む。他のすべてのターゲット —
-すべての `PreToolUse` で発火する `block` を含む — はどちらのチャネルにも触れず、
-ゼロレイテンシの経路を保つ。
+（`audit-and-sensors`・`log-subagent`・`rebuild-stage-graph`）に加え、モダンな
+`session_id` のための `session-start` と `continue-workflow`。0.12 ビルド（一度も
+書き込まずに stdin を開く）では、空でない `USER_PROMPT` が即座に消費される。それ以外では、
+アダプタは 2 秒の broken-channel 上限付きで 1.x の stdin チャネルを読む。他のすべての
+ターゲット — すべての `PreToolUse` で発火する `block` を含む — はどちらのチャネルにも
+触れず、ゼロレイテンシの経路を保つ。
 
 | Hook | trigger（matcher） | 目的 |
 |------|-------------------|---------|
 | `aidlc-session-start` | `SessionStart` | セッションごとに 1 度、ワークフローの再開文脈を注入（レガシーの 1.0 以前のファイルはプロンプトごとの `promptSubmit` に配線されたまま — その世代には session-start の trigger が無い） |
 | `aidlc-mint` | `UserPromptSubmit` | すべてのプロンプトで human-turn イベントを記録（human-presence gate） |
-| `aidlc-stop` | `Stop` | forwarding loop の audit（助言のみ。IDE では Stop の trigger はブロックできない — 強制は conductor 自身の Stop プロトコルに依る） |
+| `aidlc-continue-workflow` | `Stop` | forwarding loop の audit（助言のみ。IDE では Stop の trigger はブロックできない — 強制は conductor 自身の Stop プロトコルに依る） |
 | `aidlc-block` | `PreToolUse` | 承認 gate が開いていて以降に人間が行動していない間、ツール呼び出しをハードブロック（human-presence の床） |
-| `aidlc-audit-logger` | `PostToolUse`（`fs_write\|str_replace\|fs_append`） | 成果物の作成 / 更新を記録し、続けて適用される sensor を発火（パスはツールの結果から） |
+| `aidlc-write-audit-log` | `PostToolUse`（`fs_write\|str_replace\|fs_append`） | 成果物の作成 / 更新を記録し、続けて適用される sensor を発火（パスはツールの結果から） |
 | `aidlc-log-subagent` | `PostToolUse`（`^(subagent_.+\|invoke_sub_agent)$`） | 委譲先の identity 付きで `SUBAGENT_COMPLETED` を記録。matcher が広いのでどの委譲名もアダプタに届く。アダプタは補助的な `subagent_response` シェルを捨てる |
-| `aidlc-runtime-compile` | `PostToolUse`（`execute_bash`） | runtime グラフを再コンパイル（audit 末尾で判定） |
-| `aidlc-sync-statusline` | `PostToolUse`（`execute_bash`） | audit の最新 `STAGE_STARTED` から `Current Stage` を前方専用で同期（IDE は解析できる task ペイロードを一切出さない） |
+| `aidlc-rebuild-stage-graph` | `PostToolUse`（`execute_bash`） | runtime グラフを再コンパイル（audit 末尾で判定） |
+| `aidlc-sync-workflow-state` | `PostToolUse`（`execute_bash`） | audit の最新 `STAGE_STARTED` から `Current Stage` を前方専用で同期（IDE は解析できる task ペイロードを一切出さない） |
 
 `aidlc-session-end` には **v2 の登録が無い**: IDE の `Stop` trigger は会話の終了ではなく
 アシスタントの各ターンの終わりに発火するため、登録すると同一セッション内のプロンプト間に
@@ -191,4 +208,4 @@ subagent のツールを agent-v1 の JSON ではなく `.md` frontmatter から
 - [Scope・Depth・テスト戦略](../05-scopes-and-depth.md) — 実行の適切なサイズ選び。
 - [用語集](../glossary.md) — すべての用語の定義。
 
-他の harness: [Codex CLI 上の AI-DLC](codex-cli.md) · [harness ファミリーの索引](README.md)。
+他の harness: [Codex CLI 上の AI-DLC](codex-cli.md) · [Cursor 上の AI-DLC](cursor.md) · [harness ファミリーの索引](README.md)。

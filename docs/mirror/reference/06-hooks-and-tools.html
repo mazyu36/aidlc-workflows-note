@@ -91,28 +91,29 @@
 <main>
 <p class="eyebrow">AI-DLC DOCS 日本語版 / REFERENCE</p>
 <h1 id="hooks-and-tools">Hooks and Tools</h1>
-<p>この章は、hook システムのアーキテクチャ、16 個すべての hook スクリプト、audit イベントの分類体系、CLI ツールの構成、そして決定論的なユーティリティツールを文書化する。</p>
+<p>この章は、hook システムのアーキテクチャ、17 個すべての hook スクリプト、audit イベントの分類体系、CLI ツールの構成、そして決定論的なユーティリティツールを文書化する。</p>
 <blockquote>
 <p><strong>パス規約。</strong> 状態・audit・成果物は、アクティブな intent の <strong>record dir</strong> の下に住む — <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code>、以下では <code>&lt;record&gt;/</code> と書く（record dir が時系列でソートされるよう、コンパクトな UTC 日付プレフィックスと短い kebab-case ラベルを付す; 正規の id は <code>intents.json</code> レジストリ行の UUIDv7 である）。audit トレイルは単一ファイルではなく、<code>&lt;record&gt;/audit/</code> の下の clone ごとのシャードのディレクトリである。</p>
 </blockquote>
 <hr>
 <h2 id="hook-system-architecture">Hook システムのアーキテクチャ</h2>
-<p>この実装は <code>.claude/hooks/</code> にある 16 個の hook スクリプトを使う。16 個すべてが TypeScript である（<code>bun</code> で走る）。16 個すべてが <strong>project-wide</strong> である — <code>settings.json</code> に登録され（statusline はトップレベルの <code>statusLine</code> キーで、残る 15 個は <code>hooks</code> ブロックで）、どの skill がアクティブかに関わらず発火する。以前は分割されていた（6 個は skill スコープとして <code>aidlc/SKILL.md</code> frontmatter に宣言され、残りは project-wide だった）; v0.6.0 で skill スコープの 6 個を <code>settings.json</code> に移し、すべてのエントリポイント — orchestrator、各同梱の scope/stage runner、および手書きの顧客 runner — が runner ごとの <code>hooks:</code> ブロック無しで決定論的なスパインを継承するようにした。</p>
-<p>16 個のうち 11 個は <strong>非ブロッキング</strong> である。5 個は <strong>フロー変更</strong> である: <code>Stop</code> hook はフォワーディングループを走らせ続け、dispatch-rules hook は harness が入力の書き換えをサポートする場合に厳密な active-stage の rule を subagent のブリーフに添付し、reviewer-scope hook は兄弟 unit の reviewer アクセスを拒否し、review-freeze hook は gate の前に fresh な READY レビュー receipt を無効化する produces[] 書き込みを拒否し、state-transition guard は <code>aidlc-orchestrate.ts report</code> を迂回する直接のライフサイクル呼び出しを拒否する。</p>
+<p>この実装は <code>.claude/hooks/</code> にある 17 個の hook スクリプトを使う。17 個すべてが TypeScript である（<code>bun</code> で走る）。17 個すべてが <strong>project-wide</strong> である — <code>settings.json</code> に登録され（statusline はトップレベルの <code>statusLine</code> キーで、残る 16 個は <code>hooks</code> ブロックで）、どの skill がアクティブかに関わらず発火する。以前は分割されていた（6 個は skill スコープとして <code>aidlc/SKILL.md</code> frontmatter に宣言され、残りは project-wide だった）; v0.6.0 で skill スコープの 6 個を <code>settings.json</code> に移し、すべてのエントリポイント — orchestrator、各同梱の scope/stage runner、および手書きの顧客 runner — が runner ごとの <code>hooks:</code> ブロック無しで決定論的なスパインを継承するようにした。</p>
+<p>17 個のうち 11 個は <strong>非ブロッキング</strong> である。6 個は <strong>フロー変更</strong> である: <code>Stop</code> hook はフォワーディングループを走らせ続け、deliver-stage-rules hook は harness が入力の書き換えをサポートする場合に厳密な active-stage の rule を subagent のブリーフに添付し、plan-approval guard は時期尚早な code-generation ディスパッチを拒否し、reviewer-scope hook は兄弟 unit の reviewer アクセスを拒否し、review-freeze hook は gate の前に fresh な READY レビュー receipt を無効化する produces[] 書き込みを拒否し、state-transition guard は <code>aidlc-orchestrate.ts report</code> を迂回する直接のライフサイクル呼び出しを拒否する。</p>
 <pre class="term"><code>.claude/hooks/
-+-- mint-presence.ts<span class="t-comment">     # UserPromptSubmit + PostToolUse AskUserQuestion (project-wide, settings.json, TypeScript)</span>
-+-- dispatch-rules.ts<span class="t-comment">    # PreToolUse Task|Agent (project-wide, settings.json, TypeScript, flow-altering)</span>
++-- record-human-turn.ts<span class="t-comment">     # UserPromptSubmit + PostToolUse AskUserQuestion (project-wide, settings.json, TypeScript)</span>
++-- deliver-stage-rules.ts<span class="t-comment">    # PreToolUse Task|Agent (project-wide, settings.json, TypeScript, flow-altering)</span>
++-- plan-approval-guard.ts # PreToolUse Task (project-wide, settings.json, TypeScript, flow-altering)
 +-- state-transition-guard.ts # PreToolUse Bash (project-wide, settings.json, TypeScript, flow-altering)
 +-- reviewer-scope.ts<span class="t-comment">    # PreToolUse file/search/shell tools (project-wide, settings.json, TypeScript, flow-altering)</span>
 +-- review-freeze.ts<span class="t-comment">     # PreToolUse file-write tools (project-wide, settings.json, TypeScript, flow-altering)</span>
-+-- audit-logger.ts<span class="t-comment">      # PostToolUse Write|Edit (project-wide, settings.json, TypeScript)</span>
-+-- sensor-fire.ts<span class="t-comment">       # PostToolUse Write|Edit (project-wide, settings.json, TypeScript)</span>
-+-- sync-statusline.ts<span class="t-comment">   # PostToolUse TaskUpdate (project-wide, settings.json, TypeScript)</span>
-+-- runtime-compile.ts<span class="t-comment">   # PostToolUse Bash (project-wide, settings.json, TypeScript)</span>
++-- write-audit-log.ts<span class="t-comment">      # PostToolUse Write|Edit (project-wide, settings.json, TypeScript)</span>
++-- run-sensors.ts<span class="t-comment">       # PostToolUse Write|Edit (project-wide, settings.json, TypeScript)</span>
++-- sync-workflow-state.ts<span class="t-comment">   # PostToolUse TaskUpdate (project-wide, settings.json, TypeScript)</span>
++-- rebuild-stage-graph.ts<span class="t-comment">   # PostToolUse Bash (project-wide, settings.json, TypeScript)</span>
 +-- fold-usage.ts<span class="t-comment">        # PreToolUse + PostToolUse (project-wide, settings.json, TypeScript, Claude-only producer)</span>
 +-- validate-state.ts<span class="t-comment">    # PreCompact (project-wide, settings.json, TypeScript)</span>
 +-- log-subagent.ts<span class="t-comment">      # SubagentStop (project-wide, settings.json, TypeScript)</span>
-+-- aidlc-stop.ts<span class="t-comment">        # Stop (project-wide, settings.json, TypeScript, flow-altering)</span>
++-- aidlc-continue-workflow.ts<span class="t-comment">        # Stop (project-wide, settings.json, TypeScript, flow-altering)</span>
 +-- session-start.ts<span class="t-comment">     # SessionStart (project-wide, settings.json, TypeScript)</span>
 +-- session-end.ts<span class="t-comment">       # SessionEnd (project-wide, settings.json, TypeScript)</span>
 +-- aidlc-statusline.ts<span class="t-comment">  # statusLine (project-wide, settings.json, TypeScript)</span></code></pre>
@@ -128,25 +129,32 @@
 </tr>
 </thead>
 <tbody><tr>
-<td><code>mint-presence.ts</code></td>
+<td><code>record-human-turn.ts</code></td>
 <td>UserPromptSubmit + PostToolUse</td>
 <td>Project-wide (settings.json)</td>
 <td>(空) / <code>AskUserQuestion</code></td>
 <td>すべての本物の人間プロンプトと、応答されたすべての <code>AskUserQuestion</code> ウィジェットで <code>HUMAN_TURN</code> イベントを記録する（gate 承認やインタビュー回答はタイプされたプロンプトではなくウィジェットのクリックである）; 承認/インタビュー gate は台帳をチェックし、最後の gate 解決以降に 1 つを要求するので、autopilot 下のモデルは人間が行動していないのに承認を捏造できない</td>
 </tr>
 <tr>
-<td><code>dispatch-rules.ts</code></td>
+<td><code>deliver-stage-rules.ts</code></td>
 <td>PreToolUse</td>
 <td>Project-wide (settings.json)</td>
 <td><code>Task|Agent</code></td>
-<td><strong>フロー変更。</strong> ディスパッチされた stage の実質的なアクティブ space の rule を解決し、その正確なバイトをすべての AI-DLC subagent ブリーフに追記する。Claude、Codex、opencode の入力を書き換える; Kiro CLI はツール引数を書き換えられないため、不完全なブリーフは advisory の警告付きで進む（Kiro CLI agent は <code>resources</code> を通じてアクティブな memory ツリーをプリロードする; ロードできない必須 rule はそれでも repair guidance 付きでブロックする）。Kiro IDE はライブの memory-file 参照を持つ常時包含のワークスペース steering を使う。完全な bundle が既に存在する場合は idempotent である</td>
+<td><strong>フロー変更。</strong> ディスパッチされた stage の実質的なアクティブ space の rule を解決し、その正確なバイトをすべての AI-DLC subagent ブリーフに追記する。Claude、Codex、opencode、Copilot の入力を書き換える; Kiro CLI はツール引数を書き換えられないため、不完全なブリーフは advisory の警告付きで進む（Kiro CLI agent は <code>resources</code> を通じてアクティブな memory ツリーをプリロードする; ロードできない必須 rule はそれでも repair guidance 付きでブロックする）。Kiro IDE はライブの memory-file 参照を持つ常時包含のワークスペース steering を使う。完全な bundle が既に存在する場合は idempotent である</td>
+</tr>
+<tr>
+<td><code>plan-approval-guard.ts</code></td>
+<td>PreToolUse</td>
+<td>Project-wide (settings.json)</td>
+<td><code>Task</code></td>
+<td><strong>フロー変更。</strong> code-generation の plan-before-generation の順序（stage ステップ 2-4）を決定論的に強制する: アクティブな directive（または Current Stage フォールバック）が code-generation である間、<code>aidlc-developer-agent</code> を対象とする Task ディスパッチは拒否される（exit 2 + リダイレクトする stderr の理由）、ただしその 1 つの明示的な <code>AIDLC-UNIT: &lt;unit&gt;</code> マーカーが、ディスク上に空でない <code>code-generation-plan.md</code> を持ち、かつ明示的な「Approve Plan」応答を記録する Plan Approval 質問を持つ既知の unit を識別する場合を除く。各拒否は <code>PLAN_APPROVAL_BLOCKED</code> を発する; 欠落・矛盾・未知のマーカーは、プロンプトの散文から推測するのではなくブロックする。<code>AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1</code> は強制を無効化する</td>
 </tr>
 <tr>
 <td><code>state-transition-guard.ts</code></td>
 <td>PreToolUse</td>
 <td>Project-wide (settings.json)</td>
 <td><code>Bash</code></td>
-<td><strong>フロー変更。</strong> 直接の <code>aidlc-state.ts</code> ライフサイクル動詞を拒否し、conductor を <code>aidlc-orchestrate.ts report</code> へリダイレクトする; 読み取り専用および特殊な recovery/構成の動詞は利用可能なまま残る</td>
+<td><strong>フロー変更。</strong> 直接の <code>aidlc-state.ts</code> ライフサイクル動詞を拒否し、conductor を <code>aidlc-orchestrate.ts report</code> へリダイレクトする; harness が delegated-agent の identity を供給する場合、reviewer とサポート agent からのライフサイクル/ルーティングコマンドも拒否する; 読み取り専用の状態と通常の build/validation コマンドは利用可能なまま残る</td>
 </tr>
 <tr>
 <td><code>reviewer-scope.ts</code></td>
@@ -163,39 +171,39 @@
 <td><strong>フロー変更。</strong> §12a の終端 receipt 順序を決定論的に強制する: reviewer を持つ、まだ完了していない stage の宣言済み <code>produces[]</code> 成果物を対象とする Write/Edit またはシェルのミューテーションは、fresh な READY レビュー receipt がそれをカバーしている間、拒否される（exit 2 + リダイレクトする stderr の理由）。シェルの書き込みは Write/Edit の audit フィードを通らず、変更されたバイトの上に古い receipt を残してしまうため、実行前に検査される。engine の正確な receipt スキャン（<code>aidlc-lib.ts</code> の <code>freshReviewReceipts</code>）を共有するので、記録された gate の reject、jump、ワークフローの再起動は自動的に freeze を解除し、NOT-READY の評決は決して freeze しない。各拒否は <code>REVIEW_FREEZE_BLOCKED</code> を発する。あらゆる曖昧さで fail-open する; <code>AIDLC_DISABLE_REVIEW_FREEZE_HOOK=1</code> は強制を無効化する</td>
 </tr>
 <tr>
-<td><code>audit-logger.ts</code></td>
+<td><code>write-audit-log.ts</code></td>
 <td>PostToolUse</td>
 <td>Project-wide (settings.json)</td>
 <td><code>Write|Edit</code></td>
 <td>成果物の書き込みを <code>audit/</code> シャードに自動ログする</td>
 </tr>
 <tr>
-<td><code>sensor-fire.ts</code></td>
+<td><code>run-sensors.ts</code></td>
 <td>PostToolUse</td>
 <td>Project-wide (settings.json)</td>
 <td><code>Write|Edit</code></td>
-<td>合致する書き込みで、アクティブな stage の解決済み Sensor を発火する（advisory; 決してブロックしない）</td>
+<td>合致する書き込みで、アクティブな directive stage の解決済み Sensor を発火する（advisory; 決してブロックしない）; state に束縛された intent ごとのマーカーが、unit-major の実行が <code>Current Stage</code> より先行するときも帰属を保つ</td>
 </tr>
 <tr>
-<td><code>sync-statusline.ts</code></td>
+<td><code>sync-workflow-state.ts</code></td>
 <td>PostToolUse</td>
 <td>Project-wide (settings.json)</td>
 <td><code>TaskUpdate</code></td>
 <td>stage タスクのアクティベーション時に状態ファイルを自動同期する</td>
 </tr>
 <tr>
-<td><code>runtime-compile.ts</code></td>
+<td><code>rebuild-stage-graph.ts</code></td>
 <td>PostToolUse</td>
 <td>Project-wide (settings.json)</td>
 <td><code>Bash</code></td>
-<td>transition クラスの audit 発行時に <code>runtime-graph.json</code> を再コンパイルする</td>
+<td>成功した <code>intent-create</code> をそのツールイベントの正確なホストセッション ID に束縛する; セッションが既に別の intent を所有している場合、一度きりの fresh-session ハンドオフ receipt を書く; その後 transition クラスの audit 発行時に <code>runtime-graph.json</code> を再コンパイルする</td>
 </tr>
 <tr>
 <td><code>fold-usage.ts</code></td>
 <td>PreToolUse + PostToolUse</td>
 <td>Project-wide (settings.json)</td>
 <td>(空)</td>
-<td><strong>Claude 専用。</strong> トランスクリプトの新しい token 使用量を、llm 呼び出しごとに永続的な使用量台帳へ折り込む: PreToolUse は完了しつつあるメインの呼び出しを封じ、engine の境界の前には完了したすべての subagent 呼び出しも封じるので、ライフサイクルの roll-up が最新のまま保たれる; PostToolUse は通常のホールドバックのフォールバックを供給する。観察のみで決してブロックしない。Claude-Code のトランスクリプトリーダーは Claude harness にのみ結線されるので、Kiro/Codex/opencode では producer が走らず台帳は空のままになる（すべての使用量コンシューマは no-data に劣化する）。下の「Token 使用量とコスト追跡」を参照</td>
+<td><strong>Claude 専用。</strong> トランスクリプトの新しい token 使用量を、llm 呼び出しごとに永続的な使用量台帳へ折り込む: PreToolUse は完了しつつあるメインの呼び出しを封じ、engine の境界の前には完了したすべての subagent 呼び出しも封じるので、ライフサイクルの roll-up が最新のまま保たれる; PostToolUse は通常のホールドバックのフォールバックを供給する。観察のみで決してブロックしない。Claude-Code のトランスクリプトリーダーは Claude harness にのみ結線されるので、Kiro/Codex/opencode では producer が走らず台帳は空のままになる（すべての使用量コンシューマは no-data に劣化する）。<code>AIDLC_DISABLE_USAGE_TRACKING=1</code> はそれを無効化する。下の「Token 使用量とコスト追跡」を参照</td>
 </tr>
 <tr>
 <td><code>validate-state.ts</code></td>
@@ -212,11 +220,11 @@
 <td>subagent 完了イベントをログする</td>
 </tr>
 <tr>
-<td><code>aidlc-stop.ts</code></td>
+<td><code>aidlc-continue-workflow.ts</code></td>
 <td>Stop</td>
 <td>Project-wide (settings.json)</td>
 <td>(空)</td>
-<td><strong>フロー変更。</strong> ターン終了時にフォワーディングループを強制する: <code>aidlc-orchestrate next</code> を走らせ; <code>done</code> または <code>parked</code> では stop を許し、保留中の directive では stop をブロックして <code>reason</code> 経由で次の一手を注入し戻す。次のときは stop を許す（human-wait 免除）: 現在の stage が承認待ち（<code>[?]</code>）、修正中（<code>[R]</code>）、正規または アクティブな unit ごとの <code>&lt;slug&gt;-questions.md</code> に未回答の質問があって <code>[-]</code> 進行中、または終了しつつあるターンが会話的だった（人間の最後のプロンプトがワークフローエンジン呼び出し無しで応答された、harness トランスクリプトから読み取る）とき — 最後の 2 つは自律 Construction 下では抑制される。再帰境界あり（no-progress カウンタ + <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code> 下の <code>stop_hook_active</code>; 既定はインタラクティブ実行で 2、自律 Construction 下で 8）。AIDLC ワークフローの外では no-op</td>
+<td><strong>フロー変更。</strong> ターン終了時にフォワーディングループを強制する: <code>aidlc-orchestrate next</code> を走らせ; <code>done</code> または <code>parked</code> では stop を許し、保留中の directive では stop をブロックして <code>reason</code> 経由で次の一手を注入し戻す。セッションの元の UUID と新たにアクティブな UUID が PostToolUse の receipt に合致するとき、<code>intent-create</code> 後の正確な一度きりの fresh-session ハンドオフも許す。次のときは stop を許す（human-wait 免除）: 現在の stage が承認待ち（<code>[?]</code>）、修正中（<code>[R]</code>）、またはアクティブな directive の正規もしくは unit ごとの <code>&lt;slug&gt;-questions.md</code> に未回答の質問がある、もしくは未解決のログされた <code>DECISION_RECORDED</code> がある <code>[-]</code> 進行中、あるいは会話的なターンも許される。ログされた決定と会話的な免除は自律 Construction 下では抑制される; 保留ファイルの免除は unit-major code-generation の必須 Plan Approval を除いて抑制される。再帰境界あり（no-progress カウンタ + <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code> 下の <code>stop_hook_active</code>; 既定はインタラクティブ実行で 2、自律 Construction 下で 8）。AIDLC ワークフローの外では no-op</td>
 </tr>
 <tr>
 <td><code>session-start.ts</code></td>
@@ -230,7 +238,7 @@
 <td>SessionEnd</td>
 <td>Project-wide (settings.json)</td>
 <td>(空)</td>
-<td>正常終了時に <code>SESSION_ENDED</code> audit イベントを発する</td>
+<td>正常終了時に、その正確なセッションに記録された intent へ <code>SESSION_ENDED</code> を発する; UUID に束縛されたワークフローがセッション束縛を持たないとき、共有のアクティブカーソルを使う代わりに fail closed する</td>
 </tr>
 <tr>
 <td><code>aidlc-statusline.ts</code></td>
@@ -241,7 +249,7 @@
 </tr>
 </tbody></table>
 <h3 id="shared-characteristics">共通の性質</h3>
-<p>16 個の TypeScript hook すべて:</p>
+<p>17 個の TypeScript hook すべて:</p>
 <ul>
 <li>TypeScript で書かれ、<code>bun</code> で走る</li>
 <li>実行権限を必要としない — macOS、Linux、ネイティブ Windows PowerShell で同一に動く</li>
@@ -255,7 +263,7 @@
 <pre class="mermaid">
 sequenceDiagram
     participant CC as Claude Code
-    participant AL as audit-logger.ts
+    participant AL as write-audit-log.ts
     participant VS as validate-state.ts
     participant LS as log-subagent.ts
     participant SS as session-start.ts
@@ -293,15 +301,15 @@ sequenceDiagram
 </pre>
 <hr>
 <h2 id="workflow-spine-hooks">ワークフロースパインの hook</h2>
-<p>これら 6 個の hook（audit/sensor/statusline/runtime-compile/state-validation/subagent のスパイン）は <code>settings.json</code> に project-wide で登録される。常にオンだが、各々が <strong>self-gate</strong> する: アクティブなワークフローが無い（<code>aidlc-state.md</code> / アクティブな intent の <code>audit/</code> シャードが不在）とき早期 exit するので、audit ログと状態同期が非 AI-DLC セッションを散らかすことは決してない。v0.6.0 より前は <code>aidlc/SKILL.md</code> frontmatter に宣言されていた（skill スコープ）; <code>settings.json</code> への移行により、すべてのエントリポイント — orchestrator とすべての同梱または手書きの runner — が <code>hooks:</code> ブロックをコピーせずにスパインを継承する。</p>
-<h3 id="posttooluse-audit-loggerts">PostToolUse: audit-logger.ts</h3>
-<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-audit-logger.ts</code>
+<p>これら 6 個の hook（audit/sensor/statusline/rebuild-stage-graph/state-validation/subagent のスパイン）は <code>settings.json</code> に project-wide で登録される。常にオンだが、各々が <strong>self-gate</strong> する: アクティブなワークフローが無い（<code>aidlc-state.md</code> / アクティブな intent の <code>audit/</code> シャードが不在）とき早期 exit するので、audit ログと状態同期が非 AI-DLC セッションを散らかすことは決してない。v0.6.0 より前は <code>aidlc/SKILL.md</code> frontmatter に宣言されていた（skill スコープ）; <code>settings.json</code> への移行により、すべてのエントリポイント — orchestrator とすべての同梱または手書きの runner — が <code>hooks:</code> ブロックをコピーせずにスパインを継承する。</p>
+<h3 id="posttooluse-write-audit-logts">PostToolUse: write-audit-log.ts</h3>
+<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-write-audit-log.ts</code>
 <strong>トリガー:</strong> すべての <code>Write</code> または <code>Edit</code> Claude Code ツール呼び出しの後（matcher: <code>&quot;Write|Edit&quot;</code>）
 <strong>目的:</strong> 成果物の書き込みを intent の <code>audit/</code> シャードに自動ログする</p>
 <p><strong>処理ステップ:</strong></p>
 <ol>
 <li><strong>プロジェクトディレクトリの解決:</strong> <code>$CLAUDE_PROJECT_DIR</code> を、スクリプトパス導出と CWD 検出へのフォールバック付きで解決する。</li>
-<li><strong>ヘルスハートビート:</strong> UTC タイムスタンプを <code>.aidlc-hooks-health/audit-logger.last</code> に書く。</li>
+<li><strong>ヘルスハートビート:</strong> UTC タイムスタンプを <code>.aidlc-hooks-health/write-audit-log.last</code> に書く。</li>
 <li><strong>JSON パース:</strong> stdin を読み、<code>tool_name</code> と <code>tool_input.file_path</code> を抽出する。</li>
 <li><strong>パスフィルタリング:</strong> intent の record dir 配下でないファイルをスキップする。<code>audit/</code> シャード自体をスキップする（再帰を避ける）。</li>
 <li><strong>Audit ファイルガード:</strong> アクティブな intent の <code>audit/</code> シャードが存在しなければ静かに exit する（フレームワークが作成する）。</li>
@@ -309,46 +317,48 @@ sequenceDiagram
 <li><strong>アトミックロック:</strong> システムの temp ディレクトリ（<code>os.tmpdir()</code>）で <code>mkdir</code> ベースのロックを 3 回リトライループ（100ms 遅延）で使う。ハッシュがプロジェクトごとにロックを隔離する。</li>
 <li><strong>ログエントリ:</strong> 正規の <code>ARTIFACT_CREATED</code>（純新規パスへの Write）または <code>ARTIFACT_UPDATED</code>（Edit、または既存を上書きする Write）イベントを <code>appendAuditEntry</code> 経由で追記する。フィールド: Timestamp、Event、Tool、File、Context。</li>
 </ol>
-<h3 id="posttooluse-sync-statuslinets">PostToolUse: sync-statusline.ts</h3>
-<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-sync-statusline.ts</code>
+<h3 id="posttooluse-sync-workflow-statets">PostToolUse: sync-workflow-state.ts</h3>
+<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-sync-workflow-state.ts</code>
 <strong>トリガー:</strong> すべての <code>TaskUpdate</code> 呼び出しの後（matcher: <code>&quot;TaskUpdate&quot;</code>）
 <strong>目的:</strong> stage タスクが <code>in_progress</code> になったとき <code>aidlc-state.md</code> を自動同期する</p>
 <p><strong>処理ステップ:</strong></p>
 <ol>
-<li><strong>プロジェクトディレクトリの解決:</strong> audit-logger.ts と同じマルチフォールバックパターン。</li>
+<li><strong>プロジェクトディレクトリの解決:</strong> write-audit-log.ts と同じマルチフォールバックパターン。</li>
 <li><strong>Status フィルタ:</strong> <code>status</code> が <code>in_progress</code> のときだけ発火する。<code>completed</code>、<code>pending</code> などでは静かに exit する。</li>
 <li><strong>activeForm フィルタ:</strong> <code>activeForm</code> フィールドが無い、または <code>[slug]</code> サフィックスパターンが無ければ静かに exit する。</li>
 <li><strong>状態ファイルガード:</strong> <code>aidlc-state.md</code> が存在しなければ静かに exit する（init 前）。</li>
-<li><strong>ヘルスハートビート:</strong> <code>.aidlc-hooks-health/sync-statusline.last</code> に書く。</li>
-<li><strong>状態同期:</strong> <code>bun aidlc-utility.ts set-status --stage &lt;slug&gt;</code> を呼ぶ（Phase、Stage、Agent、チェックボックスを更新）。</li>
+<li><strong>ヘルスハートビート:</strong> <code>.aidlc-hooks-health/sync-workflow-state.last</code> に書く。</li>
+<li><strong>状態同期:</strong> <code>bun aidlc-utility.ts set-status --stage &lt;slug&gt;</code> を呼ぶ（通常は Phase、Stage、Agent、チェックボックスを更新する）。有効な interleaved unit-major directive では、永続的な first-stage カーソル、<code>In Progress</code>、チェックボックスを保ちながら、一時的な status フィールドとマーカーの digest を更新する。</li>
 </ol>
 <p><strong>設計ノート:</strong></p>
 <ul>
 <li>Stage Jump タスク（<code>[slug]</code> 無し）と依存関係配線の TaskUpdate（activeForm 無し）は自然にフィルタで除かれる。</li>
 <li>hook は既存の <code>set-status</code> サブコマンドを呼ぶ — 新しいコードパスは不要。</li>
+<li>アクティベートされた slug が state に束縛されたアクティブ directive マーカーに合致するとき、<code>set-status</code> はその unit を保ったままそのマーカーの state digest を更新する。interleaved な unit-major directive では、<code>Current Stage</code>、<code>In Progress</code>、そして永続的なカーソルのチェックボックスも変更しないままにするので、completed-grid の gate cascade はなおブロックの最初の stage で始まる。</li>
 </ul>
-<h3 id="posttooluse-sensor-firets">PostToolUse: sensor-fire.ts</h3>
-<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-sensor-fire.ts</code>
-<strong>トリガー:</strong> すべての <code>Write</code> または <code>Edit</code> Claude Code ツール呼び出しの後（matcher: <code>&quot;Write|Edit&quot;</code>）
+<h3 id="posttooluse-run-sensorsts">PostToolUse: run-sensors.ts</h3>
+<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-run-sensors.ts</code>
+<strong>トリガー:</strong> すべての <code>Write</code> または <code>Edit</code> Claude Code ツール呼び出しの後(matcher: <code>&quot;Write|Edit&quot;</code>)
 <strong>目的:</strong> 合致する書き込みで、アクティブな stage のコンパイル解決済み Sensor を発火する（advisory; 決してブロックしない）</p>
 <p><strong>処理ステップ:</strong></p>
 <ol>
-<li><strong>プロジェクトディレクトリの解決:</strong> audit-logger.ts と同じマルチフォールバックパターン。</li>
+<li><strong>プロジェクトディレクトリの解決:</strong> write-audit-log.ts と同じマルチフォールバックパターン。</li>
 <li><strong>Audit + state ガード:</strong> <code>audit/</code> シャードまたは <code>aidlc-state.md</code> が存在しなければ静かに exit する（init 前）。</li>
-<li><strong>アクティブ stage の読み取り:</strong> アクティブな stage の <code>sensors_applicable</code> 配列を <code>stage-graph.json</code> から読む — その stage ノードのコンパイル解決済み sensor リスト（workspace-scaffold のような stage では空）。</li>
+<li><strong>アクティブ stage の読み取り:</strong> engine は、各最終的に検証された <code>run-stage</code> を、アクティブな intent の gitignore された <code>.aidlc-active-directive.json</code> にアトミックに記録し、正確な <code>aidlc-state.md</code> の SHA-256 に束縛する。Task のアクティベーションは、その slug がマーカーに合致するときだけ digest を更新し、unit ごとの directive の unit を保ちながら無関係な状態変更を拒否する。hook は digest が合致する間その stage を使い、それから <code>stage-graph.json</code> から <code>sensors_applicable</code> 配列を読む。これは、永続的なカーソルがより早い設計 stage に残っている間も、unit-major code-generation の診断を <code>code-generation</code> の下に保つ。孤立した <code>--single</code> directive はあらゆるメインワークフローのマーカーを置き換え、成功した <code>report --single</code> がそれをクリアする。欠落・不正・古い、または graph-unknown のマーカーは <code>Current Stage</code> にフォールバックする。</li>
 <li><strong>ディスパッチ:</strong> 適用可能な各 Sensor について、<code>aidlc-sensor.ts fire &lt;id&gt; --stage &lt;slug&gt; --output-path &lt;path&gt;</code> を spawn する。dispatcher は各 Sensor の <code>matches</code> glob を hook 側で適用する; 合致しない書き込みはスキップされる。結果は advisory である — hook は書き込みを決してブロックしない。</li>
-<li><strong>ヘルスハートビート:</strong> 発火時に <code>.aidlc-hooks-health/sensor-fire.last</code> を書くので、doctor は健全なアイドル hook を静かな失敗と区別できる。</li>
+<li><strong>ヘルスハートビート:</strong> 発火時に <code>.aidlc-hooks-health/run-sensors.last</code> を書くので、doctor は健全なアイドル hook を静かな失敗と区別できる。</li>
 </ol>
 <p>manifest スキーマと fire ライフサイクルは <a href="07-sensor-system.html">Sensor System</a> を参照。</p>
-<h3 id="posttooluse-runtime-compilets">PostToolUse: runtime-compile.ts</h3>
-<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-runtime-compile.ts</code>
+<h3 id="posttooluse-rebuild-stage-graphts">PostToolUse: rebuild-stage-graph.ts</h3>
+<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-rebuild-stage-graph.ts</code>
 <strong>トリガー:</strong> すべての <code>Bash</code> Claude Code ツール呼び出しの後（matcher: <code>&quot;Bash&quot;</code>）
-<strong>目的:</strong> transition クラスの audit イベントが今しがた着地したとき <code>runtime-graph.json</code> を再コンパイルする</p>
+<strong>目的:</strong> pre-workflow セッションを、そのシェル呼び出しによって born した intent に束縛し、transition クラスの audit イベントが今しがた着地したとき <code>runtime-graph.json</code> を再コンパイルする</p>
 <p><strong>処理ステップ:</strong></p>
 <ol>
-<li><strong>コマンドフィルタ:</strong> <code>bun .claude/tools/aidlc-(state|jump|bolt|utility).ts</code> の起動だけが早期 exit を通過する。<code>aidlc-runtime.ts</code> は明示的に拒否される（再帰ガード）。</li>
+<li><strong>セッション束縛:</strong> グラフフィルタの前に、PostToolUse イベントの正確な <code>session_id</code> を、成功した <code>intent-create</code> の結果の record と space とペアにする。その record を <code>intents.json</code> 経由で解決する; 束縛されていないセッションにスタンプするか、既存の所有権を保ちつつ、元の intent UUID と新たにアクティブな intent UUID を名指す短命なハンドオフ receipt を書く。</li>
+<li><strong>コマンドフィルタ:</strong> <code>bun .claude/tools/aidlc-(state|jump|bolt|utility).ts</code> の起動だけがグラフの早期 exit を通過する。<code>aidlc-runtime.ts</code> は明示的に拒否される（再帰ガード）。</li>
 <li><strong>Audit 存在ガード:</strong> init 前に清く exit する（まだ <code>audit/</code> シャードが無い）。</li>
-<li><strong>ヘルスハートビート:</strong> <code>.aidlc-hooks-health/runtime-compile.last</code> を書く。</li>
+<li><strong>ヘルスハートビート:</strong> <code>.aidlc-hooks-health/rebuild-stage-graph.last</code> を書く。</li>
 <li><strong>末尾読み取り:</strong> マージされた <code>audit/</code> シャードを <code>\n---\n</code> で分割し、最後の 3 ブロックを取る（単一の <code>approve</code> 呼び出しが追記する上限）。</li>
 <li><strong>イベントクラスフィルタ:</strong> 最後の 3 ブロックのいずれかが <code>GATE_APPROVED</code>、<code>STAGE_STARTED</code>、<code>STAGE_AWAITING_APPROVAL</code>、<code>AUDIT_MERGED</code>、<code>WORKFLOW_COMPLETED</code> を運ぶときだけ再コンパイルする。合致無しでは exit する。</li>
 <li><strong>ディスパッチ:</strong> <code>bun aidlc-runtime.ts compile</code> を spawn する。非ゼロ exit では <code>--doctor</code> 用に hook ドロップを記録する; 親の Bash 呼び出しを決してブロックしない。</li>
@@ -376,12 +386,12 @@ sequenceDiagram
 <strong>目的:</strong> subagent 完了イベントを audit トレイルにログする</p>
 <p><strong>処理ステップ:</strong></p>
 <ol>
-<li><strong>プロジェクトディレクトリの解決:</strong> audit-logger.ts と同じマルチフォールバックパターン。</li>
+<li><strong>プロジェクトディレクトリの解決:</strong> write-audit-log.ts と同じマルチフォールバックパターン。</li>
 <li><strong>ヘルスハートビート:</strong> <code>.aidlc-hooks-health/log-subagent.last</code> に書く。</li>
 <li><strong>JSON パース:</strong> <code>agent_type</code>（既定 <code>&quot;unknown&quot;</code>）、<code>agent_id</code>、<code>last_assistant_message</code>（200 文字に切り詰め）を抽出する。</li>
 <li><strong>Audit ファイルガード:</strong> <code>audit/</code> シャードが存在しなければ静かに exit する。</li>
 <li><strong>エントリ組み立て:</strong> 正規の <code>SUBAGENT_COMPLETED</code> イベントを <code>appendAuditEntry</code> 経由で発する。フィールド: Timestamp、Event、Agent Type、任意で Agent ID と切り詰めた Message。</li>
-<li><strong>アトミックロック:</strong> audit-logger.ts と同じ <code>mkdir</code> ベースのパターン（<code>lib.ts</code> で統一）だが、競合を避けるため別のロック名を使う。</li>
+<li><strong>アトミックロック:</strong> write-audit-log.ts と同じ <code>mkdir</code> ベースのパターン（<code>lib.ts</code> で統一）だが、競合を避けるため別のロック名を使う。</li>
 </ol>
 <p><strong>ディスパッチされたすべての agent で発火する:</strong></p>
 <ul>
@@ -389,10 +399,10 @@ sequenceDiagram
 <li>Stage 3.5（Code Generation、<code>mode: subagent</code>）-- <code>aidlc-developer-agent</code>（unit of work ごとに 1 回発火する）</li>
 <li>アンサンブル stage（<code>mode: mob</code>、またはサポート agent 付きの <code>subagent</code>）-- ディスパッチされた協働者ごとと lead ディスパッチごとに 1 回発火する（例: user-stories は 3 人の協働者それぞれに発火する）</li>
 </ul>
-<p>Workspace 検出（0.2）はかつて subagent だった; 今は <code>aidlc-utility intent-birth</code> の中で決定論的に走るので、この hook は初期化中にもはや発火しない。</p>
+<p>Workspace 検出（0.2）はかつて subagent だった; 今は <code>aidlc-utility intent-create</code> の中で決定論的に走るので、この hook は初期化中にもはや発火しない。</p>
 <hr>
-<h3 id="stop-aidlc-stopts">Stop: aidlc-stop.ts</h3>
-<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-stop.ts</code>
+<h3 id="stop-aidlc-continue-workflowts">Stop: aidlc-continue-workflow.ts</h3>
+<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-continue-workflow.ts</code>
 <strong>トリガー:</strong> conductor がターンを終えようとするとき（matcher: 空 = 常時、<code>/aidlc</code> がアクティブな間）
 <strong>目的:</strong> インタラクティブなフォワーディングループを強制する — engine がワークフローを <code>done</code> と報告するまで走らせ続ける</p>
 <p>これはフレームワークの 5 つのフロー変更 hook の 1 つであり、dispatch-rules・state-transition・reviewer-scope・review-freeze の 4 つの PreToolUse 制御と並ぶ。ターンの終了を止めるために <code>{&quot;decision&quot;:&quot;block&quot;}</code> を返しうる; 他の 11 個の hook は観察して exit 0 する。gate 付きの会話的な経路では conductor（LLM）がループを保持する、なぜなら人間に質問できるのはそれだけだからである — だから engine を参照し忘れると、ワークフローは漂流する。この hook はその LLM の勤勉さへの依存を取り除く: ループは harness によって強制される。</p>
@@ -403,7 +413,7 @@ sequenceDiagram
 <li><strong>engine を compose する:</strong> <code>bun .claude/tools/aidlc-orchestrate.ts next --project-dir &lt;dir&gt;</code> を走らせ、directive の <code>kind</code> をパースする。状態を再導出はしない — engine を compose する。</li>
 <li><strong><code>done</code> → 許す:</strong> directive が <code>done</code> なら、ワークフローは完了である; hook は何も発せず exit 0 する（先例の非ブロッキングパターン）、そして再帰カウンタをクリアする。</li>
 <li><strong><code>parked</code> -&gt; 許す:</strong> directive が <code>parked</code> なら、ワークフローは後のセッションのために意図的にフロー途中で park された（<code>aidlc-orchestrate park</code>）; hook は stop を許してカウンタをクリアする、<code>done</code> とちょうど同じに。これはサポートされたマルチセッションの exit である: これが無いと、唯一の清い stop は <code>done</code> であり、長いワークフローの agent は残りの stage をラバースタンプしてしか到達できない（#367）。<strong>Autonomy guard（#365）:</strong> <code>parked</code> の許しは自律 Construction 下（<code>Construction Autonomy Mode: autonomous</code>）では抑制されるので、そこでの <code>parked</code> directive は cap 境界のブロックに落ち、ループは動き続ける。</li>
-<li><strong>Human-wait -&gt; 許す:</strong> directive が保留中だが conductor が正しく人間で park している（または単に雑談している）なら、hook は stop を許し、nudge をスパムするのではなくドロップを記録する。4 つのケースが該当する: 現在の stage のチェックボックスが積極的に <code>[?]</code> 承認待ち、<code>[R]</code> 修正中、<code>[-]</code> 進行中 <strong>かつ</strong> その <code>&lt;slug&gt;-questions.md</code> に未回答の <code>[Answer]:</code> タグがある（保留中の stage 途中の明確化質問）、または終了しつつあるターンが会話的だった（人間の直近のプロンプトがワークフローエンジン呼び出し無しで応答された、harness トランスクリプトから読み取る） - 最後の 2 つは自律 Construction 下では抑制される。積極的確認のみ: 他のあらゆる状態、チェックボックス行無し、開いた質問無し、トランスクリプト無し / 人間プロンプト無し / 応答ターンでのエンジン呼び出しあり、またはパースエラーは、下のブロックに落ちる。下の「Human-wait 免除」を参照。</li>
+<li><strong>Human-wait -&gt; 許す:</strong> directive が保留中だが conductor が正しく人間で park している（または単に雑談している）なら、hook は stop を許し、nudge をスパムするのではなくドロップを記録する。5 つのケースが該当する: 現在の stage のチェックボックスが積極的に <code>[?]</code> 承認待ち、<code>[R]</code> 修正中、<code>[-]</code> 進行中 <strong>かつ</strong> その <code>&lt;slug&gt;-questions.md</code> に未回答の <code>[Answer]:</code> タグがある、<code>[-]</code> 進行中で、後に <code>QUESTION_ANSWERED</code> の無い current-stage の <code>DECISION_RECORDED</code> がある、または終了しつつあるターンが会話的だった。ログされた決定と会話的なターンは自律 Construction 下では抑制される; ファイルに基づく質問は unit-major code-generation の正確な必須 Plan Approval 質問を除いて抑制される。積極的確認のみ: 他のあらゆる状態、チェックボックス行無し、開いたファイル/ログされた質問無し、トランスクリプト無し / 人間プロンプト無し / 応答ターンでのエンジン呼び出しあり、またはパースエラーは、下のブロックに落ちる。下の「Human-wait 免除」を参照。</li>
 <li><strong>Pending -&gt; ブロックして注入:</strong> 他のあらゆる（保留中の）directive - <code>run-stage</code>、<code>dispatch-subagent</code>、<code>invoke-swarm</code>、<code>present-gate</code>、<code>ask</code>、<code>print</code>、<code>error</code> - では <code>{&quot;decision&quot;:&quot;block&quot;,&quot;reason&quot;:&lt;オンタスクの継続&gt;}</code> を出力するので、同じセッションが次の一手を注入された状態で再開する。注入された <code>reason</code> は清い一時停止の代替として <code>aidlc-orchestrate park</code> も名指すので、長いワークフローを止めたい conductor は前進するのではなく park する。</li>
 <li><strong>Fail open:</strong> 予期しない失敗（読めない状態、非ゼロで exit するかパース可能な directive を返さない engine、不正な stdin）は stop を許し、ドロップを記録する。fail open は、さもなければターンを罠にかけうる hook にとって唯一安全な失敗モードである。</li>
 </ol>
@@ -413,19 +423,86 @@ sequenceDiagram
 <li><strong><code>stop_hook_active</code></strong> — Claude Code は、現在の stop それ自体が先行する Stop-hook ブロックの産物であるとき、これを true に設定する。hook はこれを、既にブロックされたシーケンスの中にいるというシグナルとして読む。</li>
 <li><strong>no-progress カウンタ</strong> - hook は <code>&lt;record&gt;/.aidlc-stop-hook/block-count.json</code>（intent の record dir の中）の下に小さな記録を、ワークフローの <em>進捗シグネチャ</em>（Current Stage slug + audit 末尾長）をキーに永続化する。ワークフローを前進させる <code>report</code> はそのシグネチャを変えるので、カウンタはリセットする - 健全なループは決してスロットルされない。連続するブロックでシグネチャが不変のとき（report が走らなかった）、カウンタは増える。no-progress の連続が上限 - <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code>、その既定は <strong>run-mode を認識する: インタラクティブ実行で 2、自律 Construction 下で 8</strong>（インタラクティブは 2 なので、雑談中または一時停止中の人間は 1 回の nudge で解放される; 自律は 8 なので、解放する人間のいない無人ループは手放す前に完了まで走る） - に達すると、hook はターンを <strong>解放</strong> する（stop を許す）ので、スタックしたループは常に手放す。明示的な <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP</code> は両方の既定を上書きする。</li>
 </ul>
-<p><strong>Human-wait 免除 - インタラクティブな gate は罰されない。</strong> conductor が人間を待っている（または単に会話的である）<em>から</em> ターンを終える 4 つのケースは、hook が決して nudge をスパムしないよう扱われる:</p>
+<p><strong>Human-wait 免除 - インタラクティブな gate は罰されない。</strong> conductor が人間を待っている（または単に会話的である）<em>から</em> ターンを終える 5 つのケースは、hook が決して nudge をスパムしないよう扱われる:</p>
 <ul>
-<li><strong>Esc は無料。</strong> Stop hook はユーザーの割り込み（Esc）では発火しないので、手動の割り込みが罠にかかることは決してない — そのケースにコードは不要である。</li>
-<li><strong>承認 gate は無料ではない。</strong> conductor が <code>AskUserQuestion</code> の回答を待つためにターンを終えるとき、Stop hook は <em>発火する</em>。承認 gate（現在の stage が <code>[?]</code> 承認待ち）または Request-Changes ループ（<code>[R]</code> 修正中）では、engine は依然として進行中の stage に対し保留中の <code>run-stage</code> を再発行するので、免除が無ければ hook はブロックし、cap が尽きるまでフォワーディングループの nudge を再注入する — インタラクティブな gate では混乱を招く。だから現在の stage のチェックボックスが積極的に <code>[?]</code>/<code>[R]</code> のとき、hook は stop を許す。これは <strong>積極的確認のみで fail-open</strong> である: より進んで解放するだけで、決してより多くブロックしない; チェックボックス行の欠落とあらゆるパースエラーは cap 境界のブロックに落ちるので、本物の stage 途中の中断はなお nudge される。</li>
-<li><strong>stage 途中の明確化質問も無料ではない。</strong> そのような質問は stage を <code>[-]</code> 進行中で park する — 怠惰な中断と同じチェックボックス状態なので、<code>[-]</code> だけでは免除できない。しかし conductor は質問する前に空の <code>[Answer]:</code> タグを持つ <code>&lt;slug&gt;-questions.md</code> を作らねばならない（stage protocol §3）ので、未回答のタグは質問が保留中である積極的シグナルである。hook は正規の <code>&lt;record&gt;/&lt;phase&gt;/&lt;slug&gt;/</code> ディレクトリ、または unit ごとの Construction directive では <code>next</code> が名指す正確な <code>&lt;record&gt;/construction/&lt;unit&gt;/&lt;slug&gt;/</code> をチェックする; 別の unit からの古い質問は受理しない。現在の <code>[-]</code> stage の質問ファイルに未回答のタグがあるとき、hook は stop を許す。これは <strong>厳格にゲートされる</strong>: 自律 Construction 下（<code>Construction Autonomy Mode: autonomous</code>、ループが無人で走り続けねばならない場所）では決して発火せず、あらゆる miss - ファイル無し、すべて回答済み、autonomous、または読み取りエラー - で cap 境界のブロックに落ちるので、本物の stage 途中の中断はなお nudge される。（残余のケースへの即時緩和策: <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=1</code>。）</li>
-<li><strong>会話的なターンも無料ではない。</strong> アクティブなワークフロー中、ただ雑談したい（質問する、決定を議論する）人間はループに nudge し戻されるべきではない。hook は harness トランスクリプトを読み、直近の本物の人間プロンプトが <strong>無し</strong> のワークフローエンジン関与で応答された - conductor がそのプロンプト以降 <code>aidlc-orchestrate</code> も <code>aidlc-state</code> も走らせなかった - とき stop を許す。読み取り専用のクエリ（<code>--status</code>、<code>--doctor</code>、<code>--help</code>、<code>--version</code>）は関与に <strong>数えない</strong> ので、<code>--status</code> で応答された「今どの stage にいる？」はなお雑談として該当する。Claude と Codex は Stop ペイロードに <code>transcript_path</code> を届ける; <strong>Kiro と opencode は何も届けない</strong>（opencode の <code>session.idle</code> イベントはトランスクリプトを運ばない）ので、それらの harness ではこの免除は不活性であり、run-mode を認識するインタラクティブ cap（2）が、雑談中の人間を 8 回ではなく 1 回の nudge の後に去らせる解放経路である。これは <strong>厳格にゲートされ fail-closed</strong> である: 自律 Construction 下では決して発火せず、欠落したまたは読めないトランスクリプト、人間プロンプトが見つからない、または応答ターンでのエンジン呼び出しは cap 境界のブロックに落ちるので、ワークフローに関与してからループ途中で中断した conductor はなお nudge される。それは常に許すだけ - 決してより多くはブロックできない。</li>
+<li><p><strong>Esc は無料。</strong> Stop hook はユーザーの割り込み（Esc）では発火しないので、手動の割り込みが罠にかかることは決してない — そのケースにコードは不要である。</p>
+</li>
+<li><p><strong>承認 gate は無料ではない。</strong> conductor が <code>AskUserQuestion</code> の回答を待つためにターンを終えるとき、Stop hook は <em>発火する</em>。承認 gate（現在の stage が <code>[?]</code> 承認待ち）または Request-Changes ループ（<code>[R]</code> 修正中）では、engine は依然として進行中の stage に対し保留中の <code>run-stage</code> を再発行するので、免除が無ければ hook はブロックし、cap が尽きるまでフォワーディングループの nudge を再注入する — インタラクティブな gate では混乱を招く。だから現在の stage のチェックボックスが積極的に <code>[?]</code>/<code>[R]</code> のとき、hook は stop を許す。これは <strong>積極的確認のみで fail-open</strong> である: より進んで解放するだけで、決してより多くブロックしない; チェックボックス行の欠落とあらゆるパースエラーは cap 境界のブロックに落ちるので、本物の stage 途中の中断はなお nudge される。</p>
+</li>
+<li><p><strong>stage 途中の明確化質問も無料ではない。</strong> そのような質問は stage を <code>[-]</code> 進行中で park する — 怠惰な中断と同じチェックボックス状態なので、<code>[-]</code> だけでは免除できない。しかし conductor は質問する前に空の <code>[Answer]:</code> タグを持つ <code>&lt;slug&gt;-questions.md</code> を作らねばならない（stage protocol §3）ので、未回答のタグは質問が保留中である積極的シグナルである。hook は正規の <code>&lt;record&gt;/&lt;phase&gt;/&lt;slug&gt;/</code> ディレクトリ、または unit ごとの Construction directive では <code>next</code> が名指す正確な <code>&lt;record&gt;/construction/&lt;unit&gt;/&lt;slug&gt;/</code> をチェックする; 別の unit からの古い質問は受理しない。現在の <code>[-]</code> stage の質問ファイルに未回答のタグがあるとき、hook は stop を許す。これは自律 Construction 下（<code>Construction Autonomy Mode: autonomous</code>）では <strong>厳格にゲートされる</strong>: unit-major code-generation の正確で可視な Plan Approval セクションで、空欄/アンダースコアのみの回答タグを持つものだけが stop を許される; 一般的な明確化質問は無人ループを走らせ続ける。他のあらゆる miss - ファイル無し、すべて回答済み、別の unit、または読み取り/パースエラー - は cap 境界のブロックに落ちるので、本物の stage 途中の中断はなお nudge される。（残余のケースへの即時緩和策: <code>CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=1</code>。）</p>
+</li>
+<li><p><strong>ログされた構造化された質問もまた human wait である。</strong> 一部の gate ではないプロンプト、特に §13 の learnings 質問は、stage の質問ファイルに空欄タグを追加しない。それらの必須な audit のハンドシェイクが同等の積極的シグナルを供給する: <code>DECISION_RECORDED</code> が current-stage の質問を開き、<code>QUESTION_ANSWERED</code> がそれを閉じる。その決定が未解決のままで現在の stage が <code>[-]</code> である間、hook は stop を許すので、散文をレンダーする harness は次の人間のメッセージを待てる。解決済みまたは別 stage の決定は該当せず、自律 Construction はこの免除を抑制する。</p>
+</li>
+<li><p><strong>会話的なターンも無料ではない。</strong> アクティブなワークフロー中、ただ雑談したい（質問する、決定を議論する）人間はループに nudge し戻されるべきではない。hook は、直近の本物の人間プロンプトが <strong>無し</strong> のワークフローエンジン関与で応答された - conductor がそのプロンプト以降 <code>aidlc-orchestrate</code> も <code>aidlc-state</code> も走らせなかった - とき stop を許す。読み取り専用のクエリ（<code>--status</code>、<code>--doctor</code>、<code>--help</code>、<code>--version</code>）は関与に <strong>数えない</strong> ので、<code>--status</code> で応答された「今どの stage にいる？」はなお雑談として該当する。これは <strong>厳格にゲートされ fail-closed</strong> である: 自律 Construction 下では決して発火せず、欠落したまたは読めない証拠、人間プロンプトが見つからない、または応答ターンでのエンジン呼び出しは cap 境界のブロックに落ちるので、ワークフローに関与してからループ途中で中断した conductor はなお nudge される。それは常に許すだけ - 決してより多くはブロックできない。</p>
+<p><strong>1 つの述語、2 つの証拠源。</strong> 質問はどの harness でも同一である; 異なるのは証拠だけである。</p>
+<table>
+<thead>
+<tr>
+<th>証拠</th>
+<th>Harness</th>
+<th>「最後の人間プロンプト以降エンジン呼び出しゼロか?」にどう答えるか</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stop ペイロードの <code>transcript_path</code></td>
+<td>Claude Code、Codex</td>
+<td>ターン履歴をパースし、各ツール呼び出しを <code>isEngineToolCall</code> で分類する。最も忠実度が高く、届く限りそれが優先される。</td>
+</tr>
+<tr>
+<td>マーカーの mtime</td>
+<td>Kiro IDE、Kiro CLI、opencode</td>
+<td><code>&lt;record&gt;/.aidlc-human-turn</code> を <code>&lt;record&gt;/.aidlc-engine-touch</code> と比較する。最後の engine の前進より <strong>新しい</strong> 人間のターンは、同じ質問のマーカーによる言い換えである — ただしそれはより <strong>粗く</strong> 答える; 下のカバレッジギャップを参照。</td>
+</tr>
+</tbody></table>
+<p>これらの harness はターン履歴を hook に一切露出しない。opencode の <code>session.idle</code> はトランスクリプトを運ばず、Kiro の <code>Stop</code> ペイロードは <code>{session_id, hook_event_name, cwd}</code> だけを運ぶ — IDE 1.x でライブに捕捉: トランスクリプト無し、ターン id 無し。（より豊富な <code>{tool_name, tool_input, tool_response}</code> の形は <em>ツール</em> トリガーに属し、<code>Stop</code> には属さない。そして「v1」/「v2」は hook の <strong>登録スキーマ</strong> を名指し、ペイロードではない — <a href="kiro-ide-hook-payload.html">kiro-ide-hook-payload.md</a> を参照。）だからフレームワークは、既に存在するシームでその 2 つの事実を自ら書く: <code>UserPromptSubmit</code> の mint は自身の <code>HUMAN_TURN</code> 台帳イベントと並んで <code>.aidlc-human-turn</code> にタッチし、<code>aidlc-orchestrate</code> はあらゆる前進する <code>next</code> / <code>report</code> / <code>park</code> で <code>.aidlc-engine-touch</code> にタッチする。マーカーが audit 台帳の読み取りより選ばれたのは、<strong><code>next</code> が読み取り専用で audit イベントを発しない</strong> からである - 台帳のみの述語は、engine に相談してからループ途中で降りた conductor に対して盲目であり、それこそがフォワーディングループが捕まえるために存在する正確な失敗である。</p>
+<p><strong>カバレッジギャップ — マーカーの経路はトランスクリプトの経路より寛容である。</strong> 2 つの述語は読み取り専用の免除では一致するが、すべてでは一致しない。<code>isEngineToolCall</code> は、非読み取り専用の <code>aidlc-jump</code> / <code>aidlc-bolt</code> / <code>aidlc-swarm</code> 呼び出しとミューテーションを行う <code>aidlc-state</code> 動詞（<code>approve</code>、<code>advance</code>、<code>skip</code>、<code>set</code>、…）のいずれも関与として数える。<strong>これらのツールはどれも engine マーカーに触れない</strong> — その唯一の書き手は <code>aidlc-orchestrate</code> の 3 つのサブコマンドである。だからトランスクリプトの無い harness では、<code>aidlc-jump</code> を走らせ（stage ポインタをミューテーションし、audit を発する）その後 engine に相談せずにターンを終える conductor は <em>会話的</em> として読まれ解放される、一方 Claude Code と Codex では同じターンがブロックされる。マーカーの経路が存在する前は、そのようなターンは nudge されていたので、これは Kiro と opencode における本物の — 狭いとはいえ — 緩和であり、単なる未実装の便宜ではない。これを閉じるには、4 つのツールすべてが横切るシーム（audit 発行の経路、または <code>writeStateFile</code>）からマーカーにタッチする必要があり、これはこの免除をはるかに超えて爆発半径を広げるので、閉じるのではなく文書化される。</p>
+<p><strong>セッションのスコープ。</strong> 両方のマーカーは <em>intent</em> ごとであり、セッションキーを運ばない、一方トランスクリプトの述語は本質的にセッションごとだった。1 つの intent 上の 2 つの並行セッション（たとえば IDE ウィンドウと CLI 実行）は cross-talk しうる: セッション B のプロンプト mint がセッション A の関与した stop を会話的として読ませることがある。この窓は狭く、失敗モードは誤った transition ではなく解放された stop なので、今のところ受け入れられている; もし閉じる価値が出てきたら Kiro のペイロードは <code>session_id</code> を運ぶ。</p>
+<p><strong>鍵となる微妙な点:</strong> Stop hook は engine 自体に相談する（<code>aidlc-orchestrate next</code> を走らせて仕事が保留中かを学ぶ）。そのプローブが engine マーカーに触れてしまうと、engine の mtime は常に人間の mtime より新しくなり、述語は永遠に false になる - 免除は実装されているように見えて何もしない。だから hook は自身の spawn に <code>AIDLC_STOP_HOOK_PROBE=1</code> を設定し、engine はそれを見るとタッチをスキップする。</p>
+<p>両方のマーカーは intent の record root の下、<code>.aidlc-stop-hook/block-count.json</code> の隣に住み、出荷される <code>aidlc/spaces/*/intents/*/.aidlc-*</code> の gitignore 規則でカバーされるので、どちらも決してコミットされない。両方の読み取りは <strong>fail closed</strong> である: マーカーが不在（アップグレード前のワークスペース、またはマーカーが出荷されて以降一度も前進していないワークフロー）は「証拠無し」として読まれ、「engine が一度も触れられていない」としては読まれないので、免除は推測するのではなく不活性のままである。書き込みが FAIL したマーカーは古いまま残すのではなく削除される — 古い <em>engine</em> マーカーは永続的な silent fail-open になる、人間のマーカーはそれを追い越し続けるからである。</p>
+<p><strong>免除が何を変えるかは、host がそのブロックに応じるかどうかで決まる。</strong> <code>{decision: block}</code> の契約は Claude Code のものである; 他の各 host はそれを、自分の作法で消費するか、しない。</p>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>ブロックに応じるか?</th>
+<th>免除の効果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Claude Code、Codex</td>
+<td>Yes — ネイティブな契約</td>
+<td>nudge が抑制される; ターンは清く終わる</td>
+</tr>
+<tr>
+<td>opencode</td>
+<td>Yes — プラグイン自身がブロックをパースし、reason でセッションを再プロンプトする</td>
+<td>nudge が抑制される</td>
+</tr>
+<tr>
+<td>Kiro IDE</td>
+<td><strong>No。</strong> IDE 1.x でプローブ hook を使ってライブに測定: コマンドは走ったが、stdout も stderr も agent に届かなかった。Kiro は <code>Stop</code> をブロック可能な集合の外に文書化し、stdout を <code>SessionStart</code> / <code>UserPromptSubmit</code> にのみ転送する</td>
+<td>ユーザーに見えるものは無い。<code>continue-workflow.drops</code> と no-progress カウンタだけが補正される — nudge はそもそもここでは届けられていなかった</td>
+</tr>
+<tr>
+<td>Kiro CLI 2.16.0 legacy/V2</td>
+<td><strong>Yes — この harness のアダプタを通じてライブに測定。</strong> host は <code>{&quot;decision&quot;:&quot;block&quot;,&quot;reason&quot;:&quot;...&quot;}</code> を消費し、<code>reason</code> を再注入し、誘発された継続の後にもう一度 <code>Stop</code> を発火する（合計 2 回の Stop 起動）</td>
+<td>nudge が抑制される</td>
+</tr>
+<tr>
+<td>Kiro CLI 2.16.0 <code>--v3</code>/KAS</td>
+<td><strong>Yes — その独立した <code>.kiro/hooks</code> 登録を通じてライブに測定。</strong> host は同じブロックの形を消費し <code>reason</code> を再注入する; <code>Stop</code> は 1 回発火し、誘発された継続の後には再発火しなかった</td>
+<td>nudge が抑制される</td>
+</tr>
+</tbody></table>
+<p>だから Kiro IDE では、この節で述べられる強制は hook ではなく conductor 自身の Stop プロトコルの上に立つ — これは <code>aidlc-continue-workflow.json</code> が常に宣言してきたことである。そこでの hook はループへの gate ではなく、フォワーディングループの audit として扱うこと。</p>
+</li>
 </ul>
 <blockquote>
-<p><strong>sensor-fire hook の advisory 契約との対比。</strong> <code>aidlc-sensor-fire.ts</code> は明示的な <em>never-block</em> 契約を運ぶ（決して <code>{decision: block}</code> を返さない、<code>t95</code> Case 7 で保証される）。それは <em>その hook の</em> advisory 契約であり、フレームワーク全体のブロック禁止ではない。<code>Stop</code> hook のループ強制のための <code>block</code> の使用は、別の、認可された契約である。</p>
+<p><strong>run-sensors hook の advisory 契約との対比。</strong> <code>aidlc-run-sensors.ts</code> は明示的な <em>never-block</em> 契約を運ぶ（決して <code>{decision: block}</code> を返さない、<code>t95</code> Case 7 で保証される）。それは <em>その hook の</em> advisory 契約であり、フレームワーク全体のブロック禁止ではない。<code>Stop</code> hook のループ強制のための <code>block</code> の使用は、別の、認可された契約である。</p>
 </blockquote>
 <hr>
-<h3 id="pretooluse-aidlc-dispatch-rulests">PreToolUse: aidlc-dispatch-rules.ts</h3>
-<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-dispatch-rules.ts</code>
+<h3 id="pretooluse-aidlc-deliver-stage-rulests">PreToolUse: aidlc-deliver-stage-rules.ts</h3>
+<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-deliver-stage-rules.ts</code>
 <strong>トリガー:</strong> AI-DLC subagent 呼び出しの前（Claude では <code>Task</code> または <code>Agent</code>; 他の harness ではアダプタの等価物）
 <strong>目的:</strong> conductor からワーカーへの境界を越えて厳密な active-stage の rule を保持する</p>
 <p>orchestration engine は既に、境界付きの <code>load-steering</code> チャンクを通じて conductor へ実質的な rule を届けている。この hook は次の境界を閉じる: 有効な明示的な stage-file パスをまず、次に状態ファイルの <code>Current Stage</code> を、最後に生きた stage が無いときの一意な slug 言及を、ディスパッチ stage の解決に使う。未知のパス形の参照は生きた stage のフォールバックを抑制しない。engine と同じアクティブ space の rule ロースターを読み、正確なファイル内容を digest マーク付きの bundle に追記する。その完全な生成ブロックだけが既に配送済みとみなされるので、marker の無いコピーや rule を言い換えた散文は注入を回避せず、再試行は idempotent のままである。composer を除くインストール済みの agent ロースターのすべてのエントリが、plugin 所有の agent を含めて参加する; ロースター外のターゲットは無変更で通過する。</p>
@@ -442,6 +519,20 @@ sequenceDiagram
 recovery/構成の動詞は利用可能なまま残る。state CLI は独立に同じ所有権マーカーを
 チェックし、シェルコマンドを pre-tool ペイロードで露出できない harness を
 カバーする。</p>
+<p>harness が突合された delegated-agent の identity を供給する場合、同じ guard は
+reviewer、lead、サポート agent からの conductor 専用エントリポイントも拒否する:
+orchestrator の <code>next</code>/<code>report</code>/<code>park</code>、<code>unpark</code> を含むミューテーションを行う
+state 動詞、jump の実行、そしてワークフローのルーティング/構成のミューテーション。
+delegated agent は成果物の作業、build、validation、そして読み取り専用の状態検査
+のための通常のシェルアクセスは保つ; それらは結果をメインの conductor へ返し、
+conductor だけがワークフローのライフサイクルと gate を所有する。</p>
+<p>コマンド位置のパーサは、その境界を適用する前に、認識される実行ラッパー
+（<code>command</code>、<code>exec</code>、<code>time</code>、<code>env</code>、<code>nice</code>、<code>nohup</code>）を、ネストしたラッパーも含め
+再帰的に正規化する。リテラルな <code>eval</code> ペイロードは再帰的に検査され、単純で無害な
+コマンドは利用可能なまま残る; シェル展開やエスケープ構文を含む <code>eval</code> ペイロードは、
+hook が実行前に結果のコマンドを判定できないため拒否される。サポートされない
+プラットフォーム固有のラッパーオプションと <code>env -S</code> の展開構文は同じ理由で
+fail closed する。</p>
 <hr>
 <h3 id="pretooluse-aidlc-reviewer-scopets">PreToolUse: aidlc-reviewer-scope.ts</h3>
 <p><strong>ソース:</strong> <code>.claude/hooks/aidlc-reviewer-scope.ts</code>
@@ -453,13 +544,21 @@ recovery/構成の動詞は利用可能なまま残る。state CLI は独立に�
 <p><strong>Decision。</strong> matcher（<code>evaluateReviewerScope</code>、<code>t220</code> で固定されたエクスポートされた純関数）はパスフィールドとコマンド/パターンテキストを <code>construction/&lt;seg&gt;</code> トークンについて走査する: ディスパッチされた unit は通過し、ワイルドカードや裸の sweep ルートはブロックし、具体的な兄弟は、完全なトークンが免除エントリの <code>construction/</code> サフィックスに正確に合致しない限りブロックする。現在の unit の grep、共有の inception 契約、および validation ツールの実行は決して触られない。ブロックは <code>REVIEWER_SCOPE_BLOCKED</code> audit 行（Tool、Target、Stage、Unit）を発し、<strong>exit 2 + リダイレクトする stderr の理由</strong> で通知する — harness の PreToolUse reject 契約 — それはスコープを名指し、reviewer を通過した契約へ指し戻す。</p>
 <p><strong>あらゆる箇所で fail-open。</strong> 記録無し、古いまたは不正な記録、非 reviewer agent、未知のツール、不正な stdin、またはあらゆる内部エラーは呼び出しを許す; ディスパッチ記録の無い reviewer-agent の目撃は <code>--doctor</code> 用の advisory ドロップを記録する（conductor がステップ 1 の書き込みを忘れた）。決定論的なオフスイッチ <code>AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1</code> は強制を完全に無効化する。</p>
 <hr>
+<h3 id="plan-approval-guard-hook">Plan-Approval Guard Hook</h3>
+<p><strong>ソース:</strong> <code>.claude/hooks/aidlc-plan-approval-guard.ts</code>
+<strong>トリガー:</strong> subagent ディスパッチの前（matcher: <code>&quot;Task&quot;</code>）
+<strong>目的:</strong> Code Generation の plan-before-generation の順序（stage ステップ 2-4）を決定論的に強制する</p>
+<p>これはフレームワークの 5 つのフロー変更 hook の 1 つであり、4 つの <code>PreToolUse</code> 制御の 1 つである。stage の散文は、人間が「Approve Plan」と答える前に generation が決して始まらないと言う - フィールドレポートは、conductor がコードを先に生成し、<code>code-summary.md</code> の隣に <code>code-generation-plan.md</code> を後から埋めて、plan を事後的な summary に変えてしまったのを示した。stage 完了の成果物 guard はその逆転を捉えられない（それは完了時に発火し、その時にはバックフィルされた plan が既に存在する）ので、この hook はディスパッチ自体を拒否する。</p>
+<p><strong>Decision。</strong> guard は、アクティブな state に束縛された directive が code-generation である（有効なマーカーが無ければ <code>Current Stage</code> にフォールバックする）、かつツール呼び出しが <code>subagent_type</code> が <code>aidlc-developer-agent</code> である <code>Task</code> ディスパッチであるときだけ動作する。これにより、永続的なカーソルが最初の設計 stage に残っている間も、unit-major の interleave の間 guard はアクティブなままである。ステップ 4 は、委譲プロンプトが <code>AIDLC-UNIT: &lt;directive.unit&gt;</code>（または現在の単一 iteration の unit）で始まることを要求する。guard はその正確なマーカーをワークフローの既知の unit（コンパイル済みの bolt DAG とディスク上の <code>construction/&lt;unit&gt;/</code> ディレクトリ）に対して解決し、その unit が、ディスク上の空でない <code>code-generation-plan.md</code> と、<code>code-generation-questions.md</code> の Plan Approval 質問への明示的な「Approve Plan」回答の両方を持つことを要求する。兄弟 unit への文脈的な言及は効果を持たない; 欠落・矛盾・未知のマーカーはブロックする。Plan Approval の識別子は、その質問番号と見出しを共有してよい(<code>Q1: Plan Approval</code> または <code>Question 1 - Plan Approval</code>)、または番号付き見出しの下の最初の質問テキスト行として現れてよい(<code>## Q1</code> の後に <code>Plan Approval</code>); 空欄タグ、「Request Changes」、無関係な回答済みの質問、そして HTML コメントやフェンスされたコード内の例は generation を認可しない。同じ証拠は自律 Construction 下でも必須であり、stage のあらゆる実行モードでのハードストップに合致する。この決定(<code>evaluatePlanApprovalDispatch</code>、<code>t265</code> で固定されたエクスポートされた純関数)は、欠落した証拠と、それを生成する stage のステップを名指す <strong>exit 2 + リダイレクトする stderr の理由</strong> でブロックし、<code>PLAN_APPROVAL_BLOCKED</code> audit 行(Tool、Target、Stage、Unit)を発する。</p>
+<p><strong>ガードされたディスパッチの外では fail-open。</strong> 状態ファイル無し、別の stage、別の agent やツール、不正な stdin、またはあらゆる内部エラーは呼び出しを許す。code-generation の developer ディスパッチが識別されると、欠落または曖昧な対象の証拠はブロックする。決定論的なオフスイッチ <code>AIDLC_DISABLE_PLAN_APPROVAL_GUARD=1</code> は強制を完全に無効化する。Kiro CLI では conductor agent がその <code>subagent</code> matcher に guard を登録する(adapter が crew スキーマを翻訳する); Codex では <code>spawn_agent</code> の PreToolUse シームに乗る; opencode ではプラグインが <code>task</code> ディスパッチの前にそれに相談する; Kiro IDE はこの境界を、他の guard と同様に散文のみとして文書化する。</p>
+<hr>
 <h3 id="pretooluse-aidlc-review-freezets">PreToolUse: aidlc-review-freeze.ts</h3>
 <p><strong>ソース:</strong> <code>.claude/hooks/aidlc-review-freeze.ts</code>
 <strong>トリガー:</strong> file-write とシェルのツール呼び出しの前（<code>Write</code>、<code>Edit</code>、<code>MultiEdit</code>、<code>NotebookEdit</code>、<code>Bash</code>; 共有の PreToolUse matcher グループに登録され、自身をミューテーション可能な呼び出しへ絞り込む）
 <strong>目的:</strong> §12a の終端 receipt 順序を決定論的に強制する - READY レビュー receipt と gate の間の write-freeze</p>
 <p>これはフレームワークの 5 つのフロー変更 hook の 1 つであり、4 つの <code>PreToolUse</code> 制御の 1 つである。各 <code>REVIEW_COMPLETED</code> 行は、宣言された成果物パスとバイトの SHA-256 フィンガープリントを記録する。完了の前提条件は、そのフィンガープリントがなお合致する間だけ receipt を受け入れる — どの harness やツールがファイルを変更したかに関わらず; 既存の audit-event の下限はなお早期の無効化シグナルとして残る。自律的な swarm の finalization もまた、あらゆる適用可能な必須成果物が Bolt worktree にファイルとして存在することを要求する（不在の任意出力は有効なフィンガープリントエントリのままである）。フィールドのトランスクリプトは散文が順序の競争に負けるのを示した: conductor が終端の receipt を記録した <em>後で</em> reviewer の提案を適用し、自分自身の receipt を無効化し、再レビューし、再編集し、gate で行き詰まるまで揺れ動いたライブセッションがあった。この hook は認識可能な書き込みをそれが起きる前に拒否する一方、コンテンツのフィンガープリントは harness に依存しない正しさの下限である。</p>
 <p><strong>Decision。</strong> 各書き込み対象について、hook は状態ファイルの中でまだ完了またはスキップされていない、reviewer を持つすべての stage に対してチェックする: パスは宣言された <code>produces[]</code>/<code>optional_produces[]</code> 成果物（engine 自身のサフィックスマッチャ <code>producesArtifactUnit</code>）に合致するか、そして fresh な READY receipt がそれを現在カバーしているか（<code>freshReviewReceipts</code> - engine の完了の前提条件が読む <strong>同じ</strong> スキャン、<code>aidlc-lib.ts</code> で共有され、freeze ウィンドウと拒否ウィンドウが分岐できないようにする）？ Freshness は audit の時系列と正確な現在の成果物フィンガープリントの両方を要求する。unit ごとの stage は、レビューされた unit の成果物だけを freeze する; 曖昧な unit ごとのパスは、いずれかの unit が READY receipt を持てば freeze する。NOT-READY の評決は決して freeze しない（修復ループは編集せねばならない）、そして記録された gate の reject、jump、ワークフローの再起動、audit された書き込み、またはコンテンツの不一致は receipt を無効化する。ブロックは <code>REVIEW_FREEZE_BLOCKED</code> audit 行（Tool、Target、Stage、任意で Unit）を発し、認可された経路を名指す <strong>exit 2 + リダイレクトする stderr の理由</strong> で通知する: gate を提示して提案をそこで引用するか、成果物を再オープンするために gate で reject する。</p>
-<p><strong>シェルの書き込み。</strong> engine の無効化スキャンを養う audit-logger hook は Write/Edit の PostToolUse hook なので、シェルコマンドとして届いたファイルのミューテーションはさもなければ不可視であり、変更されたバイトをカバーする古い READY receipt を残してしまう。だから freeze は、Bash が実行される前に、一般的なミューテーションコマンドの出力リダイレクト対象とオペランドを抽出する。読み取り専用のシェル呼び出しは対象を生まず通過する。</p>
+<p><strong>シェルの書き込み。</strong> engine の無効化スキャンを養う write-audit-log hook は Write/Edit の PostToolUse hook なので、シェルコマンドとして届いたファイルのミューテーションはさもなければ不可視であり、変更されたバイトをカバーする古い READY receipt を残してしまう。だから freeze は、Bash が実行される前に、一般的なミューテーションコマンドの出力リダイレクト対象とオペランドを抽出する。読み取り専用のシェル呼び出しは対象を生まず通過する。</p>
 <p><strong>Identity: 無し。</strong> reviewer-scope と異なり agent の関門は無い - conductor が提案を適用する、再ディスパッチされた lead、または迷い込んだ subagent など、誰が行うかに関わらず、あらゆる produces[] の書き込みは fresh な READY receipt を無効化する。</p>
 <p><strong>あらゆる箇所で fail-open。</strong> audit 台帳無し（あらゆる状態読み取りの前に決定される、非 AIDLC の一般的なケース）、読めない状態または stage グラフ、未知のツール、不正な stdin、またはあらゆる内部エラーは呼び出しを許す。決定論的なオフスイッチ <code>AIDLC_DISABLE_REVIEW_FREEZE_HOOK=1</code> は強制を完全に無効化する。</p>
 <p><strong>harness ごと。</strong> Claude Code: <code>settings.json</code>、共有の PreToolUse matcher グループの 3 番目のエントリ。Codex: adapter target <code>review-freeze</code>、Bash を転送し、<code>apply_patch</code> を触れたファイルごとに分配する（Delete File / Move to は含まれる）。Kiro CLI: conductor とすべての書き込み可能な delegate に対し <code>fs_write</code> と <code>execute_bash</code> に登録される; 委譲された <code>fs_write</code> はその後 <code>audit-and-sensors</code> も走らせるので、通常の無効化は完全なままである。opencode: プラグインの <code>bash</code>/<code>write</code>/<code>edit</code>/<code>apply_patch</code> 用の <code>tool.execute.before</code>。Kiro IDE: 登録無し（PreToolUse のツール入力はそこでは一様に利用できない）; §12a の散文の順序が統べる。</p>
@@ -495,8 +594,9 @@ Next Action: resume current stage</code></pre>
 <strong>目的:</strong> アクティブな AI-DLC ワークフローが在るとき、すべての正常な Claude Code の exit で <code>SESSION_ENDED</code> audit イベントを発する。</p>
 <p><strong>ライフサイクル:</strong></p>
 <ol>
-<li><strong>ワークフローガード:</strong> アクティブな intent の <code>aidlc-state.md</code> が存在しないとき静かに exit する（正規の「アクティブなワークフロー」マーカー — <code>session-start.ts</code> と同じガード）。born した intent の無い workspace シェルは何も発しない。</li>
-<li><strong>Audit 発行:</strong> <code>aidlc-audit.ts</code> 経由で <code>SESSION_ENDED</code> を <code>audit/</code> シャードに追記する。セッションライフサイクルの可観測性のために <code>session-start.ts</code> の <code>SESSION_STARTED</code> とペアになる。</li>
+<li><strong>セッションの所有権:</strong> 終了するセッションの UUID スタンプをその intent と space に解決する。UUID に束縛されたワークフローが存在するがこのセッションにスタンプが無い場合、発行せずに exit する; 共有のアクティブカーソルにフォールバックすると、別の並行する会話の intent を誤って帰属させてしまいうる。</li>
+<li><strong>ワークフローガード:</strong> 解決された intent が <code>aidlc-state.md</code> を持たないとき静かに exit する（正規の「アクティブなワークフロー」マーカー）。born した intent の無い workspace シェルは何も発しない。</li>
+<li><strong>Audit 発行:</strong> <code>aidlc-audit.ts</code> 経由で <code>SESSION_ENDED</code> とそのヘルスハートビートを解決済みの intent に追記する。セッションライフサイクルの可観測性のために <code>session-start.ts</code> の <code>SESSION_STARTED</code> とペアになる。</li>
 </ol>
 <h3 id="status-line-aidlc-statuslinets">Status Line: aidlc-statusline.ts</h3>
 <p><strong>ソース:</strong> <code>.claude/hooks/aidlc-statusline.ts</code>
@@ -537,13 +637,13 @@ Next Action: resume current stage</code></pre>
 <td><strong>Workflow Lifecycle</strong></td>
 <td>4</td>
 <td><code>WORKFLOW_STARTED</code>, <code>WORKFLOW_COMPLETED</code>, <code>WORKFLOW_PARKED</code>, <code>WORKFLOW_UNPARKED</code></td>
-<td><code>aidlc-utility.ts intent-birth</code>; <code>aidlc-orchestrate.ts report</code>/<code>park</code>（内部の状態 emitter 経由）</td>
+<td><code>aidlc-utility.ts intent-create</code>; <code>aidlc-orchestrate.ts report</code>/<code>park</code>（内部の状態 emitter 経由）</td>
 </tr>
 <tr>
 <td><strong>Phase</strong></td>
 <td>4</td>
 <td><code>PHASE_STARTED</code>, <code>PHASE_COMPLETED</code>, <code>PHASE_VERIFIED</code>, <code>PHASE_SKIPPED</code></td>
-<td><code>aidlc-utility.ts intent-birth</code>; ライフサイクルの結果は <code>aidlc-orchestrate.ts</code> 経由で報告される</td>
+<td><code>aidlc-utility.ts intent-create</code>; ライフサイクルの結果は <code>aidlc-orchestrate.ts</code> 経由で報告される</td>
 </tr>
 <tr>
 <td><strong>Stage</strong></td>
@@ -555,7 +655,7 @@ Next Action: resume current stage</code></pre>
 <td><strong>Initialization</strong></td>
 <td>3</td>
 <td><code>WORKSPACE_SCAFFOLDED</code>, <code>WORKSPACE_SCANNED</code>, <code>WORKSPACE_INITIALISED</code></td>
-<td><code>aidlc-utility.ts intent-birth</code></td>
+<td><code>aidlc-utility.ts intent-create</code></td>
 </tr>
 <tr>
 <td><strong>Navigation</strong></td>
@@ -573,7 +673,7 @@ Next Action: resume current stage</code></pre>
 <td><strong>Artifact</strong></td>
 <td>3</td>
 <td><code>ARTIFACT_CREATED</code>, <code>ARTIFACT_UPDATED</code>, <code>ARTIFACT_REUSED</code></td>
-<td>audit-logger hook, <code>aidlc-state.ts reuse-artifact</code></td>
+<td>write-audit-log hook, <code>aidlc-state.ts reuse-artifact</code></td>
 </tr>
 <tr>
 <td><strong>Subagent</strong></td>
@@ -586,6 +686,12 @@ Next Action: resume current stage</code></pre>
 <td>2</td>
 <td><code>REVIEWER_SCOPE_BLOCKED</code>, <code>REVIEW_FREEZE_BLOCKED</code></td>
 <td>reviewer-scope hook, review-freeze hook</td>
+</tr>
+<tr>
+<td><strong>Plan approval</strong></td>
+<td>1</td>
+<td><code>PLAN_APPROVAL_BLOCKED</code></td>
+<td>plan-approval-guard hook</td>
 </tr>
 <tr>
 <td><strong>Utility</strong></td>
@@ -670,7 +776,7 @@ Next Action: resume current stage</code></pre>
 </tr>
 </thead>
 <tbody><tr>
-<td><code>audit-logger.ts</code></td>
+<td><code>write-audit-log.ts</code></td>
 <td><code>ARTIFACT_CREATED</code> / <code>ARTIFACT_UPDATED</code></td>
 <td>intent の record dir へのすべての Write/Edit（<code>audit/</code> シャードを除く）</td>
 </tr>
@@ -688,6 +794,11 @@ Next Action: resume current stage</code></pre>
 <td><code>review-freeze.ts</code></td>
 <td><code>REVIEW_FREEZE_BLOCKED</code></td>
 <td>gate の前に fresh な READY レビュー receipt を無効化する <code>produces[]</code> 書き込みが拒否された（PreToolUse）</td>
+</tr>
+<tr>
+<td><code>plan-approval-guard.ts</code></td>
+<td><code>PLAN_APPROVAL_BLOCKED</code></td>
+<td>plan が承認される前に code-generation の developer ディスパッチが拒否された（PreToolUse）</td>
 </tr>
 <tr>
 <td><code>session-start.ts</code></td>
@@ -815,13 +926,13 @@ test コマンド、インフラ）で期待される。WebSearch は調査志�
 <td><code>HEALTH_CHECKED</code></td>
 </tr>
 <tr>
-<td><code>intent-birth</code></td>
-<td>新しい intent を born し、3 つの決定論的な Initialization stage を走らせる。</td>
+<td><code>intent-create</code></td>
+<td>新しい intent を作成し、3 つの決定論的な Initialization stage を走らせる。</td>
 <td><code>WORKFLOW_STARTED</code>, <code>PHASE_STARTED</code>, <code>PHASE_SKIPPED</code>, <code>STAGE_STARTED</code>, <code>STAGE_COMPLETED</code>, <code>WORKSPACE_*</code>、および init から init 後の最初の phase への引き継ぎイベント</td>
 </tr>
 <tr>
 <td><code>init</code></td>
-<td>このリリースでは transition エラーのみ; 何を作るか記述して作業を始めると engine が <code>intent-birth</code> へルーティングする。</td>
+<td>このリリースでは transition エラーのみ; 何を作るか記述して作業を始めると engine が <code>intent-create</code> へルーティングする。</td>
 <td>なし</td>
 </tr>
 <tr>
@@ -856,13 +967,13 @@ test コマンド、インフラ）で期待される。WebSearch は調査志�
 </tr>
 <tr>
 <td><code>config-get</code>, <code>config-list</code></td>
-<td>アクティブなワークフロー config（<code>depth</code>、<code>test-strategy</code>）を読む; <code>config-list --json</code> は構造化された形状を発する。</td>
+<td>アクティブなワークフロー config（<code>depth</code>、<code>test-strategy</code>、<code>review</code>）を読む; <code>config-list --json</code> は構造化された形状を発する。</td>
 <td>なし</td>
 </tr>
 <tr>
 <td><code>config-change</code></td>
-<td>アクティブなワークフロー config を書く。Dispatcher 形式: <code>/aidlc config set depth &lt;value&gt;</code> または <code>/aidlc config set test-strategy &lt;value&gt;</code>。</td>
-<td><code>DEPTH_CHANGED</code>, <code>TEST_STRATEGY_CHANGED</code></td>
+<td>アクティブなワークフロー config を書く。Dispatcher 形式: <code>/aidlc config set depth &lt;value&gt;</code>、<code>/aidlc config set test-strategy &lt;value&gt;</code>、または <code>/aidlc config set review &lt;value&gt;</code>。</td>
+<td><code>DEPTH_CHANGED</code>, <code>TEST_STRATEGY_CHANGED</code>, <code>REVIEW_CLASS_CHANGED</code></td>
 </tr>
 <tr>
 <td><code>plugin-list</code></td>
@@ -876,7 +987,7 @@ test コマンド、インフラ）で期待される。WebSearch は調査志�
 </tr>
 <tr>
 <td><code>set-status</code></td>
-<td>低レベルの状態フィールド同期（TaskUpdate で <code>sync-statusline.ts</code> hook が呼ぶ）</td>
+<td>低レベルの状態フィールド同期（TaskUpdate で <code>sync-workflow-state.ts</code> hook が呼ぶ）</td>
 <td>—</td>
 </tr>
 <tr>
@@ -947,7 +1058,7 @@ test コマンド、インフラ）で期待される。WebSearch は調査志�
 <td><code>SENSOR_FIRED</code> それから <code>SENSOR_PASSED</code> / <code>SENSOR_FAILED</code> / <code>SENSOR_BUDGET_OVERRIDE</code> のいずれか</td>
 </tr>
 </tbody></table>
-<p>dispatcher は自身の起動エラー（未知の id、欠けたフラグ、<code>matches</code> 不一致）でのみ非ゼロで exit する。Sensor の <em>結果</em> — pass、fail、timeout、またはあらゆるスクリプトエラー — は advisory である: CLI はなお 0 で exit し、常に <code>SENSOR_FIRED</code> 行をペアの終端行で閉じる。失敗は detail ファイルを <code>&lt;record&gt;/.aidlc-sensors/&lt;stage&gt;/&lt;id&gt;-&lt;fire-id&gt;.md</code>（intent の record dir の中）に race-free に書く（<code>wx</code> フラグ write + rename）。同じ dispatcher が、すべての合致する <code>Write</code> / <code>Edit</code> で <code>aidlc-sensor-fire.ts</code> PostToolUse hook によって駆動される。</p>
+<p>dispatcher は自身の起動エラー（未知の id、欠けたフラグ、<code>matches</code> 不一致）でのみ非ゼロで exit する。Sensor の <em>結果</em> — pass、fail、timeout、またはあらゆるスクリプトエラー — は advisory である: CLI はなお 0 で exit し、常に <code>SENSOR_FIRED</code> 行をペアの終端行で閉じる。失敗は detail ファイルを <code>&lt;record&gt;/.aidlc-sensors/&lt;stage&gt;/&lt;id&gt;-&lt;fire-id&gt;.md</code>（intent の record dir の中）に race-free に書く（<code>wx</code> フラグ write + rename）。同じ dispatcher が、すべての合致する <code>Write</code> / <code>Edit</code> で <code>aidlc-run-sensors.ts</code> PostToolUse hook によって駆動される。</p>
 <h3 id="aidlc-learningsts-learning-gate-tool"><code>aidlc-learnings.ts</code> — Learning-gate ツール</h3>
 <p>stage-protocol §13 learning 儀式の tool-as-actor 側。<code>surface</code> は今しがた承認された stage の <code>memory.md</code> を読む; <code>persist</code> は確認された選択を書く。検出、surfacing、ルーティング、書き込みは決定論的（このツール）; admission の conflict-check は orchestrator-LLM のもの; keep/skip/escalate は <code>AskUserQuestion</code> gate でのユーザーのもの。LLM 呼び出しはツールに住まない。learning ループと strict-additive な rule モデルは <a href="08-rule-system.html">Rule System</a> を参照。</p>
 <table>
@@ -1001,10 +1112,10 @@ test コマンド、インフラ）で期待される。WebSearch は調査志�
 <td>—</td>
 </tr>
 </tbody></table>
-<p>同じ audit に対する <code>compile</code> の再実行はバイト等価なグラフを生む。すべての transition クラスの audit 発行（<code>GATE_APPROVED</code>、<code>STAGE_STARTED</code>、<code>STAGE_AWAITING_APPROVAL</code>、<code>AUDIT_MERGED</code>、<code>WORKFLOW_COMPLETED</code>）で <code>aidlc-runtime-compile.ts</code> PostToolUse Bash hook によって自動で起動される; 手動起動はデバッグサーフェスである。<code>fragment-fork</code> / <code>fragment-merge</code> プリミティブは既存の fork/merge audit 境界（<code>STATE_FORKED</code> + <code>AUDIT_FORKED</code>、<code>STATE_MERGED</code> + <code>AUDIT_MERGED</code>）に便乗し、自身のイベントは発しない。すべてのサブコマンドは <code>--project-dir &lt;path&gt;</code> を受理する。</p>
+<p>同じ audit に対する <code>compile</code> の再実行はバイト等価なグラフを生む。すべての transition クラスの audit 発行（<code>GATE_APPROVED</code>、<code>STAGE_STARTED</code>、<code>STAGE_AWAITING_APPROVAL</code>、<code>AUDIT_MERGED</code>、<code>WORKFLOW_COMPLETED</code>）で <code>aidlc-rebuild-stage-graph.ts</code> PostToolUse Bash hook によって自動で起動される; 手動起動はデバッグサーフェスである。<code>fragment-fork</code> / <code>fragment-merge</code> プリミティブは既存の fork/merge audit 境界（<code>STATE_FORKED</code> + <code>AUDIT_FORKED</code>、<code>STATE_MERGED</code> + <code>AUDIT_MERGED</code>）に便乗し、自身のイベントは発しない。すべてのサブコマンドは <code>--project-dir &lt;path&gt;</code> を受理する。</p>
 <hr>
 <h2 id="token-usage-and-cost-tracking">Token 使用量とコスト追跡</h2>
-<p>AI-DLC は stage ごとの token 使用量と（値付け可能なとき）コストを記録し、現在のワークフローとセッションを statusline に表面化し、外部コレクタへ token/コストのメトリクスを発行できる。ここにあるものはすべて <strong>追加的で既定オフ</strong> である: 手を加えないインストールはメトリクスを何も書かず、Claude Code 以外のあらゆる harness では台帳も statusline のコストセグメントも生まない。</p>
+<p>AI-DLC は stage ごとの token 使用量と（値付け可能なとき）コストを記録し、現在のワークフローとセッションを statusline に表面化し、外部コレクタへ token/コストのメトリクスを発行できる。ここにあるものはすべて <strong>追加的で既定オフ</strong> である: 手を加えないインストールはメトリクスを何も書かず、Claude Code 以外のあらゆる harness では台帳も statusline のコストセグメントも生まない。Claude Code では、ローカルの追跡(台帳 + statusline セグメント + audit の roll-up)は既定でオンである; <code>AIDLC_DISABLE_USAGE_TRACKING=1</code> を設定するとそのすべてがオフになる: fold hook は何も書かず、statusline はコストセグメントをレンダーせず、完了イベントは roll-up フィールドを追加しない。既に記録された台帳はディスク上に無変更のまま残るので、フラグを外すと履歴を再開する(再開始はしない)。(メトリクス発行は下の <code>AIDLC_METRICS_ENDPOINT</code> で別途オプトインである。)</p>
 <h3 id="the-seam-aidlc-usagets">seam（<code>aidlc-usage.ts</code>）</h3>
 <p>1 つのモジュールが rate テーブル、Claude-Code のトランスクリプトリーダー、純粋なコスト計算、そして永続的な台帳を所有する。すべてのコンシューマ（audit の roll-up、statusline のセグメント、メトリクスの magnitude 行）はこのモジュールを読み、トランスクリプトを自分で再パースすることは決してない。</p>
 <ul>
@@ -1036,6 +1147,10 @@ test コマンド、インフラ）で期待される。WebSearch は調査志�
 </tr>
 </thead>
 <tbody><tr>
+<td><code>AIDLC_DISABLE_USAGE_TRACKING</code></td>
+<td><code>1</code> に設定すると、すべてのローカル使用量追跡（台帳の書き込み、statusline のコストセグメント、audit の roll-up フィールド）を無効化する。未設定 = 追跡オン（Claude Code での既定）。</td>
+</tr>
+<tr>
 <td><code>AIDLC_METRICS_ENDPOINT</code></td>
 <td>HTTP コレクタの URL。<strong>未設定 = メトリクス無効</strong>（既定）。</td>
 </tr>
@@ -1054,7 +1169,7 @@ test コマンド、インフラ）で期待される。WebSearch は調査志�
 <hr>
 <h2 id="prerequisites">前提条件</h2>
 <ol>
-<li><strong>bun</strong> -- 16 個すべての hook とすべての CLI ツール（<code>aidlc-utility.ts</code>、<code>aidlc-state.ts</code>、<code>aidlc-jump.ts</code>、<code>aidlc-orchestrate.ts</code>、<code>aidlc-audit.ts</code>、<code>aidlc-validate.ts</code>、<code>aidlc-graph.ts</code>、<code>aidlc-sensor.ts</code>、<code>aidlc-learnings.ts</code>、<code>aidlc-runtime.ts</code>）に必須。<code>curl -fsSL https://bun.sh/install | bash</code> でインストール。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code>。非対話シェルのために PATH に在らねばならない。</li>
+<li><strong>bun</strong> -- 17 個すべての hook とすべての CLI ツール（<code>aidlc-utility.ts</code>、<code>aidlc-state.ts</code>、<code>aidlc-jump.ts</code>、<code>aidlc-orchestrate.ts</code>、<code>aidlc-audit.ts</code>、<code>aidlc-validate.ts</code>、<code>aidlc-graph.ts</code>、<code>aidlc-sensor.ts</code>、<code>aidlc-learnings.ts</code>、<code>aidlc-runtime.ts</code>）に必須。<code>curl -fsSL https://bun.sh/install | bash</code> でインストール。Windows では: <code>npm install -g bun</code> または <code>powershell -c &quot;irm bun.sh/install.ps1 | iex&quot;</code>。非対話シェルのために PATH に在らねばならない。</li>
 <li><strong>$CLAUDE_PROJECT_DIR</strong> -- Claude Code がプロジェクトルートに設定する。すべての hook がこれを使って <code>aidlc/</code> workspace（およびその中のアクティブな intent の record dir）を特定する。</li>
 </ol>
 <p>他の前提条件は無い: すべての hook とツールは bun で走る TypeScript なので、どのプラットフォームでも <code>jq</code>、<code>sed</code>、<code>awk</code>、Git Bash、WSL は不要である。</p>

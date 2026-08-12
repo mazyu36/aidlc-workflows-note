@@ -10,6 +10,11 @@ git ポリシーの完全なリファレンスである。
 
 ## ディレクトリツリー
 
+これは成果物が置かれうる場所の完全な集合であり、作り立ての record の見た目ではない。
+intent の作成は scope が実行する phase ごとに 1 つのフォルダ（プラス `verification/`）を
+作る。残りは作業が進むにつれて現れ、stage ごとのフォルダはそのステージが最初に書き込んだ
+時点で作られる。
+
 ```
 aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
   aidlc-state.md                    # Workflow state (commit)
@@ -148,7 +153,7 @@ flowchart LR
 
 | Stage | 成果物 | 注記 |
 |-------|-----------|-------|
-| 0.1 Workspace Scaffold | `scaffold-report.md` | 決定論的（`aidlc-utility intent-birth` の中で実行） |
+| 0.1 Workspace Scaffold | `scaffold-report.md` | 決定論的（`aidlc-utility intent-create` の中で実行） |
 | 0.2 Workspace Detection | `workspace-findings.md`、`aidlc-state.md` を更新 | 決定論的なルールベーススキャナ |
 | 0.3 State Init | `state-init-summary.md` | 決定論的 |
 

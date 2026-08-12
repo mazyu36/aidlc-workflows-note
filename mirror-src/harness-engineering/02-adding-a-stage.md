@@ -200,7 +200,7 @@ bun .claude/tools/aidlc-orchestrate.ts next --stage <your-slug> --single
 ~6 行のシェル。手書きではない: ジェネレータが実行可能なコンパイル済み stage slug ごとに 1 つ
 emit するので、ランナーの集合が手作業で stage の集合からドリフトすることは決してない。
 （3 つのブートストラップ初期化 stage は stage 別のランナーを得ない — それらに単独の `--single`
-の意味は無い。init phase 全体が代わりに `/aidlc-init` コマンドで、エンジンの intent-birth の
+の意味は無い。init phase 全体が代わりに `/aidlc-init` コマンドで、エンジンの intent-create の
 手をパッケージする。）stage を足した（または除いた）後、ランナーを再生成する:
 
 ```bash

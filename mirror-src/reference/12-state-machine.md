@@ -35,13 +35,13 @@ stateDiagram-v2
 
 **Status values:** `Running`, `Completed`。
 
-workflow は最初の intent が誕生したとき（`aidlc-utility intent-birth`。最初の `/aidlc` または `/aidlc-init` 経由で自動起動される）に開始し、最後の in-scope stage の approval gate が閉じたときに終了する。`Paused` ステータスも `Waiting for Approval` ステータスも存在しない — 承認は stage レベルの関心事であり、pause には UX がない。
+workflow は最初の intent が誕生したとき（`aidlc-utility intent-create`。最初の `/aidlc` または `/aidlc-init` 経由で自動起動される）に開始し、最後の in-scope stage の approval gate が閉じたときに終了する。`Paused` ステータスも `Waiting for Approval` ステータスも存在しない — 承認は stage レベルの関心事であり、pause には UX がない。
 
 workflow の `Running` 状態は Claude Code の session をまたいで持続する。月曜に workflow を開始し、session を止め、火曜に resume する — workflow はまだ `Running` である。終わったのは *session* であり、新しいものが始まったのだ。
 
 | Transition | Trigger | Emitter |
 |---|---|---|
-| `[*] -> Running` | `aidlc-utility intent-birth` | `tools/aidlc-utility.ts` |
+| `[*] -> Running` | `aidlc-utility intent-create` | `tools/aidlc-utility.ts` |
 | `Running -> Completed` | `aidlc-orchestrate.ts report` を通じて報告された最終 stage の outcome | `tools/aidlc-state.ts` (internal emitter) |
 
 ---
@@ -72,14 +72,14 @@ phase 状態は `aidlc-state.md` の `## Phase Progress` セクションで追�
 
 | Transition | Trigger | Emitter |
 |---|---|---|
-| seed (`Verified`/`Active`/`Pending`/`Skipped`) | `aidlc-utility intent-birth` | `tools/aidlc-utility.ts` |
+| seed (`Verified`/`Active`/`Pending`/`Skipped`) | `aidlc-utility intent-create` | `tools/aidlc-utility.ts` |
 | `Active -> Verified` | phase 境界で `aidlc-orchestrate.ts` を通じて報告された stage の完了/skip。forward の `aidlc-jump execute` | `tools/aidlc-state.ts` (internal emitter)、`tools/aidlc-jump.ts` |
 | `Pending -> Active` (boundary) | 報告された outcome の後に engine が routing する、または `aidlc-jump execute` | `tools/aidlc-state.ts` (internal emitter)、`tools/aidlc-jump.ts` |
 | `Pending -> Skipped` (jumped over) | phase 全体を飛び越す forward の `aidlc-jump execute` | `tools/aidlc-jump.ts` |
 | `Verified/Active -> Pending` reset | backward の `aidlc-jump execute`（EXECUTE stage を持つ phase を reset） | `tools/aidlc-jump.ts` |
 | `Pending <-> Skipped` re-derivation | `aidlc-utility scope-change` / `recompose`（未到達の行のみ） | `tools/aidlc-utility.ts` |
 
-init→post-init の hand-off では、`aidlc-utility intent-birth` 自身が最終 init stage の後に `PHASE_COMPLETED + PHASE_VERIFIED + PHASE_STARTED + STAGE_STARTED` を発行する。これにより、birth と最初の `advance` の間で無音になる代わりに、audit trail がこの遷移を捉える。
+init→post-init の hand-off では、`aidlc-utility intent-create` 自身が最終 init stage の後に `PHASE_COMPLETED + PHASE_VERIFIED + PHASE_STARTED + STAGE_STARTED` を発行する。これにより、birth と最初の `advance` の間で無音になる代わりに、audit trail がこの遷移を捉える。
 
 ---
 
@@ -182,7 +182,7 @@ session hook は、発行の前にアクティブな intent の `aidlc-state.md`
 
 ## Audit event taxonomy
 
-**76 イベント**。以下では 17 カテゴリにグループ化している（標準の `audit-format.md` レジストリは同じ 76 を 19 に分割する - グループ化は提示上のものであり、不変なのはイベント集合である）。すべてのイベントはツールまたは hook の emitter をちょうど 1 つ持つ。ただし、次期リリース向けに事前登録され、Emitter セルが `Reserved (v0.4.0 PR N)`、`Reserved (v0.5.0 PR N)`、`Reserved (v0.6.0 PR N)` と書かれているイベントは例外である - これらは、consumer PR が emitter を出荷するまで drift test の forward チェックでスキップされる。drift test `tests/integration/t48-audit-event-emitters.test.ts` は、この章の表とコードの間の forward/reverse/tertiary/pairing/MD-MD の一貫性を強制する。
+**82 イベント**。以下では 18 カテゴリにグループ化している（標準の `audit-format.md` レジストリは同じ 82 を 21 に分割する - グループ化は提示上のものであり、不変なのはイベント集合である）。すべてのイベントはツールまたは hook の emitter をちょうど 1 つ持つ。ただし、次期リリース向けに事前登録され、Emitter セルが `Reserved (v0.4.0 PR N)`、`Reserved (v0.5.0 PR N)`、`Reserved (v0.6.0 PR N)` と書かれているイベントは例外である - これらは、consumer PR が emitter を出荷するまで drift test の forward チェックでスキップされる。drift test `tests/integration/t48-audit-event-emitters.test.ts` は、この章の表とコードの間の forward/reverse/tertiary/pairing/MD-MD の一貫性を強制する。
 
 ### Workflow lifecycle
 
@@ -230,6 +230,15 @@ session hook は、発行の前にアクティブな intent の `aidlc-state.md`
 | `REVIEW_REQUESTED` | `tools/aidlc-log.ts` | conductor が §12a reviewer サブエージェントを dispatch したときに発火する |
 | `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` の reviewer verdict が読まれたときに発火し、宣言された出力パスとバイトにわたる `Artifact Fingerprint` を記録する。すべての完了系の状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在の workflow attempt からの、かつそのフィンガープリントがなお合致する、一致する receipt を要求する。per-unit stage は、適用可能な unit ごとに 1 つと、その unit への scope 無効化を要求する。autonomous swarm の finalization はさらに、設定された各 unit の Bolt 開始後の一致する receipt と、その Bolt worktree にファイルとして存在するすべての適用可能な必須成果物を要求する; 不在の任意出力は有効なフィンガープリントエントリのままである。 |
 
+### Unit lifecycle (inline per-unit Construction stages)
+
+| Event | Emitter | 備考 |
+|---|---|---|
+| `UNIT_STARTED` | `tools/aidlc-state.ts` | `unit start` — engine が現在 route している正確な stage/Unit のペア、権威ある DAG からの安全な Unit 識別子（安全なレガシー表記を含む）、そして他に開いている Unit が無いことを要求する |
+| `UNIT_PAUSED` | `tools/aidlc-state.ts` | `unit pause` — `--reason` と `--next-action` を要求する; engine は一時停止した unit を最初に route し、明示的な resume までハードストップする |
+| `UNIT_RESUMED` | `tools/aidlc-state.ts` | `unit resume` — 現在一時停止している unit のみが resume できる |
+| `UNIT_COMPLETED` | `tools/aidlc-state.ts` | `unit complete` — コミット前に unit の必須成果物が通常のファイルであることを検証する; 4 つのライフサイクルイベントすべてが、正確な boundary-event/timestamp/ordinal の `Run floor`（またはフェイルクローズな cross-shard の曖昧性トークン）を運び、receipt モードは attempt をまたいで有効なまま保たれ、同一シャード内の追記順が確定を制御し、順序の無い同一秒の cross-shard ライフサイクルの同着は一時停止やその他の非終端状態を保持する可能性がある。したがって、古くなった、曖昧な、または再オープンされた unit は、それが再び完了するまで gate をブロックする |
+
 ### Scope and configuration
 
 | Event | Emitter | 備考 |
@@ -239,14 +248,15 @@ session hook は、発行の前にアクティブな intent の `aidlc-state.md`
 | `PLUGIN_SELECTION_CHANGED` | `tools/aidlc-utility.ts` | `select-plugins` の set-mode。フィールド: `Previous Selection`、`New Selection` |
 | `DEPTH_CHANGED` | `tools/aidlc-utility.ts` | `config set depth <value>` / `config-change --depth` |
 | `TEST_STRATEGY_CHANGED` | `tools/aidlc-utility.ts` | `config set test-strategy <value>` / `config-change --test-strategy` |
+| `REVIEW_CLASS_CHANGED` | `tools/aidlc-utility.ts` | `config set review <value>` / `config-change --review` / 複合的な `scope-change --review` が per-run の review override をセットまたはクリアした |
 | `RECOMPOSED` | `tools/aidlc-utility.ts` | `recompose` サブコマンド - 適応型コンポーザによる実行中の plan 再形成（pending-stage サフィックスが audit ロックの下で切り替わる） |
 
 ### Artifacts
 
 | Event | Emitter | 備考 |
 |---|---|---|
-| `ARTIFACT_CREATED` | `hooks/aidlc-audit-logger.ts` | 新規パスへの Write — `mtimeMs == birthtimeMs` の stat チェックで UPDATED と区別する |
-| `ARTIFACT_UPDATED` | `hooks/aidlc-audit-logger.ts` | Edit ツール、または既存ファイルを上書きする Write |
+| `ARTIFACT_CREATED` | `hooks/aidlc-write-audit-log.ts` | 新規パスへの Write — `mtimeMs == birthtimeMs` の stat チェックで UPDATED と区別する |
+| `ARTIFACT_UPDATED` | `hooks/aidlc-write-audit-log.ts` | Edit ツール、または既存ファイルを上書きする Write |
 | `ARTIFACT_REUSED` | `tools/aidlc-state.ts` | `reuse-artifact` サブコマンド — keep/modify/redo の決定 |
 
 ### Construction Bolts
@@ -266,10 +276,11 @@ session hook は、発行の前にアクティブな intent の `aidlc-state.md`
 | `SESSION_RESUMED` | `hooks/aidlc-session-start.ts` | `source=resume` |
 | `SESSION_COMPACTED` | `hooks/aidlc-validate-state.ts` | 重複を避けるため（次の SessionStart ではなく）PreCompact で発行される |
 | `SESSION_ENDED` | `hooks/aidlc-session-end.ts` | Claude Code からの `Reason` フィールドを含む |
-| `HUMAN_TURN` | `hooks/aidlc-mint-presence.ts` (+ per-harness prompt-submit adapters) | 実際の人間のプロンプトまたは回答済みの質問ウィジェットにつき 1 つ。approval/interview gate は最後の gate 解決以降に 1 つを要求する |
+| `HUMAN_TURN` | `hooks/aidlc-record-human-turn.ts` (+ per-harness prompt-submit adapters) | 実際の人間のプロンプトまたは回答済みの質問ウィジェットにつき 1 つ。approval/interview gate は最後の gate 解決以降に 1 つを要求する |
 | `SUBAGENT_COMPLETED` | `hooks/aidlc-log-subagent.ts` | SubagentStop hook 経由で subagent の完了を記録する |
 | `REVIEWER_SCOPE_BLOCKED` | `hooks/aidlc-reviewer-scope.ts` | per-unit reviewer のツール呼び出しが、兄弟 unit の `construction/` パスに手を伸ばしたために拒否された（§12a の read-scope 境界）。拒否 1 つにつき 1 行 |
 | `REVIEW_FREEZE_BLOCKED` | `hooks/aidlc-review-freeze.ts` | file ツールまたはシェルの `produces[]` 書き込みが、gate の前に fresh な READY レビュー receipt を無効化してしまうために拒否された（§12a の終端 receipt 順序）。拒否 1 つにつき 1 行 |
+| `PLAN_APPROVAL_BLOCKED` | `hooks/aidlc-plan-approval-guard.ts` | 対象の unit が、空でない、明示的に承認された `code-generation-plan.md` を欠いていたために code-generation の developer-agent dispatch が拒否された（stage の Step 2-3 は Step 4 に先行しなければならない）。拒否 1 つにつき 1 行 |
 
 ### Diagnostics and workspace
 
@@ -346,11 +357,11 @@ milestone 4 で v0.5.0 向けに事前登録。`MEMORY_EMPTY` emitter は milest
 
 ### Swarm
 
-milestone 2 で v0.6.0 向けに事前登録。6 つの swarm イベントはすべて、いまや swarm referee `aidlc-swarm.ts` から発行される — conductor が参照する決定論的な verdict サーフェスである。referee はステートレスである: `prepare` は per-unit の worktree を fork し `SWARM_STARTED` を発行する（加えて、conductor が loud downgrade を報告したときの `SWARM_DEGRADED`。これは Wave 4 の milestone 16 でライブになった）。`finalize` は、conductor が収束済みと主張した集合を、設定された各 unit の post-Bolt terminal reviewer receipt を含めて再検証し、per-Unit のペア、per-failed-Unit の baton 行、バッチの集計を発行する。`check` サブコマンドは advisory であり、何も発行しない。engine は読み取り専用で conductor は audit イベントを発行しないので、決定論的なツールが swarm 分類全体を所有する。これらの行は、依存関係でリンクされた Unit のバッチのライフサイクルを追跡する: バッチ開始時の fan-out、per-Unit の収束または再検証の失敗、conductor への baton の handback、バッチの完了。conductor は `invoke-swarm` を、stage の `mode` enum と並ぶ直交した directive の種類として扱う — これは予約済みの `agent-team` モードを有効化しない。それは予約済みのままである。t48 forward チェックは、Emitter セルがなお `Reserved` と書かれている行をスキップする。
+milestone 2 で v0.6.0 向けに事前登録。6 つの swarm イベントはすべて、いまや swarm referee `aidlc-swarm.ts` から発行される — conductor が参照する決定論的な verdict サーフェスである。referee はステートレスである: `prepare` は正確な stage-attempt トークンを捕捉し、per-unit の worktree を fork し、スタンプ付きの `SWARM_STARTED` を発行する（加えて、conductor が loud downgrade を報告したときの `SWARM_DEGRADED`。これは Wave 4 の milestone 16 でライブになった）。`finalize` はまず、その prepare 済みトークンが現在の attempt と一致することを要求し、続いて conductor が収束済みと主張した集合を、設定された各 unit の post-Bolt terminal reviewer receipt を含めて再検証し、各収束行にトークンを保持する。stale な finalize はマージの前に拒否される。referee は per-Unit のペア、per-failed-Unit の baton 行、バッチの集計を発行する。`check` サブコマンドは advisory であり、何も発行しない。engine は読み取り専用で conductor は audit イベントを発行しないので、決定論的なツールが swarm 分類全体を所有する。これらの行は、依存関係でリンクされた Unit のバッチのライフサイクルを追跡する: バッチ開始時の fan-out、per-Unit の収束または再検証の失敗、conductor への baton の handback、バッチの完了。conductor は `invoke-swarm` を、stage の `mode` enum と並ぶ直交した directive の種類として扱う — これは予約済みの `agent-team` モードを有効化しない。それは予約済みのままである。t48 forward チェックは、Emitter セルがなお `Reserved` と書かれている行をスキップする。
 
 | Event | Emitter | Trigger |
 |---|---|---|
-| `SWARM_STARTED` | `tools/aidlc-swarm.ts` | swarm referee の `prepare` が、依存関係でリンクされた Unit のバッチを fork した |
+| `SWARM_STARTED` | `tools/aidlc-swarm.ts` | swarm referee の `prepare` が、正確な attempt を捕捉し、依存関係でリンクされた Unit のバッチを fork した |
 | `SWARM_UNIT_CONVERGED` | `tools/aidlc-swarm.ts` | swarm Unit が green かつ未改竄で再検証され、設定された post-Bolt reviewer receipt が存在し、マージし戻された（マージし戻しが失敗した収束済み unit は、finalize の再試行がマージするまで行を得ない） |
 | `SWARM_UNIT_FAILED` | `tools/aidlc-swarm.ts` | swarm Unit が `finalize` の再検証に失敗した（主張されていない、主張されたが red、改竄された、または設定された reviewer receipt を欠く） |
 | `SWARM_BATON_RETURNED` | `tools/aidlc-swarm.ts` | swarm Unit が、orchestrator を介した調整のために baton を conductor に返した |
@@ -391,6 +402,8 @@ LLM の散文から audit イベントを発行してはならない。以下の
 - SKILL.md のステップとしての `bun .claude/tools/aidlc-audit.ts append WORKFLOW_STARTED ...` — ツールが内部で発行するように置き換えた
 - stage ファイルが書く `**Event**: STAGE_COMPLETED` markdown ブロック — イベントはツールまたは hook 内の `appendAuditEntry` からのみ生じる
 - hook が書く自由形式の `## Artifact Update` セクション — 正規の `ARTIFACT_CREATED` / `ARTIFACT_UPDATED` に置き換えた
+
+public な CLI は、この仕組みの最も鋭い切片を機械的に強制する: `append` / `append-batch` は、engine の guard が認可の証拠として読む権威を帯びた receipt（`HUMAN_TURN`、`GATE_APPROVED`、`GATE_REJECTED`、`QUESTION_ANSWERED`、`REVIEW_REQUESTED`、`REVIEW_COMPLETED`、`SWARM_STARTED`、`SWARM_UNIT_CONVERGED`、`AUTONOMY_MODE_SET`、および 4 つの `UNIT_*` ライフサイクル receipt — `aidlc-audit.ts` の `CLI_PROTECTED_EVENT_TYPES` セット）を拒否し、すべてのフィールド名は厳格な印字可能単一行ラベル文法に一致しなければならず（`Event` は予約のままである）、値は行終端記号がエスケープされ、`append-raw` は分類イベント行や行を分断する見出しを拒否する。`Timestamp` は正当なフィールドのままである — park/unpark 行がこれを運ぶ — そして emitter 自身の行が最初に書かれるので、パーサが呼び出し元の行を読むことは決してない。所有ツールと hook はライブラリの import（`appendAuditEntry`）を通じて発行し、この floor はそこには触れない。所有 emitter を模したテストフィクスチャは `AIDLC_ALLOW_DIRECT_AUDIT_EVENTS=1` をセットする。
 
 `tests/integration/t48-audit-event-emitters.test.ts` の drift test が、この章の表とコードの間の drift を捉える: 表内のすべてのイベントは、宣言された emitter ファイルに一致する `appendAuditEntry(..., "EVENT", ...)` 呼び出しを持たなければならず、codebase 内のすべての emission 呼び出し箇所は表に現れなければならない。このテストはまた、削除されたイベントの復活と、pairing 不変条件（例: `handleApprove` は `GATE_APPROVED` と `STAGE_COMPLETED` の両方を発行しなければならない）に対しても guard する。
 

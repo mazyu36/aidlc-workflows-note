@@ -33,28 +33,28 @@
 <main>
 <p class="eyebrow">AI-DLC WORKFLOWS NOTE</p>
 <h1>AI-DLC Workflows v2　コードベースノート</h1>
-<p class="lede">awslabs/aidlc-workflows の v2 ブランチを読んで書いた日本語ノート。記述はすべて基点コミットに固定した参照リンクを持つ。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論である。このリポジトリはその公式実装にあたり、単一の core/ から Claude Code / Kiro CLI / Kiro IDE / Codex CLI / opencode の 5 配布物を生成する。</p>
+<p class="lede">awslabs/aidlc-workflows の v2 ブランチを読んで書いた日本語ノート。記述はすべて基点コミットに固定した参照リンクを持つ。AI-DLC は AI 主導開発を承認ゲート付きの反復可能なフェーズへ構造化する AWS 定義の方法論である。このリポジトリはその公式実装にあたり、単一の core/ から Claude Code / Codex CLI / GitHub Copilot / Cursor / Kiro CLI / Kiro IDE / opencode の 7 配布物を生成する。</p>
 
 <h2 id="tldr">TL;DR</h2>
-<p>設計の要は 3 つの分離にある。第一に方法論と実装の分離。5 フェーズ 32 ステージの方法論は Markdown で記述する。routing は決定論エンジン（TypeScript / bun）が担い、実行品質は LLM（conductor）が担う。第二にソースと配布の分離。手書きの正は core/ の 1 箇所で、5 ハーネス向け dist/ はすべて生成物としてコミットされる。第三に判断と記録の分離。承認できるのは人間だけ、状態を書けるのは専用ツールだけである。この壁はフックが機械的に強制する。</p>
+<p>設計の要は 3 つの分離にある。第一に方法論と実装の分離。5 フェーズ 32 ステージの方法論は Markdown で記述する。routing は決定論エンジン（TypeScript / bun）が担い、実行品質は LLM（conductor）が担う。第二にソースと配布の分離。手書きの正は core/ の 1 箇所で、7 ハーネス向け dist/ はすべて生成物としてコミットされる。第三に判断と記録の分離。承認できるのは人間だけ、状態を書けるのは専用ツールだけである。この壁はフックが機械的に強制する。</p>
 <div class="stat-grid">
   <div class="stat"><div class="stat-label">ライフサイクル</div><div class="stat-value">5 / 32</div><div class="stat-detail">フェーズ / ステージ</div></div>
   <div class="stat"><div class="stat-label">エージェント</div><div class="stat-value">14</div><div class="stat-detail">専門家 11 + レビュアー 2 + composer 1</div></div>
   <div class="stat"><div class="stat-label">スコープ</div><div class="stat-value">9</div><div class="stat-detail">bugfix 7 〜 enterprise 32 ステージ</div></div>
-  <div class="stat"><div class="stat-label">監査イベント</div><div class="stat-value">76</div><div class="stat-detail">19 カテゴリ・追記専用</div></div>
-  <div class="stat"><div class="stat-label">配布ハーネス</div><div class="stat-value">5</div><div class="stat-detail">エンジンはバイト同一</div></div>
-  <div class="stat"><div class="stat-label">フック / ツール</div><div class="stat-value">16 / 37</div><div class="stat-detail">core の TypeScript 機構</div></div>
+  <div class="stat"><div class="stat-label">監査イベント</div><div class="stat-value">82</div><div class="stat-detail">21 カテゴリ・追記専用</div></div>
+  <div class="stat"><div class="stat-label">配布ハーネス</div><div class="stat-value">7</div><div class="stat-detail">エンジンはバイト同一</div></div>
+  <div class="stat"><div class="stat-label">フック / ツール</div><div class="stat-value">17 / 37</div><div class="stat-detail">core の TypeScript 機構</div></div>
 </div>
 
 <h2 id="map">リポジトリの三層構造</h2>
-<p>手書きの正（core/ + harness/）→ パッケージャ（scripts/package.ts）→ コミット済み生成物（dist/）の一方通行。dist を書き換える PR は CI の --check が落とす。テストは 366 ファイルで、TUI、SDK、ACP の 3 方式で実ハーネスを駆動する e2e まで持つ。</p>
-<div class="tree-view"><span class="dir">core/</span>       <span class="comment"># 正: stages 32 / agents 14 / hooks 16 / tools 37 / knowledge 59 / scopes 9 / sensors 5</span>
-<span class="dir">harness/</span>    <span class="comment"># 5 ハーネスの投影レシピ（manifest.ts）+ adapter</span>
-<span class="dir">dist/</span>       <span class="comment"># 生成物（コミット済み・--check でドリフト検知）: claude / codex / kiro / kiro-ide / opencode / plugins</span>
+<p>手書きの正（core/ + harness/）→ パッケージャ（scripts/package.ts）→ コミット済み生成物（dist/）の一方通行。dist を書き換える PR は CI の --check が落とす。テストは 385 ファイルで、TUI、SDK、ACP の 3 方式で実ハーネスを駆動する e2e まで持つ。</p>
+<div class="tree-view"><span class="dir">core/</span>       <span class="comment"># 正: stages 32 / agents 14 / hooks 17 / tools 37 / knowledge 59 / scopes 9 / sensors 5</span>
+<span class="dir">harness/</span>    <span class="comment"># 7 ハーネスの投影レシピ（manifest.ts）+ adapter</span>
+<span class="dir">dist/</span>       <span class="comment"># 生成物（コミット済み・--check でドリフト検知）: claude / codex / copilot / cursor / kiro / kiro-ide / opencode / plugins</span>
 <span class="dir">plugins/</span>    <span class="comment"># サンプルプラグイン test-pro</span>
 <span class="dir">scripts/</span>    <span class="comment"># package.ts（パッケージャ）ほか</span>
-<span class="dir">docs/</span>       <span class="comment"># 公式ドキュメント 91 md（guide 37 / harness-engineering 11 / reference 41）</span>
-<span class="dir">tests/</span>      <span class="comment"># 366 テストファイル（smoke / unit / integration / e2e）</span>
+<span class="dir">docs/</span>       <span class="comment"># 公式ドキュメント 93 md（guide 39 / harness-engineering 11 / reference 41）</span>
+<span class="dir">tests/</span>      <span class="comment"># 385 テストファイル（smoke / unit / integration / e2e）</span>
 </div>
 <div class="refrow"><span class="label">参照:</span>
   <span class="ref"><a href="https://github.com/awslabs/aidlc-workflows/tree/v2">リポジトリルート（基点コミット）</a><button class="copy" type="button" data-copy="." aria-label="パスをコピー">⧉</button></span>
@@ -73,11 +73,11 @@
   </a>
   <a class="card" href="aidlc-workflows/architecture.html">
     <div class="card-head"><span class="card-name">リポジトリ構成</span></div>
-    <p><span class="card-role">1 つの core を 5 ハーネスへ投影する。</span>リポジトリマップ、パッケージングパイプライン、manifest 契約、モデル tier 投影、プレーンアーキテクチャ。</p>
+    <p><span class="card-role">1 つの core を 7 ハーネスへ投影する。</span>リポジトリマップ、パッケージングパイプライン、manifest 契約、モデル tier 投影、プレーンアーキテクチャ。</p>
   </a>
   <a class="card" href="aidlc-workflows/runtime.html">
     <div class="card-head"><span class="card-name">実行モデル</span></div>
-    <p><span class="card-role">決定論エンジンと forwarding loop。</span>1 ステージ実行のシーケンス、ステージプロトコル、状態機械と監査、16 フック、CLI 面、再開とジャンプ。</p>
+    <p><span class="card-role">決定論エンジンと forwarding loop。</span>1 ステージ実行のシーケンス、ステージプロトコル、状態機械と監査、17 フック、CLI 面、再開とジャンプ。</p>
   </a>
   <a class="card" href="aidlc-workflows/quality.html">
     <div class="card-head"><span class="card-name">エージェントと検証</span></div>
@@ -89,7 +89,7 @@
   </a>
   <a class="card" href="mirror/index.html">
     <div class="card-head"><span class="card-name">公式 docs 日本語版</span></div>
-    <p><span class="card-role">docs/ 全 91 ファイルの逐語日本語訳。</span>User Guide、Harness Engineering、Developer Reference を構造 1:1 で HTML 化。図は Mermaid をそのまま描画。</p>
+    <p><span class="card-role">docs/ 全 93 ファイルの逐語日本語訳。</span>User Guide、Harness Engineering、Developer Reference を構造 1:1 で HTML 化。図は Mermaid をそのまま描画。</p>
   </a>
 </div>
 

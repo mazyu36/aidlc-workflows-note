@@ -25,9 +25,10 @@ Kiro IDE がコマンド hook にどうコンテキストを届けるか。2 つ
 タイムアウトと競争させながら。本番の既定は 2 秒である; 正の
 `AIDLC_IDE_STDIN_TIMEOUT_MS` の値は、診断や決定論的なレイテンシテストのために
 ミリ秒単位でこの上限を上書きする。両方のフィールドの綴りが受理される。取得は
-2 つの payload に依存するターゲット（`audit-and-sensors`・`log-subagent`）に限定して
-ゲートされる; 他のすべてのターゲット（tool 呼び出しごとの `block` の床を含む）は
-どちらのチャネルにも触れず、ゼロレイテンシの経路を保つ。
+3 つの payload に依存するターゲット（`audit-and-sensors`・`log-subagent`・
+`rebuild-stage-graph`）に加え、モダンな `session_id` のための `session-start` と
+`continue-workflow` に限定してゲートされる; 他のすべてのターゲット（tool 呼び出しごとの
+`block` の床を含む）はどちらのチャネルにも触れず、ゼロレイテンシの経路を保つ。
 
 `VSCODE_IPC_HOOK` / `VSCODE_PID` も IDE には存在する（CLI には無い）が、アダプタは
 上記の payload チャネルを手がかりにする。
@@ -53,25 +54,40 @@ Kiro IDE がコマンド hook にどうコンテキストを届けるか。2 つ
    （#543）。
 2. **1.x は success フラグを運ばない。** 0.12 のチャネルの明示的なブーリアン
    `toolSuccess: false` だけが、整った書き込みを audit から落とす（#417）; フィールドが
-   不在の 1.x の payload はパスチェックへすり抜け、既知のパターンに合致しないエラーの
-   散文は可視の hook-drop を記録する。存在するが非 null で誤ったランタイム型を持つ
-   payload フィールドは不正な形として扱われる: advisory hook は正常終了し、可視の
-   drop を記録し、audit も subagent イベントも転送しない。`null` は不在の値として
-   扱われる — チャネルの既存の不在値契約に一致する。
+   不在の 1.x の payload はパスチェックへすり抜ける。そのチャネルは構造的に失敗を
+   報告できないため、1.x での書き込み失敗はエラーの散文としてしか届かない — そこで
+   アダプタはログの前に分類する: 失敗と**認識された**散文は `hookDebug`（hook デバッグが
+   有効な場合のみ書かれる）へ送られる — audit すべき artifact が存在しないため、転送しない
+   のが正しく、decay ではない。認識されない文言はなお可視の hook-drop を記録する。
+   これが実際の degradation を示すケースである。レガシーの 0.12 チャネルでは、明示的な
+   `toolSuccess: true` は依然として権威を持ち、失敗散文の推論を経由しない。存在するが
+   非 null で誤ったランタイム型を持つ payload フィールドは不正な形として扱われる:
+   advisory hook は正常終了し、可視の drop を記録し、audit も subagent イベントも
+   転送しない。`null` は不在の値として扱われる — チャネルの既存の不在値契約に一致する。
 3. **結果の散文中のパスは workspace 相対である**が、core hook は絶対の record root と
    比較する — そこでアダプタは、転送する前にそれらを絶対パスに解決する。
 
 ## 各 hook への帰結
 
-- **audit-logger / sensor-fire** — 復元可能: 結果の散文からファイルパスを掻き取り、
+- **write-audit-log / run-sensors** — 復元可能: 結果の散文からファイルパスを掻き取り、
   絶対パスに解決し、core hook に Claude 形の `{tool_input:{file_path}}` を渡す。
-  既知のパターンに文言が合致しない write クラスの tool は、可視の hook-drop を
-  記録する（静かな no-op には決してならない）。
-- **runtime-compile** — shell コマンドは復元不可なので、IDE 経路は command
+  パスを抽出できないとき、アダプタは両方をログするのではなく 2 つのケースに分ける:
+  **失敗した**書き込みと認識された散文は `hookDebug`（hook デバッグが有効な場合のみ
+  書かれる）へ送られ、artifact が存在しないので転送されない。この推論は payload に
+  構造化された success フラグが無いときにのみ走る。明示的な `toolSuccess: true` と
+  その他の合致しない文言はすべて可視の hook-drop を記録する（静かな no-op には決して
+  ならない） — それがドロップログの存在理由である、可視でない degradation のケースである。
+  この 2 つを混同すると、健全なワークスペースで `--doctor` が degradation を報告して
+  しまう。
+- **rebuild-stage-graph** — shell コマンドは復元不可なので、IDE 経路は command
   フィルタを落とし、純粋に audit tail でゲートする（mtime の冪等性ガード付きで、
   残存する遷移 — 例えば `WORKFLOW_COMPLETED` の後 — が後続のすべての shell
-  コマンドで再コンパイルを起こさないようにする）。
-- **sync-statusline** — IDE は task payload を与えないので、audit tail 中の最新の
+  コマンドで再コンパイルを起こさないようにする）。shell の結果とセッション identity は
+  なお転送される: モダンなイベントは自身の正確な `session_id` を使い、レガシーの
+  チャネルは SessionStart が保持する合成 identity を使う。結果が成功した
+  `intent-create` を名指すとき、共有 hook はそのセッションを作成された record に
+  束縛する。
+- **sync-workflow-state** — IDE は task payload を与えないので、audit tail 中の最新の
   `STAGE_STARTED` から現在の stage を導出する。これは **forward-only** のミラーである:
   `Current Stage` を完了済みまたはスキップされた stage に巻き戻すことは決してなく、
   ワークフローが `Running` でないときには決して発火しない（完了したワークフローの
@@ -88,8 +104,16 @@ Kiro IDE がコマンド hook にどうコンテキストを届けるか。2 つ
   結果の散文が audit 行を誤帰属させることはできない — そして #459 由来の
   `**Reviewer:**` / `**Agent:**` の結果マーカーへフォールバックする。これは 0.12 の
   `invoke_sub_agent` の形における唯一の identity 信号である。
-- **session-start / session-end / stop / mint / block** — payload を必要としない;
-  stdin を決して読まない。
+- **session-start** — モダンな `session_id` を読み、gitignore されるランタイムの
+  session ディレクトリ配下に永続化する。レガシーチャネルは代わりに安定した合成 ID を
+  記録する。
+- **stop** — モダンな Stop イベントの `session_id` を読み、ワークスペース全体の
+  SessionStart マーカーより優先する。これにより、並走するチャットが自分自身の
+  post-create 引き渡し receipt だけを消費するようにする。レガシーの agentStop と
+  壊れたモダンチャネルは、保持された identity へフォールバックする。
+- **session-end / mint / block** — payload を必要とせず、stdin を決して読まない。
+  session-end は SessionStart が永続化した identity を再利用し、レガシーの合成 ID を
+  フォールバックとする。
 
 ## toolResult パス抽出パターン
 
@@ -101,5 +125,5 @@ Kiro IDE がコマンド hook にどうコンテキストを届けるか。2 つ
 
 抽出器はマッチの前に末尾の空白／改行をトリムし、`str_replace` の形から末尾の
 括弧書きを剥ぐ。`fs_write` は Write にマップされる; `str_replace`/`fs_append` は
-Edit にマップされる（両方とも既存のファイルを対象とする → core の audit-logger は
+Edit にマップされる（両方とも既存のファイルを対象とする → core の write-audit-log は
 `ARTIFACT_UPDATED` を記録する）。
