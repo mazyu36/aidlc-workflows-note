@@ -44,7 +44,7 @@ interface RuntimeGraph {
 }
 
 interface BoltDag {
-  units: { name: string; depends_on: string[]; kind?: string }[]; // verbatim from the authored edge block; kind (service|spec|ui|packaging|library) present only when the edge block tags the unit
+  units: { name: string; depends_on: string[]; kind?: string }[]; // verbatim from the authored edge block; new names use lowercase kebab-case, while safe legacy single-segment names beginning with a digit or containing uppercase letters, underscores, or dots remain accepted (the swarm derives a separate internal Bolt slug); kind (service|spec|ui|packaging|library) present only when the edge block tags the unit
   batches: string[][];            // topological levels; each level = units whose deps are all satisfied by prior levels; level entries sorted lexicographically (deterministic)
 }
 
@@ -143,7 +143,7 @@ gate の背後）が、hook 発火の `compile` を再実行でバイト同一�
 ## 3. Compile のライフサイクル
 
 compile は、遷移クラスの audit 発行のたびに PostToolUse Bash hook
-（`.claude/hooks/aidlc-runtime-compile.ts`）によって起動される。この hook は
+（`.claude/hooks/aidlc-rebuild-stage-graph.ts`）によって起動される。この hook は
 conductor からのすべての `Bash` ツール呼び出しで発火し、安価にフィルタする:
 
 1. **Command filter** — `bun .claude/tools/aidlc-(state|jump|bolt|utility).ts`
@@ -152,7 +152,7 @@ conductor からのすべての `Bash` ツール呼び出しで発火し、安�
    `aidlc-worktree.ts` は WORKTREE_* イベントのみを発行する。
 2. **Audit-existence guard** — intent の `audit/` シャードがまだ存在しなければ exit する。
 3. **Heartbeat** — doctor の silent-hook 検出のために
-   `<record>/.aidlc-hooks-health/runtime-compile.last` を書く。
+   `<record>/.aidlc-hooks-health/rebuild-stage-graph.last` を書く。
 4. **Last-3-block tail-read** — `audit.md` を `\n---\n` で分割し、最後の 3 エントリを
    取る。
 5. **Event-class filter** —
@@ -440,6 +440,6 @@ Bolt 単位の runtime-graph fragment ファイルは `<worktree>/<record>/runti
   [Plane アーキテクチャ](02-plane-architecture.md) を参照。
 - **compile を起動するライフサイクル** — その audit 発行が compile hook を駆動する、
   workflow / phase / stage の遷移。[状態機械](12-state-machine.md) を参照。
-- **このグラフが導出される元の audit ログ** - 76 イベントの分類と emitter レジストリ。
+- **このグラフが導出される元の audit ログ** - 82 イベントの分類と emitter レジストリ。
   [状態機械](12-state-machine.md) と、ユーザーガイドの
   [状態と Audit トレイル](../guide/10-state-and-audit.md) を参照。

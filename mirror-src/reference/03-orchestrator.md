@@ -39,12 +39,12 @@ conductor は `$ARGUMENTS` を engine の最初の `next` にそのまま渡す�
 
 引数が既知の 9 scope（`enterprise`、`feature`、`mvp`、`poc`、`bugfix`、`refactor`、`infra`、`security-patch`、`workshop`）のいずれかに一致した場合:
 
-新規ワークスペース（まだ intent が無い——`aidlc/spaces/*/intents/*/` の下に `aidlc-state.md` が存在しない）で明示的に scope を指名すると、**最初の intent が誕生する**。engine の `next` は `aidlc-utility.ts intent-birth --scope <scope>` を指名する run-then-continue の `print` directive を発行し（`--depth` / `--test-strategy` フラグは指名コマンドに引き継ぐ）、conductor がそれを実行して `next` を再実行し、最初の stage に着地する。裸の位置引数（`/aidlc bugfix`）と明示フラグ（`/aidlc --scope bugfix`）の両方の記法が、同一の birth print を発行する。作るものを記述する（`/aidlc "build the auth service"`）場合も誕生する。明示的に指名された scope も記述も無い裸の `/aidlc` は誕生しない（env またはデフォルトで解決された scope は birth シグナルではない）。この場合は no-state エラーを発行し、作るものを記述するか scope を指名するようユーザーに促す。
+新規ワークスペース（まだ intent が無い——`aidlc/spaces/*/intents/*/` の下に `aidlc-state.md` が存在しない）で明示的に scope を指名すると、**最初の intent が誕生する**。engine の `next` は `aidlc-utility.ts intent-create --scope <scope>` を指名する run-then-continue の `print` directive を発行し（`--depth` / `--test-strategy` / `--review` フラグは指名コマンドに引き継ぐ）、conductor がそれを実行して `next` を再実行し、最初の stage に着地する。裸の位置引数（`/aidlc bugfix`）と明示フラグ（`/aidlc --scope bugfix`）の両方の記法が、同一の birth print を発行する。作るものを記述する（`/aidlc "build the auth service"`）場合も誕生する。明示的に指名された scope も記述も無い裸の `/aidlc` は誕生しない（env またはデフォルトで解決された scope は birth シグナルではない）。この場合は no-state エラーを発行し、作るものを記述するか scope を指名するようユーザーに促す。
 
 1. `aidlc/spaces/<active-space>/memory/` からガードレールを読む。
 2. ユーザーに「What would you like to build?」と尋ねる。
 3. Scope から Stage への対応に従って実行する stage を決める。
-4. Initialization phase（workspace-scaffold、workspace-detection、state-init）を単一の決定論的な `aidlc-utility intent-birth` 呼び出しとして実行する。ウェルカムメッセージはセッション開始時に `settings.json` の `companyAnnouncements` から描画される。
+4. Initialization phase（workspace-scaffold、workspace-detection、state-init）を単一の決定論的な `aidlc-utility intent-create` 呼び出しとして実行する。ウェルカムメッセージはセッション開始時に `settings.json` の `companyAnnouncements` から描画される。
 5. scope 内の全 stage に対して stage レベルのタスクを作成する。最初の stage は `in_progress` に、残りは `pending` に設定する。scope 外の stage にはタスクを一切作らない。
 6. Initialization 後の最初の stage を開始する。
 
@@ -71,8 +71,8 @@ conductor は `$ARGUMENTS` を engine の最初の `next` にそのまま渡す�
 
 compose サーフェス（先頭の `compose` 動詞、`--new-scope`、`--report <path>`）は、engine に scope 確認ではなく composer-dispatch の `print` を発行させる。この動詞は意図的にワークスペース動詞ではない（ワークスペース動詞は Kiro シームがオフバンドで走らせる終端ユーティリティコマンド。compose は conductor がディスパッチする workflow の仕事である）。状態ファイルの有無で 2 モードに分かれる:
 
-1. **フロント / レポート（まだ workflow が無い）:** conductor は `aidlc-composer-agent` をディスパッチする。このエージェントは読み取り専用の `detect --json` スキャンを走らせ、5 つの実装エントロピー成分を見積もり（設定済みなら CodeKB MCP の証拠、そうでなければワークスペーススキャン）、構造化された提案（`mode matched|custom`、成分スコアと証拠手法を持つ `ars` ブロック、`arsRationale`、グリッド、SKIP 単位の根拠、validator から逐語コピーした `summary`、加えて事前描画された 2 つの markdown 表——バンド付き ARS スコアと、根拠付きの stage 単位の判断）を返す。これは `aidlc-graph.ts validate-grid` で検証される（その JSON には今やグリッドの stage/gate/per-unit カウントを持つ `summary` フィールドが載る）。conductor は approve/edit/reject の gate を 3 ブロックで描画する: validator の summary 行（`N stages EXECUTE / M SKIP, G approval gates`）、次に composer の ARS スコア表を逐語、最後にその stage 判断表を逐語。approve すると、既製の match は直接誕生し、custom グリッドは scope データ（`scopes/aidlc-<name>.md` + `scope-grid.json` エントリ、既定で `keywords: []`）として著述され、同一ターン内で birth が続く。
-2. **実行中（workflow 稼働中）:** composer は完了済み stage が実際に解決した内容からエントロピー成分を再見積もりし、カーソルより先の PENDING stage に対して SKIP/un-SKIP のフリップを提案する。各フリップの根拠は、スコアを動かした完了済み stage の証拠を名指しする。自身の検証パスは `--strict` で走るので、痩せたフリップは gate の前に捕捉される。conductor は gate の前に pending-proposal マーカー（`aidlc/.aidlc-compose-pending`）を書き（Stop hook はこれをターン停止シグナルとして尊重する）、解決時に削除する。approve すると `aidlc-utility.ts recompose --skip <slugs> --add <slugs>` を走らせ、これは audit ロックの下でプランのサフィックスをフリップし、新たな starvation に対して strict 検証し、派生フィールドを再構築し、`RECOMPOSED` を発行する。マーカーには時間境界がある: Stop hook はそれが新鮮な（mtime で 24h 未満）間だけ尊重し、より古い孤児（書き込みと解決の間でクラッシュしたセッション）は無視してベストエフォートで削除するので、取り残されたマーカーが forwarding-loop の強制を黙って無効化することはない。`--doctor` も、存在するマーカーをその年齢とともに報告する（新鮮 = advisory pass、stale = fail）。`recompose` は autonomous Construction の下では拒否する（gate に人間が必要）——先に gated へ切り替えるか、swarm を終わらせること。検出は chat-first である: conductor の pre-forward 判定ステップ（new-work を見つけるのと同じもの）が、平文チャットの reshape 要求（"can we skip market research?"）を分類し、逐語 forward せずに `next compose "<their words>"` としてルーティングする（逐語 forward だと Branch 10 に落ちて現在の stage を走らせてしまう）。要求が特定の stage を命令形で名指しする場合、conductor は composer dispatch を省いて自分で gate を提示し、approve 時に直接 `recompose` を走らせてよい——この動詞は誰が呼んでも starved/frozen/behind-cursor/skeleton-gate のフリップ（および autonomous-Construction からの呼び出し）を拒否するので健全である。人間の gate とマーカー規律は両経路で同一である。
+1. **フロント / レポート（まだ workflow が無い）:** conductor は `aidlc-composer-agent` をディスパッチする。このエージェントは読み取り専用の `detect --json` スキャンを走らせ、5 つの実装エントロピー成分を見積もり（設定済みなら CodeKB MCP の証拠、そうでなければワークスペーススキャン）、構造化された提案（`mode matched|custom`、成分スコアと証拠手法を持つ `ars` ブロック、`arsRationale`、グリッド、SKIP 単位の根拠、validator から逐語コピーした `summary`、加えて事前描画された 2 つの markdown 表——バンド付き ARS スコアと、根拠付きの stage 単位の判断）を返す。これは `aidlc-graph.ts validate-grid` で検証される。検証はコンパイル済み stage セットとの厳密一致を要求し、グリッドの stage/gate/per-unit `summary` に加えて `nearest_stock` を返す。composer が著述した scope は除外され、欠落または余分なキーは差異として数えられる。composer は、matched か custom かの判定を最終提案の `nearest_stock[0].diff <= 2` にのみ基づいて行う; 機械的な ARS スクリーン距離は advisory である。stock グリッドを採用する場合は、その最終グリッドを再検証し、summary/distance を置き換え、返す前に影響を受ける判断表の行すべてを再構築する。conductor は verdict を再導出することは決してない。conductor は approve/edit/reject の gate を 3 ブロックで描画する: validator の summary 行（`N stages EXECUTE / M SKIP, G approval gates`）、次に composer の stage 判断表を逐語、最後に「Scoring detail (advisory)」の下にその ARS スコア表を逐語。matched な stock グリッドへの編集は、修正された提案を custom に変換し、検証/表描画を繰り返す——matched の approve は scope データを一切書かないためである。approve すると、stock match は直接誕生し、custom グリッドは scope データ（`scopes/aidlc-<name>.md` + `scope-grid.json` エントリ、既定で `keywords: []`）として著述され、同一ターン内で birth が続く。
+2. **実行中（workflow 稼働中）:** composer は完了済み stage が実際に解決した内容からエントロピー成分を再見積もりし、現在の scope、保持された完全な effective グリッド、そしてカーソルより先の PENDING stage に対する厳密な `changes.skip` / `changes.add` 配列を伴う `mode: in-flight` を返す。近傍の stock グリッドを採用したり、scope/depth を変更したり、完了済み/進行中/skip 済みのアクションを書き換えたりすることは決してない; この分岐では両方の stock-distance 一覧は advisory である。各フリップの根拠は、スコアを動かした完了済み stage の証拠を名指しし、検証は `--strict` で走るので、痩せたフリップは gate の前に捕捉される。conductor は gate の前に pending-proposal マーカー（`aidlc/.aidlc-compose-pending`）を書き（Stop hook はこれをターン停止シグナルとして尊重する）、解決時に削除する。approve すると、その厳密な配列を `aidlc-utility.ts recompose --skip <slugs> --add <slugs>` に渡し、これは audit ロックの下でプランのサフィックスをフリップし、新たな starvation に対して strict 検証し、派生フィールドを再構築し、`RECOMPOSED` を発行する。scope レジストリファイルは一切書かれない。マーカーには時間境界がある: Stop hook はそれが新鮮な（mtime で 24h 未満）間だけ尊重し、より古い孤児（書き込みと解決の間でクラッシュしたセッション）は無視してベストエフォートで削除するので、取り残されたマーカーが forwarding-loop の強制を黙って無効化することはない。`--doctor` も、存在するマーカーをその年齢とともに報告する（新鮮 = advisory pass、stale = fail）。`recompose` は autonomous Construction の下では拒否する（gate に人間が必要）——先に gated へ切り替えるか、swarm を終わらせること。検出は chat-first である: conductor の pre-forward 判定ステップ（new-work を見つけるのと同じもの）が、平文チャットの reshape 要求（"can we skip market research?"）を分類し、逐語 forward せずに `next compose "<their words>"` としてルーティングする（逐語 forward だと Branch 10 に落ちて現在の stage を走らせてしまう）。要求が特定の stage を命令形で名指しする場合、conductor は composer dispatch を省いて自分で gate を提示し、approve 時に直接 `recompose` を走らせてよい——この動詞は誰が呼んでも starved/frozen/behind-cursor/skeleton-gate のフリップ（および autonomous-Construction からの呼び出し）を拒否するので健全である。人間の gate とマーカー規律は両経路で同一である。
 
 ### `/aidlc --status` -- 進捗確認
 
@@ -381,7 +381,7 @@ inline に保ち、support agent だけをディスパッチする:
 | 2.4 User Stories | mob | lead inline; `aidlc-design-agent` + `aidlc-developer-agent` + `aidlc-quality-agent` in parallel | 4 participants | lead が下書きし、互いに blind な協力者が contribution ファイルを書き、lead が gate 前に統合する |
 | 3.5 Code Generation | subagent | `aidlc-developer-agent` | aidlc-developer-agent | コード記述は unit 仕様に絞ったクリーンなコンテキストから利益を得る |
 
-Workspace detection（0.2）は以前は subagent だった。今は `aidlc-utility intent-birth` の内側の決定論的なルールベーススキャナである。ルールは `aidlc-common/stages/initialization/workspace-detection.md` に文書化されている。
+Workspace detection（0.2）は以前は subagent だった。今は `aidlc-utility intent-create` の内側の決定論的なルールベーススキャナである。ルールは `aidlc-common/stages/initialization/workspace-detection.md` に文書化されている。
 
 6 ステップのプロセス:
 
@@ -556,7 +556,7 @@ task は stage レベルで作成される -- scope 内の stage 1 つにつき 
 
 task は phase バッチで作成される:
 
-- **INITIALIZATION**: すべての Initialization stage task（workspace-scaffold, workspace-detection, state-init）を `aidlc-utility intent-birth` の実行前に作成する。このツールは 1 回の呼び出しで 3 stage すべてを完了する。task はツールが返った後に completed へ切り替わる。
+- **INITIALIZATION**: すべての Initialization stage task（workspace-scaffold, workspace-detection, state-init）を `aidlc-utility intent-create` の実行前に作成する。このツールは 1 回の呼び出しで 3 stage すべてを完了する。task はツールが返った後に completed へ切り替わる。
 - **IDEATION**: すべての Ideation stage task を stage 1.1 の開始前に作成する。
 - **INCEPTION**: すべての Inception stage task を stage 2.1 の開始前に作成する。
 - **CONSTRUCTION**: Delivery Planning からの execution plan に基づいて task を作成する。unit ごとの stage task を各 unit に作成し、加えて cross-cutting task を作成する。
@@ -719,9 +719,9 @@ stage が存在しない先行 artifact を参照している場合:
 
 ## Appendix B: Hook Reference
 
-framework の hook は `settings.json` にプロジェクト全体で登録されている（v0.6.0 の hooks-move。workflow がアクティブでないときは自己ゲートする）。以下ではそのうち 3 つを詳述する。`aidlc-sensor-fire.ts`, `aidlc-sync-statusline.ts`, `aidlc-runtime-compile.ts` を含む残りは [Hooks and Tools](06-hooks-and-tools.md) が扱っており、そこに権威ある hook 一覧とすべての hook のソースレベルの完全なドキュメントがある。
+framework の hook は `settings.json` にプロジェクト全体で登録されている（v0.6.0 の hooks-move。workflow がアクティブでないときは自己ゲートする）。以下ではそのうち 3 つを詳述する。`aidlc-run-sensors.ts`, `aidlc-sync-workflow-state.ts`, `aidlc-rebuild-stage-graph.ts` を含む残りは [Hooks and Tools](06-hooks-and-tools.md) が扱っており、そこに権威ある hook 一覧とすべての hook のソースレベルの完全なドキュメントがある。
 
-### PostToolUse: audit-logger.ts
+### PostToolUse: aidlc-write-audit-log.ts
 
 - **Matcher**: `Write|Edit`
 - **Trigger**: skill session 中のすべての Write または Edit の Claude Code ツール呼び出し。

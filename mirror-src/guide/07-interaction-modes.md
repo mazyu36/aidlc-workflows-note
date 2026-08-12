@@ -2,10 +2,12 @@
 
 AI-DLC は、stage の中でエージェントと対話する 3 つの方法と、あらゆる意思決定ポイントで制御を保つ承認 gate を提供する。
 
-> **Harness に関する注記。** gate と質問の描画は harness ごとに異なる: Claude Code は
-> `AskUserQuestion` ウィジェットを使い、他の harness は番号付きの散文の選択肢を描画する
->（番号か自由文で回答）。questions ファイルが正である。gate がいつ発火し、何を尋ね、
-> あなたが制御を保つという*意味論*はエンジン側にあるため同一である。
+> **Harness に関する注記。** gate と質問の描画は harness ごとに異なる。Claude
+> Code はネイティブの question picker を使い、Codex は有効化されていればその picker を使う。
+> Kiro・opencode・GitHub Copilot は番号付きの散文の選択肢を描画する（Copilot の
+> picker の結果は信頼済みの human-presence イベントを発火しない）。questions ファイルが
+> 正であり続ける。gate がいつ発火し、何を尋ね、あなたが制御を保つという*意味論*は
+> エンジン側にあるため同一である。
 > [他の harness で動かす](harnesses/README.md) を参照。
 
 ---
@@ -71,7 +73,7 @@ stage の途中でいつでもモードを切り替えられる。3 つのモー
   進捗行を表示して、次の stage へ進む
 - **Request Changes** は具体的なフィードバックを渡せる。エージェントが作業を修正して承認 gate を再提示する
 
-gate は本物の人間の応答を要求する: プロンプトの入力や `AskUserQuestion` ウィジェットへの回答は、audit の台帳に human turn（`HUMAN_TURN` イベント）を記録し、承認（および明確化質問への回答）は、直近の gate 解決以降に human turn が 1 つも記録されていなければ拒否される — つまり autopilot で走るモデルが、人間が何も行動していないのに承認を捏造することはできない。gate ウィジェットが human turn を記録しない harness では、一度だけ短いメッセージ（例えば「approve」）を打って記録を残す。（台帳にまだ human turn が無い harness では、gate は fail open となりこれを要求しない。）
+gate は本物の人間の応答を要求する: プロンプトの入力やネイティブの question picker への回答は、audit の台帳に human turn（`HUMAN_TURN` イベント）を記録し、承認（および明確化質問への回答）は、直近の gate 解決以降に human turn が 1 つも記録されていなければ拒否される — つまり autopilot で走るモデルが、人間が何も行動していないのに承認を捏造することはできない。picker が human turn を記録しない harness では、一度だけ短いメッセージ（例えば「approve」）を打って記録を残す。（台帳にまだ human turn が無い harness では、gate は fail open となりこれを要求しない。）
 
 ### 承認 gate のフロー
 

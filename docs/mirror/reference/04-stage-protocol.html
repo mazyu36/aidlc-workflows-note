@@ -208,7 +208,7 @@ subagent の返却フォーマット、§13 Learnings Ritual、そして phase �
 </tr>
 <tr>
 <td>7</td>
-<td>作業が始まる前に、前の stage タスクを <code>completed</code>、現在の stage タスクを <code>activeForm</code> 付きで <code>in_progress</code> にマークする（<code>sync-statusline</code> hook が状態の同期を扱う）</td>
+<td>作業が始まる前に、前の stage タスクを <code>completed</code>、現在の stage タスクを <code>activeForm</code> 付きで <code>in_progress</code> にマークする（<code>sync-workflow-state</code> hook が状態の同期を扱う）</td>
 </tr>
 <tr>
 <td>8</td>
@@ -1206,28 +1206,46 @@ skip</li>
 sub-agent</strong> として呼び出す。stage の儀式のシーケンスの全体: questions → artifact →
 reviewer（宣言されていれば）→ learnings → gate。</p>
 <p><em>(Protocol Section 12a)</em></p>
+<p>directive の <code>review_class</code> フィールドが契約を選択する。これは engine が 3 つの入力
+（低い方が勝つ: low-wins）から解決する: stage の宣言された class、アクティブな scope の
+<code>review_cap</code>、および任意の実行単位の <code>--review</code> override。<code>none</code> への解決は reviewer
+ブロックをまるごと省略し、stage は reviewless で走る。</p>
 <ol>
 <li><strong>Invoke.</strong> <code>directive.reviewer</code> で名指された agent に委譲し、stage 定義のパス、Q&amp;A
 ファイル、生成された成果物のパス、および frontmatter の任意の検証ツールを渡す —
 builder の <code>memory.md</code> や plan は決して渡さず、reviewer が独立した判断を形成するように
 する。</li>
-<li><strong>Review.</strong> レビューは adversarial review 契約の下で走る: reviewer は成果物を確認する
-のではなく反証しようと試み、存在する場合は機械チェック可能な証拠に findings を根拠づける
-（READY は既定ではなく、到達し損ねる評決である）。reviewer は定義・Q&amp;A・成果物を読み、
-リストされた任意の検証ツールを走らせ、<strong>READY</strong> または <strong>NOT-READY</strong> の評決とともに
-<code>## Review</code> セクションを主要な成果物に追記する。</li>
-<li><strong>Verdict.</strong> READY → learnings の儀式、続けて gate へ進む。イテレーションが
-<code>reviewer_max_iterations</code>（既定 2）を下回って残っている NOT-READY → lead agent が
-findings に対処するため再実行し、reviewer が再チェックする。イテレーションを使い果たした
-NOT-READY → 未解決の findings を書き留めたうえで gate へ進む。
-記録された receipt は終端であり、<code>produces[]</code> の成果物への後続の書き込みはそれを無効化し、
-engine は gate を拒否する。したがって修正はイテレーションループの内側で起き、終端の
-receipt の後には決して起きない。READY 評決に乗った提案は、適用されるのではなく、gate で
-human に向けて引用される。</li>
+<li><strong>Review.</strong> <code>adversarial</code> review は adversarial review 契約の下で走る: reviewer は
+成果物を確認するのではなく反証しようと試み、存在する場合は機械チェック可能な証拠に
+findings を根拠づける（READY は既定ではなく、到達し損ねる評決である）。<code>advisory</code>
+review は証拠根拠づけのルールを保ちつつ、単発の意思決定支援パスである: findings は
+human のために gate で重大度によってランク付けされ、その背後に修復ループはない。
+いずれにせよ reviewer は定義・Q&amp;A・成果物を読み、リストされた任意の検証ツールを走らせ、
+<strong>READY</strong> または <strong>NOT-READY</strong> の評決とともに <code>## Review</code> セクションを主要な成果物に
+追記する。</li>
+<li><strong>Verdict.</strong> <code>advisory</code> では、両方の評決が終端である: ワークフローは learnings の儀式
+と gate へ進み、そこで findings は human がトリアージするためにそのまま引用される
+（<code>reviewer_max_iterations</code> は 1 で、engine が強制する）。<code>adversarial</code> では: READY →
+learnings の儀式、続けて gate へ進む。イテレーションが <code>reviewer_max_iterations</code>
+（既定 2）を下回って残っている NOT-READY → lead agent が findings に対処するため
+再実行し、reviewer が再チェックする。イテレーションを使い果たした NOT-READY →
+未解決の findings を書き留めたうえで gate へ進む。
+記録された receipt は、後続の review パスが続かない場合は常に終端であり、<code>produces[]</code>
+の成果物への後続の書き込みはそれを無効化し、engine は gate を拒否する。したがって
+修正はイテレーションループの内側で起き、終端の receipt の後には決して起きない。評決に
+乗った提案は、適用されるのではなく、gate で human に向けて引用される。</li>
 </ol>
-<p>reviewer は決してブロックしない — human は常に gate で最終決定権を持つ — し、<code>reviewer</code>
-フィールドの無い stage では発火しない。<a href="15-stage-definition.html">Stage Definition</a> の
-<code>reviewer</code> / <code>reviewer_max_iterations</code> frontmatter フィールドを参照。</p>
+<p>イテレーション予算は engine が強制する: <code>aidlc-log.ts review</code> は、その <code>--iteration</code> が
+stage の実効予算を超える <code>REVIEW_REQUESTED</code> を拒否する。したがって、数え間違えた
+conductor が無制限の review パスを走らせることはできない。reviewer は決してブロックしない
+— human は常に gate で最終決定権を持つ — し、<code>reviewer</code> フィールドの無い stage では
+発火しない。<a href="15-stage-definition.html">Stage Definition</a> の <code>reviewer</code> /
+<code>reviewer_max_iterations</code> / <code>review_class</code> frontmatter フィールドを参照。</p>
+<p>reviewer のディスパッチが失敗した、タイムアウトした、または <code>REVIEW_REQUESTED</code> の後で
+評決の前にセッションが終了した場合は、再度ディスパッチする前に同じ request コマンドを
+<code>--retry-pending</code> 付きで再実行する。logger はこの復旧を同じ未マッチの request についてのみ
+受け入れ、<code>Retry: pending-request</code> を記録し、別のイテレーションを消費しない。完了した
+request はリトライできない。</p>
 <hr>
 <h2 id="learnings-ritual">Learnings Ritual</h2>
 <p>human が agent の振る舞いを訂正するとき、その訂正は次のワークフローのための永続的な rule

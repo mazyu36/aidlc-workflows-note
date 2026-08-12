@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -93,12 +95,16 @@
 ツール権限ブロック）は <strong>Claude Code 固有</strong>である。Kiro は同等物を
 <code>.kiro/settings/cli.json</code> + エージェント設定で、Codex は <code>.codex/config.toml</code></p>
 <ul>
-<li>Starlark rules で、opencode はプロジェクトルートの <code>opencode.json</code> で構成する —
-各 harness のサーフェスは
+<li>Starlark rules で、Cursor は <code>.cursor/hooks.json</code> + <code>.cursor/cli.json</code>
+（permissions のみ）で、opencode はプロジェクトルートの <code>opencode.json</code> で、Copilot は
+<code>.github/hooks/aidlc.json</code>（hook の配線）+ <code>~/.copilot/config.json</code>（folder trust）で
+構成する — 各 harness のサーフェスは
 <a href="harnesses/kiro-cli.html">Kiro CLI で動かす</a>、
 <a href="harnesses/kiro-ide.html">Kiro IDE で動かす</a>、
 <a href="harnesses/codex-cli.html">Codex CLI で動かす</a>、
-<a href="harnesses/opencode.html">opencode 上の AI-DLC</a> を参照。</li>
+<a href="harnesses/cursor.html">Cursor 上の AI-DLC</a>、
+<a href="harnesses/opencode.html">opencode 上の AI-DLC</a>、
+<a href="harnesses/copilot.html">GitHub Copilot 上の AI-DLC</a> を参照。</li>
 </ul>
 </blockquote>
 <hr>
@@ -114,7 +120,7 @@
 </ul>
 <hr>
 <h2 id="agent-models-and-effort-tiers">エージェントのモデルと effort（tier）</h2>
-<p>同梱エージェントは <code>tier:</code>（<code>judgment</code> | <code>balanced</code> | <code>templated</code>）付きで書かれており、ビルドが各 harness ネイティブの model / effort キーへ投影する — judgment のエージェントはセッションのモデルと effort を継承し、balanced のエージェントは中型モデルを固定し（Claude Code・Codex・opencode。Kiro では全 tier がセッションモデルを継承）、templated のエージェントは同じ非 Kiro harness で effort も下げる。完全な投影表は <a href="../reference/05-agent-system.html">エージェントシステム</a> を参照。</p>
+<p>同梱エージェントは <code>tier:</code>（<code>judgment</code> | <code>balanced</code> | <code>templated</code>）付きで書かれており、ビルドが各 harness ネイティブの model / effort キーへ投影する — judgment のエージェントはセッションのモデルと effort を継承し、balanced のエージェントは中型モデルを固定し（Claude Code・Codex・opencode。Kiro・Cursor・Copilot では全 tier がセッションモデルを継承）、templated のエージェントは同じモデル固定 harness で effort も下げる。完全な投影表は <a href="../reference/05-agent-system.html">エージェントシステム</a> を参照。</p>
 <p>インストール済みコピーで 1 体のエージェントだけ挙動を変えるには、投影された値を直接編集する — 例えば Claude のエージェント <code>.claude/agents/aidlc-*-agent.md</code> の frontmatter に <code>model: opus</code> を設定する。Kiro ではサーフェスが harness に依存する: Kiro CLI ではエージェントの <code>.kiro/agents/aidlc-*-agent.json</code> に <code>&quot;model&quot;</code> フィールドを足し、Kiro IDE ではエージェントの <code>.kiro/agents/aidlc-*-agent.md</code> frontmatter に <code>model:</code> 行を設定する（エージェントの JSON ファイルは CLI 専用 — IDE は spawn 時に <code>.md</code> frontmatter を読む）。どちらの場合もインストールで有効なモデル ID を使うこと。Kiro のエージェントはモデル固定なしで出荷されるため、既定ではセッションモデルを継承する。この編集は <code>dist/&lt;harness&gt;/</code> シェルを再コピーするまで生き残る。ソースから自分のディストリビューションをビルドする際に全エージェントへ上限を掛けるには、<code>core/memory/org.md</code>/<code>project.md</code> の frontmatter に <code>tier_cap:</code> を設定するか、パッケージャを <code>AIDLC_TIER_CAP=&lt;tier&gt;</code> で実行する — どちらも <code>bun scripts/package.ts</code> のパック時のノブであり、ランタイム設定ではない。</p>
 <hr>
 <h2 id="per-project-default-scope">プロジェクト単位の既定 scope</h2>
@@ -193,9 +199,9 @@
 <p>任意の承認 gate で、別のレベルを要望して depth を上書きできる。</p>
 <hr>
 <h2 id="statusline-claude-code-only">ステータスライン（Claude Code のみ）</h2>
-<p><strong>Claude Code</strong> では、この実装はターミナルのステータスバーにワークフロー進捗を示すステータスラインを表示する。他の harness にステータスラインは無い — ワークフローの位置は <code>/aidlc --status</code>（Kiro・opencode）や、<code>update_plan</code> のタスク進捗項目 + <code>$aidlc --status</code>（Codex）で表示する:</p>
+<p><strong>Claude Code</strong> では、この実装はターミナルのステータスバーにワークフロー進捗を示すステータスラインを表示する。他の harness にステータスラインは無い — ワークフローの位置は <code>/aidlc --status</code>（Kiro・Cursor・opencode）や、<code>update_plan</code> のタスク進捗項目 + <code>$aidlc --status</code>（Codex）で表示する:</p>
 <pre class="term"><code><span class="t-status">[AIDLC] IDEATION [▓▓▓▓▓░░░░░] 4/7 &gt; Intent Capture -- Product Agent</span></code></pre>
-<p>表示は順に: 現在の phase、phase の進捗（バーと比 — どちらも現在 phase の範囲）、stage の表示名、リードエージェント。コンテキスト使用量は右側に現れ（例: <code>ctx:15%</code>）、残りが減るにつれて色分けされる。Claude の使用量台帳にデータがある場合、<code>↑&lt;in&gt; ↓&lt;out&gt; $&lt;usd&gt;</code> が続き、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークフローとセッションは除外される。</p>
+<p>表示は順に: 現在の phase、phase の進捗（バーと比 — どちらも現在 phase の範囲）、stage の表示名、リードエージェント。コンテキスト使用量は右側に現れ（例: <code>ctx:15%</code>）、残りが減るにつれて色分けされる。Claude の使用量台帳にデータがある場合、<code>↑&lt;in&gt; ↓&lt;out&gt; $&lt;usd&gt;</code> が続き、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークフローとセッションは除外される。<code>AIDLC_DISABLE_USAGE_TRACKING=1</code> を設定すると使用量追跡は完全に無効になり、このセグメントも消える。</p>
 <h3 id="configuration">設定</h3>
 <p>ステータスラインは <code>.claude/settings.json</code> で設定される:</p>
 <pre><code class="language-json">&quot;statusLine&quot;: {
@@ -228,7 +234,7 @@
 <h3 id="expanding-permissions">権限の拡張</h3>
 <p>追加の能力を要するカスタム stage を作る場合にだけ、allow リストにツールを足す。</p>
 <h3 id="narrowing-permissions">権限の絞り込み</h3>
-<p>allow リストからツールを外すと、使用のたびに手動承認が要るようになる。<code>Task</code> を外すと、4 つの dispatch される stage（2.1 Reverse Engineering の pipeline、2.2 Practices Discovery の subagent、2.4 User Stories の mob、3.5 Code Generation の subagent）が委譲のたびに許可を求めるようになる点に注意。ワークスペース検出（0.2）は <code>aidlc-utility intent-birth</code> の中で決定論的に実行される — <code>Task</code> は使わない。</p>
+<p>allow リストからツールを外すと、使用のたびに手動承認が要るようになる。<code>Task</code> を外すと、4 つの dispatch される stage（2.1 Reverse Engineering の pipeline、2.2 Practices Discovery の subagent、2.4 User Stories の mob、3.5 Code Generation の subagent）が委譲のたびに許可を求めるようになる点に注意。ワークスペース検出（0.2）は <code>aidlc-utility intent-create</code> の中で決定論的に実行される — <code>Task</code> は使わない。</p>
 <hr>
 <h2 id="extending-ai-dlc">AI-DLC の拡張</h2>
 <p>上記の settings・scope・depth・stage の編集は、あなたが走らせるワークフローの日々の調整を覆う。フレームワークそのものをチーム向けに作り変えたいとき — stage の追加、エージェントの追加、scope の定義、常設 rule の教示、決定論チェックの束線、ドメイン知識の追加 — それは独自のガイドを持つ別の仕事である: <strong><a href="../harness-engineering/00-overview.html">Harness Engineer ガイド</a></strong>。</p>

@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -107,7 +109,7 @@
 </tr>
 <tr>
 <td><strong>Audit trail</strong></td>
-<td>intent の record dir の <code>audit/</code> にある追記専用イベントログ。クローン別シャード（<code>&lt;host&gt;-&lt;clone&gt;.md</code>）として書かれ、読む側が glob してタイムスタンプでマージする。intent から本番までの完全なトレーサビリティのため、76 のイベント種別を ISO タイムスタンプ付きで記録する。</td>
+<td>intent の record dir の <code>audit/</code> にある追記専用イベントログ。クローン別シャード（<code>&lt;host&gt;-&lt;clone&gt;.md</code>）として書かれ、読む側が glob してタイムスタンプでマージする。intent から本番までの完全なトレーサビリティのため、82 のイベント種別を ISO タイムスタンプ付きで記録する。</td>
 </tr>
 <tr>
 <td><strong>CLI tool</strong></td>
@@ -142,6 +144,10 @@
 <td><code>core/</code> にある、手書きで harness 非依存な単一の正 — エンジン・stage・エージェント・rule・scope・sensor・knowledge・hook・セッションスキル。すべての harness ディストリビューションはここから生成される。編集するのはここであり、<code>dist/</code> では決してない。</td>
 </tr>
 <tr>
+<td><strong>Cursor</strong></td>
+<td>Cursor の harness（cursor.com）— 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/cursor/</code> から <code>dist/cursor/</code> へ生成される。1 つのツリーが Cursor IDE と Cursor CLI（<code>agent</code>）の両方に対応する。14 のペルソナは <code>.cursor/agents/</code> のネイティブ subagent であり、orchestrator・runner・ユーティリティショートカットは <code>.cursor/skills/</code> のネイティブ skill である。Cursor は <code>@</code>-import を展開しないため、<code>.cursor/rules/aidlc.mdc</code> が常設のメソッド層を指し、4 つの <code>aidlc-phase-*.mdc</code> rule が phase 層を指す。<code>/aidlc</code> で呼び出し、<code>/aidlc-status</code>・<code>/aidlc-jump</code>・<code>/aidlc-scope</code> のショートカットを持つ。<a href="harnesses/cursor.html">Cursor 上の AI-DLC</a> を参照。</td>
+</tr>
+<tr>
 <td><strong>Depth</strong></td>
 <td>各 stage がどれだけ詳細に作るかを制御する 3 つの詳細レベル（Minimal・Standard・Comprehensive）のひとつ。scope は既定の depth を持ち、任意の承認 gate で上書きできる。<a href="05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> を参照。</td>
 </tr>
@@ -151,7 +157,7 @@
 </tr>
 <tr>
 <td><strong>Distribution</strong></td>
-<td>1 つの harness のために生成され、コミットされ、ドリフト検知される <code>dist/&lt;harness&gt;/</code> ツリー（<code>dist/claude/</code>、<code>dist/kiro/</code>、<code>dist/kiro-ide/</code>、<code>dist/codex/</code>、<code>dist/opencode/</code>）。ユーザーはこれをプロジェクトへコピーする。メンテナが手で編集することはない。<strong>Core</strong> から <strong>Packager</strong> が生成する。</td>
+<td>1 つの harness のために生成され、コミットされ、ドリフト検知される <code>dist/&lt;harness&gt;/</code> ツリー（<code>dist/claude/</code>、<code>dist/codex/</code>、<code>dist/copilot/</code>、<code>dist/cursor/</code>、<code>dist/kiro/</code>、<code>dist/kiro-ide/</code>、<code>dist/opencode/</code>）。ユーザーはこれをプロジェクトへコピーする。メンテナが手で編集することはない。<strong>Core</strong> から <strong>Packager</strong> が生成する。</td>
 </tr>
 <tr>
 <td><strong>Engine</strong></td>
@@ -167,11 +173,11 @@
 </tr>
 <tr>
 <td><strong>Harness</strong></td>
-<td>AI-DLC の core の CLI ディストリビューション — harness 非依存の <strong>Core</strong> を描画する先の、対応力のあるコマンドラインエージェント 1 つ。集合はオープンで成長する（今日: Claude Code・Kiro CLI・Kiro IDE・Codex CLI・opencode）。<em>注 — 「harness」はこのリポジトリで文脈により 4 つの意味を持つ:</em> (1) <strong>この正準の CLI ディストリビューションの意味</strong>、(2) rule+sensor の<strong>制御ループ</strong>（古い用法。改名済み — <strong>Control loop</strong> を参照）、(3) <code>harness/&lt;name&gt;/</code> のソースサーフェスディレクトリ、(4) <code>tests/harness/</code> のテストヘルパーディレクトリ。ユーザードキュメントで「a harness」は意味 1 だけである。</td>
+<td>AI-DLC の core の CLI ディストリビューション — harness 非依存の <strong>Core</strong> を描画する先の、対応力のあるコマンドラインエージェント 1 つ。集合はオープンで成長する（今日: Claude Code・Kiro CLI・Kiro IDE・Codex CLI・Cursor・opencode・GitHub Copilot）。<em>注 — 「harness」はこのリポジトリで文脈により 4 つの意味を持つ:</em> (1) <strong>この正準の CLI ディストリビューションの意味</strong>、(2) rule+sensor の<strong>制御ループ</strong>（古い用法。改名済み — <strong>Control loop</strong> を参照）、(3) <code>harness/&lt;name&gt;/</code> のソースサーフェスディレクトリ、(4) <code>tests/harness/</code> のテストヘルパーディレクトリ。ユーザードキュメントで「a harness」は意味 1 だけである。</td>
 </tr>
 <tr>
 <td><strong>Hook</strong></td>
-<td>イベントに応じて Claude Code が自動実行する TypeScript スクリプト。この実装は 16 の hook を使い、すべて <code>settings.json</code> にプロジェクト全体で登録される: ワークフローの背骨（audit ログ、sensor ディスパッチ、runtime グラフのコンパイル、statusline 同期、token 使用量の折り込み、コンパクション時の状態検証、subagent 追跡、ターン終端のループ強制）に加え、セッションライフサイクル、human-turn の記録、厳密な dispatch-rule 配送、状態遷移・reviewer スコープ・review-freeze のガード、statusline コマンド。それぞれ自己判定し、ワークフローが無ければ no-op になる。</td>
+<td>イベントに応じて Claude Code が自動実行する TypeScript スクリプト。この実装は 17 の hook を使い、すべて <code>settings.json</code> にプロジェクト全体で登録される: ワークフローの背骨（audit ログ、sensor ディスパッチ、runtime グラフのコンパイル、statusline 同期、token 使用量の折り込み、コンパクション時の状態検証、subagent 追跡、ターン終端のループ強制）に加え、セッションライフサイクル、human-turn の記録、厳密な dispatch-rule 配送、状態遷移・reviewer スコープ・review-freeze・plan-approval のガード、statusline コマンド。それぞれ自己判定し、ワークフローが無ければ no-op になる。</td>
 </tr>
 <tr>
 <td><strong>Inline execution</strong></td>
@@ -226,6 +232,10 @@
 <td>opencode の harness（opencode.ai）— 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/opencode/</code> から <code>dist/opencode/</code> へ生成される。エンジンツリーは <code>.aidlc/</code> に出荷される（opencode は <code>.opencode/tools/*.ts</code> をカスタムツールとして自動インポートするため、エンジンをそこに置けない）。<code>.opencode/</code> はネイティブシェル（subagent・<code>/aidlc</code> コマンド・hook アダプタのプラグイン）だけを運び、AIDLC のメソッドはプロジェクトルートの <code>opencode.json</code> の <code>instructions</code> glob 経由で読まれる。<code>/aidlc</code> で呼び出す。<a href="harnesses/opencode.html">opencode 上の AI-DLC</a> を参照。</td>
 </tr>
 <tr>
+<td><strong>GitHub Copilot</strong></td>
+<td>GitHub Copilot の harness — 今日の AI-DLC の harness ディストリビューションのひとつで、<code>core/</code> + <code>harness/copilot/</code> から <code>dist/copilot/</code> へ生成され、1 つのインストールが両方の Copilot サーフェス（Copilot CLI と VS Code のエージェントモード — 同じプロジェクトファイルを読む）を提供する。エンジンツリーは <code>.aidlc/</code> に出荷される。<code>.github/</code> は aidlc 名を持つネイティブの生成物だけを運び（hook の配線 <code>hooks/aidlc.json</code>、ペルソナのカスタムエージェント、skills ツリー）、あなたのリポジトリの <code>.github/</code> を置き換えるのではなくマージされる。AIDLC のメソッドはプロジェクトルートの <code>AGENTS.md</code> の <code>@</code>-import 行経由で読まれる。<code>/aidlc</code> で呼び出す。<a href="harnesses/copilot.html">GitHub Copilot 上の AI-DLC</a> を参照。</td>
+</tr>
+<tr>
 <td><strong>Orchestrator</strong></td>
 <td>ワークフローがどう駆動されるかの総称: 次に何が起きるかを決める決定論的な <strong>Engine</strong> と、それを実行する <strong>Conductor</strong>（<code>SKILL.md</code>）。<code>/aidlc</code> で呼び出す。<a href="../reference/17-skill-system.html">Engine と Skill システム</a> を参照。</td>
 </tr>
@@ -267,7 +277,7 @@
 </tr>
 <tr>
 <td><strong>Rule</strong></td>
-<td>ワークスペースルートのアクティブ space の memory 層（<code>aidlc/spaces/&lt;active-space&gt;/memory/</code>）に一度だけ書かれ、各 harness のネイティブな取り込み（Claude の <code>@</code>-import スタブ、Kiro CLI の resources または IDE の steering、Codex の <code>AIDLC_RULES_DIR</code>）でコンテキストへ引き込まれ、カバーするすべての stage に適用される永続的な行動ルール。rule は厳密加算の 5 層連鎖 — org → team → project → phase → stage — で解決され、適用されるすべての rule がコンテキストに現れる。広い層は決して上書きされず、足されるだけである。rule は<strong>制御ループ</strong>の feedforward 側であり、決定論検証のために Sensor と対になりうる。<a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</td>
+<td>ワークスペースルートのアクティブ space の memory 層（<code>aidlc/spaces/&lt;active-space&gt;/memory/</code>）に一度だけ書かれ、各 harness のネイティブな取り込み（Claude の <code>@</code>-import スタブ、Kiro CLI の resources または IDE の steering、Codex の <code>AIDLC_RULES_DIR</code>、opencode の <code>instructions</code> glob、Copilot の <code>AGENTS.md</code> <code>@</code>-import）でコンテキストへ引き込まれ、カバーするすべての stage に適用される永続的な行動ルール。rule は厳密加算の 5 層連鎖 — org → team → project → phase → stage — で解決され、適用されるすべての rule がコンテキストに現れる。広い層は決して上書きされず、足されるだけである。rule は<strong>制御ループ</strong>の feedforward 側であり、決定論検証のために Sensor と対になりうる。<a href="09-rules-and-the-learning-loop.html">Rule と学習ループ</a> を参照。</td>
 </tr>
 <tr>
 <td><strong>Runtime graph</strong></td>

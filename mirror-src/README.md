@@ -1,6 +1,6 @@
 # AI-DLC ドキュメント
 
-**AI-DLC は方法論である** — AI 駆動のソフトウェア開発に対する、構造化された gate 付きのアプローチである（AWS が定義）。**このリポジトリは、そのネイティブかつ複数 harness 対応の実装である:** 方法論を単一の harness 非依存な `core/` から skills・agents・hooks・tools として具現化したものであり、利用する CLI harness 上でネイティブに動作する — 現時点では Claude Code・Kiro CLI・Kiro IDE・Codex CLI・opencode、および移植先となる任意の対応 CLI である。方法論は *何を* に当たり、各 harness ディストリビューションは 1 つのランタイムに対する *どのように* に当たる。そして、すべてのディストリビューションは同一のソースから生成される。
+**AI-DLC は方法論である** — AI 駆動のソフトウェア開発に対する、構造化された gate 付きのアプローチである（AWS が定義）。**このリポジトリは、そのネイティブかつ複数 harness 対応の実装である:** 方法論を単一の harness 非依存な `core/` から skills・agents・hooks・tools として具現化したものであり、利用する CLI harness 上でネイティブに動作する — 現時点では Claude Code・Kiro CLI・Kiro IDE・Codex CLI・Cursor・opencode・GitHub Copilot、および移植先となる任意の対応 CLI である。方法論は *何を* に当たり、各 harness ディストリビューションは 1 つのランタイムに対する *どのように* に当たる。そして、すべてのディストリビューションは同一のソースから生成される。
 
 初めてだろうか？ [README](../README.md) にインストールの Quick Start と「pick your harness」の表がある。このページはドキュメントそのものの地図である。
 

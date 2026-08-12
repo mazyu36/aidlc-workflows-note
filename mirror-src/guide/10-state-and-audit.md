@@ -77,9 +77,9 @@ stateDiagram-v2
 
 audit トレイルは intent の record dir の `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/audit/` に住む。**クローンごとのシャード**（`<host>-<clone>.md`）として書かれる追記専用のイベントログで、各クローンは自分のシャードにだけ追記するため、兄弟 worktree からの並行追記が git コンフリクトを起こすことは決してない。読む側は `audit/*.md` を glob し、ISO タイムスタンプでマージソートして、決定とイベントの完全な時系列を再構成する。
 
-### 76 イベントの分類
+### 82 イベントの分類
 
-イベントは 19 カテゴリに編成される:
+イベントは 21 カテゴリに編成される:
 
 | カテゴリ | 数 | イベント |
 |----------|------:|--------|
@@ -88,11 +88,13 @@ audit トレイルは intent の record dir の `aidlc/spaces/<space>/intents/<Y
 | **Stage Lifecycle** | 6 | `STAGE_STARTED`、`STAGE_AWAITING_APPROVAL`、`STAGE_REVISING`、`STAGE_COMPLETED`、`STAGE_SKIPPED`、`STAGE_JUMPED` |
 | **Session** | 5 | `SESSION_STARTED`、`SESSION_RESUMED`、`SESSION_COMPACTED`、`SESSION_ENDED`、`HUMAN_TURN`（hook が発行） |
 | **Initialization** | 3 | `WORKSPACE_SCAFFOLDED`、`WORKSPACE_SCANNED`、`WORKSPACE_INITIALISED` |
-| **Navigation** | 6 | `SCOPE_CHANGED`、`SCOPE_DETECTED`、`DEPTH_CHANGED`、`TEST_STRATEGY_CHANGED`、`RECOMPOSED`、`PLUGIN_SELECTION_CHANGED` |
+| **Navigation** | 7 | `SCOPE_CHANGED`、`SCOPE_DETECTED`、`DEPTH_CHANGED`、`TEST_STRATEGY_CHANGED`、`REVIEW_CLASS_CHANGED`、`RECOMPOSED`、`PLUGIN_SELECTION_CHANGED` |
 | **Interaction** | 7 | `DECISION_RECORDED`、`GATE_APPROVED`、`GATE_REJECTED`、`QUESTION_ANSWERED`、`SUMMARY_CONFIRMATION_RECORDED`、`REVIEW_REQUESTED`、`REVIEW_COMPLETED` |
-| **Artifact** | 3 | `ARTIFACT_CREATED`、`ARTIFACT_UPDATED`（audit-logger hook）、`ARTIFACT_REUSED` |
+| **Unit Lifecycle** | 4 | `UNIT_STARTED`、`UNIT_PAUSED`、`UNIT_RESUMED`、`UNIT_COMPLETED` |
+| **Artifact** | 3 | `ARTIFACT_CREATED`、`ARTIFACT_UPDATED`（write-audit-log hook）、`ARTIFACT_REUSED` |
 | **Subagent** | 1 | `SUBAGENT_COMPLETED`（log-subagent hook） |
 | **Reviewer Enforcement** | 2 | `REVIEWER_SCOPE_BLOCKED`（reviewer-scope hook）、`REVIEW_FREEZE_BLOCKED`（review-freeze hook） |
+| **Plan Approval** | 1 | `PLAN_APPROVAL_BLOCKED`（plan-approval-guard hook） |
 | **Utility** | 1 | `HEALTH_CHECKED` |
 | **Error/Recovery** | 2 | `ERROR_LOGGED`、`RECOVERY_COMPLETED` |
 | **Construction Bolt** | 4 | `BOLT_STARTED`、`BOLT_COMPLETED`、`BOLT_FAILED`、`AUTONOMY_MODE_SET` |
@@ -106,7 +108,7 @@ audit トレイルは intent の record dir の `aidlc/spaces/<space>/intents/<Y
 ### 何がいつ記録されるか
 
 - **すべての stage の開始と完了**が `STAGE_STARTED` と `STAGE_COMPLETED` イベントで記録される
-- intent の record dir への**すべてのファイル書き込み**（`audit/` シャード自身を除く）が audit-logger hook により自動記録される
+- intent の record dir への**すべてのファイル書き込み**（`audit/` シャード自身を除く）が write-audit-log hook により自動記録される
 - **すべての承認 gate の決定**（承認・変更要求・accept-as-is）が記録される
 - あなたが与えた**すべての質問回答**が記録される
 - **すべての subagent の完了**が log-subagent hook により記録される
@@ -117,7 +119,7 @@ audit トレイルは intent の record dir の `aidlc/spaces/<space>/intents/<Y
 各エントリは次のフィールドを持つ構造化形式に従う:
 
 - **Timestamp** — ISO 8601 タイムスタンプ
-- **Event** - 76 イベント種別のいずれか
+- **Event** - 82 イベント種別のいずれか
 - **Details** — イベント固有のデータ（stage 名、決定、成果物パス 等）
 
 エントリは時系列に追記される。特定の stage の履歴を確認するには、その `STAGE_STARTED` と `STAGE_COMPLETED` のエントリと、その間のすべてを探す。

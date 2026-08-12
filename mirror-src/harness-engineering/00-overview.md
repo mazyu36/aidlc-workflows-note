@@ -3,7 +3,7 @@
 > [AI-DLC ドキュメント](../README.md) の一部 · [ユーザーガイド](../guide/00-introduction.md) · **Harness Engineer ガイド** · [開発者リファレンス](../reference/00-overview.md)
 
 AI-DLC は方法論であり、この実装はそれを、あなたが使う harness — Claude Code、Kiro CLI、
-Kiro IDE、Codex CLI、opencode — の上で箱から出してすぐ動く形で同梱する: 14 のエージェント
+Kiro IDE、Codex CLI、Cursor、opencode、GitHub Copilot — の上で箱から出してすぐ動く形で同梱する: 14 のエージェント
 （11 のドメインエキスパート、2 の reviewer、composer）、32 の stage、9 の scope、
 rule と sensor の一式。このガイドは、その方法論を**再形成**したい人のためのものである —
 どの stage が走るかを変える、フレームワークが扱わないドメインのエージェントを足す、scope を
@@ -106,7 +106,7 @@ harness engineer が著述するものはすべて **`core/`** に住む — 手
 ソースオブトゥルース（stage は `core/aidlc-common/stages/`、agent は `core/agents/`、
 scope、rule、sensor、knowledge、ツール、hook）。あなたが実際に走らせる harness 別の
 `dist/<harness>/` ツリー（`dist/claude/.claude/`、`dist/kiro/.kiro/`、`dist/kiro-ide/.kiro/`、
-`dist/codex/`、`dist/opencode/`）は `core/` に薄い `harness/<name>/` サーフェスを加えて
+`dist/codex/`、`dist/cursor/`、`dist/opencode/`、`dist/copilot/`）は `core/` に薄い `harness/<name>/` サーフェスを加えて
 **生成**され、**ドリフトガード**される — そこでの手編集は CI が拒否する。ループは常に:
 
 ```bash

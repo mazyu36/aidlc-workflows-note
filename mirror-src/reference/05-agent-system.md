@@ -87,21 +87,22 @@ frontmatter の下で、markdown 本体は次を定義する:
 |------|--------|---------|
 | `judgment` | architect, aws-platform, compliance, composer, design, developer, devsecops, product, quality | 曖昧さの下での多制約推論; 出力は下流へカスケードする。決してダウングレードされない: セッションの model と effort の両方を継承する |
 | `balanced` | architecture-reviewer, product-lead | レビュアー型の作業 -- 明示的な基準に対する新規の入力。中サイズの model、セッションの effort |
-| `templated` | delivery, operations, pipeline-deploy | 支配的にパターン追従の出力; 方法論はすでに knowledge にある（delivery plan、CI/CD YAML、runbook）。Claude Code、Codex、opencode では中サイズの model を減らした effort で -- 唯一の意図的なダウングレード（Kiro では、すべての tier と同様にセッションの model を継承する） |
+| `templated` | delivery, operations, pipeline-deploy | 支配的にパターン追従の出力; 方法論はすでに knowledge にある（delivery plan、CI/CD YAML、runbook）。Claude Code、Codex、opencode では中サイズの model を減らした effort で -- 唯一の意図的なダウングレード（Kiro、Cursor、Copilot では、すべての tier と同様にセッションの model を継承する） |
 
 harness ごとの射影（`core/tools/aidlc-tiers.ts` が single source of truth）:
 
-| Tier | Claude Code (.md frontmatter) | Codex CLI (.toml) | Kiro CLI/IDE (agent JSON `"model"`, CLI / `.md` frontmatter `model:`, IDE) | Kiro cli.json `chat.modelDefaults` | opencode (.md frontmatter) |
-|------|-------------------------------|-------------------|--------------------------------------|-------------------------------------|-----------------------------|
-| `judgment` | `model: inherit`、`effort:` 行なし | `model`/`model_reasoning_effort` キーなし（config.toml のセッションデフォルトが適用される） | フィールド省略（スキーマのフォールバック: ユーザーのデフォルト model） | tier エントリなし | `model:`/`variant:` キーなし（opencode.json のセッションデフォルトが適用される） |
-| `balanced` | `model: sonnet`、`effort:` 行なし | `model = "openai.gpt-5.4"`、effort キーなし | フィールド省略（下記参照） | tier エントリなし | `model: amazon-bedrock/global.anthropic.claude-sonnet-4-6`、variant キーなし |
-| `templated` | `model: sonnet`、`effort: medium` | `model = "openai.gpt-5.4"`、`model_reasoning_effort = "medium"` | フィールド省略（下記参照） | tier エントリなし | 同じ model、`variant: medium` |
+| Tier | Claude Code (.md frontmatter) | Codex CLI (.toml) | Kiro CLI/IDE (agent JSON `"model"`, CLI / `.md` frontmatter `model:`, IDE) | Kiro cli.json `chat.modelDefaults` | opencode (.md frontmatter) | Copilot (.md frontmatter) | Cursor (.md frontmatter) |
+|------|-------------------------------|-------------------|--------------------------------------|-------------------------------------|-----------------------------|-----------------------------|--------------------------|
+| `judgment` | `model: inherit`、`effort:` 行なし | `model`/`model_reasoning_effort` キーなし（config.toml のセッションデフォルトが適用される） | フィールド省略（スキーマのフォールバック: ユーザーのデフォルト model） | tier エントリなし | `model:`/`variant:` キーなし（opencode.json のセッションデフォルトが適用される） | 省略（セッションの model を継承） | `model:` 省略（セッションの model を継承） |
+| `balanced` | `model: sonnet`、`effort:` 行なし | `model = "openai.gpt-5.4"`、effort キーなし | フィールド省略（下記参照） | tier エントリなし | `model: amazon-bedrock/global.anthropic.claude-sonnet-4-6`、variant キーなし | 省略（セッションの model を継承） | `model:` 省略（下記参照） |
+| `templated` | `model: sonnet`、`effort: medium` | `model = "openai.gpt-5.4"`、`model_reasoning_effort = "medium"` | フィールド省略（下記参照） | tier エントリなし | 同じ model、`variant: medium` | 省略（セッションの model を継承） | `model:` 省略（下記参照） |
 
 表の背後にある主要な事実:
 
 - **省略が継承のメカニズムである。** Claude Code では、`effort:` キーの無い agent .md はセッションの effort を継承し、固定された `effort:` は両方向でセッションを上書きする（固定は cap であって floor ではない）-- だから不在が judgment と balanced の契約である。Codex では、`model` の無いロール TOML は同梱の `.codex/config.toml` のセッションデフォルトで spawn する（codex-cli 0.139.0 と 0.142.5 で live に検証済み; 現在 doctor が強制する最小は、compact セッションの即時リロードのため 0.145.0 である）。Kiro では、agent-v1 スキーマが不在-`"model"` のフォールバックを文書化している: "If not specified, uses the default model"（`/model` の永続化された設定）。
 - **Kiro は決して model を固定しない。** 同梱の Kiro model ID は、その model がユーザーのインストールで有効なときにだけ解決する; 他の任意の model を走らせるセッションは、委譲された spawn を `Invalid model ID` ですべて拒否し、Kiro は Claude 方言の tier エイリアス（`opus`/`sonnet`）を真っ向から拒否する -- だから普遍的に安全に固定できる値は無い。したがってすべての Kiro tier は `"model"`（および `.md` frontmatter の `model:` 行）を省略する: すべての agent がセッションの model を継承する。`TIER_PROJECTIONS` の kiro スロットと `kiroModelDefaults()` の機構は、解決可能なインストールごとの固定メカニズムが現れたときに備え、休眠状態のまま残る。
 - **Kiro は agent ごとの effort サーフェスを持たない。** kiro-cli は agent JSON 内の effort 的なキーに対して fail-close するので、model ごとの effort デフォルトは `settings/cli.json` の `chat.modelDefaults[<modelId>].output_config.effort` にしか乗れない。tier が model を固定しないので、著述された条件付きエントリだけが同梱される（`claude-opus-4.8` -> `xhigh`、セッションが実際にその model を走らせるときにだけ適用される）。そのファイルは CLI 専用である: Kiro IDE は cli.json を完全に無視し、拡張機能に埋め込まれた model ごとのデフォルト（またはユーザーの `/effort` のセッション state）を適用する。
+- **Cursor もまた決して model を固定しない。** Cursor でのモデル可用性はプランに依存する（Free アカウントは名前指定のあらゆる model を拒否し、`Auto` しか走らせられない）ので、固定された agent model は下位プランのインストールをハード失敗させてしまう。したがってすべての Cursor tier は `.md` frontmatter の `model:` 行を省略する（Cursor には agent ごとの effort キーが無い -- effort は model-id サフィックスに乗る）。すべての agent がセッションの model を継承し、`TIER_PROJECTIONS` の cursor スロットは model のみで、プランに依存しない固定メカニズムが現れたときに備えて休眠状態のまま残る。
 
 ### Tier cap (cost override)
 
@@ -137,7 +138,7 @@ harness ごとの射影（`core/tools/aidlc-tiers.ts` が single source of truth
 
 **Observations:**
 - aidlc-architect-agent が最も広い stage 関与を持つ（3 つの phase にまたがる 9 stage）。
-- 14 agent の全ロスターにわたり、9 つの agent が `judgment` tier を持ち、5 つが Claude Code、Codex、opencode でステップダウンする（2 つの `balanced` レビュアーに加え 3 つの `templated` プランナー; Kiro ではすべての tier がセッションの model と effort を継承するので、そこではどの agent もステップダウンしない）; ステップダウンした agent は、明示的なチェックリストに対するレビュー、または支配的にテンプレート化された planning、CI/CD、runbook の作業を生産する。上のマトリクスは 11 のドメインエキスパート agent をカバーする。
+- 14 agent の全ロスターにわたり、9 つの agent が `judgment` tier を持ち、5 つが Claude Code、Codex、opencode でステップダウンする（2 つの `balanced` レビュアーに加え 3 つの `templated` プランナー; Kiro、Cursor、Copilot ではすべての tier がセッションの model と effort を継承するので、そこではどの agent もステップダウンしない）; ステップダウンした agent は、明示的なチェックリストに対するレビュー、または支配的にテンプレート化された planning、CI/CD、runbook の作業を生産する。上のマトリクスは 11 のドメインエキスパート agent をカバーする。
 - aidlc-compliance-agent は純粋に助言的な立場で動作する（4 support stage、lead stage なし）。
 - 11 agent のうち 6 つが CLI 対話のために Bash を使うと期待される。
 - 3 つの agent がリサーチタスクのために WebSearch を使うと期待される。

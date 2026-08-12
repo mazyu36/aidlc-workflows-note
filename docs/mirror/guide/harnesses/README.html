@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../../guide/harnesses/README.html" class="here">他の harness で動かす</a>
   <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -107,9 +109,19 @@
 <td><a href="codex-cli.html">Codex CLI 上の AI-DLC</a> — 前提条件、trust の事前シード、Bedrock 設定、git リポジトリ必須の件。</td>
 </tr>
 <tr>
+<td><strong>Cursor</strong></td>
+<td><code>/aidlc</code></td>
+<td><a href="cursor.html">Cursor 上の AI-DLC</a> — Cursor IDE と CLI 向けの 1 つのツリー、ネイティブの subagent と skill、hooks.json アダプタ、Cursor での違い。</td>
+</tr>
+<tr>
 <td><strong>opencode</strong>（≥ 1.17）</td>
 <td><code>/aidlc</code></td>
 <td><a href="opencode.html">opencode 上の AI-DLC</a> — <code>.aidlc/</code> + <code>.opencode/</code> の分割レイアウト、アダプタのプラグイン、opencode での違い。</td>
+</tr>
+<tr>
+<td><strong>GitHub Copilot</strong>（CLI ≥ 1.0.74 / VS Code ≥ 1.130）</td>
+<td><code>/aidlc</code></td>
+<td><a href="copilot.html">GitHub Copilot 上の AI-DLC</a> — 両サーフェス共通の 1 つのインストール、<code>.github/</code> への merge、フォルダの信頼、Copilot での違い。</td>
 </tr>
 </tbody></table>
 <p>Kiro（IDE・CLI）上の AI-DLC は <strong>Claude Opus 4.8</strong> で最もよく動き、これには <strong>Kiro の有償プラン</strong>が必要である。</p>

@@ -1,7 +1,7 @@
 # AI-DLC を新しい harness へ移植する
 
 AI-DLC は **one core, many harnesses** から出荷される — 今日は Claude Code、Kiro CLI、
-Kiro IDE、Codex CLI、そして opencode であり、その集合は開いている。手著述のソースは、
+Kiro IDE、Codex CLI、Cursor、opencode、そして GitHub Copilot であり、その集合は開いている。手著述のソースは、
 harness 中立な `core/` に加え、CLI ごとの薄い `harness/<name>/` サーフェスである; packager
 （`scripts/package.ts`）はコミット済みの各 `dist/<harness>/` ツリーを再生成する。別の harness を
 足すことは **1 つのディレクトリと 1 つの manifest 行** である — engine、methodology、そして
@@ -21,6 +21,8 @@ harness/
   claude/  manifest.ts · skills/aidlc/ · CLAUDE.md · settings.json
   kiro/    manifest.ts · skills/aidlc/ · agents/*.json · hooks/aidlc-kiro-adapter.ts · settings/cli.json · AGENTS.md
   codex/   manifest.ts · emit.ts · skills/aidlc/ · hooks/aidlc-codex-adapter.ts
+  opencode/ manifest.ts · emit.ts · skills/aidlc/ · command/ · plugin/
+  copilot/ manifest.ts · emit.ts · skills/aidlc/ · hooks/aidlc-copilot-adapter.ts
 scripts/
   package.ts               # bun scripts/package.ts [<name>] [--check]
   manifest-types.ts        # the HarnessManifest contract every manifest implements
@@ -64,9 +66,11 @@ packager は `harness/` を `manifest.ts` について走査することで harn
 - `rulesRename` — リネームされた rules ディレクトリ（`"steering"` | `"aidlc-rules"` | `null`）。
   packager はそれを、コピーされたディレクトリに、かつ散文中の `<harnessDir>/rules/` 参照に、かつ
   コンパイルされた stage-graph の rule パスに（`loadRules` がリネームされたディレクトリを
-  見つけるよう、コンパイル時に `AIDLC_RULES_DIR` を設定する）、かつランタイムの `rulesSubdir()`
-  seam が読む生成された `tools/data/harness.json` へそれを emit する形で適用する — その結果、
-  実際のインストールはハードコードされたマップ無しにリネームされたディレクトリを解決する。これが
+  見つけるよう、コンパイル時に `AIDLC_RULES_DIR` を設定する）、かつ manifest の name と rules
+  ディレクトリの両方を記録する生成された `tools/data/harness.json` へそれを emit する形で
+  適用する。ランタイムのパス解決は、engine ディレクトリを共有する harness を判別するために
+  name を使い、`rulesSubdir()` がリネームを読む — その結果、実際のインストールはハードコード
+  無しに両方の事実を解決する。これが
   `rulesRename` を純粋な manifest データにする seam である: ここで設定すれば、あらゆるレイヤー
   （build 散文、コンパイルされたパス、ランタイム）が `core/` の編集無しに追随する。
 - `skipRunnerGen` — harness が `<harnessDir>/skills/` を出荷しないときに設定する（Codex は自身の
@@ -90,10 +94,10 @@ adapter を harness のイベントに、harness 自身のやり方で結線す�
 ターゲットを登録する; Codex は `hooks.json` を emit する。実際の core-hook 消費者があるイベント
 だけを登録する。
 
-5 つの hook はフローを変えるもので、単にパイプするだけでなく、その制御チャネルを転送する
+6 つの hook はフローを変えるもので、単にパイプするだけでなく、その制御チャネルを転送する
 必要がある。Stop hook は stdout で `{"decision":"block"}` を返す; dispatch-rules は委譲された
-プロンプトを書き換える; そして PreToolUse の reviewer-scope、review-freeze、state-transition の
-ガードは stderr で exit 2 と理由を返す（adapter がその exit コードを中継するとき、そのツール呼び出しは
+プロンプトを書き換える; そして PreToolUse の reviewer-scope、review-freeze、plan-approval、
+state-transition のガードは stderr で exit 2 と理由を返す（adapter がその exit コードを中継するとき、そのツール呼び出しは
 拒否されねばならない）。新しい harness が自身の pre-tool seam からツール呼び出しをハードブロックできないなら、
 reviewer-scope と review-freeze の登録を省き、死んだ hook 群を結線するのではなくギャップを文書化する - stage-protocol §12a に
 束縛された散文が依然そこを統べる。harness のペイロードが subagent の identity を運ばないときは、harness が agent

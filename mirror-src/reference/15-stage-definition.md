@@ -336,7 +336,7 @@ stage で `lead_agent` として名指される）である; それは設計上 
 を `.claude/agents/` に落とすことを意味する。[Contributing: Adding an
 Agent](11-contributing.md#adding-an-agent) を参照。
 
-### `reviewer` と `reviewer_max_iterations`
+### `reviewer`、`reviewer_max_iterations`、そして `review_class`
 
 任意。`reviewer` は、stage のボディがその成果物を生成した後、承認 gate の前に呼び出される
 quality-gate agent を名指す（[Stage Protocol](04-stage-protocol.md) を参照）。今日 2 つの
@@ -350,6 +350,21 @@ reviewer が出荷される — `aidlc-product-lead-agent` と `aidlc-architectu
 フィールドを省くこと: コンパイラは `reviewer` 無しで宣言された `reviewer_max_iterations` を拒む
 （スキーマエラー `reviewer_max_iterations requires a reviewer` がグラフの compile を失敗させる）
 ので、それは決して静かに無視されない。
+
+`review_class` は review 契約を選択する: `adversarial`（上記の refute-and-repair ループ —
+`reviewer` がクラス無しで宣言されたときの既定）、または `advisory`（1 パスのみで、その指摘は
+human の承認 gate で逐語引用され、修復ループは無い; 実効イテレーション予算は 1）。出荷される
+分割: 7 つの human-gated な ideation/inception の散文 stage は `advisory` を宣言する; 5 つの
+Construction の design/build stage は `adversarial` を既定とする。`none` は意図的に stage の値
+ではない — review を望まない stage は `reviewer:` 行を削除する; `none` は scope の `review_cap`
+と実行ごとの `--review` オーバーライドに存在し、これらは stage を編集せずに宣言済みの reviewer
+を沈黙させられる。ランタイムでの実効クラスは、stage の宣言、アクティブな scope の
+`review_cap`（出荷される `bugfix`、`poc`、`workshop` scope は `advisory` に cap する）、そして
+実行ごとのオーバーライドのうち **最も低いもの** である — cap やオーバーライドはクラスを下げる
+ことはできるが、決して上げることはできない。自律的な swarm の review は cap とオーバーライドの
+両方から免除される: Bolt の内側では reviewer がマージ前の唯一の検証なので、宣言されたクラスが
+そこでは常に適用される。cap と同様、`review_class` は `reviewer` を要求する（スキーマエラー
+`review_class requires a reviewer`）。
 
 ---
 

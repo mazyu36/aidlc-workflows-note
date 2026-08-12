@@ -124,8 +124,9 @@ agent が自身の subagent を産み、フレームワークが防ぐために�
 判定する reviewer 型のペルソナには <code>balanced</code> を選ぶ。出力が支配的にパターン追従で、方法論が
 既に agent の knowledge ファイルに符号化されているとき — delivery plan、CI/CD YAML、
 runbook のスキャフォールディングのように — だけ <code>templated</code> を選ぶ; templated は effort を
-段階的に下げる唯一の tier である（Claude Code、Codex、opencode で; Kiro ではすべての
-tier がセッションの model と effort を継承するので、tier はそこでは何も変えない）。迷ったら
+段階的に下げる唯一の tier である（Claude Code、Codex、opencode で; Kiro、Cursor、
+Copilot ではすべての tier がセッションの model と effort を継承するので、tier はそこでは
+何も変えない）。迷ったら
 <code>judgment</code> を使う: 射影テーブル（とプロジェクトの <code>tier_cap</code>）は後でいつでもコストを
 段階的に下げられるが、低く著述しすぎたペルソナは静かに推論不足になる。完全な射影テーブルと
 cap の上書きは <a href="../reference/05-agent-system.html">Agent System</a> を参照。</p>
@@ -189,7 +190,7 @@ compile が手作業の変更を上書きする（<a href="02-adding-a-stage.htm
 <li><strong>手で保守される docs のテーブルを更新する</strong> — Phase Participation マトリクスと
 agent→examples テーブルは自動再生成されない（下の「何が自動で検証されないか」を参照）。</li>
 </ol>
-<p>完全なレシピ — 発見、intent-birth、statusline 検証のコマンドとともに — は
+<p>完全なレシピ — 発見、intent-create、statusline 検証のコマンドとともに — は
 <a href="../reference/11-contributing.html#adding-an-agent">Contributing: Agent を足す</a> にある。
 足すのではなく既存の agent のツール、tier、stage 割り当てを変えるには、
 <a href="../reference/05-agent-system.html#how-to-modify-an-agent">Agent System: agent を変更する方法</a> を参照。</p>

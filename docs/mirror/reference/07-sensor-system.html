@@ -255,7 +255,7 @@ outputs: ...
 <li>manifest の <code>matches</code> filter を逐語で解決済みの <code>sensors_applicable[]</code> エントリにコピーする。</li>
 <li>stage ごとの解決済み配列を正準の <code>data/stage-graph.json</code> に発する（FIELD_ORDER 固定: <code>rules_in_context</code> の後）。</li>
 </ol>
-<p>ランタイムの PostToolUse hook（<code>aidlc-sensor-fire.ts</code>）は <code>sensors_applicable</code> をグラフノードから読む — 決して manifest を開き直さない。<code>matches</code> は compile でスナップショットされる: ワークフロー中の manifest 編集は、進行中のワークフローの書き込みで発火するものを変えない（BGP 安定性の性質 — <a href="02-plane-architecture.html">Plane アーキテクチャ</a> を参照）。</p>
+<p>ランタイムの PostToolUse hook（<code>aidlc-run-sensors.ts</code>）は <code>sensors_applicable</code> をグラフノードから読む — 決して manifest を開き直さない。<code>matches</code> は compile でスナップショットされる: ワークフロー中の manifest 編集は、進行中のワークフローの書き込みで発火するものを変えない（BGP 安定性の性質 — <a href="02-plane-architecture.html">Plane アーキテクチャ</a> を参照）。</p>
 <h3 id="per-stage-sensor-matrix-32-framework-stages">stage ごとの sensor マトリクス（32 の framework stage）</h3>
 <table>
 <thead>
@@ -317,7 +317,7 @@ outputs: ...
 <td><code>**/*.{ts,tsx}</code></td>
 </tr>
 </tbody></table>
-<p><code>matches</code> <strong>こそが</strong> fire filter である — 実質的に任意ではない。hook は書き込まれるパスを glob と比較し、合致するときだけ発火する; <code>matches</code> glob を <strong>持たない</strong> エントリは一切発火しない（<code>aidlc-sensor-fire.ts</code>: <code>if (!entry.matches) continue</code>）。だから 5 つの同梱 manifest はすべて 1 つを宣言する — provenance と 2 つの document-shape sensor は artifact tree にスコープされ（同梱 manifest は上に示した <code>matches</code> 値を運ぶ）、2 つの code-quality sensor はそれぞれの言語 glob にスコープされる。compile resolver は <code>matches</code> を逐語で stage ごとの <code>sensors_applicable[]</code> エントリにコピーする; hook はスナップショットされた値をグラフノードから読む。</p>
+<p><code>matches</code> <strong>こそが</strong> fire filter である — 実質的に任意ではない。hook は書き込まれるパスを glob と比較し、合致するときだけ発火する; <code>matches</code> glob を <strong>持たない</strong> エントリは一切発火しない（<code>aidlc-run-sensors.ts</code>: <code>if (!entry.matches) continue</code>）。だから 5 つの同梱 manifest はすべて 1 つを宣言する — provenance と 2 つの document-shape sensor は artifact tree にスコープされ（同梱 manifest は上に示した <code>matches</code> 値を運ぶ）、2 つの code-quality sensor はそれぞれの言語 glob にスコープされる。compile resolver は <code>matches</code> を逐語で stage ごとの <code>sensors_applicable[]</code> エントリにコピーする; hook はスナップショットされた値をグラフノードから読む。</p>
 <p>空文字列（<code>matches: &quot;&quot;</code>）は parse 時に拒否される。glob が無いことは sensor が決して発火しないことを意味するので、manifest は自身が適用される glob 形状を宣言せねばならない — 「すべてで発火する」モードは無い。</p>
 <h3 id="cross-references-between-rules-and-sensors">rule と sensor の間の相互参照</h3>
 <p>rule ファイルは sensor へフィードフォワードするのに <code>pairing: aidlc-required-sections</code>（<code>aidlc-</code> プレフィックス付き）を使う; sensor manifest の <code>id:</code> は <code>required-sections</code>（プレフィックス無し）である。doctor のカバレッジチェックは、manifest の <code>id</code> と照合する前に、rule の <code>pairing:</code> 値から <code>aidlc-</code> プレフィックスを剥いで正規化する。</p>

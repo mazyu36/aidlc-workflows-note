@@ -78,7 +78,7 @@ subagent の返却フォーマット、§13 Learnings Ritual、そして phase �
 | 4 | ユーザー入力を決して要約しない — 正確な選択肢ラベルを、それを所有する log tool か report tool に渡す; 自動化された stage には `N/A -- [reason]` を使う |
 | 5 | 1 インタラクションにつき 1 つの audit エントリ — log/state tool が単一イベントの発行を強制する; 複数のイベントを 1 回の呼び出しにマージしない |
 | 6 | stage の終わりに、`aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"`（gate 付きの stage）または `report --stage <slug> --result completed`（Initialization）を呼ぶ。engine は `[?]`/`[-]` を `[x]` に反転させ、gate 付きなら `GATE_APPROVED` を発行し、state tool を通じて `STAGE_COMPLETED` をアトミックに発行する |
-| 7 | 作業が始まる前に、前の stage タスクを `completed`、現在の stage タスクを `activeForm` 付きで `in_progress` にマークする（`sync-statusline` hook が状態の同期を扱う） |
+| 7 | 作業が始まる前に、前の stage タスクを `completed`、現在の stage タスクを `activeForm` 付きで `in_progress` にマークする（`sync-workflow-state` hook が状態の同期を扱う） |
 | 8 | `knowledge/aidlc-shared/audit-format.md` のイベントタイプのみを使う — state と log tool がこれを強制する; `audit/` シャードに直接書き込まない |
 | 9 | ライフサイクルイベントを手書きしたり、`aidlc-state.ts` でライフサイクルの動詞を呼び出したりしない。結果は `aidlc-orchestrate.ts` を通じて報告する; engine の内部の state 呼び出しがアトミックな audit 行を発行する |
 
@@ -923,27 +923,47 @@ reviewer（宣言されていれば）→ learnings → gate。
 
 *(Protocol Section 12a)*
 
+directive の `review_class` フィールドが契約を選択する。これは engine が 3 つの入力
+（低い方が勝つ: low-wins）から解決する: stage の宣言された class、アクティブな scope の
+`review_cap`、および任意の実行単位の `--review` override。`none` への解決は reviewer
+ブロックをまるごと省略し、stage は reviewless で走る。
+
 1. **Invoke.** `directive.reviewer` で名指された agent に委譲し、stage 定義のパス、Q&A
    ファイル、生成された成果物のパス、および frontmatter の任意の検証ツールを渡す —
    builder の `memory.md` や plan は決して渡さず、reviewer が独立した判断を形成するように
    する。
-2. **Review.** レビューは adversarial review 契約の下で走る: reviewer は成果物を確認する
-   のではなく反証しようと試み、存在する場合は機械チェック可能な証拠に findings を根拠づける
-   （READY は既定ではなく、到達し損ねる評決である）。reviewer は定義・Q&A・成果物を読み、
-   リストされた任意の検証ツールを走らせ、**READY** または **NOT-READY** の評決とともに
-   `## Review` セクションを主要な成果物に追記する。
-3. **Verdict.** READY → learnings の儀式、続けて gate へ進む。イテレーションが
-   `reviewer_max_iterations`（既定 2）を下回って残っている NOT-READY → lead agent が
-   findings に対処するため再実行し、reviewer が再チェックする。イテレーションを使い果たした
-   NOT-READY → 未解決の findings を書き留めたうえで gate へ進む。
-   記録された receipt は終端であり、`produces[]` の成果物への後続の書き込みはそれを無効化し、
-   engine は gate を拒否する。したがって修正はイテレーションループの内側で起き、終端の
-   receipt の後には決して起きない。READY 評決に乗った提案は、適用されるのではなく、gate で
-   human に向けて引用される。
+2. **Review.** `adversarial` review は adversarial review 契約の下で走る: reviewer は
+   成果物を確認するのではなく反証しようと試み、存在する場合は機械チェック可能な証拠に
+   findings を根拠づける（READY は既定ではなく、到達し損ねる評決である）。`advisory`
+   review は証拠根拠づけのルールを保ちつつ、単発の意思決定支援パスである: findings は
+   human のために gate で重大度によってランク付けされ、その背後に修復ループはない。
+   いずれにせよ reviewer は定義・Q&A・成果物を読み、リストされた任意の検証ツールを走らせ、
+   **READY** または **NOT-READY** の評決とともに `## Review` セクションを主要な成果物に
+   追記する。
+3. **Verdict.** `advisory` では、両方の評決が終端である: ワークフローは learnings の儀式
+   と gate へ進み、そこで findings は human がトリアージするためにそのまま引用される
+   （`reviewer_max_iterations` は 1 で、engine が強制する）。`adversarial` では: READY →
+   learnings の儀式、続けて gate へ進む。イテレーションが `reviewer_max_iterations`
+   （既定 2）を下回って残っている NOT-READY → lead agent が findings に対処するため
+   再実行し、reviewer が再チェックする。イテレーションを使い果たした NOT-READY →
+   未解決の findings を書き留めたうえで gate へ進む。
+   記録された receipt は、後続の review パスが続かない場合は常に終端であり、`produces[]`
+   の成果物への後続の書き込みはそれを無効化し、engine は gate を拒否する。したがって
+   修正はイテレーションループの内側で起き、終端の receipt の後には決して起きない。評決に
+   乗った提案は、適用されるのではなく、gate で human に向けて引用される。
 
-reviewer は決してブロックしない — human は常に gate で最終決定権を持つ — し、`reviewer`
-フィールドの無い stage では発火しない。[Stage Definition](15-stage-definition.md) の
-`reviewer` / `reviewer_max_iterations` frontmatter フィールドを参照。
+イテレーション予算は engine が強制する: `aidlc-log.ts review` は、その `--iteration` が
+stage の実効予算を超える `REVIEW_REQUESTED` を拒否する。したがって、数え間違えた
+conductor が無制限の review パスを走らせることはできない。reviewer は決してブロックしない
+— human は常に gate で最終決定権を持つ — し、`reviewer` フィールドの無い stage では
+発火しない。[Stage Definition](15-stage-definition.md) の `reviewer` /
+`reviewer_max_iterations` / `review_class` frontmatter フィールドを参照。
+
+reviewer のディスパッチが失敗した、タイムアウトした、または `REVIEW_REQUESTED` の後で
+評決の前にセッションが終了した場合は、再度ディスパッチする前に同じ request コマンドを
+`--retry-pending` 付きで再実行する。logger はこの復旧を同じ未マッチの request についてのみ
+受け入れ、`Retry: pending-request` を記録し、別のイテレーションを消費しない。完了した
+request はリトライできない。
 
 ---
 

@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -142,7 +144,7 @@ graph LR
 <hr>
 <h2 id="phase-0-initialization">Phase 0: Initialization</h2>
 <p><strong>目的:</strong> ワークスペースのブートストラップ — docs ディレクトリのスキャフォールド、ワークスペースの検出、状態の初期化。ウェルカムメッセージはセッション開始時に <code>settings.json</code> の <code>companyAnnouncements</code> エントリ経由で表示される（stage ではない）。</p>
-<p>Initialization の stage は承認 gate なしで<strong>自動的に</strong>実行される。3 つすべてが単一の決定論的ツール呼び出し（<code>aidlc-utility intent-birth</code>）の中で実行され、1 秒未満で完了する。</p>
+<p>Initialization の stage は承認 gate なしで<strong>自動的に</strong>実行される。3 つすべてが単一の決定論的ツール呼び出し（<code>aidlc-utility intent-create</code>）の中で実行され、1 秒未満で完了する。</p>
 <table>
 <thead>
 <tr>
@@ -177,7 +179,7 @@ graph LR
 </tbody></table>
 <p><strong>実行に関する注記:</strong></p>
 <ul>
-<li>3 stage すべてが <code>aidlc-utility intent-birth</code> の中で inline に実行される — LLM subagent への委譲も、stage ごとのプロンプトも無い。</li>
+<li>3 stage すべてが <code>aidlc-utility intent-create</code> の中で inline に実行される — LLM subagent への委譲も、stage ごとのプロンプトも無い。</li>
 <li>ワークスペース検出はルールベースのスキャナ（ファイル拡張子・既知の設定ファイル名・パッケージマニフェスト）である。</li>
 <li>この phase でユーザーの対話は不要。</li>
 </ul>
@@ -713,7 +715,7 @@ flowchart TD
 <td>Inline（自動進行）</td>
 <td>0.1、0.2、0.3</td>
 <td>なし</td>
-<td><code>aidlc-utility intent-birth</code> の中で決定論的に実行。承認 gate なし</td>
+<td><code>aidlc-utility intent-create</code> の中で決定論的に実行。承認 gate なし</td>
 </tr>
 <tr>
 <td>Inline</td>

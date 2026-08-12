@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -84,7 +86,7 @@
 <p><strong>エージェント深掘り</strong> · <a href="../00-introduction.html">ユーザーガイド</a> › <a href="../06-agents.html">エージェント</a> › <a href="README.html">深掘り</a> · 技術リファレンス: <a href="../../reference/agents/architect-agent.html">architect-agent</a></p>
 </blockquote>
 <p>aidlc-architect-agent はあなたのソリューションアーキテクトである。要件を堅牢なシステムアーキテクチャへ翻訳し、Architecture Decision Record（ADR）を作り、ドメインモデルを設計し、プロジェクトを実装可能な unit of work に分解する。パターンとトレードオフで考え、開発者が直接実装できる設計を生む。</p>
-<p>aidlc-architect-agent は、ライフサイクルの単一エージェントとして最多の stage — 計 6 つ、Ideation・Inception・Construction にまたがる — をリードする。設計の第一の権威であり、他の 7 つの高判断エージェントとともに <code>judgment</code> tier を持つため、特定のモデルを固定せず、セッション自身のモデルと effort を継承する。<code>templated</code> tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro では全 tier がセッションのモデルと effort を継承）を持つのは delivery・pipeline-deploy・operations だけである。その出力が支配的に定型だからだ。</p>
+<p>aidlc-architect-agent は、ライフサイクルの単一エージェントとして最多の stage — 計 6 つ、Ideation・Inception・Construction にまたがる — をリードする。設計の第一の権威であり、他の 7 つの高判断エージェントとともに <code>judgment</code> tier を持つため、特定のモデルを固定せず、セッション自身のモデルと effort を継承する。<code>templated</code> tier（Claude Code・Codex・opencode では中型モデル + 低めの effort。Kiro・Cursor・Copilot では全 tier がセッションのモデルと effort を継承）を持つのは delivery・pipeline-deploy・operations だけである。その出力が支配的に定型だからだ。</p>
 <h2 id="stages-led">リードする stage</h2>
 <table>
 <thead>

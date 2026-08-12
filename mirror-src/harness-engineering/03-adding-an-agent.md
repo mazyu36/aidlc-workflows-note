@@ -88,8 +88,9 @@ agent が自身の subagent を産み、フレームワークが防ぐために�
 判定する reviewer 型のペルソナには `balanced` を選ぶ。出力が支配的にパターン追従で、方法論が
 既に agent の knowledge ファイルに符号化されているとき — delivery plan、CI/CD YAML、
 runbook のスキャフォールディングのように — だけ `templated` を選ぶ; templated は effort を
-段階的に下げる唯一の tier である（Claude Code、Codex、opencode で; Kiro ではすべての
-tier がセッションの model と effort を継承するので、tier はそこでは何も変えない）。迷ったら
+段階的に下げる唯一の tier である（Claude Code、Codex、opencode で; Kiro、Cursor、
+Copilot ではすべての tier がセッションの model と effort を継承するので、tier はそこでは
+何も変えない）。迷ったら
 `judgment` を使う: 射影テーブル（とプロジェクトの `tier_cap`）は後でいつでもコストを
 段階的に下げられるが、低く著述しすぎたペルソナは静かに推論不足になる。完全な射影テーブルと
 cap の上書きは [Agent System](../reference/05-agent-system.md) を参照。
@@ -162,7 +163,7 @@ stage を決して名指さない。だから agent ファイル単体は設計�
 5. **手で保守される docs のテーブルを更新する** — Phase Participation マトリクスと
    agent→examples テーブルは自動再生成されない（下の「何が自動で検証されないか」を参照）。
 
-完全なレシピ — 発見、intent-birth、statusline 検証のコマンドとともに — は
+完全なレシピ — 発見、intent-create、statusline 検証のコマンドとともに — は
 [Contributing: Agent を足す](../reference/11-contributing.md#adding-an-agent) にある。
 足すのではなく既存の agent のツール、tier、stage 割り当てを変えるには、
 [Agent System: agent を変更する方法](../reference/05-agent-system.md#how-to-modify-an-agent) を参照。

@@ -375,7 +375,7 @@ stage で <code>lead_agent</code> として名指される）である; それ�
 にハードコードされた enum は無い — agent を足すことは、必須の frontmatter を伴う <code>.md</code> ファイル
 を <code>.claude/agents/</code> に落とすことを意味する。<a href="11-contributing.html#adding-an-agent">Contributing: Adding an
 Agent</a> を参照。</p>
-<h3 id="reviewer-and-reviewer_max_iterations"><code>reviewer</code> と <code>reviewer_max_iterations</code></h3>
+<h3 id="reviewer-reviewer_max_iterations-and-review_class"><code>reviewer</code>、<code>reviewer_max_iterations</code>、そして <code>review_class</code></h3>
 <p>任意。<code>reviewer</code> は、stage のボディがその成果物を生成した後、承認 gate の前に呼び出される
 quality-gate agent を名指す（<a href="04-stage-protocol.html">Stage Protocol</a> を参照）。今日 2 つの
 reviewer が出荷される — <code>aidlc-product-lead-agent</code> と <code>aidlc-architecture-reviewer-agent</code> —
@@ -387,6 +387,20 @@ reviewer が出荷される — <code>aidlc-product-lead-agent</code> と <code>
 フィールドを省くこと: コンパイラは <code>reviewer</code> 無しで宣言された <code>reviewer_max_iterations</code> を拒む
 （スキーマエラー <code>reviewer_max_iterations requires a reviewer</code> がグラフの compile を失敗させる）
 ので、それは決して静かに無視されない。</p>
+<p><code>review_class</code> は review 契約を選択する: <code>adversarial</code>（上記の refute-and-repair ループ —
+<code>reviewer</code> がクラス無しで宣言されたときの既定）、または <code>advisory</code>（1 パスのみで、その指摘は
+human の承認 gate で逐語引用され、修復ループは無い; 実効イテレーション予算は 1）。出荷される
+分割: 7 つの human-gated な ideation/inception の散文 stage は <code>advisory</code> を宣言する; 5 つの
+Construction の design/build stage は <code>adversarial</code> を既定とする。<code>none</code> は意図的に stage の値
+ではない — review を望まない stage は <code>reviewer:</code> 行を削除する; <code>none</code> は scope の <code>review_cap</code>
+と実行ごとの <code>--review</code> オーバーライドに存在し、これらは stage を編集せずに宣言済みの reviewer
+を沈黙させられる。ランタイムでの実効クラスは、stage の宣言、アクティブな scope の
+<code>review_cap</code>（出荷される <code>bugfix</code>、<code>poc</code>、<code>workshop</code> scope は <code>advisory</code> に cap する）、そして
+実行ごとのオーバーライドのうち <strong>最も低いもの</strong> である — cap やオーバーライドはクラスを下げる
+ことはできるが、決して上げることはできない。自律的な swarm の review は cap とオーバーライドの
+両方から免除される: Bolt の内側では reviewer がマージ前の唯一の検証なので、宣言されたクラスが
+そこでは常に適用される。cap と同様、<code>review_class</code> は <code>reviewer</code> を要求する（スキーマエラー
+<code>review_class requires a reviewer</code>）。</p>
 <hr>
 <h2 id="relationship-to-agent-frontmatter">agent frontmatter との関係</h2>
 <p>stage と agent は同じ YAML 優先の規律に従う。agent frontmatter（<a href="05-agent-system.html#frontmatter-contract">Agent

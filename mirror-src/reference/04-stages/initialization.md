@@ -3,11 +3,12 @@
 ## Phase 概要
 
 Initialization phase は AI-DLC ワークフローの 5 つの phase のうちの最初である。stage 0.1 から
-0.3 を走らせ、**intent を誕生させる** — その record dir を
+0.3 を走らせ、**intent を誕生させる**。その record dir を
 `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`（以下 `<record>/` と書く）に、状態ファイル、
-ディレクトリの scaffold、workspace 分類、ルーティング設定とともに鋳造する。別個の scaffold
-コマンドは無い: workspace shell は `dist/<harness>/` に事前ビルドされて出荷され、エンジンは
-最初の `/aidlc`（または何をビルドするかを記述したとき）で最初の intent を自動誕生させる。
+in-scope の phase ごとに 1 つのディレクトリ、workspace 分類、ルーティング設定とともに鋳造する。
+別個の scaffold コマンドは無い: workspace shell は `dist/<harness>/` に事前ビルドされて出荷され、
+エンジンは最初の `/aidlc`（または何をビルドするかを記述したとき）で最初の intent を自動誕生
+させる。
 
 この phase の 3 つの stage すべてが、すべての scope に対して実行される — 条件付きの stage は
 無い。すべての stage は承認 gate 無しで auto-proceed する。
@@ -17,7 +18,7 @@ Initialization phase は AI-DLC ワークフローの 5 つの phase のうち�
 チェックボックスも無い。
 
 3 つの stage すべては、1 秒を十分に下回って完了する単一の決定論的な
-`bun .claude/tools/aidlc-utility.ts intent-birth --scope <scope>` 呼び出しの内側で走る。
+`bun .claude/tools/aidlc-utility.ts intent-create --scope <scope>` 呼び出しの内側で走る。
 conductor は可観測性のためにサイドバーに 3 つの task（Workspace Scaffold、Workspace Detection、
 State Init）を作り、ツールが返ると、それらすべてを completed とマークする。
 
@@ -59,7 +60,7 @@ State Init）を作り、ツールが返ると、それらすべてを completed
 
 ### 手順
 1. 必要なら `<record>/` ディレクトリを作成する
-2. 5 つすべての phase 用の stage 成果物ディレクトリ + `<record>/verification/` を作成する
+2. scope が走らせる各 phase の成果物ディレクトリ 1 つ + `<record>/verification/` を作成する
 3. 空の space レベルの `aidlc/knowledge/` ディレクトリを作成する（自由形式; agent ごとの
    サブディレクトリも READMEs も無い）
 4. intent の `audit/` シャード dir ヘッダを作成 + `WORKFLOW_STARTED` を emit する
@@ -69,15 +70,18 @@ State Init）を作り、ツールが返ると、それらすべてを completed
 - 無し（エントリポイント）
 
 ### 出力
-- stage サブディレクトリを伴う `<record>/initialization/`、`ideation/`、`inception/`、
-  `construction/`、`operation/`
-- `<record>/verification/`
+- scope が走らせる各 phase につき成果物ディレクトリ 1 つ: `<record>/initialization/`、
+  加えて少なくとも 1 つの EXECUTE stage を持つ `ideation/`、`inception/`、`construction/`、
+  `operation/` の各々。scope が除外する phase はディレクトリを得ない（bugfix の record には
+  `ideation/` も `operation/` も無い）。stage ごとのサブディレクトリはここでは作られない:
+  stage のディレクトリは、それが最初に成果物を書いたときに現れる
+- `<record>/verification/`（すべての scope で作成される）
 - 空の space レベルの `aidlc/knowledge/` ディレクトリ（space の `intents/` の兄弟）
 - intent の `audit/` シャード dir（ヘッダ + セッション + scaffold イベント）
 
 ### メモ
 - 冪等 — 既に存在するディレクトリとファイルをスキップする
-- LLM を介さず、`aidlc-utility intent-birth` の内側で走る
+- LLM を介さず、`aidlc-utility intent-create` の内側で走る
 
 ---
 
@@ -119,7 +123,7 @@ State Init）を作り、ツールが返ると、それらすべてを completed
 - 走査結果を捕らえる `WORKSPACE_SCANNED` audit イベント
 
 ### メモ
-- `aidlc-utility intent-birth` の内側で決定論的なスキャナとして走る。LLM subagent の dispatch は
+- `aidlc-utility intent-create` の内側で決定論的なスキャナとして走る。LLM subagent の dispatch は
   無い。
 - シンボリックリンクは辿らない（`lstatSync` によるサイクル保護）
 - `.claude/`、`<record>/`、`node_modules/`、`.git/`、`dist/`、`build/`、`.next/`、`target/`、

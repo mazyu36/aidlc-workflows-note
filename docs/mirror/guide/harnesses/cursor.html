@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cursor 上の AI-DLC — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script src="../../../assets/base.js"></script>
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS NOTE</a>
+  <span class="here">docs 日本語版 / guide/harnesses/cursor</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">ノートのトップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../../guide/00-introduction.html">はじめに</a>
+  <a href="../../guide/01-getting-started.html">はじめかた</a>
+  <a href="../../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../../guide/06-agents.html">エージェント</a>
+  <a href="../../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../../guide/11-session-management.html">セッション管理</a>
+  <a href="../../guide/12-cli-commands.html">CLI コマンド</a>
+  <a href="../../guide/13-customization.html">カスタマイズ</a>
+  <a href="../../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../../guide/16-worked-examples.html">実例集</a>
+  <a href="../../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../../guide/glossary.html">用語集</a>
+  <a href="../../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../../guide/harnesses/cursor.html" class="here">Cursor 上の AI-DLC</a>
+  <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#layout">レイアウト</a>
+  <a href="#prerequisites">前提条件</a>
+  <a href="#install">インストール</a>
+  <a href="#whats-different-on-this-harness">この harness での違い</a>
+  <a href="#verifying-an-install">インストールの検証</a>
+  <a href="#next-steps">次のステップ</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="ai-dlc-on-cursor">Cursor 上の AI-DLC</h1>
+<p><code>dist/cursor/</code> は、<a href="https://cursor.com">Cursor</a> 向けの、フレームワークの harness ディストリビューションのひとつである。1 つのツリーが <strong>Cursor IDE</strong> と <strong>Cursor CLI</strong>（<code>agent</code>）の両方に給仕する: 両者は同じ <code>.cursor/</code> の発見機構を共有する。1 つの決定論的 core、多くの harness: エンジン、状態機械、audit ログ、グラフ、swarm の referee、learnings の gate はすべてのディストリビューションでバイト同一 — 異なるのはシェルだけである。このツリーは <code>core/</code> + <code>harness/cursor/</code> から <code>bun scripts/package.ts cursor</code> で<strong>生成</strong>される。決して手で編集しないこと（ドリフトガードが CI を落とす）。</p>
+<h2 id="layout">レイアウト</h2>
+<p>Cursor はこれまでで最も「ネイティブ」なポートである — 標準の core プロジェクションを直接消費する（<code>emit.ts</code> も分割 dot ディレクトリも無い）。ディストリビューションの構成:</p>
+<ul>
+<li><strong><code>.cursor/</code></strong> — フレームワークのツリー。Cursor がネイティブな意味として読むサブディレクトリはごく一部: <code>rules/</code>（1 つの standing と 4 つの phase メソッドポインタ）、<code>agents/</code>（14 のペルソナをネイティブ subagent として）、<code>skills/</code>（orchestrator・utility ショートカット・生成された stage ランナー）、<code>hooks.json</code> + <code>hooks/</code>（hook の配線とアダプタ）、<code>cli.json</code>（権限）、<code>mcp.json</code>（MCP サーバー、追加する場合）。それらの傍にあるエンジンのディレクトリ（<code>tools/</code>・<code>aidlc-common/</code>・<code>knowledge/</code>・<code>sensors/</code>・<code>scopes/</code>）は Cursor にとって不活性なデータであり、同じディレクトリを安全に共有する。</li>
+<li><strong><code>aidlc/</code></strong> — ワークスペースシェル（エンジンが読む構築済みの <code>aidlc/spaces/default/memory/</code> メソッドツリー）、<code>.cursor/</code> の兄弟。</li>
+<li><strong><code>AGENTS.md</code></strong> — Cursor が自動で読むプロジェクトルートのアンビエント指示。</li>
+</ul>
+<h2 id="prerequisites">前提条件</h2>
+<ul>
+<li><strong>Cursor</strong> — IDE か Cursor CLI（<code>curl https://cursor.com/install -fsS | bash</code> でインストール、<code>agent</code> として起動）。両方がこのインストールの <code>.cursor/</code> サーフェスを読む。cursor-agent 2026.07 で検証済み。hook（<code>.cursor/hooks.json</code>）と skill（<code>.cursor/skills/</code>）は current-line の機能である。</li>
+<li><strong>bun</strong> — どの harness とも同じ要件。すべてのツールと hook は bun 経由で走る。<code>bun</code> は Cursor が spawn するシェルが見える PATH に無ければならない。</li>
+<li><strong>名前付きモデル向けの有料 Cursor プラン</strong> — 無料アカウントは <code>Auto</code> しか使えない。tier 付きのペルソナサーフェスは<strong>モデル固定を持たずに</strong>同梱される（すべての tier が Cursor 上では null に投影される: モデルの利用可否はプラン依存のため）、そのためすべてのエージェントがセッションモデルを継承する。<code>--model</code> を渡すヘッドレス CLI 実行には、それを許すプランが必要である。Bedrock の BYOK は IDE 専用: Pro では静的キー、Teams では IAM ロール（Cursor のモデル設定に対して文書で確認済みだが、ここではライブ検証していない）。CLI はモデルを Cursor 自身のバックエンド経由で回す。</li>
+</ul>
+<h2 id="install">インストール</h2>
+<ol>
+<li><p>ディストリビューションをプロジェクトへインストールする:</p>
+<pre><code class="language-bash">bun dist/cursor/install.ts your-project
+</code></pre>
+<p>インストーラは完全コピーを事前確認し、プロジェクト所有の衝突を拒否し、<code>.cursor/.gitignore</code> と既存のメソッド memory を保持し、<code>.cursor/hooks.json</code> と <code>.cursor/cli.json</code> を構造的にマージし、既存の <code>AGENTS.md</code> と <code>.gitignore</code> ファイルには置き換えではなくマーク付きの AI-DLC セクションを追加する。フレームワークの所有権を <code>.cursor/aidlc-install.json</code> に記録する。再実行すると、<code>aidlc/active-space</code> と明示的なプラグイン選択・合成状態を保ちながら管理対象ファイルをアップグレードし、削除後に復元されたファイルを含め、すべての可変な rule・ペルソナポインタにその space を再適用する。plugin が合成した stage ファイルは、contribution sidecar か seam sentinel がその stage を識別できる場合にのみ保持され、インストーラは保持したすべての管理対象パスを出力する。無関係な core stage は通常の receipt-hash の衝突・アップグレード処理をそのまま通る。
+<code>aidlc/</code> シェルは、エンジンが読む構築済みの <code>aidlc/spaces/default/memory/</code> メソッドツリーを同梱する。これが無いと <code>/aidlc --doctor</code> の「workspace shell ready」チェックが失敗する。</p>
+</li>
+<li><p>Cursor IDE でプロジェクトを開く（または中で <code>agent</code> を起動する）。<code>/aidlc --doctor</code> を実行し、続けて <code>/aidlc</code> に作りたいものを続けて打つ。ネイティブの utility ショートカットは <code>/aidlc-status</code>、<code>/aidlc-jump --stage &lt;slug&gt;</code>（または <code>--phase &lt;name&gt;</code>）、<code>/aidlc-scope &lt;name&gt;</code> である。</p>
+</li>
+</ol>
+<h2 id="whats-different-on-this-harness">この harness での違い</h2>
+<ul>
+<li><strong>質問は番号付きの散文の選択肢として描画される</strong>（構造化質問のウィジェットは無い）。<code>[Answer]:</code> タグ付きの質問ファイルが正であることは変わらない。</li>
+<li><strong>hook は AIDLC アダプタ（<code>.cursor/hooks/aidlc-cursor-adapter.ts</code>）を通じて <code>.cursor/hooks.json</code> に乗る</strong>。アダプタは Cursor の camelCase の hook イベント（<code>sessionStart</code>・<code>sessionEnd</code>・<code>beforeSubmitPrompt</code>・<code>preToolUse</code>・<code>postToolUse</code>・<code>postToolUseFailure</code>・<code>preCompact</code>・<code>stop</code>）を、バイト共有の core hook 本体（bun のサブプロセスとして実行）に対応付ける: 各 human turn での human-turn 記録、ツール実行前の state-transition・reviewer 読み取りスコープ・review-freeze・plan-approval の各 guard、write / edit での audit + sensor、失敗した Task の attribution クリーンアップ、shell での stage-graph 再構築、コンパクション前の状態検証。<strong>PreToolUse guard のブロック</strong>は Cursor の <code>{&quot;permission&quot;:&quot;deny&quot;,&quot;agent_message&quot;:...}</code> の stdout チャネル経由で行われ、<code>failClosed: true</code> を登録する。不正な入力、guard の欠落、guard のクラッシュはすべて操作を拒否する。Cursor はシェルツールを <code>Shell</code> と呼ぶ。アダプタはこれを core hook の <code>Bash</code> に対応付ける。Cursor のファーストクラスの <code>Delete</code> ツール（この harness だけに固有 — 他のすべての harness では削除はシェルを経由する）は reviewer-scope guard に write として提示されるため、unit-scoped の reviewer が兄弟 unit の成果物を削除することはできない。Shell ペイロードの入れ子になった <code>cwd</code>/<code>working_directory</code> フィールドは共有 guard 契約に昇格されるため、相対的な読み取りと書き込みは Cursor が実際に実行する場所でチェックされる。</li>
+<li><strong>forwarding loop の強制は助言的である。</strong> Cursor の <code>stop</code> hook は停止を拒否できないため、core の stop hook が <code>block</code> と答えたときアダプタは代わりにフォローアップのナッジを表示する（opencode と同じ姿勢）。ホストの <code>loop_limit</code> は Cursor の既定の 5 ではなく 10 であり、これは core の自律的な no-progress 上限 8 をカバーする。conductor スキル内の forwarding loop こそが本当の規律である。</li>
+<li><strong>本物の session-end の瞬間が存在する</strong>（Codex とは異なり）: <code>sessionEnd</code> が発火するため、<code>SESSION_ENDED</code> の audit イベントが発行される。コンパクション前の検証も発火する（<code>preCompact</code>）。</li>
+<li><strong>ペルソナはネイティブの subagent である。</strong> <code>.cursor/agents/</code> 配下の 14 のペルソナ <code>.md</code> ファイルは frontmatter の <code>name</code> で発見される。conductor は大半の stage でこれらを inline に纏い、2 つの subagent stage（2.1 reverse-engineering・3.5 code-generation）では <code>task</code> ツールで委譲する。worker エージェントは <code>task</code> ツールを持たないため、委譲先が再委譲することはできない。</li>
+<li><strong>subagent の identity は再構成される。</strong> Cursor は hook ペイロード上で subagent 別の identity を一切出さない（<code>subagentStart</code>/<code>subagentStop</code> イベントは文書化されているが CLI では発火しない）。そのためアダプタは <code>aidlc/.aidlc-cursor-subagents/</code> 配下に保護されたプロジェクトローカルの runtime ledger を保持する: トップレベルの会話は <code>sessionStart</code>/<code>beforeSubmitPrompt</code> の時点で自己登録し（subagent の会話はどちらのイベントも受け取らない）、各 Task の spawn がそのエージェントを記録し、reviewer 読み取りスコープの強制は、登録されたトップレベルセッションではない会話からの呼び出しに帰属を付ける。親の次の同期的な Task dispatch は、その直前のレコードを引退させて記録する（Cursor CLI は Task の <code>postToolUse</code> を一切出さない）。真の親間の曖昧さは、reviewer が生きている間は常に保守的にとどまるため、reviewer-scope の強制を無効化することはできない。委譲されたツールは、祖先の削除や無引用のシェル glob / character-class パスを経由しても ledger や dispatch レコードにアクセスできない。attribution のストレージが欠落または読み取り不能な状態で reviewer の dispatch がなお有効なら、操作は reviewer の強制を逃れるのではなく fail closed する。review の delegate は通常の Shell コマンドを使えるが、汎用インタプリタと動的なコマンド評価は拒否される。Cursor のネイティブな読み取り / 検索ツールを使い、実行可能なプローブは親の会話に走らせる。</li>
+<li><strong>生成された stage・scope ランナーは明示専用である。</strong> Cursor は生成されたランナースキル（plugin のランナーを含む）に <code>disable-model-invocation: true</code> を受け取るため、通常のコーディングプロンプトが状態変更を伴うワークフローショートカットを自動起動することはない。</li>
+<li><strong>utility ショートカットはネイティブなスキルである。</strong> <code>/aidlc-status</code>・<code>/aidlc-jump</code>・<code>/aidlc-scope</code> は、第 2 のエンジン経路を作ることなく、スラッシュメニューでの発見性を改善する。いずれも <code>disable-model-invocation: true</code> を持ち、Cursor はユーザーが選んだときだけそれらを起動する。レガシーの <code>.cursor/commands/</code> サーフェスは同梱されない。</li>
+<li><strong>method rule は読み取り指示であり、import ではない。</strong> Cursor の rule は <code>@</code>-import 行を展開しない。<code>.cursor/rules/aidlc.mdc</code> は常に適用され、アクティブな space の org/team/project ファイルを指す。4 つの <code>.cursor/rules/aidlc-phase-*.mdc</code> rule はエージェントが判断し、関連するときだけ該当する phase ファイルを指す（cursor-agent でライブ検証済み: phase を意識したプロンプトは該当する phase rule だけを読み込み、無関係なプロンプトはどれも読み込まない）。<code>sessionStart</code> hook は別途ライブなワークフロー文脈を注入する。<code>/aidlc space &lt;name&gt;</code> は 5 つの rule ファイルすべてをその場で向け直す。</li>
+<li><strong>Construction の swarm は task ツールのファンアウトのみで走る</strong>（<code>AIDLC_USE_SWARM=1</code> は大きな音の no-op — Workflow ツールは存在しない）。</li>
+<li><strong>ステータスライン / ウェルカムメッセージは無い</strong> — <code>/aidlc-status</code>（または <code>/aidlc --status</code>）と各 gate の進捗行を使う。</li>
+<li><strong>Tab の自動補完はこのインストールで変更されない</strong> — 設定に関わらず Cursor 自身のモデルに乗る。</li>
+<li><strong>Permissions</strong>: <code>.cursor/cli.json</code> は <code>Shell(bun)</code> のみを事前承認する（プロジェクトレベルの <code>cli.json</code> は権限のみを運ぶ）。それ以外のすべてのシェルコマンドは、あなたの Cursor の承認設定に従う。</li>
+<li><strong>MCP サーバー</strong>: 同梱なし。必要なら <code>.cursor/mcp.json</code> 配下に自分で設定する。</li>
+<li><strong>ヘッドレスの <code>agent -p</code> 実行は承認 gate を通過できない。</strong> human-presence の mint は <code>beforeSubmitPrompt</code> に乗るが、Cursor はこれを対話的な送信のときだけ発火する（cursor-agent 2026.07 で検証済み） — そのため print モードの実行は <code>HUMAN_TURN</code> を一切記録せず、gate 付きの stage は、無人のモデルが自分の作業を承認できるようにするのではなく、設計どおり承認を拒否する。ヘッドレスモードは読み取り専用の utility（<code>--status</code>・<code>--doctor</code>・<code>--version</code>）と自律的な Construction（gate に人間がいないため免除される）に使い、gate 付きのワークフローは対話的な Cursor セッションで実行する。これはフレームワークの presence gate の性質であり、Cursor の制約ではない — どの harness も presence を human-prompt イベントから mint する。</li>
+</ul>
+<h2 id="verifying-an-install">インストールの検証</h2>
+<pre><code class="language-bash">bun .cursor/tools/aidlc-utility.ts doctor        # all checks pass on a fresh copy
+agent -p &quot;/aidlc --status&quot; --output-format text --trust   # /aidlc --status through the CLI
+</code></pre>
+<p>doctor の Cursor 固有チェック: <code>.cursor/hooks.json</code> の hook 配線、<code>.cursor/cli.json</code> の <code>Shell(bun)</code> 権限の事前承認、<code>.cursor/rules/aidlc.mdc</code> の standing rule、そして 4 つすべての phase-rule ポインタ。</p>
+<blockquote>
+<p><strong>スクリプティングの罠: Cursor CLI は常に exit 0 になる。</strong> ヘッドレスの <code>agent -p &quot;&lt;prompt&gt;&quot; --output-format text --trust</code> は実行がエラーになってもリターンコード 0 を返す。そのため CI チェックは出力されたテキストで判定しなければならず、exit ステータスで判定してはならない。名前付きモデル（<code>--model</code>）には有料プランが必要である。無ければ <code>Auto</code> を使う。</p>
+</blockquote>
+<h2 id="next-steps">次のステップ</h2>
+<p>インストールと検証は済んだ？ 方法論はどの harness でも同じである — 中立の章で続きを:</p>
+<ul>
+<li><a href="../02-your-first-workflow.html">最初のワークフロー</a> — 注釈付きの end-to-end 実行。</li>
+<li><a href="../04-phases-and-stages.html">Phase と Stage</a> — 5 つの phase と 32 の stage。</li>
+<li><a href="../05-scopes-and-depth.html">Scope・Depth・テスト戦略</a> — 実行の適切なサイズ選び。</li>
+<li><a href="../glossary.html">用語集</a> — すべての用語の定義。</li>
+</ul>
+<p>他の harness: <a href="opencode.html">opencode 上の AI-DLC</a> · <a href="README.html">harness ファミリーの索引</a>。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/v2/docs/guide/harnesses/cursor.md"><code>docs/guide/harnesses/cursor.md</code></a>（基点コミット <span class="gh-hash">v2</span> に固定）· 逐語日本語訳
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -86,7 +88,7 @@
 <p>本章はユーザー向けのツアーである。rule がどこに住むか、5 つの層がどう積み重なるか、学習ループが修正をどう捕捉するか、そして Sensor が rule と並んで決定論的なセカンドオピニオンをどう与えるかを扱う。スキーマレベルの機構は、各所で開発者リファレンスへ相互リンクする。</p>
 <hr>
 <h2 id="rules-at-a-glance">rule の全体像</h2>
-<p>rule は、アクティブ space の memory 層 <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> に Markdown ファイルとして住む — ワークスペースルートにある、手で編集できる単一のセットで、すべての harness がネイティブの取り込み（Claude の <code>@</code>-import スタブ、Kiro CLI の resources または IDE の steering、Codex の <code>AIDLC_RULES_DIR</code>）経由で読む。各ファイルは scope の名を持つ:</p>
+<p>rule は、アクティブ space の memory 層 <code>aidlc/spaces/&lt;active-space&gt;/memory/</code> に Markdown ファイルとして住む — ワークスペースルートにある、手で編集できる単一のセットで、すべての harness がネイティブの取り込み（Claude の <code>@</code>-import スタブ、Kiro CLI の resources または IDE の steering、Codex の <code>AIDLC_RULES_DIR</code>、opencode の <code>instructions</code> glob、Copilot の <code>AGENTS.md</code> <code>@</code>-import）経由で読む。各ファイルは scope の名を持つ:</p>
 <pre class="term"><code>aidlc/spaces/&lt;active-space&gt;/memory/
 ├── org.md                <span class="t-comment"> # framework + organization-wide defaults</span>
 ├── team.md               <span class="t-comment"> # your team's affirmed practices</span>

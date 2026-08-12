@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -113,15 +115,19 @@ while keeping you in control at every decision point.
 - **11 domain experts.** Specialized agent personas guide each stage.</code></pre>
 <hr>
 <h2 id="initialization-phase-automatic">Initialization phase（自動）</h2>
-<p>3 つの initialization stage は <code>aidlc-utility intent-birth</code> という単一のツール呼び出しの中で決定論的に実行され、1 秒未満で完了する。initialization で利用者が対話することはない。最初の intent をアクティブな space に自動で birth し、ワークフローのための record dir をブートストラップする。</p>
+<p>3 つの initialization stage は <code>aidlc-utility intent-create</code> という単一のツール呼び出しの中で決定論的に実行され、1 秒未満で完了する。initialization で利用者が対話することはない。最初の intent をアクティブな space に自動で birth し、ワークフローのための record dir をブートストラップする。</p>
 <h3 id="stage-01-workspace-scaffold">Stage 0.1: Workspace Scaffold</h3>
-<p>フレームワークは最初の intent を birth し、その record dir を <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> に作成する（名前付き space を使わない限り <code>&lt;space&gt;</code> は <code>default</code>）:</p>
-<pre class="term"><code>Intent born — record dir scaffolded:
-  aidlc/spaces/default/intents/&lt;YYMMDD&gt;-&lt;label&gt;/initialization/<span class="t-comment">   (3 stage artifact dirs)</span>
-  aidlc/spaces/default/intents/&lt;YYMMDD&gt;-&lt;label&gt;/ideation/<span class="t-comment">         (7 stage artifact dirs)</span>
-  ...
+<p>フレームワークは最初の intent とその record dir を <code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/</code> に作成する（名前付き space を使わない限り <code>&lt;space&gt;</code> は <code>default</code>）。scope が実際に実行する phase ごとに 1 つのフォルダを作成するため、record は存在するすべての phase ではなく計画を示す。<code>feature</code> scope は 5 つすべてを実行するが、<code>bugfix</code> scope は Ideation と Operation をスキップするため、それらのフォルダは現れない:</p>
+<pre class="term"><code>Intent created, record dir at aidlc/spaces/default/intents/&lt;YYMMDD&gt;-&lt;label&gt;/
+  initialization/
+  inception/
+  construction/
+  verification/
 Space-level dirs ensured:
-  aidlc/spaces/default/knowledge/<span class="t-comment">                             (team knowledge — empty; you add files)</span></code></pre>
+  aidlc/spaces/default/knowledge/<span class="t-comment">    (team knowledge, empty; you add files)</span></code></pre>
+<p>stage ごとのフォルダはあらかじめ作られない。ある stage のフォルダ（例:
+<code>inception/requirements-analysis/</code>）は、その stage が最初に artifact を書き込んだ時点で
+現れるため、record には成果を生んだ作業だけが並ぶ。</p>
 <h3 id="stage-02-workspace-detection">Stage 0.2: Workspace Detection</h3>
 <p>決定論的なルールベースのスキャナが、プロジェクト直下 1 階層と既知のソースディレクトリ（<code>src/</code>、<code>app/</code>、<code>lib/</code>、<code>pages/</code>、<code>components/</code>、<code>tests/</code>）を走査する。ソースファイル・フレームワーク設定・パッケージマニフェストに基づいて greenfield か brownfield かを分類する。トップレベルでシグナルが検出されないときは、任意の名前のサブディレクトリそれぞれの 1 階層下にも降りるため、ソースがコンテナフォルダ（例: <code>wordbook/</code>、<code>backend/</code>）の中にあるプロジェクトも brownfield として検出される。</p>
 <h3 id="stage-03-state-initialization">Stage 0.3: State Initialization</h3>
@@ -137,7 +143,7 @@ Detected scope: feature (Standard depth, Standard test strategy, all 32 stages)
 <h3 id="stage-11-intent-capture-aidlc-product-agent">Stage 1.1: Intent Capture（aidlc-product-agent）</h3>
 <p>Claude Code では、ターミナル下部のカスタム AI-DLC ステータスラインが更新される（Kiro と opencode は <code>/aidlc --status</code> を使う。Codex は <code>$aidlc --status</code> とその組み込みの <code>update_plan</code> 進捗表示を使う）:</p>
 <pre class="term"><code><span class="t-status">[AIDLC] IDEATION &gt; Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product</span></code></pre>
-<p>表示内容は、現在の phase、stage の表示名、phase 進捗バー、phase 進捗比、リードエージェントである。バーと比は同じ範囲を数える — どちらも現在の phase 内の <code>[x]</code> の stage を数えるため、比が進むたびにバーも進む。残りコンテキスト（<code>ctx:N%</code>）は常に右側に表示され、減るにつれて色分けされる。Claude Code では、最初の使用量折り込み後に <code>↑&lt;in&gt; ↓&lt;out&gt; $&lt;usd&gt;</code> も表示され、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークスペース活動は含まない。</p>
+<p>表示内容は、現在の phase、stage の表示名、phase 進捗バー、phase 進捗比、リードエージェントである。バーと比は同じ範囲を数える — どちらも現在の phase 内の <code>[x]</code> の stage を数えるため、比が進むたびにバーも進む。残りコンテキスト（<code>ctx:N%</code>）は常に右側に表示され、減るにつれて色分けされる。Claude Code では、最初の使用量折り込み後に <code>↑&lt;in&gt; ↓&lt;out&gt; $&lt;usd&gt;</code> も表示され、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークスペース活動は含まない。使用量追跡（およびこのセグメント）を無効にするには <code>AIDLC_DISABLE_USAGE_TRACKING=1</code> を設定する。</p>
 <p>aidlc-product-agent は対話モードの選択を求める:</p>
 <pre class="term"><code><span class="t-prompt">▸ Choose interaction mode:</span>
   (1) Guide Me — agent asks structured questions
@@ -219,7 +225,7 @@ sequenceDiagram
     O-&gt;&gt;O: Engine updates state and routes
 </pre>
 <h3 id="subagent-delegation">subagent への委譲</h3>
-<p>4 つの stage は背景の subagent に dispatch される — 2.1 Reverse Engineering（pipeline: developer のスキャン、次いで architect の統合と書き出し）、2.2 Practices Discovery（subagent の hub-and-spoke: リードの草稿、相互に盲目な 3 つの支援レビュー、人間へのインタビュー、リードの統合）、2.4 User Stories（mob: collaborator が並列に貢献し、判断が割れた場合は stage の途中で利用者に提示されることがある）、3.5 Code Generation（subagent）である。Practices Discovery は、スポークと最終統合の間に意図的に利用者を輪の中へ招き入れる。User Stories の mob も判断の分かれ目を stage 途中で提示することがある。Workspace detection（0.2）は subagent ではなく <code>aidlc-utility intent-birth</code> の中で決定論的に実行される。</p>
+<p>4 つの stage は背景の subagent に dispatch される — 2.1 Reverse Engineering（pipeline: developer のスキャン、次いで architect の統合と書き出し）、2.2 Practices Discovery（subagent の hub-and-spoke: リードの草稿、相互に盲目な 3 つの支援レビュー、人間へのインタビュー、リードの統合）、2.4 User Stories（mob: collaborator が並列に貢献し、判断が割れた場合は stage の途中で利用者に提示されることがある）、3.5 Code Generation（subagent）である。Practices Discovery は、スポークと最終統合の間に意図的に利用者を輪の中へ招き入れる。User Stories の mob も判断の分かれ目を stage 途中で提示することがある。Workspace detection（0.2）は subagent ではなく <code>aidlc-utility intent-create</code> の中で決定論的に実行される。</p>
 <pre class="mermaid">
 sequenceDiagram
     participant U as You
@@ -284,7 +290,7 @@ sequenceDiagram
 </tr>
 <tr>
 <td><code>↑&lt;in&gt; ↓&lt;out&gt; $&lt;usd&gt;</code></td>
-<td>現在のワークフローと現在のトランスクリプト/セッションについての token 使用量と課金可能なコスト（Claude Code のみ。使用量が利用可能になるまでは省略される）</td>
+<td>現在のワークフローと現在のトランスクリプト/セッションについての token 使用量と課金可能なコスト（Claude Code のみ。使用量が利用可能になるまでは省略される。<code>AIDLC_DISABLE_USAGE_TRACKING=1</code> で無効化される）</td>
 </tr>
 </tbody></table>
 <hr>

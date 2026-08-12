@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub Copilot（CLI + VS Code）上の AI-DLC — AI-DLC docs 日本語版</title>
+<link rel="stylesheet" href="../../../assets/style.css">
+<script src="../../../assets/base.js"></script>
+<script defer src="../../../assets/mermaid.min.js"></script>
+<script defer src="../../../assets/highlight.min.js"></script>
+<script defer src="../../../assets/app.js"></script>
+<script type="module" src="../../../assets/budoux-init.js"></script>
+</head>
+<body data-repo="aidlc">
+<div class="nav-backdrop"></div>
+<div class="wrap">
+
+<header class="masthead">
+  <button class="nav-toggle" type="button" aria-label="ページ一覧" aria-controls="site-nav" aria-expanded="false">☰</button>
+  <a class="site" href="../../../index.html">AI-DLC WORKFLOWS NOTE</a>
+  <span class="here">docs 日本語版 / guide/harnesses/copilot</span>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="ページ" id="site-nav">
+  <div class="group">docs 日本語版</div>
+  <a href="../../index.html">総合索引</a>
+  <a href="../../../index.html">ノートのトップ</a>
+  <div class="group">USER GUIDE</div>
+  <a href="../../guide/00-introduction.html">はじめに</a>
+  <a href="../../guide/01-getting-started.html">はじめかた</a>
+  <a href="../../guide/02-your-first-workflow.html">最初のワークフロー</a>
+  <a href="../../guide/03-spaces-and-intents.html">Space と Intent</a>
+  <a href="../../guide/04-phases-and-stages.html">Phase と Stage</a>
+  <a href="../../guide/05-scopes-and-depth.html">Scope・Depth・テスト戦略</a>
+  <a href="../../guide/06-agents.html">エージェント</a>
+  <a href="../../guide/07-interaction-modes.html">対話モード</a>
+  <a href="../../guide/08-knowledge.html">ナレッジ</a>
+  <a href="../../guide/09-rules-and-the-learning-loop.html">Rule と学習ループ</a>
+  <a href="../../guide/10-state-and-audit.html">状態の追跡と audit トレイル</a>
+  <a href="../../guide/11-session-management.html">セッション管理</a>
+  <a href="../../guide/12-cli-commands.html">CLI コマンド</a>
+  <a href="../../guide/13-customization.html">カスタマイズ</a>
+  <a href="../../guide/14-artifacts-reference.html">成果物リファレンス</a>
+  <a href="../../guide/15-troubleshooting.html">トラブルシューティング</a>
+  <a href="../../guide/16-worked-examples.html">実例集</a>
+  <a href="../../guide/17-skills.html">Skill とランナーコマンド</a>
+  <a href="../../guide/glossary.html">用語集</a>
+  <a href="../../guide/workshop-mode.html">Workshop モード</a>
+  <div class="group">USER GUIDE / agents</div>
+  <a href="../../guide/agents/README.html">エージェント深掘り</a>
+  <a href="../../guide/agents/architect-agent.html">Architect Agent</a>
+  <a href="../../guide/agents/aws-platform-agent.html">AWS Platform Agent</a>
+  <a href="../../guide/agents/compliance-agent.html">Compliance Agent</a>
+  <a href="../../guide/agents/delivery-agent.html">Delivery Agent</a>
+  <a href="../../guide/agents/design-agent.html">Design Agent</a>
+  <a href="../../guide/agents/developer-agent.html">Developer Agent</a>
+  <a href="../../guide/agents/devsecops-agent.html">DevSecOps Agent</a>
+  <a href="../../guide/agents/operations-agent.html">Operations Agent</a>
+  <a href="../../guide/agents/pipeline-deploy-agent.html">Pipeline &amp; Deploy Agent</a>
+  <a href="../../guide/agents/product-agent.html">Product Agent</a>
+  <a href="../../guide/agents/quality-agent.html">Quality Agent</a>
+  <div class="group">USER GUIDE / harnesses</div>
+  <a href="../../guide/harnesses/README.html">他の harness で動かす</a>
+  <a href="../../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../../guide/harnesses/copilot.html" class="here">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
+  <a href="../../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
+  <a href="../../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
+</nav>
+
+<nav class="pagetoc" aria-label="このページの目次">
+  <div class="group">このページの目次</div>
+  <a href="#layout-the-engine-dir-and-the-github-shell">レイアウト: エンジンディレクトリと .github シェル</a>
+  <a href="#prerequisites">前提条件</a>
+  <a href="#install">インストール</a>
+  <a href="#whats-different-on-this-harness">この harness での違い</a>
+  <a href="#verify">検証</a>
+</nav>
+
+<main>
+<p class="eyebrow">AI-DLC DOCS 日本語版 / GUIDE</p>
+<h1 id="ai-dlc-on-github-copilot-cli-vs-code">GitHub Copilot（CLI + VS Code）上の AI-DLC</h1>
+<p><code>dist/copilot/</code> は、<strong>GitHub Copilot</strong> 向けのフレームワークの harness ディストリビューションのひとつであり、1 つのインストールが両方の Copilot サーフェス — スタンドアロンの Copilot CLI（<code>copilot</code>）と VS Code のエージェントモード — に対応する。GitHub は両者を同じプロジェクト発見パス（<code>.github/skills/</code>、<code>.github/agents/</code>、<code>.github/hooks/</code>、ルートの <code>AGENTS.md</code>）に収束させたため、フレームワークは両方が読む 1 つのツリーを同梱する。1 つの決定論的 core、多くの harness: エンジン、状態機械、audit ログ、グラフ、swarm の referee、learnings の gate はすべてのディストリビューションでバイト同一 — 異なるのはシェルだけである。このツリーは <code>core/</code> + <code>harness/copilot/</code> から <code>bun scripts/package.ts copilot</code> で<strong>生成</strong>される。決して手で編集しないこと（ドリフトガードが CI を落とす）。</p>
+<h2 id="layout-the-engine-dir-and-the-github-shell">レイアウト: エンジンディレクトリと .github シェル</h2>
+<ul>
+<li><strong><code>.aidlc/</code></strong> — AIDLC のエンジンツリー（tools・hooks + Copilot アダプタ・agents・knowledge・scopes・sensors・aidlc-common）。どちらの Copilot サーフェスもこれをスキャンしない。ユーザーに見えるものはすべて <code>.github/</code> に乗る。</li>
+<li><strong><code>.github/</code></strong> — ネイティブに消費される、<code>aidlc</code> 名の出力物のみ: hook の配線（<code>hooks/aidlc.json</code>）、14 のペルソナカスタムエージェント（<code>agents/aidlc-*-agent.md</code>）、そしてスキルツリー全体（<code>skills/aidlc*/</code> — orchestrator、stage 別ランナー、scope ランナー、セッションスキル）。リポジトリ自身の <code>.github/</code> の内容（workflows、templates）は無変更のままである: インストールはこれらのファイルを MERGE する。すべて prefix によって衝突フリーである。</li>
+</ul>
+<h2 id="prerequisites">前提条件</h2>
+<ul>
+<li><strong>Copilot CLI ≥ 1.0.74 かつ/または VS Code ≥ 1.130</strong> — PascalCase の hook 登録（両サーフェスとも同一の snake_case ペイロードを配送する）、ブロッキングの PreToolUse deny チャネル、ブロッキングの Stop hook、<code>.github</code> の skills/agents 発見の検証済みラインである。<code>copilot --version</code> / <code>code --version</code> で確認する。（VS Code のエージェント hook はプレビュー機能である — doctor が下限を固定する。）</li>
+<li><strong>bun</strong> — 他のすべての harness と同じ要件。すべてのツールと hook は bun 経由で走り、Copilot が spawn するシェルの PATH に bun が乗っていなければならない。</li>
+<li><strong>フォルダの信頼</strong> — リポジトリの hook は、プロジェクトの絶対パスが <code>~/.copilot/config.json</code> の <code>trustedFolders</code> にあるときのみ実行される（CLI は最初の対話的使用時にプロンプトを出す）。ヘッドレスの <code>copilot -p</code> 実行にはさらに <code>GITHUB_COPILOT_PROMPT_MODE_REPO_HOOKS=1</code> が必要である。<strong>未信頼 = すべての hook がどこにも警告を出さず黙って no-op になる</strong> — <code>/aidlc --doctor</code> が両方を確認するサーフェスである。</li>
+<li><strong>モデルプロバイダ</strong> — このインストールはモデルを何もピンしない。サインイン済みの Copilot はそのまま動く。BYOK は GitHub 認証を一切必要とせずに動く（例: Amazon Bedrock の Anthropic 互換エンドポイント: <code>COPILOT_PROVIDER_BASE_URL=https://bedrock-runtime.&lt;region&gt;.amazonaws.com/anthropic</code>、<code>COPILOT_PROVIDER_TYPE=anthropic</code>、bearer トークン、そして <code>COPILOT_MODEL=&lt;catalog name&gt;</code> + <code>COPILOT_PROVIDER_WIRE_MODEL=&lt;Bedrock model id&gt;</code> — <code>copilot help providers</code> がこの集合を文書化する）。VS Code では、モデルピッカーか Custom Endpoint プロバイダを使う。</li>
+</ul>
+<h2 id="install">インストール</h2>
+<p>以下のコピーは、<a href="https://github.com/awslabs/aidlc-workflows">aidlc-workflows</a> リポジトリを
+<code>v2</code> ブランチで clone した場所から行う:</p>
+<pre><code class="language-bash">git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+</code></pre>
+<ol>
+<li><p>ディストリビューションをプロジェクトにコピーする:</p>
+<pre><code class="language-bash">mkdir -p your-project/.aidlc your-project/aidlc your-project/.github
+cp -R dist/copilot/.aidlc/.  your-project/.aidlc/
+cp -R dist/copilot/aidlc/.   your-project/aidlc/    # the workspace shell — a sibling of .aidlc/, not inside it
+cp -R dist/copilot/.github/. your-project/.github/  # MERGE — everything is aidlc-prefixed, nothing of yours is overwritten
+cp dist/copilot/AGENTS.md    your-project/AGENTS.md # or merge into yours — keep the @-import block (the method include)
+</code></pre>
+</li>
+<li><p>ワークフローを始める前に、同梱 <code>AGENTS.md</code> の「Git Integration」節にある <code>.gitignore</code>
+エントリを適用する（クローン別 audit シャードは意図的にコミットされ、カーソルとマシンローカルの
+ランタイムは無視されたままになる）。</p>
+</li>
+<li><p>フォルダを信頼する: プロジェクトで <code>copilot</code> を対話的に 1 回起動し、trust プロンプトを
+承認する（もしくはプロジェクトの絶対パスを <code>~/.copilot/config.json</code> の <code>trustedFolders</code> に
+追加する）。</p>
+</li>
+<li><p><code>/aidlc --doctor</code> を実行し、続けて <code>/aidlc</code> に続けて作りたいものを渡す — どちらのサーフェスでも。</p>
+</li>
+</ol>
+<h2 id="whats-different-on-this-harness">この harness での違い</h2>
+<ul>
+<li><strong>1 つのインストール、2 つのサーフェス。</strong> Skills・personas・instructions・hook は CLI と
+VS Code のエージェントモードで同一に振る舞う。以下の差異は明示的に述べる。</li>
+<li><strong>質問は番号付きの散文の選択肢として描画される。</strong> 両サーフェスともネイティブのピッカーツールを
+備えるが、ピッカーの回答はツール結果として返るため、human-presence ガードが要求する
+信頼済みの <code>UserPromptSubmit</code> イベントを発火しない。人間の次のチャットメッセージはそれを
+発火する。<code>[Answer]:</code> タグ付きの質問ファイルが正であることは変わらない。</li>
+<li><strong>Hook はネイティブに強制する。</strong> アダプタ（<code>.aidlc/hooks/aidlc-copilot-adapter.ts</code>、
+<code>.github/hooks/aidlc.json</code> で配線）は core-guard の block を Copilot の
+<code>permissionDecision: deny</code> へ変換する — reviewer の読み取りスコープ境界と状態遷移ガードが
+実際にツール呼び出しを拒否する。SessionStart と Stop の応答は、CLI のトップレベルフィールドと
+VS Code が要求する <code>hookSpecificOutput</code> エンベロープの両方を運ぶ。
+CLI 上でライブ検証済み。VS Code のエージェントモードでは同じ deny/block チャネルが
+文書化されており、アダプタは <code>runTerminalCommand</code>・<code>createFile</code>・<code>editFiles</code>・<code>readFile</code>
+のような文書化された名前を正規化するが、IDE 側はまだライブ検証されていない — 検証されるまでは
+IDE の強制をベストエフォートとして扱う。</li>
+<li><strong>Hook の配線は設計により matcher フリーである</strong>: VS Code は hook の matcher を解析するが
+無視する。そのため各アダプタターゲットは代わりに <code>tool_name</code> で自己フィルタする — matcher は
+IDE 上で黙って広がってしまう。</li>
+<li><strong>reviewer の identity は配送ではなく相関で得る</strong>: PreToolUse のペイロードは呼び出しごとの
+agent フィールドを運ばない。アダプタは SubagentStart/SubagentStop（VS Code の
+<code>agent_type</code>/<code>agent_id</code> フィールドを含む）で委譲を括り、subagent が正確に 1 つだけアクティブな
+ときに identity を転送する。曖昧な重複はその呼び出しに対して fail open する（§12a の散文の
+境界が依然として支配する）。</li>
+<li><strong>Personas は <code>model:</code> の pin を運ばない。</strong> 両サーフェスは model 値の構文で一致しない
+（CLI は frontmatter の文字列を BYOK プロバイダへそのまま転送する。IDE の表示名はそこで
+400 になる）。エージェントはセッションモデルを継承する — この harness での tier 投影は
+型により model 省略になる。</li>
+<li><strong>Worker persona は明示的な組み込みの <code>tools:</code> 許可リストを使う。</strong> これは入れ子の委譲を
+禁止するため Copilot の <code>agent</code> 委譲ツールを省く。Copilot には all-except-agent の形式が
+無いため、委譲された worker は任意の MCP ツールを継承しない。</li>
+<li><strong>AIDLC の plugin は Copilot ネイティブのサーフェスを使う。</strong> 合成された plugin の persona と
+生成された stage/scope ランナーは <code>.github/{agents,skills}</code> に置かれる。plugin の選択は
+これらのパスを再生成し、<code>.aidlc/skills</code> や <code>.opencode/agents</code> を決して作らない。</li>
+<li><strong>Session-end</strong>: VS Code は SessionEnd を文書化していないため、共有 hook manifest は
+両ホストでこれを省く。アダプタは次の SessionStart で、推定した provenance で前セッションを
+調停する（codex のパターン）。</li>
+<li><strong>メソッドの include は AGENTS.md の <code>@</code>-import に乗る</strong>（CLI 上でライブ検証済み。VS Code は
+<code>@</code>-import の展開を文書化しているがそこではまだライブ検証されていない）。
+<code>/aidlc space &lt;name&gt;</code> はブロックをその場で再ポイントし、<code>.github/agents/</code> の persona twin も
+含む。</li>
+<li><strong>ステータスラインは無い</strong>。<code>/aidlc --status</code> と各 gate の進捗行を使う。</li>
+<li><strong>Construction の swarm は subagent のファンアウトのみ</strong>（<code>AIDLC_USE_SWARM=1</code> は大きな音の
+no-op である）。</li>
+<li><strong>MCP</strong>: 同梱なし。サーバーを追加する場合、サーフェスがここで分岐することに注意する — CLI は
+<code>~/.copilot/mcp-config.json</code> を読み、VS Code は <code>.vscode/mcp.json</code> を読む。conductor は
+それらを使えるが、委譲された worker persona は使えない。</li>
+</ul>
+<h2 id="verify">検証</h2>
+<pre><code class="language-bash">cd your-project
+copilot -p &quot;/aidlc --doctor&quot; -s --allow-all-tools   # or run /aidlc --doctor in VS Code chat
+</code></pre>
+<p>doctor はエンジンツリーとすべてのアダプタ依存、ルートの <code>AGENTS.md</code>、<code>.github</code> の配線ファイル、
+CLI のバージョン下限、フォルダの信頼を確認し、ヘッドレスの env var についてリマインドする。
+この harness の決定論的エンジンテストは <code>tests/unit/t248-copilot-packaging.test.ts</code>・
+<code>t249-copilot-adapter.test.ts</code>・<code>t250-copilot-adapter-security.test.ts</code> である。ライブ
+ジャーニーは <code>tests/e2e/t-exec-copilot-status.serial.test.ts</code> で、
+<code>AIDLC_COPILOT_EXEC_LIVE=1</code> でゲートされている。</p>
+
+<footer class="meta">
+  原文: <a href="https://github.com/awslabs/aidlc-workflows/blob/v2/docs/guide/harnesses/copilot.md"><code>docs/guide/harnesses/copilot.md</code></a>（基点コミット <span class="gh-hash">v2</span> に固定）· 逐語日本語訳
+</footer>
+</main>
+</div>
+
+</div>
+</body>
+</html>

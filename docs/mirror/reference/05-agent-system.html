@@ -259,7 +259,7 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <tr>
 <td><code>templated</code></td>
 <td>delivery, operations, pipeline-deploy</td>
-<td>支配的にパターン追従の出力; 方法論はすでに knowledge にある（delivery plan、CI/CD YAML、runbook）。Claude Code、Codex、opencode では中サイズの model を減らした effort で -- 唯一の意図的なダウングレード（Kiro では、すべての tier と同様にセッションの model を継承する）</td>
+<td>支配的にパターン追従の出力; 方法論はすでに knowledge にある（delivery plan、CI/CD YAML、runbook）。Claude Code、Codex、opencode では中サイズの model を減らした effort で -- 唯一の意図的なダウングレード（Kiro、Cursor、Copilot では、すべての tier と同様にセッションの model を継承する）</td>
 </tr>
 </tbody></table>
 <p>harness ごとの射影（<code>core/tools/aidlc-tiers.ts</code> が single source of truth）:</p>
@@ -272,6 +272,8 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <th>Kiro CLI/IDE (agent JSON <code>&quot;model&quot;</code>, CLI / <code>.md</code> frontmatter <code>model:</code>, IDE)</th>
 <th>Kiro cli.json <code>chat.modelDefaults</code></th>
 <th>opencode (.md frontmatter)</th>
+<th>Copilot (.md frontmatter)</th>
+<th>Cursor (.md frontmatter)</th>
 </tr>
 </thead>
 <tbody><tr>
@@ -281,6 +283,8 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <td>フィールド省略（スキーマのフォールバック: ユーザーのデフォルト model）</td>
 <td>tier エントリなし</td>
 <td><code>model:</code>/<code>variant:</code> キーなし（opencode.json のセッションデフォルトが適用される）</td>
+<td>省略（セッションの model を継承）</td>
+<td><code>model:</code> 省略（セッションの model を継承）</td>
 </tr>
 <tr>
 <td><code>balanced</code></td>
@@ -289,6 +293,8 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <td>フィールド省略（下記参照）</td>
 <td>tier エントリなし</td>
 <td><code>model: amazon-bedrock/global.anthropic.claude-sonnet-4-6</code>、variant キーなし</td>
+<td>省略（セッションの model を継承）</td>
+<td><code>model:</code> 省略（下記参照）</td>
 </tr>
 <tr>
 <td><code>templated</code></td>
@@ -297,6 +303,8 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <td>フィールド省略（下記参照）</td>
 <td>tier エントリなし</td>
 <td>同じ model、<code>variant: medium</code></td>
+<td>省略（セッションの model を継承）</td>
+<td><code>model:</code> 省略（下記参照）</td>
 </tr>
 </tbody></table>
 <p>表の背後にある主要な事実:</p>
@@ -304,6 +312,7 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <li><strong>省略が継承のメカニズムである。</strong> Claude Code では、<code>effort:</code> キーの無い agent .md はセッションの effort を継承し、固定された <code>effort:</code> は両方向でセッションを上書きする（固定は cap であって floor ではない）-- だから不在が judgment と balanced の契約である。Codex では、<code>model</code> の無いロール TOML は同梱の <code>.codex/config.toml</code> のセッションデフォルトで spawn する（codex-cli 0.139.0 と 0.142.5 で live に検証済み; 現在 doctor が強制する最小は、compact セッションの即時リロードのため 0.145.0 である）。Kiro では、agent-v1 スキーマが不在-<code>&quot;model&quot;</code> のフォールバックを文書化している: &quot;If not specified, uses the default model&quot;（<code>/model</code> の永続化された設定）。</li>
 <li><strong>Kiro は決して model を固定しない。</strong> 同梱の Kiro model ID は、その model がユーザーのインストールで有効なときにだけ解決する; 他の任意の model を走らせるセッションは、委譲された spawn を <code>Invalid model ID</code> ですべて拒否し、Kiro は Claude 方言の tier エイリアス（<code>opus</code>/<code>sonnet</code>）を真っ向から拒否する -- だから普遍的に安全に固定できる値は無い。したがってすべての Kiro tier は <code>&quot;model&quot;</code>（および <code>.md</code> frontmatter の <code>model:</code> 行）を省略する: すべての agent がセッションの model を継承する。<code>TIER_PROJECTIONS</code> の kiro スロットと <code>kiroModelDefaults()</code> の機構は、解決可能なインストールごとの固定メカニズムが現れたときに備え、休眠状態のまま残る。</li>
 <li><strong>Kiro は agent ごとの effort サーフェスを持たない。</strong> kiro-cli は agent JSON 内の effort 的なキーに対して fail-close するので、model ごとの effort デフォルトは <code>settings/cli.json</code> の <code>chat.modelDefaults[&lt;modelId&gt;].output_config.effort</code> にしか乗れない。tier が model を固定しないので、著述された条件付きエントリだけが同梱される（<code>claude-opus-4.8</code> -&gt; <code>xhigh</code>、セッションが実際にその model を走らせるときにだけ適用される）。そのファイルは CLI 専用である: Kiro IDE は cli.json を完全に無視し、拡張機能に埋め込まれた model ごとのデフォルト（またはユーザーの <code>/effort</code> のセッション state）を適用する。</li>
+<li><strong>Cursor もまた決して model を固定しない。</strong> Cursor でのモデル可用性はプランに依存する（Free アカウントは名前指定のあらゆる model を拒否し、<code>Auto</code> しか走らせられない）ので、固定された agent model は下位プランのインストールをハード失敗させてしまう。したがってすべての Cursor tier は <code>.md</code> frontmatter の <code>model:</code> 行を省略する（Cursor には agent ごとの effort キーが無い -- effort は model-id サフィックスに乗る）。すべての agent がセッションの model を継承し、<code>TIER_PROJECTIONS</code> の cursor スロットは model のみで、プランに依存しない固定メカニズムが現れたときに備えて休眠状態のまま残る。</li>
 </ul>
 <h3 id="tier-cap-cost-override">Tier cap (cost override)</h3>
 <p>プロジェクトは、どの agent ファイルも編集せずに、pack 時にすべての射影を cap できる:</p>
@@ -432,7 +441,7 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 <p><strong>Observations:</strong></p>
 <ul>
 <li>aidlc-architect-agent が最も広い stage 関与を持つ（3 つの phase にまたがる 9 stage）。</li>
-<li>14 agent の全ロスターにわたり、9 つの agent が <code>judgment</code> tier を持ち、5 つが Claude Code、Codex、opencode でステップダウンする（2 つの <code>balanced</code> レビュアーに加え 3 つの <code>templated</code> プランナー; Kiro ではすべての tier がセッションの model と effort を継承するので、そこではどの agent もステップダウンしない）; ステップダウンした agent は、明示的なチェックリストに対するレビュー、または支配的にテンプレート化された planning、CI/CD、runbook の作業を生産する。上のマトリクスは 11 のドメインエキスパート agent をカバーする。</li>
+<li>14 agent の全ロスターにわたり、9 つの agent が <code>judgment</code> tier を持ち、5 つが Claude Code、Codex、opencode でステップダウンする（2 つの <code>balanced</code> レビュアーに加え 3 つの <code>templated</code> プランナー; Kiro、Cursor、Copilot ではすべての tier がセッションの model と effort を継承するので、そこではどの agent もステップダウンしない）; ステップダウンした agent は、明示的なチェックリストに対するレビュー、または支配的にテンプレート化された planning、CI/CD、runbook の作業を生産する。上のマトリクスは 11 のドメインエキスパート agent をカバーする。</li>
 <li>aidlc-compliance-agent は純粋に助言的な立場で動作する（4 support stage、lead stage なし）。</li>
 <li>11 agent のうち 6 つが CLI 対話のために Bash を使うと期待される。</li>
 <li>3 つの agent がリサーチタスクのために WebSearch を使うと期待される。</li>

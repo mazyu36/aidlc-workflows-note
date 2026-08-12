@@ -94,8 +94,8 @@
 <p>AI-DLC の方法論のコンセプトは harness 中立である; 各 CLI harness はそれらを自身のネイティブな
 プリミティブを通して表現する。この章は AI-DLC のコンセプトを、各 harness が使うプリミティブへ
 マッピングし、その後 <strong>Claude Code</strong> の表現を深く詳述する（それは最も完全に文書化された harness
-である; Kiro CLI、Kiro IDE、Codex、opencode は同じコンセプトを自身の等価物を通して表現し、章ごと
-の要約は
+である; Kiro CLI、Kiro IDE、Codex、opencode、GitHub Copilot、そして Cursor は同じコンセプトを
+自身の等価物を通して表現し、章ごとの要約は
 <a href="../guide/harnesses/README.html">他の harness で動かす</a> にあり、harness を足すためのソース契約は
 <a href="../harness-engineering/09-porting-to-a-new-harness.html">新しい harness への移植</a> である）。</p>
 <p>hook については <a href="06-hooks-and-tools.html">Hook とツール</a> を参照。knowledge については <a href="10-knowledge-system.html">Knowledge System</a> を参照。</p>
@@ -112,6 +112,8 @@ harness に移植するときは列を足す。</p>
 <th>Kiro IDE</th>
 <th>Codex CLI</th>
 <th>opencode</th>
+<th>GitHub Copilot</th>
+<th>Cursor</th>
 </tr>
 </thead>
 <tbody><tr>
@@ -121,6 +123,8 @@ harness に移植するときは列を足す。</p>
 <td>Skills（<code>/aidlc</code>）</td>
 <td>Skills（<code>$aidlc</code>）</td>
 <td>Command → skill（<code>/aidlc</code>; <code>.aidlc/skills</code> からの skill を <code>skills.paths</code> 経由で）</td>
+<td>Skills（<code>/aidlc</code>; <code>.github/skills/</code>）</td>
+<td>Native skills（<code>/aidlc</code> に加え <code>/aidlc-status</code>、<code>/aidlc-jump</code>、<code>/aidlc-scope</code>; <code>.cursor/skills/</code>）</td>
 </tr>
 <tr>
 <td><strong>Agent ペルソナ</strong>（合計 14）</td>
@@ -129,6 +133,8 @@ harness に移植するときは列を足す。</p>
 <td>ペルソナ <code>.md</code>; 委任先は IDE の <code>tools:</code> grant を足す</td>
 <td><code>.codex/agents/</code> の TOML</td>
 <td><code>.opencode/agents/*.md</code>（subagent）+ ペルソナ <code>.md</code></td>
+<td><code>.github/agents/*.md</code>（custom agent）+ ペルソナ <code>.md</code></td>
+<td><code>.cursor/agents/*.md</code>（native subagent）</td>
 </tr>
 <tr>
 <td><strong>自動化</strong>（audit、状態、追跡）</td>
@@ -137,6 +143,8 @@ harness に移植するときは列を足す。</p>
 <td><code>.kiro/hooks/aidlc-*.json</code>（v2、IDE &gt;= 1.0）+ <code>.kiro/hooks/aidlc-*.kiro.hook</code>（レガシー、1.0 以前）</td>
 <td><code>.codex/hooks.json</code> 経由の Hook（1 つのアダプタ）</td>
 <td>アダプタ plugin（<code>.opencode/plugin/</code>）</td>
+<td><code>.github/hooks/aidlc.json</code> 経由の Hook（1 つのアダプタ）</td>
+<td><code>.cursor/hooks.json</code> 経由の Hook（1 つのアダプタ）</td>
 </tr>
 <tr>
 <td><strong>常設の rule</strong>（レイヤーチェーン）</td>
@@ -145,10 +153,14 @@ harness に移植するときは列を足す。</p>
 <td><code>aidlc/spaces/&lt;active-space&gt;/memory/</code>（常時包含の steering のライブ参照経由）</td>
 <td><code>aidlc/spaces/&lt;active-space&gt;/memory/</code>（<code>AIDLC_RULES_DIR</code> 経由）</td>
 <td><code>aidlc/spaces/&lt;active-space&gt;/memory/</code>（<code>instructions</code> glob 経由）</td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/memory/</code>（<code>AGENTS.md</code> @-import 経由）</td>
+<td><code>aidlc/spaces/&lt;active-space&gt;/memory/</code>（常時適用の <code>rules/aidlc.mdc</code> の常設ポインタ + agent が判断する 4 つの phase ポインタ）</td>
 </tr>
 <tr>
 <td><strong>プロジェクトオンボーディング文書</strong></td>
 <td><code>CLAUDE.md</code></td>
+<td><code>AGENTS.md</code></td>
+<td><code>AGENTS.md</code></td>
 <td><code>AGENTS.md</code></td>
 <td><code>AGENTS.md</code></td>
 <td><code>AGENTS.md</code></td>
@@ -161,12 +173,14 @@ harness に移植するときは列を足す。</p>
 <td>委任先のための Agent <code>.md</code> の <code>tools:</code> frontmatter</td>
 <td><code>.codex/config.toml</code>（+ Starlark <code>rules/</code>）</td>
 <td><code>opencode.json</code>（プロジェクトルート）</td>
+<td><code>trustedFolders</code>（<code>~/.copilot/config.json</code>）+ <code>--allow-tool</code> フラグ</td>
+<td><code>.cursor/cli.json</code>（permissions）+ <code>.cursor/hooks.json</code></td>
 </tr>
 </tbody></table>
 <p>その下にある決定論的な engine、state machine、audit ログ、stage graph、そして swarm referee は、
 あらゆる harness にわたってバイト同一である — それらを運ぶプリミティブだけが異なる。この章の残りは
-各プリミティブの <strong>Claude Code</strong> 表現を詳細に文書化する; Kiro CLI、Kiro IDE、Codex、opencode の
-等価物については、それらの guide 章を参照。</p>
+各プリミティブの <strong>Claude Code</strong> 表現を詳細に文書化する; Kiro CLI、Kiro IDE、Codex、opencode、
+Copilot、そして Cursor の等価物については、それらの guide 章を参照。</p>
 <hr>
 <h2 id="claude-specific">Claude 固有</h2>
 <p>以下のセクションは、特に Claude Code が各プリミティブをどう表現するか — その skill frontmatter、
@@ -266,7 +280,7 @@ conductor は Claude Code の Task ツール経由で別々の Claude インス�
 <td>コード記述は、unit 仕様に集中したクリーンなコンテキストから恩恵を受ける</td>
 </tr>
 </tbody></table>
-<p>Workspace 検出（0.2）はかつて subagent であった; 今は <code>aidlc-utility intent-birth</code> の中で決定論的に走る。</p>
+<p>Workspace 検出（0.2）はかつて subagent であった; 今は <code>aidlc-utility intent-create</code> の中で決定論的に走る。</p>
 <h3 id="agent-tiers-projected-model-effort">Agent の tier（射影される model + effort）</h3>
 <p>あらゆる agent の著述されたダイヤルは <code>tier:</code> である; packager はそれを Claude Code が読む <code>model:</code>/<code>effort:</code> frontmatter キーへ射影する。以前の振る舞い（v2.2.15 から v2.2.19; それ以前はキーが不活性な <code>modelOverride:</code> だった）は、9 つの judgment 型の agent に <code>model: opus</code> を固定し、より大きな model を走らせるセッションを強制的にダウングレードしていた。</p>
 <table>
@@ -619,7 +633,7 @@ Gitignore:
 <li><a href="06-hooks-and-tools.html">Hook とツール</a> -- hook システム、audit の分類体系、CLI ツール</li>
 <li><a href="10-knowledge-system.html">Knowledge System</a> -- 2 層 knowledge、ロード順</li>
 <li><a href="../harness-engineering/09-porting-to-a-new-harness.html">新しい harness への移植</a> -- 上のマッピングに列を足す方法: manifest、hook アダプタ、そして <code>emit.ts</code> 契約</li>
-<li><a href="../guide/harnesses/README.html">他の harness で動かす</a> -- これらのプリミティブの Kiro CLI、Kiro IDE、Codex、opencode での表現</li>
+<li><a href="../guide/harnesses/README.html">他の harness で動かす</a> -- これらのプリミティブの Kiro CLI、Kiro IDE、Codex、Cursor、opencode、そして Copilot での表現</li>
 </ul>
 
 <footer class="meta">

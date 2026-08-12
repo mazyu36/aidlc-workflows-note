@@ -3,8 +3,8 @@
 AI-DLC の方法論のコンセプトは harness 中立である; 各 CLI harness はそれらを自身のネイティブな
 プリミティブを通して表現する。この章は AI-DLC のコンセプトを、各 harness が使うプリミティブへ
 マッピングし、その後 **Claude Code** の表現を深く詳述する（それは最も完全に文書化された harness
-である; Kiro CLI、Kiro IDE、Codex、opencode は同じコンセプトを自身の等価物を通して表現し、章ごと
-の要約は
+である; Kiro CLI、Kiro IDE、Codex、opencode、GitHub Copilot、そして Cursor は同じコンセプトを
+自身の等価物を通して表現し、章ごとの要約は
 [他の harness で動かす](../guide/harnesses/README.md) にあり、harness を足すためのソース契約は
 [新しい harness への移植](../harness-engineering/09-porting-to-a-new-harness.md) である）。
 
@@ -17,19 +17,19 @@ hook については [Hook とツール](06-hooks-and-tools.md) を参照。know
 AI-DLC のコンセプトが定数である; それを運ぶプリミティブが harness のパラメータである。新しい
 harness に移植するときは列を足す。
 
-| AI-DLC コンセプト | Claude Code | Kiro CLI | Kiro IDE | Codex CLI | opencode |
-|----------------|-------------|----------|----------|-----------|----------|
-| **Orchestrator エントリ**（`/aidlc` + runner） | Skills（`/aidlc`） | Skills（`/aidlc`） | Skills（`/aidlc`） | Skills（`$aidlc`） | Command → skill（`/aidlc`; `.aidlc/skills` からの skill を `skills.paths` 経由で） |
-| **Agent ペルソナ**（合計 14） | `.claude/agents/*.md` | `.kiro/agents/*.json` + ペルソナ `.md` | ペルソナ `.md`; 委任先は IDE の `tools:` grant を足す | `.codex/agents/` の TOML | `.opencode/agents/*.md`（subagent）+ ペルソナ `.md` |
-| **自動化**（audit、状態、追跡） | `settings.json` 経由の Hook | `agents/aidlc.json` 経由の Hook | `.kiro/hooks/aidlc-*.json`（v2、IDE >= 1.0）+ `.kiro/hooks/aidlc-*.kiro.hook`（レガシー、1.0 以前） | `.codex/hooks.json` 経由の Hook（1 つのアダプタ） | アダプタ plugin（`.opencode/plugin/`） |
-| **常設の rule**（レイヤーチェーン） | `aidlc/spaces/<active-space>/memory/`（`.claude/rules/aidlc.md` の @-import stub 経由） | `aidlc/spaces/<active-space>/memory/`（agent resources 経由） | `aidlc/spaces/<active-space>/memory/`（常時包含の steering のライブ参照経由） | `aidlc/spaces/<active-space>/memory/`（`AIDLC_RULES_DIR` 経由） | `aidlc/spaces/<active-space>/memory/`（`instructions` glob 経由） |
-| **プロジェクトオンボーディング文書** | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
-| **Permissions / 設定** | `.claude/settings.json` | `.kiro/settings/cli.json` + agent 設定 | 委任先のための Agent `.md` の `tools:` frontmatter | `.codex/config.toml`（+ Starlark `rules/`） | `opencode.json`（プロジェクトルート） |
+| AI-DLC コンセプト | Claude Code | Kiro CLI | Kiro IDE | Codex CLI | opencode | GitHub Copilot | Cursor |
+|----------------|-------------|----------|----------|-----------|----------|----------------|--------|
+| **Orchestrator エントリ**（`/aidlc` + runner） | Skills（`/aidlc`） | Skills（`/aidlc`） | Skills（`/aidlc`） | Skills（`$aidlc`） | Command → skill（`/aidlc`; `.aidlc/skills` からの skill を `skills.paths` 経由で） | Skills（`/aidlc`; `.github/skills/`） | Native skills（`/aidlc` に加え `/aidlc-status`、`/aidlc-jump`、`/aidlc-scope`; `.cursor/skills/`） |
+| **Agent ペルソナ**（合計 14） | `.claude/agents/*.md` | `.kiro/agents/*.json` + ペルソナ `.md` | ペルソナ `.md`; 委任先は IDE の `tools:` grant を足す | `.codex/agents/` の TOML | `.opencode/agents/*.md`（subagent）+ ペルソナ `.md` | `.github/agents/*.md`（custom agent）+ ペルソナ `.md` | `.cursor/agents/*.md`（native subagent） |
+| **自動化**（audit、状態、追跡） | `settings.json` 経由の Hook | `agents/aidlc.json` 経由の Hook | `.kiro/hooks/aidlc-*.json`（v2、IDE >= 1.0）+ `.kiro/hooks/aidlc-*.kiro.hook`（レガシー、1.0 以前） | `.codex/hooks.json` 経由の Hook（1 つのアダプタ） | アダプタ plugin（`.opencode/plugin/`） | `.github/hooks/aidlc.json` 経由の Hook（1 つのアダプタ） | `.cursor/hooks.json` 経由の Hook（1 つのアダプタ） |
+| **常設の rule**（レイヤーチェーン） | `aidlc/spaces/<active-space>/memory/`（`.claude/rules/aidlc.md` の @-import stub 経由） | `aidlc/spaces/<active-space>/memory/`（agent resources 経由） | `aidlc/spaces/<active-space>/memory/`（常時包含の steering のライブ参照経由） | `aidlc/spaces/<active-space>/memory/`（`AIDLC_RULES_DIR` 経由） | `aidlc/spaces/<active-space>/memory/`（`instructions` glob 経由） | `aidlc/spaces/<active-space>/memory/`（`AGENTS.md` @-import 経由） | `aidlc/spaces/<active-space>/memory/`（常時適用の `rules/aidlc.mdc` の常設ポインタ + agent が判断する 4 つの phase ポインタ） |
+| **プロジェクトオンボーディング文書** | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
+| **Permissions / 設定** | `.claude/settings.json` | `.kiro/settings/cli.json` + agent 設定 | 委任先のための Agent `.md` の `tools:` frontmatter | `.codex/config.toml`（+ Starlark `rules/`） | `opencode.json`（プロジェクトルート） | `trustedFolders`（`~/.copilot/config.json`）+ `--allow-tool` フラグ | `.cursor/cli.json`（permissions）+ `.cursor/hooks.json` |
 
 その下にある決定論的な engine、state machine、audit ログ、stage graph、そして swarm referee は、
 あらゆる harness にわたってバイト同一である — それらを運ぶプリミティブだけが異なる。この章の残りは
-各プリミティブの **Claude Code** 表現を詳細に文書化する; Kiro CLI、Kiro IDE、Codex、opencode の
-等価物については、それらの guide 章を参照。
+各プリミティブの **Claude Code** 表現を詳細に文書化する; Kiro CLI、Kiro IDE、Codex、opencode、
+Copilot、そして Cursor の等価物については、それらの guide 章を参照。
 
 ---
 
@@ -109,7 +109,7 @@ conductor は Claude Code の Task ツール経由で別々の Claude インス�
 | 2.4 User Stories | product lead に加え並列の design/developer/quality mob | 参加者 4 名 | 人間の判断を伴う、境界づけられた協調的なストーリーの精緻化 |
 | 3.5 Code Generation | `aidlc-developer-agent` | aidlc-developer-agent | コード記述は、unit 仕様に集中したクリーンなコンテキストから恩恵を受ける |
 
-Workspace 検出（0.2）はかつて subagent であった; 今は `aidlc-utility intent-birth` の中で決定論的に走る。
+Workspace 検出（0.2）はかつて subagent であった; 今は `aidlc-utility intent-create` の中で決定論的に走る。
 
 ### Agent の tier（射影される model + effort）
 
@@ -384,4 +384,4 @@ spike はまた、別の frontmatter の footgun を露出した: `allowedTools`
 - [Hook とツール](06-hooks-and-tools.md) -- hook システム、audit の分類体系、CLI ツール
 - [Knowledge System](10-knowledge-system.md) -- 2 層 knowledge、ロード順
 - [新しい harness への移植](../harness-engineering/09-porting-to-a-new-harness.md) -- 上のマッピングに列を足す方法: manifest、hook アダプタ、そして `emit.ts` 契約
-- [他の harness で動かす](../guide/harnesses/README.md) -- これらのプリミティブの Kiro CLI、Kiro IDE、Codex、opencode での表現
+- [他の harness で動かす](../guide/harnesses/README.md) -- これらのプリミティブの Kiro CLI、Kiro IDE、Codex、Cursor、opencode、そして Copilot での表現

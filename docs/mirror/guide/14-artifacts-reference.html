@@ -63,6 +63,8 @@
   <div class="group">USER GUIDE / harnesses</div>
   <a href="../guide/harnesses/README.html">他の harness で動かす</a>
   <a href="../guide/harnesses/codex-cli.html">Codex CLI 上の AI-DLC</a>
+  <a href="../guide/harnesses/copilot.html">GitHub Copilot（CLI + VS Code）上の AI-DLC</a>
+  <a href="../guide/harnesses/cursor.html">Cursor 上の AI-DLC</a>
   <a href="../guide/harnesses/kiro-cli.html">Kiro CLI で AI-DLC を動かす</a>
   <a href="../guide/harnesses/kiro-ide.html">Kiro IDE で AI-DLC を動かす</a>
   <a href="../guide/harnesses/opencode.html">opencode 上の AI-DLC</a>
@@ -90,6 +92,10 @@
 git ポリシーの完全なリファレンスである。</p>
 <hr>
 <h2 id="directory-tree">ディレクトリツリー</h2>
+<p>これは成果物が置かれうる場所の完全な集合であり、作り立ての record の見た目ではない。
+intent の作成は scope が実行する phase ごとに 1 つのフォルダ（プラス <code>verification/</code>）を
+作る。残りは作業が進むにつれて現れ、stage ごとのフォルダはそのステージが最初に書き込んだ
+時点で作られる。</p>
 <pre class="term"><code>aidlc/spaces/&lt;space&gt;/intents/&lt;YYMMDD&gt;-&lt;label&gt;/<span class="t-comment">   # one record dir per intent</span>
   aidlc-state.md<span class="t-comment">                    # Workflow state (commit)</span>
   audit/<span class="t-comment">                            # Audit trail — per-clone shards (commit)</span>
@@ -222,7 +228,7 @@ flowchart LR
 <tbody><tr>
 <td>0.1 Workspace Scaffold</td>
 <td><code>scaffold-report.md</code></td>
-<td>決定論的（<code>aidlc-utility intent-birth</code> の中で実行）</td>
+<td>決定論的（<code>aidlc-utility intent-create</code> の中で実行）</td>
 </tr>
 <tr>
 <td>0.2 Workspace Detection</td>

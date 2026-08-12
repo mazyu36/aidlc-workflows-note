@@ -266,9 +266,10 @@ Fragment は `(order, plugin)` によって決定論的に順序づけられる�
 ## 5. ディストリビューションとインストール
 
 packager はあなたの plugin を **本物の host plugin** として emit する（harness ごとに 1 つの射影
-ターゲット: `.claude-plugin/plugin.json`、`.codex-plugin/plugin.json`、加えて Kiro のフォルダ射影）。
-あなたはその出力を semver タグと `marketplace.json` を付けて git リポジトリに公開し、チームは host
-のネイティブコマンドを通してインストールする。
+ターゲットで、`.claude-plugin/plugin.json`、`.codex-plugin/plugin.json`、Copilot の
+`.plugin/plugin.json`、そして Kiro のフォルダ射影を含む）。あなたはその出力を semver タグと
+`marketplace.json` を付けて git リポジトリに公開し、チームは host のネイティブコマンドを通して
+インストールする。
 
 ### Claude / Codex（host store）
 

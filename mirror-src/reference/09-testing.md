@@ -58,7 +58,7 @@ LLM を呼び出さずに orchestrator の構造的な正しさを検証する�
 
 **テスト対象:**
 - Preflight ヘルス gate: Claude CLI が PATH 上にある、AWS 認証情報が有効、Claude が応答する（exit 0）、応答が空でない（preflight）
-- CLI ツールのユーティリティハンドラ: intent-birth, --doctor, --status, --stage, --phase（integration）
+- CLI ツールのユーティリティハンドラ: intent-create, --doctor, --status, --stage, --phase（integration）
 - greenfield/brownfield スタブを用いた個々の stage、成果物の検証（integration）
 
 **実行:** `bun tests/run-tests.ts --ci`
@@ -150,6 +150,13 @@ WSL や Docker は不要である; サポートされる検証基盤はネイテ
 ## Preflight 検証
 
 フィルタ無しでライブ可能な level（integration または e2e）を実行する前に、runner は gate として `tests/integration/t19.test.ts` を実行する。これは **Claude Agent SDK** を通じて小さな実ターンを駆動し（integration tier が使うのと同じライブ経路）、決定論的なサーフェスにだけアサートする。preflight が失敗した場合でも決定論的なファイルは実行され、Claude 依存のファイルはファイルごとの `SKIP` エントリとともにスキップされる。
+
+SDK driver は、`driveAidlc()` の各呼び出しに一時的な `CLAUDE_CONFIG_DIR`
+を与え、session の永続化を無効にする。したがって、ホームディレクトリが
+コマンドサンドボックス内で読み取り専用であるときも含めて、ライブテストは
+ユーザーの `~/.claude.json` と Claude のトランスクリプトに触れないままである。
+呼び出しごとの `env.CLAUDE_CONFIG_DIR` は、絞り込んだキャリブレーションのために
+利用可能なままである。
 
 | アサーション | サーフェス | 失敗時 |
 |-----------|---------|---------|

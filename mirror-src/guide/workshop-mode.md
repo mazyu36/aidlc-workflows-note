@@ -8,7 +8,7 @@ scope の depth / テスト戦略 / スキップ一覧は [Scope と Depth § wo
 
 > **Harness に関する注記。** このレシピは harness 非依存である: `aidlc-worktree` と
 > `aidlc-bolt` のツール（全 harness で共有）と通常の git を駆動する。コマンド例は
-> orchestrator を `/aidlc`（Claude Code / Kiro）として呼び出す。Codex では `$aidlc` を
+> orchestrator を `/aidlc`（Claude Code / Kiro / opencode / Copilot）として呼び出す。Codex では `$aidlc` を
 > 使う。claim とマージの git 契約はどこでも同一である。
 
 ---

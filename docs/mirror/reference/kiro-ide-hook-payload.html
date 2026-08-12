@@ -127,9 +127,10 @@
 タイムアウトと競争させながら。本番の既定は 2 秒である; 正の
 <code>AIDLC_IDE_STDIN_TIMEOUT_MS</code> の値は、診断や決定論的なレイテンシテストのために
 ミリ秒単位でこの上限を上書きする。両方のフィールドの綴りが受理される。取得は
-2 つの payload に依存するターゲット（<code>audit-and-sensors</code>・<code>log-subagent</code>）に限定して
-ゲートされる; 他のすべてのターゲット（tool 呼び出しごとの <code>block</code> の床を含む）は
-どちらのチャネルにも触れず、ゼロレイテンシの経路を保つ。</p>
+3 つの payload に依存するターゲット（<code>audit-and-sensors</code>・<code>log-subagent</code>・
+<code>rebuild-stage-graph</code>）に加え、モダンな <code>session_id</code> のための <code>session-start</code> と
+<code>continue-workflow</code> に限定してゲートされる; 他のすべてのターゲット（tool 呼び出しごとの
+<code>block</code> の床を含む）はどちらのチャネルにも触れず、ゼロレイテンシの経路を保つ。</p>
 <p><code>VSCODE_IPC_HOOK</code> / <code>VSCODE_PID</code> も IDE には存在する（CLI には無い）が、アダプタは
 上記の payload チャネルを手がかりにする。</p>
 <h2 id="per-event-captures">イベントごとのキャプチャ</h2>
@@ -183,25 +184,40 @@
 （#543）。</li>
 <li><strong>1.x は success フラグを運ばない。</strong> 0.12 のチャネルの明示的なブーリアン
 <code>toolSuccess: false</code> だけが、整った書き込みを audit から落とす（#417）; フィールドが
-不在の 1.x の payload はパスチェックへすり抜け、既知のパターンに合致しないエラーの
-散文は可視の hook-drop を記録する。存在するが非 null で誤ったランタイム型を持つ
-payload フィールドは不正な形として扱われる: advisory hook は正常終了し、可視の
-drop を記録し、audit も subagent イベントも転送しない。<code>null</code> は不在の値として
-扱われる — チャネルの既存の不在値契約に一致する。</li>
+不在の 1.x の payload はパスチェックへすり抜ける。そのチャネルは構造的に失敗を
+報告できないため、1.x での書き込み失敗はエラーの散文としてしか届かない — そこで
+アダプタはログの前に分類する: 失敗と<strong>認識された</strong>散文は <code>hookDebug</code>（hook デバッグが
+有効な場合のみ書かれる）へ送られる — audit すべき artifact が存在しないため、転送しない
+のが正しく、decay ではない。認識されない文言はなお可視の hook-drop を記録する。
+これが実際の degradation を示すケースである。レガシーの 0.12 チャネルでは、明示的な
+<code>toolSuccess: true</code> は依然として権威を持ち、失敗散文の推論を経由しない。存在するが
+非 null で誤ったランタイム型を持つ payload フィールドは不正な形として扱われる:
+advisory hook は正常終了し、可視の drop を記録し、audit も subagent イベントも
+転送しない。<code>null</code> は不在の値として扱われる — チャネルの既存の不在値契約に一致する。</li>
 <li><strong>結果の散文中のパスは workspace 相対である</strong>が、core hook は絶対の record root と
 比較する — そこでアダプタは、転送する前にそれらを絶対パスに解決する。</li>
 </ol>
 <h2 id="consequences-for-each-hook">各 hook への帰結</h2>
 <ul>
-<li><strong>audit-logger / sensor-fire</strong> — 復元可能: 結果の散文からファイルパスを掻き取り、
+<li><strong>write-audit-log / run-sensors</strong> — 復元可能: 結果の散文からファイルパスを掻き取り、
 絶対パスに解決し、core hook に Claude 形の <code>{tool_input:{file_path}}</code> を渡す。
-既知のパターンに文言が合致しない write クラスの tool は、可視の hook-drop を
-記録する（静かな no-op には決してならない）。</li>
-<li><strong>runtime-compile</strong> — shell コマンドは復元不可なので、IDE 経路は command
+パスを抽出できないとき、アダプタは両方をログするのではなく 2 つのケースに分ける:
+<strong>失敗した</strong>書き込みと認識された散文は <code>hookDebug</code>（hook デバッグが有効な場合のみ
+書かれる）へ送られ、artifact が存在しないので転送されない。この推論は payload に
+構造化された success フラグが無いときにのみ走る。明示的な <code>toolSuccess: true</code> と
+その他の合致しない文言はすべて可視の hook-drop を記録する（静かな no-op には決して
+ならない） — それがドロップログの存在理由である、可視でない degradation のケースである。
+この 2 つを混同すると、健全なワークスペースで <code>--doctor</code> が degradation を報告して
+しまう。</li>
+<li><strong>rebuild-stage-graph</strong> — shell コマンドは復元不可なので、IDE 経路は command
 フィルタを落とし、純粋に audit tail でゲートする（mtime の冪等性ガード付きで、
 残存する遷移 — 例えば <code>WORKFLOW_COMPLETED</code> の後 — が後続のすべての shell
-コマンドで再コンパイルを起こさないようにする）。</li>
-<li><strong>sync-statusline</strong> — IDE は task payload を与えないので、audit tail 中の最新の
+コマンドで再コンパイルを起こさないようにする）。shell の結果とセッション identity は
+なお転送される: モダンなイベントは自身の正確な <code>session_id</code> を使い、レガシーの
+チャネルは SessionStart が保持する合成 identity を使う。結果が成功した
+<code>intent-create</code> を名指すとき、共有 hook はそのセッションを作成された record に
+束縛する。</li>
+<li><strong>sync-workflow-state</strong> — IDE は task payload を与えないので、audit tail 中の最新の
 <code>STAGE_STARTED</code> から現在の stage を導出する。これは <strong>forward-only</strong> のミラーである:
 <code>Current Stage</code> を完了済みまたはスキップされた stage に巻き戻すことは決してなく、
 ワークフローが <code>Running</code> でないときには決して発火しない（完了したワークフローの
@@ -218,8 +234,16 @@ matcher は広い（<code>^(subagent_.+|invoke_sub_agent)$</code>）ので、ど
 結果の散文が audit 行を誤帰属させることはできない — そして #459 由来の
 <code>**Reviewer:**</code> / <code>**Agent:**</code> の結果マーカーへフォールバックする。これは 0.12 の
 <code>invoke_sub_agent</code> の形における唯一の identity 信号である。</li>
-<li><strong>session-start / session-end / stop / mint / block</strong> — payload を必要としない;
-stdin を決して読まない。</li>
+<li><strong>session-start</strong> — モダンな <code>session_id</code> を読み、gitignore されるランタイムの
+session ディレクトリ配下に永続化する。レガシーチャネルは代わりに安定した合成 ID を
+記録する。</li>
+<li><strong>stop</strong> — モダンな Stop イベントの <code>session_id</code> を読み、ワークスペース全体の
+SessionStart マーカーより優先する。これにより、並走するチャットが自分自身の
+post-create 引き渡し receipt だけを消費するようにする。レガシーの agentStop と
+壊れたモダンチャネルは、保持された identity へフォールバックする。</li>
+<li><strong>session-end / mint / block</strong> — payload を必要とせず、stdin を決して読まない。
+session-end は SessionStart が永続化した identity を再利用し、レガシーの合成 ID を
+フォールバックとする。</li>
 </ul>
 <h2 id="toolresult-path-extraction-patterns">toolResult パス抽出パターン</h2>
 <table>
@@ -248,7 +272,7 @@ stdin を決して読まない。</li>
 </tbody></table>
 <p>抽出器はマッチの前に末尾の空白／改行をトリムし、<code>str_replace</code> の形から末尾の
 括弧書きを剥ぐ。<code>fs_write</code> は Write にマップされる; <code>str_replace</code>/<code>fs_append</code> は
-Edit にマップされる（両方とも既存のファイルを対象とする → core の audit-logger は
+Edit にマップされる（両方とも既存のファイルを対象とする → core の write-audit-log は
 <code>ARTIFACT_UPDATED</code> を記録する）。</p>
 
 <footer class="meta">

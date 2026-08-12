@@ -59,7 +59,7 @@
 <p><a href="../README.html">AI-DLC ドキュメント</a> の一部 · <a href="../guide/00-introduction.html">ユーザーガイド</a> · <strong>Harness Engineer ガイド</strong> · <a href="../reference/00-overview.html">開発者リファレンス</a></p>
 </blockquote>
 <p>AI-DLC は方法論であり、この実装はそれを、あなたが使う harness — Claude Code、Kiro CLI、
-Kiro IDE、Codex CLI、opencode — の上で箱から出してすぐ動く形で同梱する: 14 のエージェント
+Kiro IDE、Codex CLI、Cursor、opencode、GitHub Copilot — の上で箱から出してすぐ動く形で同梱する: 14 のエージェント
 （11 のドメインエキスパート、2 の reviewer、composer）、32 の stage、9 の scope、
 rule と sensor の一式。このガイドは、その方法論を<strong>再形成</strong>したい人のためのものである —
 どの stage が走るかを変える、フレームワークが扱わないドメインのエージェントを足す、scope を
@@ -199,7 +199,7 @@ space レベル（<code>aidlc/knowledge/</code>。space の <code>memory/</code>
 ソースオブトゥルース（stage は <code>core/aidlc-common/stages/</code>、agent は <code>core/agents/</code>、
 scope、rule、sensor、knowledge、ツール、hook）。あなたが実際に走らせる harness 別の
 <code>dist/&lt;harness&gt;/</code> ツリー（<code>dist/claude/.claude/</code>、<code>dist/kiro/.kiro/</code>、<code>dist/kiro-ide/.kiro/</code>、
-<code>dist/codex/</code>、<code>dist/opencode/</code>）は <code>core/</code> に薄い <code>harness/&lt;name&gt;/</code> サーフェスを加えて
+<code>dist/codex/</code>、<code>dist/cursor/</code>、<code>dist/opencode/</code>、<code>dist/copilot/</code>）は <code>core/</code> に薄い <code>harness/&lt;name&gt;/</code> サーフェスを加えて
 <strong>生成</strong>され、<strong>ドリフトガード</strong>される — そこでの手編集は CI が拒否する。ループは常に:</p>
 <pre><code class="language-bash"># 1. edit the source in core/ (never dist/)
 $EDITOR core/aidlc-common/stages/inception/my-stage.md

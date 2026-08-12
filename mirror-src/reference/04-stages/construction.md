@@ -67,19 +67,23 @@ Bolt 実行中に **engine によって抑制される** のはその Step 7 の
 置き換えられる。Unit ごとの完了 gate は直接起動での使用（例:
 `/aidlc --stage code-generation`）のために残る。
 
-**design stage の反復順序（opt-in）。** 既定では、engine は 4 つの inline design
-stage（3.1 から 3.4）を stage-major で反復する: すべての Unit について 3.1 を
-走らせ、次にすべての Unit について 3.2 を走らせ、と続ける。state ファイルが
-`## Runtime State` の下に `Construction Iteration: unit-major` を記録するとき
-（delivery-planning で `aidlc-state.ts set-construction-iteration unit-major` に
-より、または人間によって設定される）、engine は代わりに unit-major で歩く: Bolt
-ビルド順の各 Unit について、次の Unit が始まる前にその Unit の 4 つの design
-ドキュメント（3.1 から 3.4）を連続して著述する。4 つの stage ごとの承認 gate は、
-数も機構も変わらない; unit-major の下では、それらは遅く、stage 順に、（stage ×
-Unit の）design グリッド全体がカバーされた後に、stage ごとに人間の承認 1 つで
-発火する。
-`code-generation`（3.5、`mode: subagent`）は決してこの歩みの一部ではない。正確な
-値 `unit-major` だけがそれを起動する; 不在または `stage-major` が既定である。
+**Construction の反復順序（opt-in）。** 既定では、engine は Unit ごとの construction
+stage を stage-major で反復する: すべての Unit について 3.1 を走らせ、次にすべての
+Unit について 3.2 を走らせ、と続け、すべての Unit について最後に 3.5 Code
+Generation を走らせる。state ファイルが `## Runtime State` の下に
+`Construction Iteration: unit-major` を記録するとき（delivery-planning で
+`aidlc-state.ts set-construction-iteration unit-major` により、または人間によって
+設定される）、engine は代わりに unit-major で歩く: Bolt ビルド順の各 Unit について、
+その Unit の 4 つの design ドキュメント（3.1 から 3.4）を著述し、次いでそのコード
+（3.5）を生成してから、次の Unit が始まる — 最初の動くコードは、すべての Unit の
+design の後ではなく、1 つの Unit の design の後に現れる。Code Generation の Unit
+ごとの Plan Approval（Step 3）は依然として生成の前にハードストップし、autonomy な
+Construction swarm は、このノブがセットされている間は決して発火しない（この歩みが
+ビルドを所有し、Bolt ビルド順で直列に進む; 並列バッチ swarm は stage-major の領分
+である）。stage ごとの承認 gate は、数も機構も変わらない; unit-major の下では、
+それらは遅く、stage 順に、Code Generation を含む（stage × Unit の）グリッド全体が
+カバーされた後に、stage ごとに人間の承認 1 つで発火する。
+正確な値 `unit-major` だけがそれを起動する; 不在または `stage-major` が既定である。
 
 **並列バッチ。** 2 つ以上の Bolt が依存充足を共有し、互いに依存しないとき、
 conductor は単一の assistant メッセージで N 個の `Task` 呼び出しを発行することで、
@@ -668,6 +672,10 @@ shared-infrastructure.md は、複数の unit がインフラリソースを共�
    ツールへ委譲する。
 
    **subagent に渡されるコンテキスト:**
+   - プロンプトの最初の行として、正確なターゲットマーカー
+     `AIDLC-UNIT: <directive.unit>`（または `unit` の無い単一イテレーションの
+     directive では現在の unit 名）。文脈上の依存関係は追加のマーカーを
+     受け取らない。
    - `agents/aidlc-developer-agent.md` からの lead agent の persona と
      `.claude/knowledge/aidlc-developer-agent/` からの knowledge（subagent は会話履歴に
      アクセスできないのでプロンプトに含める）

@@ -39,20 +39,25 @@ while keeping you in control at every decision point.
 
 ## Initialization phase（自動）
 
-3 つの initialization stage は `aidlc-utility intent-birth` という単一のツール呼び出しの中で決定論的に実行され、1 秒未満で完了する。initialization で利用者が対話することはない。最初の intent をアクティブな space に自動で birth し、ワークフローのための record dir をブートストラップする。
+3 つの initialization stage は `aidlc-utility intent-create` という単一のツール呼び出しの中で決定論的に実行され、1 秒未満で完了する。initialization で利用者が対話することはない。最初の intent をアクティブな space に自動で birth し、ワークフローのための record dir をブートストラップする。
 
 ### Stage 0.1: Workspace Scaffold
 
-フレームワークは最初の intent を birth し、その record dir を `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に作成する（名前付き space を使わない限り `<space>` は `default`）:
+フレームワークは最初の intent とその record dir を `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に作成する（名前付き space を使わない限り `<space>` は `default`）。scope が実際に実行する phase ごとに 1 つのフォルダを作成するため、record は存在するすべての phase ではなく計画を示す。`feature` scope は 5 つすべてを実行するが、`bugfix` scope は Ideation と Operation をスキップするため、それらのフォルダは現れない:
 
 ```
-Intent born — record dir scaffolded:
-  aidlc/spaces/default/intents/<YYMMDD>-<label>/initialization/   (3 stage artifact dirs)
-  aidlc/spaces/default/intents/<YYMMDD>-<label>/ideation/         (7 stage artifact dirs)
-  ...
+Intent created, record dir at aidlc/spaces/default/intents/<YYMMDD>-<label>/
+  initialization/
+  inception/
+  construction/
+  verification/
 Space-level dirs ensured:
-  aidlc/spaces/default/knowledge/                             (team knowledge — empty; you add files)
+  aidlc/spaces/default/knowledge/    (team knowledge, empty; you add files)
 ```
+
+stage ごとのフォルダはあらかじめ作られない。ある stage のフォルダ（例:
+`inception/requirements-analysis/`）は、その stage が最初に artifact を書き込んだ時点で
+現れるため、record には成果を生んだ作業だけが並ぶ。
 
 ### Stage 0.2: Workspace Detection
 
@@ -85,7 +90,7 @@ Claude Code では、ターミナル下部のカスタム AI-DLC ステータス
 [AIDLC] IDEATION > Intent Capture [▓▓▓▓▓░░░░░] 4/7 -- product
 ```
 
-表示内容は、現在の phase、stage の表示名、phase 進捗バー、phase 進捗比、リードエージェントである。バーと比は同じ範囲を数える — どちらも現在の phase 内の `[x]` の stage を数えるため、比が進むたびにバーも進む。残りコンテキスト（`ctx:N%`）は常に右側に表示され、減るにつれて色分けされる。Claude Code では、最初の使用量折り込み後に `↑<in> ↓<out> $<usd>` も表示され、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークスペース活動は含まない。
+表示内容は、現在の phase、stage の表示名、phase 進捗バー、phase 進捗比、リードエージェントである。バーと比は同じ範囲を数える — どちらも現在の phase 内の `[x]` の stage を数えるため、比が進むたびにバーも進む。残りコンテキスト（`ctx:N%`）は常に右側に表示され、減るにつれて色分けされる。Claude Code では、最初の使用量折り込み後に `↑<in> ↓<out> $<usd>` も表示され、対象は現在のワークフローと現在のトランスクリプト/セッションのみで、それ以前のワークスペース活動は含まない。使用量追跡（およびこのセグメント）を無効にするには `AIDLC_DISABLE_USAGE_TRACKING=1` を設定する。
 
 aidlc-product-agent は対話モードの選択を求める:
 
@@ -218,7 +223,7 @@ sequenceDiagram
 
 ### subagent への委譲
 
-4 つの stage は背景の subagent に dispatch される — 2.1 Reverse Engineering（pipeline: developer のスキャン、次いで architect の統合と書き出し）、2.2 Practices Discovery（subagent の hub-and-spoke: リードの草稿、相互に盲目な 3 つの支援レビュー、人間へのインタビュー、リードの統合）、2.4 User Stories（mob: collaborator が並列に貢献し、判断が割れた場合は stage の途中で利用者に提示されることがある）、3.5 Code Generation（subagent）である。Practices Discovery は、スポークと最終統合の間に意図的に利用者を輪の中へ招き入れる。User Stories の mob も判断の分かれ目を stage 途中で提示することがある。Workspace detection（0.2）は subagent ではなく `aidlc-utility intent-birth` の中で決定論的に実行される。
+4 つの stage は背景の subagent に dispatch される — 2.1 Reverse Engineering（pipeline: developer のスキャン、次いで architect の統合と書き出し）、2.2 Practices Discovery（subagent の hub-and-spoke: リードの草稿、相互に盲目な 3 つの支援レビュー、人間へのインタビュー、リードの統合）、2.4 User Stories（mob: collaborator が並列に貢献し、判断が割れた場合は stage の途中で利用者に提示されることがある）、3.5 Code Generation（subagent）である。Practices Discovery は、スポークと最終統合の間に意図的に利用者を輪の中へ招き入れる。User Stories の mob も判断の分かれ目を stage 途中で提示することがある。Workspace detection（0.2）は subagent ではなく `aidlc-utility intent-create` の中で決定論的に実行される。
 
 ```mermaid
 sequenceDiagram
@@ -275,7 +280,7 @@ Claude Code 上ではワークフロー全体を通じて、ターミナルの�
 | `4/7` | phase 内の stage 進捗 |
 | `-- product` | この stage のリードエージェント |
 | `ctx:N%` | 残りコンテキスト（常に表示。減るにつれて色分け） |
-| `↑<in> ↓<out> $<usd>` | 現在のワークフローと現在のトランスクリプト/セッションについての token 使用量と課金可能なコスト（Claude Code のみ。使用量が利用可能になるまでは省略される） |
+| `↑<in> ↓<out> $<usd>` | 現在のワークフローと現在のトランスクリプト/セッションについての token 使用量と課金可能なコスト（Claude Code のみ。使用量が利用可能になるまでは省略される。`AIDLC_DISABLE_USAGE_TRACKING=1` で無効化される） |
 
 ---
 

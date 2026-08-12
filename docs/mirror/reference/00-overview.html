@@ -93,7 +93,7 @@
 <p><strong>このリファレンスにおけるパス。</strong> AI-DLC は一度だけ著述され harness ごとに生成されるので、ファイルは意図によって 3 つの規約のいずれかで名付けられる:</p>
 <ul>
 <li><strong><code>core/…</code></strong> -- 手で著述される、harness 中立な<strong>信頼できる源泉</strong>（例: <code>core/tools/aidlc-orchestrate.ts</code>、<code>core/aidlc-common/stages/</code>）。ここで編集する。ファイルが<em>著述</em>または<em>変更</em>される場所を名指すパスは <code>core/</code> パスである。</li>
-<li><strong><code>dist/&lt;harness&gt;/…</code></strong> -- <strong>生成され、コミットされ、drift ガードされた</strong>ディストリビューション（<code>dist/claude/.claude/</code>、<code>dist/kiro/.kiro/</code>、<code>dist/kiro-ide/.kiro/</code>、<code>dist/codex/</code>）。決して手で編集されない; <code>bun scripts/package.ts</code> によってバイト単位で再生成される。<em>出荷される</em>ものを説明するときだけ引用される。</li>
+<li><strong><code>dist/&lt;harness&gt;/…</code></strong> -- <strong>生成され、コミットされ、drift ガードされた</strong>ディストリビューション（<code>dist/claude/.claude/</code>、<code>dist/kiro/.kiro/</code>、<code>dist/kiro-ide/.kiro/</code>、<code>dist/codex/</code>、<code>dist/opencode/</code>、<code>dist/copilot/</code>）。決して手で編集されない; <code>bun scripts/package.ts</code> によってバイト単位で再生成される。<em>出荷される</em>ものを説明するときだけ引用される。</li>
 <li><strong><code>&lt;harness-dir&gt;/…</code></strong>（例: <code>.claude/</code>、<code>.kiro/</code>、<code>.codex/</code>） -- <em>インストールされた</em>プロジェクトの中の<strong>ランタイム</strong>の場所であり、そこでコマンドが走り、ワークフロー中にフレームワークが読み書きする（<code>bun .claude/tools/aidlc-graph.ts compile</code>、<code>.claude/agents/</code> を読む <code>loadAgents()</code>）。このディレクトリは harness のパラメータである。</li>
 </ul>
 <p>このリファレンスが裸の <code>.claude/</code> パスを示すとき、それは特に Claude harness のランタイムの場所と読むこと; 同じファイルは <code>core/</code> で著述され、各 harness 自身のディレクトリに出荷される。</p>
@@ -132,7 +132,7 @@
 </tr>
 <tr>
 <td><a href="06-hooks-and-tools.html">Hook とツール</a></td>
-<td>hook システム、CLI ツール、76 イベントの audit 分類体系</td>
+<td>hook システム、CLI ツール、82 イベントの audit 分類体系</td>
 </tr>
 <tr>
 <td><a href="07-sensor-system.html">Sensor System</a></td>
@@ -156,7 +156,7 @@
 </tr>
 <tr>
 <td><a href="12-state-machine.html">状態機械</a></td>
-<td>workflow / phase / stage の機械、76 イベントの分類体系、audit-first のルール</td>
+<td>workflow / phase / stage の機械、82 イベントの分類体系、audit-first のルール</td>
 </tr>
 <tr>
 <td><a href="13-runtime-graph.html">Runtime Graph</a></td>
